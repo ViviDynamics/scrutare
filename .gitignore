@@ -16,3 +16,5 @@ coverage.xml
 .env
 .env.*
 repo.env
+
+.agents/state/

@@ -109,8 +109,10 @@ uv build --wheel
 
 The full preflight table, including a wheel installation check, is in
 [.agents/test-commands.md](.agents/test-commands.md). `repo.env.example`
-documents the current environment contract. No login commands or credentials
-are required in that file.
+contains shared Vivi Dynamics workflow settings. Copy it to local `repo.env`
+for the workflow tools. Authentication uses already configured, authorized `gh`
+access; keep login commands and credentials outside the example. Scrutare
+ingestion itself requires no application environment variables.
 
 ## Licensing
 

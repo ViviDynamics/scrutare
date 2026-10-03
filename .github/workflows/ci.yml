@@ -31,14 +31,4 @@ jobs:
         run: uv build --wheel
       - name: Installed CLI smoke check
         shell: bash
-        run: |
-          uv venv /tmp/scrutare-smoke
-          uv pip install --python /tmp/scrutare-smoke/bin/python dist/*.whl
-          cd /tmp
-          /tmp/scrutare-smoke/bin/scrutare --version
-          /tmp/scrutare-smoke/bin/python -m scrutare --version
-          /tmp/scrutare-smoke/bin/scrutare review --help
-          if /tmp/scrutare-smoke/bin/python -m scrutare review --pr invalid; then
-            echo "Expected invalid PR to fail"
-            exit 1
-          fi
+        run: scripts/smoke-cli.sh
