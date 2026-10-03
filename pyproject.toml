@@ -8,6 +8,9 @@ version = "0.1.0"
 description = "A standalone code review meta harness"
 requires-python = ">=3.10"
 
+[project.scripts]
+scrutare = "scrutare.interfaces.cli:main"
+
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.9", "mypy>=1.14"]
 
