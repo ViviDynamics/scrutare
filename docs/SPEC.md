@@ -199,6 +199,22 @@ artifacts, in code alone, with no model and no network, and says whether it
 is byte-identical with the verdict the run posted. This is qare's audit
 pattern: anyone can re-check a published verdict after the fact.
 
+For an escalated replay, the stored `verdict.exhaustion` is permitted only as
+a supplemental recorded assertion. Code validates its completed round bound,
+nonconvergence, and agreement with captured strategy and round limit, then
+independently recomputes findings, classification, verdict and rule using the
+captured source evidence and policy. It does not use the saved verdict or rule
+as the candidate answer. The escalated result is conditional on the validated
+assertion; missing or conflicting exhaustion evidence cannot become approval.
+
+Saved-byte identity and locally recorded posted-verdict identity are separate
+comparisons. A validated original posted digest binding the saved
+exhaustion-bearing bytes supports `recorded_assertion`; otherwise the basis is
+`unverified_recorded_assertion`. Neither establishes genuine execution or
+nonconvergence. Local unsigned artifacts and receipts prove internal recorded
+consistency, not remote delivery or protection against a coherent history
+rewrite. See the [replay guide](replay.md) for evidence requirements and exits.
+
 ## 10. Interfaces and milestones
 
 - **M1 (MVP)**: engine, persona registry, panel strategy, findings pipeline,

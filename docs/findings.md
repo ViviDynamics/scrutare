@@ -110,8 +110,8 @@ and docs are advisory. The configured blocking and advisory categories must
 partition exactly `scrutare.config.CATEGORIES`, without overlap or missing
 categories. `VerdictSettings` validates this for programmatic construction as
 well as loaded configuration. Reclassification follows the supplied policy,
-so the same verified evidence can produce a different verdict. Replay through
-the CLI comes in issue #13.
+so the same verified evidence can produce a different verdict. The
+[replay CLI](replay.md) recomputes from captured source evidence and policy.
 
 `Verdict.to_dict()` returns fresh artifact data with these fields:
 

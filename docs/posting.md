@@ -3,7 +3,9 @@
 The Python poster API accepts an existing ingestion run and a code-derived
 `Verdict`. It sends one complete GitHub review containing a summary and one
 inline comment per merged finding, retaining every source persona, category and
-reason. It does not run reviewers, call models or implement a replay CLI.
+reason. It does not run reviewers or call models. The separate
+[`scrutare replay`](replay.md) command audits saved and locally recorded posted
+verdict identity offline.
 The `scrutare review` command still captures inputs only.
 
 `post_review(run_dir: Path, verdict: Verdict, *, client: ReviewClient | None = None,
