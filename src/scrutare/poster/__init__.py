@@ -10,4 +10,5 @@ from scrutare.poster.payload import ReviewComment as ReviewComment
 from scrutare.poster.payload import ReviewPayload as ReviewPayload
 from scrutare.poster.payload import build_review_payload as build_review_payload
 from scrutare.poster.posting import post_review as post_review
+from scrutare.poster.reviewers import ReviewerRequestReceipt as ReviewerRequestReceipt
 from scrutare.poster.reviewers import normalize_human_reviewers as normalize_human_reviewers

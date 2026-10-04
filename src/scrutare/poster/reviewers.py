@@ -1,6 +1,8 @@
 """Pure validation and stable normalization of configured human reviewer logins."""
 
 import re
+from dataclasses import dataclass
+from typing import Literal
 
 from scrutare.poster.errors import PostingError
 
@@ -24,3 +26,20 @@ def normalize_human_reviewers(values: tuple[str, ...]) -> tuple[str, ...]:
             seen.add(folded)
             normalized.append(value)
     return tuple(normalized)
+
+
+@dataclass(frozen=True)
+class ReviewerRequestReceipt:
+    """Confirmed targets with provenance that does not claim causal ownership."""
+
+    reviewers: tuple[str, ...]
+    provenance: Literal["post_response", "observed_requested", "no_targets"]
+
+    def __post_init__(self) -> None:
+        normalized = normalize_human_reviewers(self.reviewers)
+        if (
+            normalized != self.reviewers
+            or self.provenance not in ("post_response", "observed_requested", "no_targets")
+            or (not self.reviewers) != (self.provenance == "no_targets")
+        ):
+            raise PostingError("Use a normalized reviewer receipt with valid delivery provenance.")
