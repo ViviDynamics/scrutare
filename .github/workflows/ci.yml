@@ -21,8 +21,24 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Install locked development environment
         run: uv sync --locked --extra dev
+      - name: Install pinned external nare runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          nare_checkout="$RUNNER_TEMP/scrutare-nare-2026.10.0"
+          git clone --depth 1 --branch 2026.10.0 https://github.com/ViviDynamics/nare.git "$nare_checkout"
+          test "$(git -C "$nare_checkout" rev-parse HEAD)" = "899e1eb3851dcce4a4ab907f76384c49f4aca2fa"
+          uv python install 3.14
+          uv sync --project "$nare_checkout" --python 3.14 --locked --no-dev
+          test -x "$nare_checkout/.venv/bin/nare"
+          echo "SCRUTARE_TEST_NARE_EXECUTABLE=$nare_checkout/.venv/bin/nare" >> "$GITHUB_ENV"
       - name: Tests
-        run: uv run --locked --extra dev pytest
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SCRUTARE_TEST_NARE_EXECUTABLE"
+          test -x "$SCRUTARE_TEST_NARE_EXECUTABLE"
+          uv run --locked --extra dev pytest
       - name: Lint
         run: uv run --locked --extra dev ruff check .
       - name: Strict typecheck
