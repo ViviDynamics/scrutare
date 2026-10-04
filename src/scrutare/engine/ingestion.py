@@ -9,7 +9,9 @@ from pathlib import Path
 from typing import Any
 
 from scrutare import __version__
+from scrutare.config import ReviewConfig
 from scrutare.engine.github import GitHubClient, GitHubError, PullRequestRef, assert_pr_open
+from scrutare.engine.review_inputs import prepare_review_inputs
 
 
 def check_pr_open(client: GitHubClient, ref: PullRequestRef) -> None:
@@ -25,6 +27,7 @@ def ingest_pr(
     *,
     config_bytes: bytes | None = None,
     config_data: dict[str, Any] | None = None,
+    review_config: ReviewConfig | None = None,
 ) -> Path:
     """Persist inputs only when surrounding metadata reads agree on head and base."""
     if config_path is not None and config_bytes is not None:
@@ -85,6 +88,8 @@ def ingest_pr(
         (run_dir / "metadata.json").write_text(
             json.dumps(metadata, indent=2) + "\n", encoding="utf-8"
         )
+        if review_config is not None:
+            prepare_review_inputs(run_dir, review_config)
     except Exception:
         shutil.rmtree(run_dir)
         raise

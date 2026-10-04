@@ -12,6 +12,7 @@ from scrutare import __version__
 from scrutare.config import ConfigError, parse_config
 from scrutare.engine.github import GitHubClient, GitHubError, resolve_pr
 from scrutare.engine.ingestion import ingest_pr
+from scrutare.engine.review_inputs import ReviewInputError
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -44,7 +45,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 1
     try:
-        config_data = parse_config(config_bytes).to_dict()
+        review_config = parse_config(config_bytes)
+        config_data = review_config.to_dict()
     except ConfigError as exc:
         print(f"scrutare: {exc}", file=sys.stderr)
         return 1
@@ -57,9 +59,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             Path(".scrutare/runs"),
             config_bytes=config_bytes,
             config_data=config_data,
+            review_config=review_config,
         )
         metadata = json.loads((run_dir / "metadata.json").read_text(encoding="utf-8"))
-    except GitHubError as exc:
+    except (GitHubError, ReviewInputError) as exc:
         print(f"scrutare: {exc}", file=sys.stderr)
         return 1
     except OSError:

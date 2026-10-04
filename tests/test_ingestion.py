@@ -317,3 +317,56 @@ def test_zero_changed_files_can_be_captured_completely(tmp_path):
     )
     assert read_json(run, "files.json") == []
     assert read_json(run, "metadata.json")["pull_request"]["changed_files"] == 0
+
+
+@pytest.mark.parametrize("invalid", [False, True])
+def test_review_config_prepares_coherent_capture_or_cleans_fresh_run(tmp_path, invalid):
+    from scrutare.config import parse_config
+
+    class CoherentClient(FakeClient):
+        def get_diff(self, ref):
+            super().get_diff(ref)
+            return (
+                "diff --git a/example.py b/example.py\n"
+                "--- a/example.py\n+++ b/example.py\n@@ -1 +1 @@\n-old\n+new\n"
+            )
+
+        def get_files(self, ref):
+            assert ref == REF
+            return [{"filename": "wrong.py" if invalid else "example.py", "status": "modified"}]
+
+    raw = b"models: {default: {model: test-model}}\n"
+    config = parse_config(raw)
+    existing = tmp_path / "run-existing"
+    existing.mkdir()
+    (existing / "keep").write_bytes(b"saved")
+    if invalid:
+        with pytest.raises(ValueError, match="[Pp]repar|review inputs"):
+            ingestion().ingest_pr(CoherentClient(), REF, tmp_path, config_bytes=raw,
+                                  config_data=config.to_dict(), review_config=config)
+        assert list(tmp_path.iterdir()) == [existing]
+    else:
+        run = ingestion().ingest_pr(CoherentClient(), REF, tmp_path, config_bytes=raw,
+                                    config_data=config.to_dict(), review_config=config)
+        assert read_json(run, "effective-files.json")["files"] == ["example.py"]
+        assert (run / "review-inputs/diff.patch").read_bytes() == (
+            b"diff --git a/example.py b/example.py\n"
+            b"--- a/example.py\n+++ b/example.py\n@@ -1 +1 @@\n-old\n+new\n"
+        )
+        assert (run / "diff.patch").read_bytes() == (run / "review-inputs/diff.patch").read_bytes()
+        assert read_json(run / "review-inputs", "files.json") == [
+            {"filename": "example.py", "status": "modified"},
+        ]
+    assert (existing / "keep").read_bytes() == b"saved"
+
+
+def test_complete_raw_count_is_checked_before_review_projection(tmp_path):
+    from scrutare.config import parse_config
+
+    raw = b"models: {default: {model: test-model}}\n"
+    config = parse_config(raw)
+    client = FakeClient([metadata(changed_files=2), metadata(changed_files=2)])
+    with pytest.raises(GitHubError, match="Incomplete file capture"):
+        ingestion().ingest_pr(client, REF, tmp_path, config_bytes=raw,
+                              config_data=config.to_dict(), review_config=config)
+    assert list(tmp_path.iterdir()) == []
