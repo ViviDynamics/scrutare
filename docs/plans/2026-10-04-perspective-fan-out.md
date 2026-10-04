@@ -1,0 +1,99 @@
+# Perspective Fan-out Implementation Plan
+
+> For agentic workers: REQUIRED SUB-SKILL: use subagent-driven-development task by task, with independent task and final reviews. Steps use checkbox syntax.
+
+**Goal:** Deliver issue #3: parallel independent nare sessions returning attributed candidate findings and honest partial/failure and budget artifacts.
+**Architecture:** External nare 2026.10.0+ subprocesses use contract 1 and prepared read-only inputs. A synchronous ledger reserves disjoint allowances, reconciles reported usage and prevents new invocation admission after exhaustion or uncertain accounting. Session artifacts stay outside the model read root.
+**Tech stack:** Python 3.10+, asyncio and standard library; existing config, personas, prepared inputs and Finding validators. Nare runs with its own supported interpreter.
+**Spec:** docs/SPEC.md sections 2, 5, 8 and 11. Maintainer approved documented after-turn thresholds on 2026-10-04; approval and actual CLI evidence are in the controller's .agents/state/nare41-capability directory.
+
+## Scope
+
+In: shared budget/outcome types, ledger, strict contract decoding, private artifact persistence, one external invocation, parallel initial wave, offline actual installed nare verification, approved SPEC clarification and API setup documentation.
+Out: panel convergence (#10), full review CLI/release (#7), automatic retry/re-anchor orchestration, verdict derivation/posting, new YAML settings, credential changes, App identity and deployment.
+
+## Tasks
+
+- [ ] 1. Budget ledger and shared session records.
+- [ ] 2. Contract decoder and exclusive artifact boundary.
+- [ ] 3. Single external nare session lifecycle.
+- [ ] 4. Parallel initial wave, approved docs and actual-CLI integration.
+
+## Global Constraints
+
+- Approved SPEC is the authority. Every model call goes through nare. No direct provider adapter or kill-based budget workaround.
+- Keep the exact SPEC5 YAML surface and Python >=3.10. Nare is an external executable, never an imported production Python dependency.
+- Consume prepare_review_inputs and prepare_persona_inputs for initial sessions. Consume descriptor.nare_input_args() verbatim; --system is separate. Never widen --tools read or the copied root, expose raw capture, or turn an empty effective file list into a full review.
+- Attribution is caller-owned through parse_finding. Candidate findings are not anchor-verified or a verdict. Retain latest complete schema-valid output, not implicit aggregation of earlier documents.
+- Token total is input+output+cache_read+cache_write, disjoint reported counters. No clipping. Record thresholds, actual use and overshoot. Successful done exactly at its threshold may remain complete; admission is closed. Strictly above the invocation threshold or nare error/stop_reason budget is partial, even with done exit0. Protocol/output corruption remains failed.
+- Limits govern admission and nare after-turn enforcement. No new persona/retry/re-anchor/round invocation after exhausted or uncertain allowance. Already admitted invocations may finish internal turns and overshoot. No strict spending ceiling or complete provider billing claim.
+- Ordinary verification is offline with fake executables/transports, no live provider/network/auth calls. Actual installed nare proof substitutes only vendor factory and keeps CLI, loop, schema, tools, counters and persistence real. A skip is not evidence.
+- No new suppression markers, weakened quality gates or em dashes in authored prose/commits. Workers own production/tests/docs, never children. Coordinator owns plan/ledger/integration/reviews. Serial workers and independent task reviews. Ship issue global review-fix budget is two, preserved across resumption.
+
+## Review Focus
+
+1. NARE environment controls or symlinked destinations must not override configured rails or expose/write raw inputs (Tasks 2/3/4).
+2. Unknown/corrupt/truncated accounting must close admission, never manufacture a successful empty review (Tasks 1/2/3).
+3. Terminal done over allocation, cache accounting and resumed cumulative totals must not escape or double-charge budgets (Tasks 1/2/4).
+4. Parallel processes must overlap without shared writable state, and cancellation must reap all children (Tasks 3/4).
+5. Existing/reused artifact paths and malformed findings must fail safely while preserving captured evidence (Tasks 2/3/4).
+
+## Shared Interfaces
+
+Create focused modules in src/scrutare/engine; no package-wide restructure.
+`session_models.py` produces frozen `TokenUsage(input: int=0, output: int=0, cache_read: int=0, cache_write: int=0)` with total property and to_dict(), validating nonnegative actual ints; frozen `NareRuntime(executable: Path, max_turns: int=50, timeout_seconds: float=600.0)` with positive finite operational limits; frozen `NareCapability(version: str, contract: int)`; frozen `SessionOutcome(persona: str, status: Literal['complete','partial','failed','not_started'], reason: str, findings: tuple[Finding,...], output_available: bool, usage: TokenUsage, accounting_complete: bool, allocated_tokens: int, overshoot_tokens: int, session_id: str|None, artifact_directory: Path, invocation_limit: int, nare_status: str|None=None, stop_reason: str|None=None, exit_code: int|None=None)`; frozen `FanOutResult(outcomes: tuple[SessionOutcome,...], failed: bool, partial: bool, usage: TokenUsage, review_exhausted: bool, review_overshoot_tokens: int)`.
+Outcome overshoot_tokens is max(0, cumulative session usage.total-invocation_limit); snapshot also records persona/review overshoots. Zero quotas use invocation_limit=0, no process, status not_started/reason review_budget. to_dict on outcomes/result returns fresh JSON-safe records, including candidate wire data with caller attribution, artifact path, version/schema fields at their owning manifest boundary. No final findings.json/verdict.json producer here.
+
+`budgets.py` produces frozen `BudgetLease(persona: str, session_key: str, baseline: TokenUsage, limit_tokens: int, allocated_tokens: int)` and `ReviewBudgetLedger(persona_names: tuple[str,...], settings: BudgetSettings)`. Public synchronous methods `admit(persona: str, session_key: str, baseline: TokenUsage=TokenUsage()) -> BudgetLease|None`, `observe(lease: BudgetLease, cumulative_usage: TokenUsage) -> None`, `settle(lease: BudgetLease, final_usage: TokenUsage, accounting_complete: bool) -> None`, `snapshot() -> dict[str,object]`. Expose read-only persona allocation, aggregate usage, exhausted/accounting confidence through explicit properties or snapshot. Unknown/stale/forged leases and backwards counters are validation errors, not silently trusted. Mutation is event-loop-owned without awaits; no threads modify it.
+
+`session_output.py` produces `SessionProtocolError(ValueError)` with safe diagnostics; `findings_schema() -> dict[str,object]`; frozen `DecodedSession` carrying validated session identity, raw status/stop reason/exit, TokenUsage, parsed findings, output_available and budget limit. `decode_session(stdout: bytes, session_document: bytes|None, *, persona: str, exit_code: int, expected_limit: int, expected_root: Path) -> DecodedSession`. An incremental cost parser may expose per-turn TokenUsage records to the executor; it shares strict decoding, never duplicated accounting rules.
+`session_artifacts.py` produces `create_attempt_directory(run_dir: Path, persona: str, attempt: int=1) -> Path` and `write_owned_json(path: Path, document: object) -> None`; safe exclusive roots and owner-only atomic files. Helpers assume known engine artifact destinations, never generic arbitrary overwriting paths.
+
+`nare_session.py` produces `async inspect_nare_runtime(runtime: NareRuntime) -> NareCapability` and `async run_persona_session(descriptor: PersonaReviewInput, rail: ModelRail, lease: BudgetLease, *, ledger: ReviewBudgetLedger, artifact_directory: Path, runtime: NareRuntime, capability: NareCapability) -> SessionOutcome`.
+`fanout.py` produces `async fan_out(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime) -> FanOutResult`. Future strategies can use ledger/executor directly. No resume invocation adapter or retry loop is shipped in #3.
+
+### Task 1: Budget ledger and shared records
+
+Files: create engine/session_models.py, budgets.py; tests/test_session_budgets.py.
+Consumes existing BudgetSettings/ModelRail/Finding; produces Shared Interfaces types and ledger.
+
+- [ ] RED tests pin fair allocation S=min(R,N*P), q,r=divmod(S,N), configured index i gets q+(i<r). R10/P100/N4 gives3/3/2/2; R2/N4 gives1/1/0/0; no borrowing or allocation above P, total within R. Reject empty/duplicate/unsafe persona names, bool/nonpositive settings and negative/bool counters/direct DTO invalid values.
+- [ ] RED tests: admission denied when persona actual >= quota, global actual >=R, unknown accounting or another active lease for that persona. Sum outstanding reservations avoids double allocation. A known overshoot shrinks later grants. Grant g=min(quota-persona_used,max(0,R-review_used-other_remaining_reservations)), cumulative limit=baseline.total+g.
+- [ ] RED tests: key high-water baseline exact vector, genuine fresh key zero, resume30->45 adds15 and stays total45; fresh retry30+12 charges42, not a fresh persona allowance. No counter decreases, duplicate settlement/forged lease or baseline mismatch. Unknown settlement seals admission while retaining observed lower bound. Component-wise monotone update. Successful exact-at-cap does not itself impose partial DTO, but ledger denies new work.
+- [ ] Implement only immutable records and synchronous ledger, validating exposed direct constructors. Snapshot deterministic fresh JSON reports configured review/perpersona bounds, quotas, actual vector per persona/session and aggregate, active reservations, confidence, exhausted and overshoots without tokens/provider credentials.
+- [ ] Focused RED/GREEN with logged command/output; self-review; all six project gates on Python3.10 and3.14, commit task code/tests. Report exact commands, exit statuses, counts and log paths. No downstream edits.
+
+### Task 2: Wire decoder and artifact boundary
+
+Files: create engine/session_output.py, session_artifacts.py; tests/test_session_output.py, test_session_artifacts.py.
+Consumes Task1 types; produces decoder/schema/private artifact helpers in Shared Interfaces.
+
+- [ ] RED tests: strict UTF8, object per nonempty JSONL line, duplicate keys/NaN/Infinity refused, actual nonnegative int four counters/cost finite or null. One terminal result last, contract actual int1, identity/persisted usage/output/status/stop reason/rail-policy consistent. Done/blocked exit0, error exit1; exit2 without output is safe failed start, missing/trailing/duplicate result fails. Unknown additive fields/event types accepted with valid envelope; do not infer budget from error text.
+- [ ] RED tests: schema only nare-supported type/properties/required/items/enum/additionalProperties. Object required findings array, entries approved file/line/optional side/category/problem/reason; no model persona/severity/verdict. parse_finding owns semantics and caller attribution. Valid empty vs null output distinguishable. Successful done requires valid document; budget partial null may preserve no candidates honestly. Latest terminal validated document canonical, earlier docs retained raw, no aggregation. Malformed output never masked as budget partial. Exact-at-threshold done complete; strictly above partial; budget error partial regardless document.
+- [ ] RED tests: per-turn cost usage totals reconcile with terminal cumulative usage, result budget used_tokens and expected configured tokens. Saved session may omit unrelated additive fields but required known fields agree; malformed/missing session after started run fails. Persisted read policy exactly read/root. Safe fixed diagnostics omit raw provider/model content.
+- [ ] RED tests: exclusive sessions/persona/attempt-0001 private directories; reject existing destination, symlinked ancestors or outputs, nonregular artifacts and inside prepared root. Do not replace another attempt. Atomic write own result files with restrictive permissions, cleanup own temporary file on failed write, captured logs remain on decoding/persistence failure.
+- [ ] Implement focused decoder/schema/helpers, not process spawning/anchor verification/replay changes. Focused RED/GREEN; self-review; six gates both Python versions; commit/report exact evidence.
+
+### Task 3: Single external nare lifecycle
+
+Files: create engine/nare_session.py; tests/test_nare_session.py with small deterministic external fixture executables.
+Consumes Tasks1/2 and prepared descriptor/model rail; produces inspection/executor Shared Interfaces.
+
+- [ ] RED tests: runtime inspection calls external --version/contract only, pins contract1 and minimum release2026.10.0, rejects older/unrecognized/bad-contract/no executable before model/session launch. Store actual version. All subprocess calls argv arrays, no shell, executable absolute before cwd changes. Operational timeout/maxturn positive limits are internal API only.
+- [ ] RED tests: argv consumes descriptor.nare_input_args() verbatim plus exact system, explicit provider/model, configured nonnull base-url, --jsonl --yes --contract1 --schema --budget-tokens lease.limit_tokens --session private path --max-turns runtime.max_turns. No passthrough tools/root flags. Scrub NARE_* behavioral controls including ambient base URL and USD/pricing; keep only runtime necessities and selected provider credentials for production without recording their values, exclude GitHub auth. Tests run credential-free. Private cwd/HOME/temp, stdin DEVNULL. Revalidate copied inputs before launch and after completion.
+- [ ] RED tests: independent stdout/stderr drainage avoids deadlock, raw capture retained even malformed/exit2/no session. Incremental per-turn usage advances ledger before terminal; final reconciliation never double-charges. Stable attempt/session IDs, owned files, safe engine result with thresholds/actual/overshoot/output confidence, no credential dump. Blocked unsupported outcome fails under no-ask policy. Done above grant partial despite exit0, exact complete, budget partial with nullable output. Provider/protocol failure keeps honest lower bound and closes future admission if missing/contradictory accounting.
+- [ ] RED tests: timeout and caller cancellation terminate process group, bounded grace then kill/reap, no orphan. These are liveness operations, never budget enforcement. Siblings not owned here. Late failure retains already captured artifacts and safe reason; no automatic retry. Inspection/executor failures safe field diagnostics without leaking stderr.
+- [ ] Implement lifecycle, ledger reconciliation and outcome persistence. Any helper extraction stays within owned module responsibility; ask coordinator if boundary must change. Focused RED/GREEN; six gates both versions; self-review; commit/report. Fake executable tests prove coordinator behavior, not delivered nare behavior.
+
+### Task 4: Concurrent wave, docs and actual installed CLI proof
+
+Files: create engine/fanout.py; tests/test_fanout.py and tests/test_nare_cli_integration.py plus tests/helpers/nare_offline_worker.py if needed; docs/session-fanout.md; update README.md and docs/SPEC.md sections5/8/11 only as needed for approved budget clarification.
+Consumes all Shared Interfaces, captured run producer and prepared inputs. No CLI/config/poster/verdict/replay source modifications.
+
+- [ ] RED tests: fan_out prepares coherent filtered inputs and ordered personas, validates runtime once, creates exclusive perpersona artifacts, reserves initial leases without awaits and launches admitted tasks concurrently with asyncio.create_task/gather (Python3.10). Results configured order despite completion order; independent failure preserves sibling outputs/artifacts. Zero quota gets explicit not_started, no process. Aggregate review budget/actual/cache/overshoot and confidence from ledger. Caller cancellation reaps all child processes; existing fanout/session directories fail without overwrite. Safe fanout.json binds captured head, Scrutare+nare version/contract, systems/rails or durable hashes, ordered outcomes and ledger snapshot.
+- [ ] RED tests exercise real prepared inputs and empty effective selection. Only filtered copies model-readable; session outputs outside review-inputs; copied byte snapshots unchanged. Downstream outputs remain candidate session records, not final findings/verdict artifacts.
+- [ ] Build offline integration using installed nare console path from an explicit test environment setting, separate Python interpreter. Replace only nare.cli.make_transport with deterministic fake transport; real parser, loop, schemas, tool policy/dispatch, accounting, JSONL and persistence. Strip credentials, guard network/DNS/secondary processes, restrict worker writes to its artifacts. Unit gates may explicitly skip unavailable optional installed runtime; coordinator must run this suite with verified runtime and report actual passes. Existing probe executable/interpreter root .agents/state/nare41-capability/checkout/.venv/bin/nare can be used for controller proof, never hardcode user path into shipped tests.
+- [ ] ActualCLI proof: at least two personas overlap at transport barrier, distinct PIDs/sessionIDs/paths and no context contamination. Builtin+inline exact systems; default/override provider/model/baseURL including ambientNARE_BASE_URL with configured null. Only read tool offered; fabricated write/edit/bash/ask denied, read traversal/outside absolute/symlink escapes denied, inputs unchanged. Filtered and empty input cases prove no raw artifact exposure.
+- [ ] ActualCLI proof: budget25/two15-token read turns returns30 partial/no third call, retained valid findings through later invalid text; nullable partial and explicit empty distinct. Done limit1/actual15 and limit31/actual45 partial exit0; exact limit done complete/admission closed; cache2+3+5+8=18 counted once. Concurrent grants sum within R and overshoot reported. Later lease denied after global exhaustion; ledger resume30->45 delta15 and fresh retry remaining bound demonstration without adding resume adapter. Provider failure/log retention and timeout cleanup tested offline with uncertainty, no fabricated success.
+- [ ] Update SPEC5 approved after-turn reported token semantics, disjoint counters, allocation admission and actual/overshoot persistence with explicit absence of hard ceiling. SPEC8 over-allocation partial even done; exact cap may complete but no further admission. SPEC11 --budget-tokens distinct from response --max-tokens and minimum nare2026.10.0. Document external CLI install/Python boundary, operational runtime API, artifacts, candidate/output confidence, explicit in-flight invocation limitation and read-only tools versus OS sandbox. Keep CLI currently-ingestion limitation truthful.
+- [ ] Focused RED/GREEN; actual integration passes with installed runtime, self-review; six gates both Python versions; commit/report. Controller will independently inspect artifacts, full-branch review, both preflights/current-head CI, update PR summary and squash merge before next issue.
