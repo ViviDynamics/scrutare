@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from scrutare import __version__
+from scrutare.config import ConfigError, parse_config
 from scrutare.engine.github import GitHubClient, GitHubError, resolve_pr
 from scrutare.engine.ingestion import ingest_pr
 
@@ -20,29 +21,43 @@ def main(argv: Sequence[str] | None = None) -> int:
     commands = parser.add_subparsers(dest="command", required=True)
     review = commands.add_parser("review", help="capture PR inputs only; no review or posting")
     review.add_argument("--pr", required=True, help="GitHub PR URL or number in the current repo")
-    review.add_argument("--config", type=Path, help="snapshot this file verbatim without parsing")
+    review.add_argument(
+        "--config",
+        type=Path,
+        default=Path("scrutare.yaml"),
+        help="validate YAML settings (default: scrutare.yaml); models.default.model is required",
+    )
     try:
         args = parser.parse_args(argv)
     except SystemExit as exc:
         return int(exc.code) if isinstance(exc.code, int) else 1
 
-    config: Path | None = args.config
-    if config is not None:
-        try:
-            if not config.is_file():
-                raise OSError("not a regular file")
-            with config.open("rb") as stream:
-                stream.read(1)
-        except OSError:
-            print(
-                "scrutare: cannot read config file; provide an accessible regular file.",
-                file=sys.stderr,
-            )
-            return 1
+    config: Path = args.config
+    try:
+        if not config.is_file():
+            raise OSError("not a regular file")
+        config_bytes = config.read_bytes()
+    except OSError:
+        print(
+            "scrutare: cannot read config file; provide an accessible regular file.",
+            file=sys.stderr,
+        )
+        return 1
+    try:
+        config_data = parse_config(config_bytes).to_dict()
+    except ConfigError as exc:
+        print(f"scrutare: {exc}", file=sys.stderr)
+        return 1
 
     try:
         ref = resolve_pr(args.pr)
-        run_dir = ingest_pr(GitHubClient(), ref, Path(".scrutare/runs"), config)
+        run_dir = ingest_pr(
+            GitHubClient(),
+            ref,
+            Path(".scrutare/runs"),
+            config_bytes=config_bytes,
+            config_data=config_data,
+        )
         metadata = json.loads((run_dir / "metadata.json").read_text(encoding="utf-8"))
     except GitHubError as exc:
         print(f"scrutare: {exc}", file=sys.stderr)

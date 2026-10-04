@@ -12,6 +12,11 @@ cd "$smoke_root"
 "$smoke_root/venv/bin/scrutare" --version
 "$smoke_root/venv/bin/python" -m scrutare --version
 "$smoke_root/venv/bin/scrutare" review --help
+cat > scrutare.yaml <<'YAML'
+models:
+  default:
+    model: smoke-test-model
+YAML
 if "$smoke_root/venv/bin/python" -m scrutare review --pr invalid; then
   echo "Expected invalid PR to fail" >&2
   exit 1

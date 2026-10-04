@@ -57,8 +57,9 @@ models:
 
 ## Status
 
-PR ingestion is implemented. The review panel, model sessions, findings,
-verdicts, posting, replay, and configuration semantics are planned. The design
+PR ingestion and YAML configuration validation are implemented. The review
+panel, model sessions, findings, verdicts, posting, replay, and execution of
+configured settings are planned. The design
 and milestone order are in [docs/SPEC.md](docs/SPEC.md).
 
 ## Capture a pull request
@@ -67,18 +68,30 @@ Install Python 3.10 or newer, [uv](https://docs.astral.sh/uv/), and the
 [GitHub CLI](https://cli.github.com/). `gh` must already be authenticated with
 read access to the repository. Scrutare uses that existing authentication.
 
+Create `scrutare.yaml` in the current repository with an explicit model:
+
+```yaml
+models:
+  default:
+    model: <model>
+```
+
 ```sh
 uv sync --locked --extra dev
 uv run --locked scrutare --version
 uv run --locked scrutare review --pr https://github.com/owner/repo/pull/12
-uv run --locked scrutare review --pr 12 --config scrutare.yaml
+uv run --locked scrutare review --pr 12 --config path/to/settings.yaml
 ```
 
 A numeric PR reference resolves the repository from the current checkout
 through `gh repo view`. `python -m scrutare` exposes the same interface.
-`--config` is optional and must name an accessible regular file. Its bytes are
-copied verbatim to `config.yaml`; YAML validation and settings arrive in issue
-#8. A config error fails before GitHub access.
+`--config` defaults to `scrutare.yaml` in the current directory and must name
+an accessible regular file. Scrutare reads and validates the YAML before any
+GitHub access. `models.default.model` is required; no model is selected
+automatically. Omitted settings use the documented defaults, including the
+panel strategy, four built-in personas, and anthropic provider. See the
+[configuration reference](docs/config.md) for every field, accepted values,
+defaults, and model overrides. Invalid settings report the affected field.
 
 The command captures inputs only and makes no model calls or GitHub writes.
 It returns a nonzero exit code with a concise error if capture fails, including
@@ -89,8 +102,11 @@ when the PR closes or merges. Success prints one JSON object:
 ```
 
 Each unique run directory contains `diff.patch`, `files.json`, `reviews.json`,
-`comments.json`, `review_comments.json`, and `metadata.json`, plus `config.yaml`
-when supplied. Metadata records the complete PR object under `pull_request`,
+`comments.json`, `review_comments.json`, `metadata.json`, `config.yaml`, and
+`config.json`. `config.yaml` preserves the exact bytes validated before
+GitHub access, including comments and line endings. `config.json` is the
+canonical configuration artifact with effective defaults and resolved model
+overrides. Metadata records the complete PR object under `pull_request`,
 the captured head, repository, PR number, schema version, and application
 version. Capture retries if the head changes while inputs are being fetched.
 `ingested` means the inputs were saved; a review verdict does not yet exist.

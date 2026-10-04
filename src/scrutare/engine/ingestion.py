@@ -22,8 +22,13 @@ def ingest_pr(
     ref: PullRequestRef,
     runs_root: Path,
     config_path: Path | None = None,
+    *,
+    config_bytes: bytes | None = None,
+    config_data: dict[str, Any] | None = None,
 ) -> Path:
     """Persist inputs only when surrounding metadata reads agree on head and base."""
+    if config_path is not None and config_bytes is not None:
+        raise ValueError("config_path and config_bytes cannot both be supplied")
     for _ in range(3):
         before = client.get_pr(ref)
         assert_pr_open(before)
@@ -71,6 +76,12 @@ def ingest_pr(
             (run_dir / filename).write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
         if config_path is not None:
             (run_dir / "config.yaml").write_bytes(config_path.read_bytes())
+        elif config_bytes is not None:
+            (run_dir / "config.yaml").write_bytes(config_bytes)
+        if config_data is not None:
+            (run_dir / "config.json").write_text(
+                json.dumps(config_data, indent=2) + "\n", encoding="utf-8"
+            )
         (run_dir / "metadata.json").write_text(
             json.dumps(metadata, indent=2) + "\n", encoding="utf-8"
         )
