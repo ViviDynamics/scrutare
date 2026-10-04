@@ -1,6 +1,8 @@
-"""Pure finding validation, side-aware verification, lossless dedupe, and verdicts."""
+"""Finding validation, side-aware verification, dedupe, verdicts, and persistence."""
 
 from scrutare.findings.anchors import parse_diff as parse_diff
+from scrutare.findings.artifacts import VerdictArtifactError as VerdictArtifactError
+from scrutare.findings.artifacts import write_verdict as write_verdict
 from scrutare.findings.dedupe import MergedFinding as MergedFinding
 from scrutare.findings.dedupe import dedupe_findings as dedupe_findings
 from scrutare.findings.models import Anchor as Anchor
