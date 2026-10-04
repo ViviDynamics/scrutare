@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install locked development environment
+        run: uv sync --locked --extra dev
+      - name: Tests
+        run: uv run --locked --extra dev pytest
+      - name: Lint
+        run: uv run --locked --extra dev ruff check .
+      - name: Strict typecheck
+        run: uv run --locked --extra dev mypy src
+      - name: Build wheel
+        run: uv build --wheel
+      - name: Installed CLI smoke check
+        shell: bash
+        run: scripts/smoke-cli.sh

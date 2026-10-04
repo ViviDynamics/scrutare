@@ -57,9 +57,62 @@ models:
 
 ## Status
 
-Design. The spec, including the engine flow, config reference, escalation and
-failure paths, and the milestone order, is in
-[docs/SPEC.md](docs/SPEC.md).
+PR ingestion is implemented. The review panel, model sessions, findings,
+verdicts, posting, replay, and configuration semantics are planned. The design
+and milestone order are in [docs/SPEC.md](docs/SPEC.md).
+
+## Capture a pull request
+
+Install Python 3.10 or newer, [uv](https://docs.astral.sh/uv/), and the
+[GitHub CLI](https://cli.github.com/). `gh` must already be authenticated with
+read access to the repository. Scrutare uses that existing authentication.
+
+```sh
+uv sync --locked --extra dev
+uv run --locked scrutare --version
+uv run --locked scrutare review --pr https://github.com/owner/repo/pull/12
+uv run --locked scrutare review --pr 12 --config scrutare.yaml
+```
+
+A numeric PR reference resolves the repository from the current checkout
+through `gh repo view`. `python -m scrutare` exposes the same interface.
+`--config` is optional and must name an accessible regular file. Its bytes are
+copied verbatim to `config.yaml`; YAML validation and settings arrive in issue
+#8. A config error fails before GitHub access.
+
+The command captures inputs only and makes no model calls or GitHub writes.
+It returns a nonzero exit code with a concise error if capture fails, including
+when the PR closes or merges. Success prints one JSON object:
+
+```json
+{"status":"ingested","run_dir":".scrutare/runs/run-example","head_sha":"captured-head-sha","scrutare_version":"0.1.0"}
+```
+
+Each unique run directory contains `diff.patch`, `files.json`, `reviews.json`,
+`comments.json`, `review_comments.json`, and `metadata.json`, plus `config.yaml`
+when supplied. Metadata records the complete PR object under `pull_request`,
+the captured head, repository, PR number, schema version, and application
+version. Capture retries if the head changes while inputs are being fetched.
+`ingested` means the inputs were saved; a review verdict does not yet exist.
+
+## Development checks
+
+CI checks Python 3.10 and 3.14. Use the same commands locally:
+
+```sh
+uv sync --locked --extra dev
+uv run --locked --extra dev pytest
+uv run --locked --extra dev ruff check .
+uv run --locked --extra dev mypy src
+uv build --wheel
+```
+
+The full preflight table, including a wheel installation check, is in
+[.agents/test-commands.md](.agents/test-commands.md). `repo.env.example`
+contains shared Vivi Dynamics workflow settings. Copy it to local `repo.env`
+for the workflow tools. Authentication uses already configured, authorized `gh`
+access; keep login commands and credentials outside the example. Scrutare
+ingestion itself requires no application environment variables.
 
 ## Licensing
 

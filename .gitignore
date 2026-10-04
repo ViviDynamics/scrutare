@@ -10,3 +10,11 @@ build/
 .coverage
 coverage.xml
 *.session.json
+
+.mypy_cache/
+.scrutare/
+.env
+.env.*
+repo.env
+
+.agents/state/
