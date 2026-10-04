@@ -152,8 +152,16 @@ Design choices:
 - Finding categories are a fixed set, with a code-enforced mapping to
   blocking and advisory, so the verdict rule stays auditable. Personas cannot
   invent a category that flips the verdict.
-- Budgets are config, not vibes: per-persona and whole-review caps, enforced
-  by the engine, and the run aborts (and says so) rather than overspending.
+- Budgets govern invocation admission and nare's reported after-turn token
+  thresholds. The engine allocates ordered persona quotas whose total stays
+  within the whole-review allowance and reserves grants before concurrency.
+  Reported usage is the sum of disjoint input, output, cache-read and cache-write
+  counters. Artifacts preserve allocations, actual usage, confidence and
+  overshoot without clipping. Exhausted or uncertain allowance closes admission
+  to later persona, retry, re-anchor or round invocations. Already admitted
+  invocations may finish internal turns and overshoot their allocations and the
+  review allowance. These limits provide no hard spending ceiling or complete
+  provider billing claim.
 - Path filters exclude files from review entirely.
 
 ## 6. Verdict, anchoring, and posting
@@ -184,8 +192,12 @@ When the strategy's rounds are exhausted without convergence:
   failed persona, and an Action run goes red.
 - Findings unanchorable after one re-anchor round: dropped, and the verdict is
   derived from the survivors only.
-- A budget cap hit mid-persona: the persona's result is marked partial, its
-  findings still count, and the artifacts record the cap.
+- A nare budget stop or reported usage strictly above the invocation allocation
+  marks the persona partial, even if nare reports `done` with exit 0. Valid
+  candidate findings remain available and artifacts record actual usage and
+  overshoot. A successful `done` exactly at its threshold may remain complete,
+  while admission to further invocations stays closed. Missing or corrupt
+  accounting fails safely and closes admission; it cannot imply an empty review.
 - The pull request closes or merges mid-run: abort, discard, post nothing.
 - A force-push during a run: the run reviewed the captured head SHA and says
   so. The iterative strategy owns re-review on new pushes.
@@ -231,9 +243,20 @@ rewrite. See the [replay guide](replay.md) for evidence requirements and exits.
 ## 11. Nare dependency policy
 
 Every capability scrutare needs from nare is tested against nare's actual CLI
-at design time. The M1 needs are met by existing flags: `--system`, `--tools`,
-`--provider`, `--base-url`, `--model`, `--max-tokens`, `--session`,
-`--resume`, and the JSONL result line that carries usage. A capability nare
+at design time. Initial persona sessions require the external nare executable
+at version 2026.10.0 or newer and contract 1. Scrutare stays compatible with
+Python 3.10; nare runs in its separately installed interpreter and environment.
+The M1 needs are met by flags including `--system`, `--tools`, `--root`,
+`--provider`, `--base-url`, `--model`, `--schema`, `--budget-tokens`,
+`--max-turns`, `--session`, `--resume`, and typed JSONL usage/results.
+`--budget-tokens` bounds cumulative reported tokens after turns;
+`--max-tokens` controls one response's output and cannot substitute for it.
+Initial fan-out has no resume adapter or retry loop. Actual installed CLI
+tests replace only the vendor factory with an offline transport, retaining
+the real parser, loop, tools, schema, accounting and persistence. Both CI Python
+lanes install a pinned external runtime and run this proof without credentials
+or live model calls. See [session-fanout.md](session-fanout.md).
+A capability nare
 lacks is filed as an issue on nare's repository, and the dependent scrutare
 feature is marked blocked by it, in the issue body and on the board. Scrutare
 does not work around nare gaps silently.
