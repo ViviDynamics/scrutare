@@ -15,6 +15,13 @@ strategy integration and full CLI review execution remain separate work. The
 `scrutare review` CLI still reports ingestion, and this component makes no model
 calls or changes to the nare dependency policy.
 
+[`scrutare replay`](replay.md) can audit the stored verdict and both delivery
+stages offline. Its escalated result is conditional on a validated recorded
+exhaustion assertion; neither saved nor locally recorded posted byte identity
+proves actual nonconvergence. Verdict identity and reviewer request delivery
+have separate result fields, so pending requests can coexist with matching
+confirmed posted verdict bytes.
+
 ## Calling the API
 
 `post_escalation(run_dir: Path, verdict: Verdict, *, client: ReviewClient | None =
