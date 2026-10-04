@@ -75,7 +75,7 @@ def installed():
         env={"PATH": "/usr/bin:/bin"},
         timeout=10,
     )
-    assert result.returncode == 0 and result.stdout.strip() == "2026.10.0", result.stderr
+    assert result.returncode == 0 and result.stdout.strip() == "2026.10.4", result.stderr
     return console, interpreter
 
 
@@ -103,7 +103,7 @@ def observations(outcome):
     assert result["guard_violations"] == []
     assert result["credential_names"] == []
     assert result["nare_controls"] == {}
-    assert result["version"] == "2026.10.0"
+    assert result["version"] == "2026.10.4"
     assert result["python"].startswith("3.14.")
     assert all(Path(path).is_relative_to(outcome.artifact_directory) for path in result["writes"])
     return result
