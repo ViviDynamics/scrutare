@@ -279,13 +279,14 @@ def direct_cli(
     resume=None,
     max_tokens=None,
     observation_name="offline-observations.json",
+    schema_document=None,
 ):
     from scrutare.engine.session_output import findings_schema
 
     artifact = tmp_path / "direct-artifacts" if resume is None else resume.parent
     artifact.mkdir(exist_ok=True)
     schema = artifact / "schema.json"
-    schema.write_text(json.dumps(findings_schema()))
+    schema.write_text(json.dumps(findings_schema() if schema_document is None else schema_document))
     runtime = offline_runtime(tmp_path, installed, default={"replies": replies})
     spec = tmp_path / "offline-spec.json"
     document = load(spec)
@@ -331,7 +332,7 @@ def direct_cli(
     assert observed["guard_violations"] == [] and observed["credential_names"] == []
     decoded = (
         None
-        if resume is not None
+        if resume is not None or schema_document is not None
         else decode_session(
             process.stdout,
             session.read_bytes(),
@@ -342,6 +343,78 @@ def direct_cli(
         )
     )
     return process, decoded, observed, session
+
+
+CORRECTION_SCHEMA = {
+    "type": "object",
+    "properties": {"corrections": {
+        "type": "array", "items": {
+            "type": "object", "properties": {
+                "request_id": {"type": "string"}, "file": {"type": "string"},
+                "line": {"type": "integer"},
+                "side": {"type": "string", "enum": ["LEFT", "RIGHT"]},
+            }, "required": ["request_id", "file", "line", "side"],
+            "additionalProperties": False,
+        },
+    }},
+    "required": ["corrections"],
+    "additionalProperties": False,
+}
+
+
+@pytest.mark.parametrize("document", [
+    {"corrections": []},
+    {"corrections": [{"request_id": "r0001", "file": "src/app.py", "line": 3,
+                       "side": "RIGHT"}]},
+])
+def test_actual_correction_schema_accepts_anchor_only_documents(tmp_path, installed, document):
+    root = tmp_path / "read-root"
+    root.mkdir()
+    process, _, observed, session = direct_cli(
+        tmp_path, installed, [text(document)], root=root, schema_document=CORRECTION_SCHEMA,
+    )
+    terminal = json.loads(process.stdout.splitlines()[-1])
+    assert process.returncode == 0 and terminal["status"] == "done"
+    assert terminal["output"] == load(session)["output"] == document
+    assert terminal["usage"] == load(session)["usage"]
+    assert len(observed["calls"]) == 1
+    assert load(session)["policy"] == {"tools": ["read"], "root": str(root)}
+
+
+@pytest.mark.parametrize("mutation", [
+    "boolean-line", "invalid-side", "missing-side", "extra-field", "extra-verdict",
+])
+def test_actual_correction_schema_rejects_invalid_model_output_then_accepts_empty(
+    tmp_path, installed, mutation,
+):
+    item = {"request_id": "r0001", "file": "src/app.py", "line": 3, "side": "LEFT"}
+    bad = {"corrections": [item]}
+    if mutation == "boolean-line":
+        item["line"] = True
+    elif mutation == "invalid-side":
+        item["side"] = "BOTH"
+    elif mutation == "missing-side":
+        del item["side"]
+    elif mutation == "extra-field":
+        item["problem"] = "Changed"
+    else:
+        bad["verdict"] = "approve"
+    root = tmp_path / "read-root"
+    root.mkdir()
+    process, _, observed, session = direct_cli(
+        tmp_path, installed, [text(bad), text({"corrections": []})], root=root,
+        schema_document=CORRECTION_SCHEMA,
+    )
+    records = [json.loads(line) for line in process.stdout.splitlines()]
+    assert process.returncode == 0 and records[-1]["status"] == "done"
+    assert records[-1]["output"] == load(session)["output"] == {"corrections": []}
+    assert len(observed["calls"]) == 2
+    assert [r["detail"]["output"] for r in records if r["type"] == "output"] == [
+        {"corrections": []},
+    ]
+    assert "did not satisfy the required JSON Schema" in json.dumps(
+        observed["calls"][1]["messages"]
+    )
 
 
 def test_actual_read_only_tool_dispatch_refuses_fabricated_tools_and_path_escapes(
