@@ -40,8 +40,10 @@ Errors identify a field path or YAML location without echoing field values.
 | `github.paths.exclude` | List of nonempty glob strings | `["docs/**", "*.md"]` |
 
 Validation only accepts settings here. It does not execute strategies, enforce
-budgets, filter paths, derive a verdict, or post reviews. Those consumers use
-the typed settings in their own stages. Configuration has no API-key,
+budgets, filter paths, derive a verdict, or post reviews. Configured capture uses
+the typed path settings to prepare a filtered reviewer view. See the
+[path filters guide](path-filters.md) for the glob dialect, rename exclusions,
+artifact format, and persona input API. Configuration has no API-key,
 credential, retry, or arbitrary extension fields.
 
 ## Personas

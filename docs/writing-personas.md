@@ -5,11 +5,13 @@ The registry loads the four packaged built-ins and resolves configured names
 and inline definitions into frozen `PersonaDefinition` objects. Adding a
 custom perspective requires only a configuration change.
 
-Persona resolution is implemented. Session orchestration, model calls,
-findings processing, and verdict execution remain future work. The prompts
-express the review contract for those stages; the registry does not execute
-or enforce it. See the [configuration reference](config.md) for all settings
-and [specification](SPEC.md) for the planned review pipeline.
+Persona resolution and [confined input descriptors](path-filters.md) are
+implemented, alongside the pure findings and verdict APIs. Session orchestration
+and live model calls remain future work. The prompts express the review
+contract; the registry does not execute sessions. Every configured persona
+receives the same filtered artifact root and read-only tools through the input
+descriptor. See the [configuration reference](config.md) for all settings and
+[specification](SPEC.md) for the planned review pipeline.
 
 ## Choose a perspective
 

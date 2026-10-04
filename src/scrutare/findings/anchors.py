@@ -1,8 +1,39 @@
 """Count unified patch payload without reading files or inferring unseen lines."""
 
 import re
+from dataclasses import dataclass
 
 from scrutare.findings.models import Anchor, FindingError, _path
+
+
+@dataclass(frozen=True)
+class DiffSection:
+    """One validated Git file change, retaining its exact source bytes."""
+
+    old_path: str | None
+    new_path: str | None
+    data: bytes
+    anchors: frozenset[Anchor]
+
+    def __post_init__(self) -> None:
+        if self.old_path is None and self.new_path is None:
+            raise _invalid("a section must have a file identity")
+        for name in (self.old_path, self.new_path):
+            if name is not None:
+                _path(name, "diff.file")
+        if not isinstance(self.data, bytes):
+            raise _invalid("section data must be bytes")
+        if not isinstance(self.anchors, frozenset) or any(
+            not isinstance(anchor, Anchor) or anchor.file != self.file for anchor in self.anchors
+        ):
+            raise _invalid("section anchors must be a frozenset for its file")
+
+    @property
+    def file(self) -> str:
+        """Use the current name, or the old name for a deletion."""
+        file = self.new_path if self.new_path is not None else self.old_path
+        assert file is not None
+        return file
 
 
 def _invalid(detail: str) -> FindingError:
@@ -144,10 +175,20 @@ def _hunk(
         index += 1
     return index, left_start, left_end, right_start, right_end, left_closed, right_closed
 
+def _matching_pairs(
+    pairs: tuple[tuple[str, str], ...], old: str | None, new: str | None,
+) -> tuple[tuple[str, str], ...]:
+    matches = tuple((a, b) for a, b in pairs
+                    if (old is None or old == a) and (new is None or new == b))
+    if not matches:
+        raise _invalid("file identities disagree with Git file header")
+    return matches
 
 
-
-def _binary_names(raw: str, pairs: tuple[tuple[str, str], ...]) -> None:
+def _binary_names(
+    raw: str, pairs: tuple[tuple[str, str], ...],
+) -> tuple[str | None, str | None]:
+    identities: set[tuple[str | None, str | None]] = set()
     for separator in re.finditer(" and ", raw):
         try:
             old = _header_path(raw[:separator.start()], "a")
@@ -157,8 +198,11 @@ def _binary_names(raw: str, pairs: tuple[tuple[str, str], ...]) -> None:
         if old is None and new is None:
             continue
         if any((old is None or old == a) and (new is None or new == b) for a, b in pairs):
-            return
-    raise _invalid("binary filenames disagree with Git file header")
+            identities.add((old, new))
+    if len(identities) != 1:
+        raise _invalid("binary filenames are ambiguous or disagree with Git file header")
+    return next(iter(identities))
+
 
 def _binary(lines: list[str], index: int) -> None:
     """Validate Git binary block framing without decoding its opaque content."""
@@ -185,13 +229,19 @@ def _binary(lines: list[str], index: int) -> None:
     if not blocks:
         raise _invalid("missing binary patch block")
 
-def _section(lines: list[str], result: set[Anchor]) -> None:
+
+def _section(lines: list[str], data: bytes) -> DiffSection:
     pairs = _git_pairs(lines[0][len("diff --git "):])
+    result: set[Anchor] = set()
     index = 1
     old: str | None = None
     new: str | None = None
     has_headers = False
     has_hunks = False
+    has_identity = False
+    new_file = deleted_file = False
+    movement: str | None = None
+    moved: dict[int, str] = {}
     left_end = right_end = -1
     left_closed = right_closed = False
     while index < len(lines):
@@ -203,9 +253,9 @@ def _section(lines: list[str], result: set[Anchor]) -> None:
             new = _header_path(lines[index + 1][4:], "b")
             if old is None and new is None:
                 raise _invalid("both file headers name /dev/null")
-            if not any((old is None or old == a) and (new is None or new == b) for a, b in pairs):
-                raise _invalid("file headers disagree with Git file header")
+            pairs = _matching_pairs(pairs, old, new)
             has_headers = True
+            has_identity = True
             index += 2
         elif line.startswith("@@"):
             if not has_headers:
@@ -224,57 +274,99 @@ def _section(lines: list[str], result: set[Anchor]) -> None:
             has_hunks = True
         elif not has_headers and line.startswith(("rename from ", "rename to ",
                                                    "copy from ", "copy to ")):
-            raw = line.split(" ", 2)[2]
+            kind, direction, raw = line.split(" ", 2)
             name = _path(_decode_name(raw), "diff.file")
-            side = 0 if " from " in line else 1
-            if not any(name == pair[side] for pair in pairs):
-                raise _invalid("rename or copy metadata disagrees with file header")
+            side = 0 if direction == "from" else 1
+            if (movement is not None and movement != kind) or side in moved:
+                raise _invalid("duplicate or inconsistent rename or copy metadata")
+            movement = kind
+            moved[side] = name
+            pairs = _matching_pairs(pairs, name if side == 0 else None,
+                                    name if side == 1 else None)
             index += 1
         elif not has_headers and re.fullmatch(
             r"(?:index [0-9a-f]+\.\.[0-9a-f]+(?: [0-7]{6})?|"
             r"(?:new file|deleted file|old|new) mode [0-7]{6}|"
             r"(?:dis)?similarity index (?:100|[0-9]{1,2})%)", line,
         ):
+            if line.startswith("new file mode "):
+                if new_file:
+                    raise _invalid("duplicate new file metadata")
+                new_file = True
+            elif line.startswith("deleted file mode "):
+                if deleted_file:
+                    raise _invalid("duplicate deleted file metadata")
+                deleted_file = True
             index += 1
         elif not has_headers and line.startswith("Binary files ") and line.endswith(" differ"):
             if index != len(lines) - 1:
                 raise _invalid("unexpected content after binary change")
-            _binary_names(line[len("Binary files "):-len(" differ")], pairs)
-            return
+            old, new = _binary_names(line[len("Binary files "):-len(" differ")], pairs)
+            pairs = _matching_pairs(pairs, old, new)
+            has_identity = True
+            break
         elif not has_headers and line == "GIT binary patch":
             _binary(lines, index + 1)
-            return
+            break
         else:
             raise _invalid("unexpected patch structure or excess hunk payload")
     if has_headers and not has_hunks:
         raise _invalid("textual file headers require a hunk")
+    if len(pairs) != 1:
+        raise _invalid("ambiguous Git file identity")
+    if movement is not None and (len(moved) != 2 or new_file or deleted_file):
+        raise _invalid("incomplete or inconsistent rename or copy metadata")
+    if new_file and deleted_file:
+        raise _invalid("a file cannot be both added and deleted")
+    if not has_identity:
+        old, new = pairs[0]
+        old = None if new_file else old
+        new = None if deleted_file else new
+    elif (new_file and old is not None) or (deleted_file and new is not None):
+        raise _invalid("file mode metadata disagrees with file identity")
+    if movement is not None and (old is None or new is None):
+        raise _invalid("rename or copy metadata requires both file identities")
+    return DiffSection(old, new, data, frozenset(result))
 
 
-def parse_diff(diff: bytes | str) -> frozenset[Anchor]:
-    """Index LEFT deletions/context and RIGHT additions/context from a Git patch."""
-    if isinstance(diff, bytes):
+def parse_diff_sections(diff: bytes | str) -> tuple[DiffSection, ...]:
+    """Parse ordered sections once, preserving bytes independently of line parsing."""
+    if isinstance(diff, str):
         try:
-            diff = diff.decode("utf-8")
+            diff = diff.encode("utf-8")
         except UnicodeError:
             raise _invalid("patch must be UTF-8") from None
-    if not isinstance(diff, str):
+    if not isinstance(diff, bytes):
         raise _invalid("expected bytes or text")
-    lines = [line.removesuffix("\r") for line in diff.split("\n")]
-    if lines[-1] == "":
+    try:
+        lines = [line.removesuffix("\r") for line in diff.decode("utf-8").split("\n")]
+    except UnicodeError:
+        raise _invalid("patch must be UTF-8") from None
+    if lines[-1] == "" and diff.endswith(b"\n"):
         lines.pop()
-    result: set[Anchor] = set()
+    if not diff:
+        return ()
+    result: list[DiffSection] = []
     section: list[str] = []
-    for line in lines:
+    start = offset = 0
+    for line, raw in zip(lines, diff.split(b"\n")):
         if line.startswith(("diff --cc ", "diff --combined ")):
             raise _invalid("combined diffs are unsupported")
         if line.startswith("diff --git "):
             if section:
-                _section(section, result)
+                result.append(_section(section, diff[start:offset]))
             section = [line]
+            start = offset
         elif section:
             section.append(line)
         else:
             raise _invalid("expected a Git file header")
+        offset += len(raw) + 1
     if section:
-        _section(section, result)
-    return frozenset(result)
+        result.append(_section(section, diff[start:]))
+    return tuple(result)
+
+
+def parse_diff(diff: bytes | str) -> frozenset[Anchor]:
+    """Index LEFT deletions/context and RIGHT additions/context from a Git patch."""
+    return frozenset(anchor for section in parse_diff_sections(diff) for anchor in section.anchors)

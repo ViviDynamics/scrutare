@@ -1,4 +1,4 @@
-"""Ingest pull request inputs; review and posting stages are not implemented yet."""
+"""Capture PR inputs and prepare a filtered view; live review and posting are unfinished."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from scrutare import __version__
 from scrutare.config import ConfigError, parse_config
 from scrutare.engine.github import GitHubClient, GitHubError, resolve_pr
 from scrutare.engine.ingestion import ingest_pr
+from scrutare.engine.review_inputs import ReviewInputError
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -19,7 +20,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="scrutare", description=__doc__)
     parser.add_argument("--version", action="version", version=f"scrutare {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
-    review = commands.add_parser("review", help="capture PR inputs only; no review or posting")
+    review = commands.add_parser(
+        "review", help="capture PR inputs and prepare a filtered view; no live review or posting",
+        description=__doc__,
+    )
     review.add_argument("--pr", required=True, help="GitHub PR URL or number in the current repo")
     review.add_argument(
         "--config",
@@ -44,7 +48,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 1
     try:
-        config_data = parse_config(config_bytes).to_dict()
+        review_config = parse_config(config_bytes)
+        config_data = review_config.to_dict()
     except ConfigError as exc:
         print(f"scrutare: {exc}", file=sys.stderr)
         return 1
@@ -57,9 +62,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             Path(".scrutare/runs"),
             config_bytes=config_bytes,
             config_data=config_data,
+            review_config=review_config,
         )
         metadata = json.loads((run_dir / "metadata.json").read_text(encoding="utf-8"))
-    except GitHubError as exc:
+    except (GitHubError, ReviewInputError) as exc:
         print(f"scrutare: {exc}", file=sys.stderr)
         return 1
     except OSError:

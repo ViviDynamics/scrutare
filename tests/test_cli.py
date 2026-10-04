@@ -49,9 +49,15 @@ def gh(monkeypatch: pytest.MonkeyPatch) -> list[list[str]]:
         if args[1] == "repo":
             output = '{"nameWithOwner":"owner/repo"}'
         elif "--header" in args:
-            output = "diff --git a/a.py b/a.py\n"
+            output = (
+                "diff --git a/a.py b/a.py\n"
+                "--- a/a.py\n+++ b/a.py\n@@ -1 +1 @@\n-old\n+new\n"
+            )
         elif "--paginate" in args:
-            output = '[[{"id":1}]]'
+            output = (
+                '[[{"filename":"a.py","status":"modified"}]]'
+                if args[2].endswith('/files') else '[[{"id":1}]]'
+            )
         else:
             output = json.dumps(
                 {
@@ -108,7 +114,17 @@ def test_review_snapshots_config_and_reports_ingestion(
         "reviews.json",
         "comments.json",
         "review_comments.json",
+        "effective-files.json",
+        "review-inputs",
     }
+
+    assert json.loads((run / "effective-files.json").read_text())["files"] == ["a.py"]
+    root = run / "review-inputs"
+    assert {p.name for p in root.iterdir()} == {"diff.patch", "files.json", "context.json"}
+    assert (root / "diff.patch").read_bytes() == (
+        b"diff --git a/a.py b/a.py\n"
+        b"--- a/a.py\n+++ b/a.py\n@@ -1 +1 @@\n-old\n+new\n"
+    )
 
 
 def test_number_uses_repository_context(
@@ -301,3 +317,25 @@ def test_config_artifacts_use_bytes_validated_before_github(
     run = Path(json.loads(output.out)["run_dir"])
     assert (run / "config.yaml").read_bytes() == VALID_CONFIG
     assert json.loads((run / "config.json").read_text()) == NORMALIZED_CONFIG
+
+
+def test_cli_preparation_failure_has_a_safe_error_and_removes_fresh_run(
+    tmp_path, monkeypatch, capsys, gh,
+):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "scrutare.yaml").write_bytes(VALID_CONFIG)
+    original = github.subprocess.run
+
+    def invalid_diff(args, **kwargs):
+        result = original(args, **kwargs)
+        if "--header" in args:
+            return subprocess.CompletedProcess(args, 0, b"HOSTILE_DIFF_DIAGNOSTIC", b"")
+        return result
+
+    monkeypatch.setattr(github.subprocess, "run", invalid_diff)
+    assert cli_main(["review", "--pr", "https://github.com/owner/repo/pull/12"]) == 1
+    output = capsys.readouterr()
+    assert output.out == ""
+    assert "review inputs" in output.err.lower() or "prepar" in output.err.lower()
+    assert "HOSTILE" not in output.err and "Traceback" not in output.err
+    assert list((tmp_path / ".scrutare/runs").iterdir()) == []
