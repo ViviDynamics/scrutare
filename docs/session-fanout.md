@@ -2,9 +2,11 @@
 
 The Python API runs one initial concurrent wave against a captured run. The
 review CLI currently performs ingestion only. Fan-out returns candidate session
-records; callers still need anchor verification, deduplication, convergence,
-verdict derivation and posting. It creates neither `findings.json` nor
-`verdict.json`, and a complete empty candidate output is not an approval.
+records. Use the [panel API](panel.md), `scrutare.engine.strategy.run_review`,
+for anchor verification, bounded corrections, deduplication, convergence and
+verdict derivation; posting remains caller-owned. Fan-out creates neither
+`findings.json` nor `verdict.json`, and a complete empty candidate output is not
+an approval.
 
 ```python
 import asyncio
@@ -89,10 +91,20 @@ prevents future persona, retry, re-anchor or round admissions. Accounting
 uncertainty remains distinct from known zero use and from validated empty
 findings.
 
+The panel retains the same live ledger after the initial wave. A fresh anchor
+correction receives only the persona's remaining quota and available review
+allowance, with zero baseline and a distinct `persona/attempt-0002` session key.
+For example, initial usage of 60 against 100 leaves a correction grant of at most
+40. Initial `fanout.json` remains an immutable snapshot; `panel.json` records
+the final total. Exact threshold use can deny correction without making the
+initial session partial. Denial drops unresolved anchors after their one
+opportunity, without resetting the allowance or creating escalation.
+
 `ReviewBudgetLedger` supports cumulative high-water observations for future
 strategies. Observing 30 and then 45 tokens on the same session charges only
 15 more; repeated settlement does not double-charge. Fresh retries start from
-zero and receive only remaining allowance. This release ships no resume
+zero and receive only remaining allowance. Panel corrections are fresh typed
+anchor-only sessions, not initial retries. This release ships no resume
 invocation adapter, retry loop or later rounds. The session decoder validates
 fresh invocations; the supplemental real CLI resume test checks persisted
 cumulative evidence directly against ledger baselines.
@@ -129,6 +141,16 @@ Provider failures retain logs and session evidence with uncertain accounting.
 Nare 2026.10.0 records a denied fabricated ask call as a blocked terminal
 session; the engine treats blocked sessions as failed without deriving a verdict.
 
+For panel execution, each admitted correction's `attempt-0002/` retains an
+anchor-only schema, original request IDs, exact unchanged system and model rail,
+filtered root, invocation, streamed output, saved session and typed result.
+Only file/line/side anchors can change. Omitted or still invalid corrections drop
+their original findings. Valid partial correction documents count, including
+empty corrections. A known budget-stopped correction with no document also
+drops unresolved originals; failed, protocol-invalid or uncertain corrections
+fail the panel without a verdict. See [panel.md](panel.md) for final publication
+and replay contracts.
+
 ## Offline installed CLI proof
 
 Set `SCRUTARE_TEST_NARE_EXECUTABLE` to the absolute installed console path for
@@ -146,6 +168,12 @@ persistence remain real. The proof verifies overlapping processes, isolated
 contexts, exact systems/rails, filtered and empty input boundaries, tool denials,
 after-turn budget stops, terminal overshoot, disjoint cache counts, cumulative
 resume evidence, remaining retry grants, provider failure and process cleanup.
+It also runs the complete panel producer, including successful and denied
+corrections, shared remaining grants, partial and missing initial documents,
+fatal correction results, filtered correction tools, duplicate/conflicting
+source preservation, exact correction rails and replay of producer artifacts.
+Scenario selection reads existing purpose, positional prompt and attempt data;
+it never rewrites the persona system or changes the runner's invocation.
 No network, credential or model access is needed.
 
 Absent runtime configuration permits an explicit local skip. A configured

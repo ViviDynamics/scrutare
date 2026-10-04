@@ -49,7 +49,7 @@ Out: full review CLI and releases (#7), configurable retries (#12), iterative (#
 - [x] 1. Typed correction inputs and protocol.
 - [x] 2. Shared execution context and correction adapter.
 - [x] 3. Panel strategy and exclusive final evidence.
-- [ ] 4. Actual nare panel proof and user documentation.
+- [x] 4. Actual nare panel proof and user documentation.
 
 ### Task 1: Typed correction inputs and protocol
 
@@ -96,10 +96,10 @@ Out: full review CLI and releases (#7), configurable retries (#12), iterative (#
 
 **Interfaces:** Consume run_review and the typed execution contracts from tasks 1-3. Use actual nare console/parser/loop/schema/tools/counters/session persistence with only the vendor transport factory substituted. Correction scenario selection may inspect purpose/prompt/attempt, never mutate persona system or bypass runner.
 
-- [ ] Write RED actual integration scenarios for complete panel plus successful correction, remaining allowance, threshold-denied correction, partial initial output, missing output failure, provider failure and filtered correction tools. Exercise pipeline, not just direct fake adapter calls. Preserve network/credential/write guards.
-- [ ] Implement only test-fixture capability needed for those scenarios; fix production defects through coordinator-reviewed scope, not ad hoc fixture weakening. Actual proof must validate session/artifact reconciliation, exact systems/rails/read root, no raw/excluded read, single correction opportunity and no budget reset.
-- [ ] README identifies panel as default and the current programmatic engine surface truthfully, with explicit iterative/debate not yet implemented. Document partial versus missing output, one independent wave plus bounded corrections, actual after-turn limits and artifacts/replay. Keep ingestion-only CLI promise truthful; full CLI/release remains #7.
-- [ ] Run all six gates in .agents/test-commands.md on both Python 3.10 and 3.14 with explicit SCRUTARE_TEST_NARE_EXECUTABLE pointing to the verified actual runtime. Actual integration proof must run without skips. No overlapping shared-venv runs. Record every command/exit/count and tested source hashes; commit then coordinator confirms committed blobs match evidence.
+- [x] Write RED actual integration scenarios for complete panel plus successful correction, remaining allowance, threshold-denied correction, partial initial output, missing output failure, provider failure and filtered correction tools. Exercise pipeline, not just direct fake adapter calls. Preserve network/credential/write guards.
+- [x] Implement only test-fixture capability needed for those scenarios; fix production defects through coordinator-reviewed scope, not ad hoc fixture weakening. Actual proof must validate session/artifact reconciliation, exact systems/rails/read root, no raw/excluded read, single correction opportunity and no budget reset.
+- [x] README identifies panel as default and the current programmatic engine surface truthfully, with explicit iterative/debate not yet implemented. Document partial versus missing output, one independent wave plus bounded corrections, actual after-turn limits and artifacts/replay. Keep ingestion-only CLI promise truthful; full CLI/release remains #7.
+- [x] Run all six gates in .agents/test-commands.md on both Python 3.10 and 3.14 with explicit SCRUTARE_TEST_NARE_EXECUTABLE pointing to the verified actual runtime. Actual integration proof must run without skips. No overlapping shared-venv runs. Record every command/exit/count and tested source hashes; commit then coordinator confirms committed blobs match evidence.
 
 ## Completion and review
 

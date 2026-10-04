@@ -7,33 +7,34 @@ reviewer agents, each a [nare](https://github.com/ViviDynamics/nare) session
 with its own perspective (senior developer, junior developer, security,
 devops), surveys the diff and the surrounding code read-only, and reports
 structured findings. Code verifies that every finding is anchored to the diff,
-derives the verdict by rule, and posts one review with inline comments. When
-the panel cannot converge within its bound, scrutare escalates to human
-reviewers instead of pretending to agree with itself.
+derives the verdict by rule, and produces replayable review artifacts. The
+Python posting API can then post one review with inline comments. The default
+panel performs one convergence pass; failed coverage withholds a verdict.
 
 scrutare sits beside [nare](https://github.com/ViviDynamics/nare),
 [qare](https://github.com/ViviDynamics/qare), and
 [coordinare](https://github.com/ViviDynamics/coordinare) in the Coordinare
 project family: an orchestrator calls nare to develop, scrutare to review, and
-qare to QA. The engine is standalone, so it reviews any repository through its
-CLI, GitHub Action, or MCP server, and the conductor/coordinare reviewer
-performer is a caller like any other.
+qare to QA. The engine is standalone, with a Python review API. A complete
+review CLI, GitHub Action, MCP server, and conductor/coordinare reviewer
+integration are planned interfaces.
 
 ## Three ways to converge
 
-`strategy` is a top-level config setting. All three behaviors are first-class,
-and the implementer of a repository chooses:
+`strategy` is a top-level config setting. Panel is the implemented default;
+iterative and debate are planned and the engine rejects them before execution:
 
 - **panel** (milestone 1): the perspectives review independently, in one
-  round. Code dedupes their findings, derives the verdict by rule, and posts
-  it. The cheap default.
-- **iterative** (milestone 2): the findings pool persists, and each new push
-  is reviewed for what is new or contested, until the bound is reached.
-- **debate** (milestone 3): the perspectives see each other's findings and a
-  chair session arbitrates disputes, downgrades nitpicks, and accepts the
-  final finding set.
+  wave. Code verifies anchors, offers one bounded correction opportunity per
+  persona, dedupes findings, and derives the verdict by rule.
+- **iterative** (milestone 2, not yet implemented): the findings pool persists,
+  and each new push is reviewed for what is new or contested, until the bound
+  is reached.
+- **debate** (milestone 3, not yet implemented): the perspectives see each
+  other's findings and a chair session arbitrates disputes, downgrades nitpicks,
+  and accepts the final finding set.
 
-In all three, the verdict is derived by code, never declared by a model: any
+The verdict is derived by code, never declared by a model: any
 blocking finding requests changes, none approves, and the run's artifacts
 record both the finding that decided it and the rule that fired.
 
@@ -70,11 +71,17 @@ durable receipts, bounded retries and uncertain-delivery recovery. The
 summaries and durable human review requests through the Python API. The
 [replay guide](docs/replay.md) covers offline verdict recomputation and separate
 saved and locally recorded posted comparisons. The Python
-[session fan-out API](docs/session-fanout.md) runs an initial concurrent wave
-through an external nare executable, with isolated artifacts, reported token
-accounting and candidate findings. Anchor verification, convergence and posting
-remain caller-owned stages. The review CLI still captures inputs only;
-execution of the panel and remaining settings through the CLI is planned.
+[panel API](docs/panel.md), `scrutare.engine.strategy.run_review`, runs the
+complete panel pipeline through an external nare executable, verifies and
+corrects anchors against filtered inputs, dedupes, and writes findings, panel
+evidence and a code-derived verdict. A valid partial findings document counts,
+including an explicitly empty array; missing or failed initial output withholds
+the verdict. Corrections share the initial wave's remaining reported token
+allowance. Limits apply after turns and can overshoot. Posting remains a
+separate caller action. The lower-level
+[session fan-out API](docs/session-fanout.md) remains available for candidate
+findings. The review CLI still captures inputs only; full review CLI and release
+work remain planned under #7.
 The design and milestone order are in
 [docs/SPEC.md](docs/SPEC.md).
 
