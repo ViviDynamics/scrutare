@@ -6,6 +6,8 @@ from scrutare.poster.errors import PostingError as PostingError
 from scrutare.poster.errors import PostingRateLimited as PostingRateLimited
 from scrutare.poster.errors import PostingRejected as PostingRejected
 from scrutare.poster.errors import PostingUncertain as PostingUncertain
+from scrutare.poster.escalation import PostedEscalation as PostedEscalation
+from scrutare.poster.escalation import post_escalation as post_escalation
 from scrutare.poster.payload import ReviewComment as ReviewComment
 from scrutare.poster.payload import ReviewPayload as ReviewPayload
 from scrutare.poster.payload import build_review_payload as build_review_payload
