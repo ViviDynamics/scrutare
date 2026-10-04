@@ -1,6 +1,8 @@
-"""Pure finding validation and side-aware patch anchors."""
+"""Pure finding validation, side-aware anchor verification, and lossless dedupe."""
 
 from scrutare.findings.anchors import parse_diff as parse_diff
+from scrutare.findings.dedupe import MergedFinding as MergedFinding
+from scrutare.findings.dedupe import dedupe_findings as dedupe_findings
 from scrutare.findings.models import Anchor as Anchor
 from scrutare.findings.models import Finding as Finding
 from scrutare.findings.models import FindingError as FindingError

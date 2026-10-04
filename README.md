@@ -57,10 +57,12 @@ models:
 
 ## Status
 
-PR ingestion, YAML configuration validation, and the persona registry are
-implemented. The review panel, model sessions, findings, verdicts, posting,
-replay, and execution of configured settings are planned. The design and
-milestone order are in [docs/SPEC.md](docs/SPEC.md).
+PR ingestion, YAML configuration validation, the persona registry, and the pure
+findings pipeline are implemented. The [findings guide](docs/findings.md) covers
+validated input, diff anchors, one supplied correction round, and lossless
+dedupe. The review panel, model sessions, verdicts, posting, replay, and execution
+of configured settings are planned. The design and milestone order are in
+[docs/SPEC.md](docs/SPEC.md).
 
 ## Capture a pull request
 
