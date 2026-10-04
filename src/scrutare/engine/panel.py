@@ -10,7 +10,12 @@ from typing import Literal
 
 from scrutare import __version__
 from scrutare.config import ReviewConfig
-from scrutare.engine.fanout import _ExecutionContext, _prepare_execution, _run_initial_wave
+from scrutare.engine.fanout import (
+    _await_wave,
+    _ExecutionContext,
+    _prepare_execution,
+    _run_initial_wave,
+)
 from scrutare.engine.nare_session import run_reanchor_session
 from scrutare.engine.panel_artifacts import encode_panel, preflight_panel, publish_panel
 from scrutare.engine.persona_inputs import PersonaReanchorInput
@@ -106,19 +111,7 @@ async def _correct(context: _ExecutionContext, descriptors: tuple[PersonaReancho
                 ledger=context.ledger, artifact_directory=attempt, runtime=context.runtime,
                 capability=context.capability,
             )))
-    try:
-        completed = await asyncio.gather(*tasks)
-    except BaseException:
-        for task in tasks:
-            task.cancel()
-        cleanup = asyncio.gather(*tasks, return_exceptions=True)
-        while not cleanup.done():
-            try:
-                await asyncio.shield(cleanup)
-            except asyncio.CancelledError:
-                continue
-        cleanup.result()
-        raise
+    completed = await _await_wave(tasks)
     for index, outcome in zip(admitted, completed):
         outcomes[index] = outcome
     return tuple(outcome for outcome in outcomes if outcome is not None)

@@ -4,6 +4,7 @@ import asyncio
 import importlib
 import json
 from dataclasses import FrozenInstanceError, replace
+from pathlib import Path
 
 import pytest
 from test_fanout import configure
@@ -407,3 +408,61 @@ def test_correction_evidence_failure_records_failure_and_releases_unlaunched_lea
     assert ledgers[0].snapshot()["active_reservations"] == []
     assert not any(call[0] == "reanchor" for call in calls if isinstance(call, tuple))
     assert json.loads((capture / "panel.json").read_bytes())["reason"] == "artifacts"
+
+
+def test_panel_repeated_cancellation_reaps_real_correction_groups_and_settles(
+        capture, tmp_path, monkeypatch):
+    from test_nare_session import HANG_BODY, alive, fixture_pids, running_executable
+
+    config = configure(capture, personas=["security", "devops"], per=100, review=200)
+    hang_correction = ('if a.prompt.startswith("Correct"):\n'
+                       + "\n".join("    " + line for line in HANG_BODY.splitlines()))
+    path = running_executable(tmp_path, extra=hang_correction, output={"findings": [{
+        "file": "src/app.py", "line": 999, "side": "RIGHT", "category": "security",
+        "problem": "Problem", "reason": "Risk",
+    }]})
+    strategy, panel, _ = modules()
+    prepare = panel._prepare_execution
+    contexts = []
+    async def observe_context(*args, **kwargs):
+        context = await prepare(*args, **kwargs)
+        contexts.append(context)
+        return context
+    monkeypatch.setattr(panel, "_prepare_execution", observe_context)
+    attempts = [capture / "sessions" / persona / "attempt-0002"
+                for persona in ("security", "devops")]
+
+    async def scenario():
+        task = asyncio.create_task(strategy.run_review(
+            capture, config, runtime=NareRuntime(path, timeout_seconds=5)))
+        try:
+            groups = [await fixture_pids(attempt / "cwd" / "pids.json", task)
+                      for attempt in attempts]
+            assert all(alive(pid) for group in groups for pid in group)
+            task.cancel()
+            await asyncio.sleep(0.05)
+            assert not task.done()
+            task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await task
+            assert all(not alive(pid) for group in groups for pid in group)
+            assert all(not Path(f"/proc/{group[0]}").exists() for group in groups)
+            ledger = contexts[0].ledger
+            assert ledger.usage.total == 40
+            assert not ledger.accounting_complete
+            assert ledger.snapshot()["active_reservations"] == []
+            for attempt in attempts:
+                result = json.loads((attempt / "result.json").read_bytes())
+                assert result["reason"] == "cancelled"
+                assert result["purpose"] == "reanchor"
+                assert result["usage"]["total"] == 10
+                assert result["accounting_complete"] is False
+            initial = json.loads((capture / "fanout.json").read_bytes())
+            assert initial["result"]["usage"]["total"] == 20
+            assert not (capture / "verdict.json").exists()
+        finally:
+            if not task.done():
+                task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+
+    asyncio.run(scenario())

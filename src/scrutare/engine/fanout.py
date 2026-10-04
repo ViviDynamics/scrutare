@@ -7,6 +7,7 @@ import os
 from dataclasses import asdict, dataclass
 from hashlib import sha256
 from pathlib import Path
+from typing import TypeVar
 
 from scrutare import __version__
 from scrutare.config import ReviewConfig
@@ -87,6 +88,27 @@ async def _prepare_execution(
                              attempts, leases)
 
 
+_Outcome = TypeVar("_Outcome")
+
+
+async def _await_wave(tasks: list[asyncio.Task[_Outcome]]) -> list[_Outcome]:
+    """Await admitted work in order and finish cleanup before propagating any failure."""
+    try:
+        return await asyncio.gather(*tasks)
+    except BaseException:
+        for task in tasks:
+            task.cancel()
+        # Repeated cancellation cannot cut short process-group cleanup in the executor.
+        cleanup = asyncio.gather(*tasks, return_exceptions=True)
+        while not cleanup.done():
+            try:
+                await asyncio.shield(cleanup)
+            except asyncio.CancelledError:
+                continue
+        cleanup.result()
+        raise
+
+
 async def _run_initial_wave(context: _ExecutionContext) -> FanOutResult:
     """Settle initial sessions and preserve their immutable manifest beside the live ledger."""
     inputs, descriptors, ledger = context.inputs, context.descriptors, context.ledger
@@ -139,20 +161,7 @@ async def _run_initial_wave(context: _ExecutionContext) -> FanOutResult:
                     )
                 )
             )
-    try:
-        completed = await asyncio.gather(*tasks)
-    except BaseException:
-        for task in tasks:
-            task.cancel()
-        # Repeated cancellation cannot cut short process-group cleanup in the executor.
-        cleanup = asyncio.gather(*tasks, return_exceptions=True)
-        while not cleanup.done():
-            try:
-                await asyncio.shield(cleanup)
-            except asyncio.CancelledError:
-                continue
-        cleanup.result()
-        raise
+    completed = await _await_wave(tasks)
     for index, outcome in zip(admitted, completed):
         outcomes[index] = outcome
     ordered = tuple(outcome for outcome in outcomes if outcome is not None)
