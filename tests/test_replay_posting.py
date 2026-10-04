@@ -584,3 +584,22 @@ def test_original_escalation_target_header_must_match_request_without_current_co
     assert result.posting.reviewer_request_status == "invalid"
     assert result.exit_code == 2
     assert "secret" not in json.dumps(result.to_dict())
+
+
+@pytest.mark.parametrize("artifact", ["metadata.json", "diff.patch"])
+def test_unreadable_optional_capture_preserves_recorded_exhaustion_basis(tmp_path, artifact):
+    run, original = produced(tmp_path, exhausted=True)
+    (run / artifact).unlink()
+    (run / artifact).symlink_to(run / "missing")
+    result = replay_run(run)
+    digest = hashlib.sha256(original.to_bytes()).hexdigest()
+    assert result.saved_identical is True
+    assert result.posted_identical is True
+    assert result.saved_sha256 == result.posted_sha256 == digest
+    assert result.posting.status == "posted"
+    assert result.posting.verdict_sha256 == digest
+    assert any(i.code == "capture_unreadable" and i.path == artifact
+               and i.severity == "incomplete" for i in result.posting.issues)
+    assert result.to_dict()["exhaustion_basis"] == "recorded_assertion"
+    assert result.to_dict()["status"] == "incomplete"
+    assert result.exit_code == 2

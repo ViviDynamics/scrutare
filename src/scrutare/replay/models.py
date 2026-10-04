@@ -98,8 +98,12 @@ class ReplayResult:
             if (self.posting.status == "posted" and self.saved_sha256 is not None
                     and self.posted_sha256 == self.saved_sha256
                     and self.posting.verdict_sha256 == self.saved_sha256
-                    and not any(issue.severity in ("invalid", "incomplete")
-                                for issue in self.posting.issues)):
+                    and not any(
+                        issue.severity in ("invalid", "incomplete")
+                        and not (issue.code == "capture_unreadable"
+                                 and issue.severity == "incomplete"
+                                 and issue.path in ("metadata.json", "diff.patch"))
+                        for issue in self.posting.issues)):
                 basis = "recorded_assertion"
         return {
             "schema_version": 1,

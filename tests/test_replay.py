@@ -285,3 +285,23 @@ def test_exhaustion_basis_requires_original_posted_digest_to_match_saved_bytes(t
     assert result.exit_code == 0
     result = replace(result, saved_sha256="0" * 64)
     assert result.to_dict()["exhaustion_basis"] == "unverified_recorded_assertion"
+
+
+@pytest.mark.parametrize("issue", [
+    AuditIssue("posting_provenance_invalid", "posting.json", "invalid"),
+    AuditIssue("request_provenance_invalid", "escalation.json", "invalid"),
+    AuditIssue("review_not_posted", "posting.status", "incomplete"),
+    AuditIssue("unrecognized_issue", "metadata.json", "incomplete"),
+    AuditIssue("capture_unreadable", "metadata.json", "invalid"),
+    AuditIssue("capture_unreadable", "posting.json", "incomplete"),
+])
+def test_exhaustion_basis_does_not_ignore_original_provenance_issues(tmp_path, issue):
+    from scrutare.replay import replay_run
+
+    bundle(tmp_path, exhausted=True)
+    result = replay_run(tmp_path)
+    result = replace(result,
+                     posting=PostingAudit("posted", result.saved_sha256, "pending", (issue,)),
+                     posted_sha256=result.saved_sha256, posted_identical=True)
+    assert result.to_dict()["exhaustion_basis"] == "unverified_recorded_assertion"
+    assert result.exit_code == 2
