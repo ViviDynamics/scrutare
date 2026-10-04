@@ -5,9 +5,31 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from scrutare.config import Category, VerdictSettings
+from scrutare.config import Category, Strategy, VerdictSettings
 from scrutare.findings.dedupe import MergedFinding
 from scrutare.findings.models import FindingError
+
+
+@dataclass(frozen=True)
+class Exhaustion:
+    """Captured strategy evidence of reaching the bound without convergence."""
+
+    strategy: Strategy
+    rounds_completed: int
+    round_limit: int
+    converged: bool = False
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.strategy, str) or self.strategy not in (
+            "panel", "iterative", "debate"
+        ):
+            raise FindingError("exhaustion.strategy: expected panel, iterative or debate")
+        if type(self.round_limit) is not int or self.round_limit <= 0:
+            raise FindingError("exhaustion.round_limit: expected a positive integer")
+        if type(self.rounds_completed) is not int or self.rounds_completed != self.round_limit:
+            raise FindingError("exhaustion.rounds_completed: expected the exact round limit")
+        if self.converged is not False:
+            raise FindingError("exhaustion.converged: expected False")
 
 
 @dataclass(frozen=True)
@@ -16,6 +38,7 @@ class Verdict:
 
     findings: tuple[MergedFinding, ...]
     config: VerdictSettings
+    exhaustion: Exhaustion | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.findings, tuple) or any(
@@ -24,6 +47,8 @@ class Verdict:
             raise FindingError("findings: expected a tuple of MergedFinding values")
         if not isinstance(self.config, VerdictSettings):
             raise FindingError("config: expected VerdictSettings")
+        if self.exhaustion is not None and not isinstance(self.exhaustion, Exhaustion):
+            raise FindingError("exhaustion: expected Exhaustion or None")
 
     def _blocking_categories(self, finding: MergedFinding) -> tuple[Category, ...]:
         return tuple(
@@ -33,15 +58,21 @@ class Verdict:
         )
 
     @property
-    def verdict(self) -> Literal["approve", "changes_requested"]:
-        """Request changes if any source category is configured as blocking."""
+    def verdict(self) -> Literal["approve", "changes_requested", "escalated"]:
+        """Escalate exhaustion, otherwise apply the configured blocking categories."""
+        if self.exhaustion is not None:
+            return "escalated"
         if any(self._blocking_categories(finding) for finding in self.findings):
             return "changes_requested"
         return "approve"
 
     @property
-    def rule(self) -> Literal["any_blocking_finding", "no_blocking_findings"]:
+    def rule(self) -> Literal[
+        "any_blocking_finding", "no_blocking_findings", "rounds_exhausted_without_convergence"
+    ]:
         """Name the evidence rule that produced this verdict."""
+        if self.exhaustion is not None:
+            return "rounds_exhausted_without_convergence"
         if self.verdict == "changes_requested":
             return "any_blocking_finding"
         return "no_blocking_findings"
@@ -57,7 +88,7 @@ class Verdict:
                     "blocking_categories": list(blocking),
                 }
             )
-        return {
+        data: dict[str, Any] = {
             "schema_version": 1,
             "verdict": self.verdict,
             "rule": self.rule,
@@ -67,6 +98,14 @@ class Verdict:
             },
             "findings": findings,
         }
+        if self.exhaustion is not None:
+            data["exhaustion"] = {
+                "strategy": self.exhaustion.strategy,
+                "rounds_completed": self.exhaustion.rounds_completed,
+                "round_limit": self.exhaustion.round_limit,
+                "converged": self.exhaustion.converged,
+            }
+        return data
 
     def to_bytes(self) -> bytes:
         """Encode deterministic sorted JSON as UTF-8 with a final newline."""
@@ -74,8 +113,11 @@ class Verdict:
         return (data + "\n").encode("utf-8")
 
 
-def derive_verdict(findings: Iterable[MergedFinding], config: VerdictSettings) -> Verdict:
+def derive_verdict(
+    findings: Iterable[MergedFinding], config: VerdictSettings, *,
+    exhaustion: Exhaustion | None = None,
+) -> Verdict:
     """Snapshot already verified, deduplicated findings and apply the category policy."""
     if not isinstance(findings, Iterable) or isinstance(findings, (str, bytes, Mapping)):
         raise FindingError("findings: expected an iterable of MergedFinding values")
-    return Verdict(tuple(findings), config)
+    return Verdict(tuple(findings), config, exhaustion)
