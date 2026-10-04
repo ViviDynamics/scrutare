@@ -58,10 +58,13 @@ models:
 ## Status
 
 PR ingestion, YAML configuration validation, the persona registry, and the pure
-findings pipeline are implemented. The [findings guide](docs/findings.md) covers
+findings pipeline, code-derived verdicts, and durable Python poster API are
+implemented. The [findings guide](docs/findings.md) covers
 validated input, diff anchors, one supplied correction round, and lossless
-dedupe. The review panel, model sessions, verdicts, posting, replay, and execution
-of configured settings are planned. The design and milestone order are in
+dedupe. The [posting guide](docs/posting.md) covers captured-head reviews,
+durable receipts, bounded retries and uncertain-delivery recovery. The review
+panel, live model sessions, replay CLI, and execution of configured settings
+through the CLI are planned. The design and milestone order are in
 [docs/SPEC.md](docs/SPEC.md).
 
 ## Capture a pull request
