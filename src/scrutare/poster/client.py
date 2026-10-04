@@ -19,6 +19,7 @@ from scrutare.poster.errors import (
     PostingUncertain,
 )
 from scrutare.poster.payload import ReviewPayload
+from scrutare.poster.reviewers import ReviewerRequestReceipt, normalize_human_reviewers
 
 _T = TypeVar("_T")
 
@@ -47,6 +48,7 @@ class _Response:
     value: Any
     rate_limited: bool
     retry_after: float
+    pagination: bool
 
 
 def _validated_ref(ref: PullRequestRef) -> PullRequestRef:
@@ -65,6 +67,21 @@ def _login(value: object) -> bool:
         and len(value.removesuffix("[bot]")) <= 39
         and _LOGIN.fullmatch(value) is not None
     )
+
+
+def _human_users(value: object) -> tuple[str, ...]:
+    """Validate every account before retaining only human login targets."""
+    if not isinstance(value, list):
+        raise PostingError("GitHub returned malformed requested reviewer accounts.")
+    humans = []
+    for user in value:
+        login = user.get("login") if isinstance(user, dict) else None
+        if not _login(login):
+            raise PostingError("GitHub returned malformed requested reviewer accounts.")
+        assert isinstance(login, str)
+        if not login.endswith("[bot]"):
+            humans.append(login)
+    return normalize_human_reviewers(tuple(humans))
 
 
 def _timing(value: str, *, date: bool = False) -> float | None:
@@ -96,11 +113,14 @@ def _parse_response(output: bytes, *, failed: bool) -> _Response:
             raise ValueError
         status = int(match[1])
         headers: dict[str, str] = {}
+        pagination = False
         for line in lines[1:]:
             if _HEADER.fullmatch(line) is None:
                 raise ValueError
             name, value = line.split(":", 1)
             name = name.lower()
+            if name == "link":
+                pagination = True
             if name in {"retry-after", "x-ratelimit-reset", "x-ratelimit-remaining"}:
                 if name in headers:
                     raise ValueError
@@ -134,7 +154,7 @@ def _parse_response(output: bytes, *, failed: bool) -> _Response:
     limited = status == 429 or (
         status == 403 and (retry is not None or primary_exhausted or secondary_limited)
     )
-    return _Response(status, value, limited, max(delays))
+    return _Response(status, value, limited, max(delays), pagination)
 
 
 def _http_result(result: subprocess.CompletedProcess[bytes]) -> _Response:
@@ -190,17 +210,66 @@ class ReviewClient:
         ref = _validated_ref(ref)
         if not isinstance(payload, ReviewPayload):
             raise PostingError("Use a validated review payload.")
+        response = self._write(
+            f"repos/{ref.owner}/{ref.repo}/pulls/{ref.number}/reviews", payload.to_bytes(),
+        )
+        return _receipt(response.value, ref, payload)
+
+    def request_reviewers(
+        self, ref: PullRequestRef, reviewers: tuple[str, ...],
+    ) -> ReviewerRequestReceipt:
+        """Attempt once; reconcile malformed success before sending any further request."""
+        ref = _validated_ref(ref)
+        reviewers = normalize_human_reviewers(reviewers)
+        if not reviewers:
+            return ReviewerRequestReceipt((), "no_targets")
+        response = self._write(
+            f"repos/{ref.owner}/{ref.repo}/pulls/{ref.number}/requested_reviewers",
+            json.dumps({"reviewers": list(reviewers)}, separators=(",", ":")).encode("utf-8"),
+        )
+        value = response.value
+        expected_url = (
+            rf"https://github\.com/(?i:{re.escape(ref.owner)}/{re.escape(ref.repo)})"
+            f"/pull/{ref.number}"
+        )
+        if (
+            response.status != 201
+            or not isinstance(value, dict)
+            or type(value.get("number")) is not int
+            or value["number"] != ref.number
+            or not isinstance(value.get("html_url"), str)
+            or re.fullmatch(expected_url, value["html_url"]) is None
+        ):
+            raise PostingUncertain(_UNCERTAIN)
+        if "base" in value:
+            base = value["base"]
+            repo = base.get("repo") if isinstance(base, dict) else None
+            full_name = repo.get("full_name") if isinstance(repo, dict) else None
+            if (
+                not isinstance(full_name, str)
+                or full_name.lower() != f"{ref.owner}/{ref.repo}".lower()
+            ):
+                raise PostingUncertain(_UNCERTAIN)
+        try:
+            requested = _human_users(value.get("requested_reviewers"))
+        except PostingError:
+            raise PostingUncertain(_UNCERTAIN) from None
+        if not {login.lower() for login in reviewers} <= {login.lower() for login in requested}:
+            raise PostingUncertain(_UNCERTAIN)
+        return ReviewerRequestReceipt(reviewers, "post_response")
+
+    def _write(self, endpoint: str, content: bytes) -> _Response:
         try:
             result = self._runner(
                 [
                     "gh", "api", "--method", "POST",
-                    f"repos/{ref.owner}/{ref.repo}/pulls/{ref.number}/reviews",
+                    endpoint,
                     "--include", "--input", "-",
                     "--header", "Accept: application/vnd.github+json",
                     "--header", "X-GitHub-Api-Version: 2022-11-28",
                     "--header", "Content-Type: application/json",
                 ],
-                input=payload.to_bytes(), capture_output=True, text=False, shell=False,
+                input=content, capture_output=True, text=False, shell=False,
                 timeout=60, env={**os.environ, "GH_HOST": "github.com"},
             )
         except FileNotFoundError:
@@ -224,7 +293,7 @@ class ReviewClient:
             )
         if not 200 <= response.status < 300:
             raise PostingUncertain(_UNCERTAIN)
-        return _receipt(response.value, ref, payload)
+        return response
 
     def _read(self, operation: Callable[[], _T]) -> _T:
         for attempt in range(3):
@@ -252,6 +321,45 @@ class ReviewClient:
         """Read every review page using the existing pagination validator."""
         ref = _validated_ref(ref)
         return self._read(lambda: self._reads.get_reviews(ref))
+
+    def get_requested_reviewers(self, ref: PullRequestRef) -> tuple[str, ...]:
+        """Observe current humans; absence never proves a request was unsent."""
+        ref = _validated_ref(ref)
+        return self._read(lambda: self._get_requested_reviewers(ref))
+
+    def _get_requested_reviewers(self, ref: PullRequestRef) -> tuple[str, ...]:
+        try:
+            result = self._runner(
+                [
+                    "gh", "api", "--method", "GET",
+                    f"repos/{ref.owner}/{ref.repo}/pulls/{ref.number}/requested_reviewers",
+                    "--include",
+                    "--header", "Accept: application/vnd.github+json",
+                    "--header", "X-GitHub-Api-Version: 2022-11-28",
+                ],
+                capture_output=True, text=False, shell=False, timeout=60,
+                env={**os.environ, "GH_HOST": "github.com"},
+            )
+        except (OSError, subprocess.SubprocessError):
+            raise PostingError(
+                "Could not read requested reviewers; check gh installation and access."
+            ) from None
+        response = _http_result(result)
+        if response.rate_limited:
+            raise PostingRateLimited(status=response.status, retry_after=response.retry_after)
+        value = response.value
+        if (
+            response.status != 200
+            or response.pagination
+            or not isinstance(value, dict)
+            or any(key in value for key in (
+                "next", "next_page", "page", "pages", "per_page", "total_count", "pagination",
+            ))
+            or not isinstance(value.get("teams"), list)
+            or any(not isinstance(team, dict) for team in value["teams"])
+        ):
+            raise PostingError("GitHub returned malformed or paginated requested reviewers.")
+        return _human_users(value.get("users"))
 
     def get_login(self) -> str:
         """Read current identity for reconciliation; never a write precondition."""

@@ -11,6 +11,7 @@ from scrutare.findings.models import Anchor as Anchor
 from scrutare.findings.models import Finding as Finding
 from scrutare.findings.models import FindingError as FindingError
 from scrutare.findings.models import parse_finding as parse_finding
+from scrutare.findings.verdict import Exhaustion as Exhaustion
 from scrutare.findings.verdict import Verdict as Verdict
 from scrutare.findings.verdict import derive_verdict as derive_verdict
 from scrutare.findings.verification import AnchorCheck as AnchorCheck

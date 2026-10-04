@@ -65,7 +65,9 @@ input API fixes each persona's read root and read-only tool policy. The
 [findings guide](docs/findings.md) covers
 validated input, diff anchors, one supplied correction round, and lossless
 dedupe. The [posting guide](docs/posting.md) covers captured-head reviews,
-durable receipts, bounded retries and uncertain-delivery recovery. The review
+durable receipts, bounded retries and uncertain-delivery recovery. The
+[escalation guide](docs/escalation.md) covers code-derived exhaustion, COMMENT
+summaries and durable human review requests through the Python API. The review
 panel, live model sessions, replay CLI, and execution of the remaining configured
 settings through the CLI are planned. The design and milestone order are in
 [docs/SPEC.md](docs/SPEC.md).

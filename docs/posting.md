@@ -39,7 +39,8 @@ strategy, mode, policy or payload fail safely.
 | --- | --- | --- | --- |
 | review | approve | APPROVE | APPROVED |
 | review | changes_requested | REQUEST_CHANGES | CHANGES_REQUESTED |
-| comment | either | COMMENT | COMMENTED |
+| comment | approve or changes_requested | COMMENT | COMMENTED |
+| either | escalated | COMMENT | COMMENTED |
 
 The summary names the strategy, verdict, deciding rule, finding count, complete
 captured SHA and an opaque run marker. Each comment uses its exact captured
@@ -118,3 +119,9 @@ cannot read the authenticated login can still post, but may leave uncertain
 runs unresolved. Reads use the transport's bounded retries. The poster never
 edits or deletes another review. Inspect uncertain delivery and the saved run
 before any manual GitHub action; do not create a fresh run to bypass its journal.
+
+For an escalated verdict, `post_review` validates captured exhaustion and human
+targets and delivers only the COMMENT review. Use
+[`post_escalation`](escalation.md) to confirm both the review and human reviewer
+request stages. Both entrypoints validate existing escalation artifacts before
+network access, so the lower-level API cannot bypass conflicting request intent.

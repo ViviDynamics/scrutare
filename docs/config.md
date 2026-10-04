@@ -131,3 +131,10 @@ rails. It retains inline definition text and list order for personas,
 reviewers, and globs. Verdict lists normalize to the fixed vocabulary order
 above; override keys normalize by name. Serializing the dictionary with
 `yaml.safe_dump` and passing it to `parse_config` produces equal settings.
+
+For exhausted runs, [`post_escalation`](escalation.md) validates
+`github.human_reviewers` as plain human GitHub login syntax before network
+access. Case-insensitive duplicates keep their first spelling and order.
+Team paths, `@` prefixes and literal `[bot]` suffixes are unsupported. Empty
+targets still publish the escalation COMMENT and skip the request stage.
+No additional escalation or retry settings are required.
