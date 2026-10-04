@@ -29,9 +29,11 @@ approval, or verdict fields. Unknown fields and malformed values raise
 
 ## Diff sides and paths
 
-`parse_diff(diff)` accepts unified Git patch bytes or text and returns a
-`frozenset[Anchor]`. Only lines present in hunks are anchors. `RIGHT` uses new-file
-line numbers for additions and context; `LEFT` uses old-file line numbers for
+`parse_diff(diff)` accepts unified Git patch bytes or text from the established
+UTF-8 captured GitHub diff contract and returns a `frozenset[Anchor]`. Raw bytes
+must be UTF-8, and Git-quoted filenames must decode as UTF-8. Malformed or
+unsupported encodings raise `FindingError`. Only lines present in hunks are
+anchors. `RIGHT` uses new-file line numbers for additions and context; `LEFT` uses old-file line numbers for
 deletions and context. The side is part of anchor identity, so an added line
 cannot validate a `LEFT` finding merely because its number matches.
 
