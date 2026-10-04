@@ -100,7 +100,9 @@ def create_attempt_directory(
 def _destination(path: Path, prepared_root: Path) -> tuple[Path, bool]:
     path, run = _boundary(path, prepared_root)
     parts = path.relative_to(run).parts
-    if parts == ("fanout.json",):
+    if len(parts) == 1 and parts[0] in (
+        "fanout.json", "panel.json", "findings.json", "verdict.json"
+    ):
         return path, False
     if (len(parts) != 4 or parts[0] != "sessions" or not _persona(parts[1])
             or re.fullmatch(r"attempt-[0-9]{4}", parts[2]) is None
@@ -112,11 +114,21 @@ def _destination(path: Path, prepared_root: Path) -> tuple[Path, bool]:
 
 def write_owned_json(path: Path, document: object, *, prepared_root: Path) -> None:
     """Atomically create a new owner-only JSON record; never replace any existing entry."""
+    try:
+        data = (json.dumps(document, ensure_ascii=False, sort_keys=True, indent=2,
+                           allow_nan=False) + "\n").encode("utf-8")
+    except (ValueError, TypeError, OverflowError, RecursionError):
+        raise SessionArtifactError("Cannot serialize private JSON artifact.") from None
+    write_owned_bytes(path, data, prepared_root=prepared_root)
+
+
+def write_owned_bytes(path: Path, data: bytes, *, prepared_root: Path) -> None:
+    """Install exact bytes atomically at an engine destination without replacing evidence."""
     temporary: str | None = None
     try:
         path, private_parent = _destination(path, prepared_root)
-        data = (json.dumps(document, ensure_ascii=False, sort_keys=True, indent=2,
-                           allow_nan=False) + "\n").encode("utf-8")
+        if not isinstance(data, bytes):
+            _fail()
         with _directory(path.parent) as parent:
             if private_parent:
                 _private(parent)

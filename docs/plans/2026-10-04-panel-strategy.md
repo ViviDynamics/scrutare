@@ -48,7 +48,7 @@ Out: full review CLI and releases (#7), configurable retries (#12), iterative (#
 
 - [x] 1. Typed correction inputs and protocol.
 - [x] 2. Shared execution context and correction adapter.
-- [ ] 3. Panel strategy and exclusive final evidence.
+- [x] 3. Panel strategy and exclusive final evidence.
 - [ ] 4. Actual nare panel proof and user documentation.
 
 ### Task 1: Typed correction inputs and protocol
@@ -65,7 +65,7 @@ Out: full review CLI and releases (#7), configurable retries (#12), iterative (#
 
 ### Task 2: Shared execution context and correction adapter
 
-**Files:** Modify fanout.py, nare_session.py and session_models.py; extend tests/test_fanout.py and tests/test_nare_session.py; add focused correction runtime tests as needed.
+**Files:** Modify fanout.py, nare_session.py and session_models.py; extend tests/test_fanout.py and create tests/test_reanchor_session.py; run the existing tests/test_nare_session.py regressions unchanged. Task-2 review confirmed equivalent lifecycle coverage in the dedicated correction file.
 
 **Interfaces:** Preserve async fan_out(run_dir, config, *, runtime) -> FanOutResult. Internal _ExecutionContext owns inputs, descriptors, ledger, capability, runtime, config and run directory. async _prepare_execution(run_dir, config, *, runtime) -> _ExecutionContext; async _run_initial_wave(context) -> FanOutResult. Frozen ReanchorOutcome has execution/accounting metadata compatible with SessionOutcome and corrections: tuple[ReanchorCorrection, ...], never fake findings. async run_reanchor_session(descriptor: PersonaReanchorInput, rail: ModelRail, lease: BudgetLease, *, ledger, artifact_directory, runtime, capability) -> ReanchorOutcome. Correction wave scheduling belongs to task 3.
 
@@ -81,14 +81,14 @@ Out: full review CLI and releases (#7), configurable retries (#12), iterative (#
 
 **Interfaces:** async run_review(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime) -> PanelResult; StrategyNotImplementedError for iterative/debate with clear not yet implemented message. Frozen PanelResult carries status complete|partial|failed, optional verdict: Verdict, initial FanOutResult, ordered correction outcomes, verification result when computed, final usage/confidence and run path. Keep mutable context private. Exclusive producer preserves existing bare findings JSON and exact verdict bytes.
 
-- [ ] Write RED tests for unsupported dispatch causing no preparation/model/write; one initial invocation per persona; deterministic configured order; blocking/advisory/conflict dedupe; one convergence pass regardless positive rounds.max; no escalation.
-- [ ] Pin eligibility: initial failed, uncertain, not_started or output unavailable fails with artifacts and no verdict. Valid partial document, nonempty or empty, counts. No correction spending after fatal initial result. Retain siblings' evidence.
-- [ ] Use shared context, build anchors from validated filtered diff, check_anchors once, group requests by original persona, reserve all correction leases synchronously in configured order and launch only admitted corrections. One correction opportunity per requested original, never another wave. Denied corrections are recorded and dropped; failed correction is fatal; valid partial correction output counts. finish_reanchor preserves source text/attribution and duplicate occurrences; dedupe and derive once.
-- [ ] Tests cover successful/missing/invalid/excluded corrections, distinct-ID bindings, duplicates, no new findings, exhausted denial, shared usage totals/overshoot, uncertainty and failed correction. Revalidate input/config binding before publication.
-- [ ] Preflight refuses prior sessions/fanout/panel/findings/verdict and existing posting/delivery evidence before models, including symlinks/nonregular paths. Narrowly extend private atomic no-clobber writer to exact engine destinations and exact byte output. Serialize before publishing; install findings and panel evidence before verdict last. Failure never posts and never replaces prior evidence. Test race-safe exclusive refusal and partial publication.
-- [ ] panel.json records schema/app version/head/strategy/pass count, effective input/config hashes, per-stage statuses and purposes, requested originals/IDs, corrections/drop reasons and final ledger. Failed panel records diagnostics where safe, no verdict. Avoid claiming a multi-file transaction or execution authenticity.
-- [ ] Real producer artifacts pass replay_run saved identity with absent posted target; existing fake-client post_review composition accepts exact artifacts and posted receipt identity. No new GitHub calls or poster flow.
-- [ ] Run panel/artifact/replay/poster regression areas, Ruff and mypy. Record RED/GREEN and self-review, then commit.
+- [x] Write RED tests for unsupported dispatch causing no preparation/model/write; one initial invocation per persona; deterministic configured order; blocking/advisory/conflict dedupe; one convergence pass regardless positive rounds.max; no escalation.
+- [x] Pin eligibility: initial failed, uncertain, not_started or output unavailable fails with artifacts and no verdict. Valid partial document, nonempty or empty, counts. No correction spending after fatal initial result. Retain siblings' evidence.
+- [x] Use shared context, build anchors from validated filtered diff, check_anchors once, group requests by original persona, reserve all correction leases synchronously in configured order and launch only admitted corrections. One correction opportunity per requested original, never another wave. Denied corrections are recorded and dropped; failed correction is fatal; valid partial correction output counts. finish_reanchor preserves source text/attribution and duplicate occurrences; dedupe and derive once.
+- [x] Tests cover successful/missing/invalid/excluded corrections, distinct-ID bindings, duplicates, no new findings, exhausted denial, shared usage totals/overshoot, uncertainty and failed correction. Revalidate input/config binding before publication.
+- [x] Preflight refuses prior sessions/fanout/panel/findings/verdict and existing posting/delivery evidence before models, including symlinks/nonregular paths. Narrowly extend private atomic no-clobber writer to exact engine destinations and exact byte output. Serialize before publishing; install findings and panel evidence before verdict last. Failure never posts and never replaces prior evidence. Test race-safe exclusive refusal and partial publication.
+- [x] panel.json records schema/app version/head/strategy/pass count, effective input/config hashes, per-stage statuses and purposes, requested originals/IDs, corrections/drop reasons and final ledger. Failed panel records diagnostics where safe, no verdict. Avoid claiming a multi-file transaction or execution authenticity.
+- [x] Real producer artifacts pass replay_run saved identity with absent posted target; existing fake-client post_review composition accepts exact artifacts and posted receipt identity. No new GitHub calls or poster flow.
+- [x] Run panel/artifact/replay/poster regression areas, Ruff and mypy. Record RED/GREEN and self-review, then commit.
 
 ### Task 4: Actual nare integration proof and documentation
 
