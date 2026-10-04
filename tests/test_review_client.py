@@ -478,3 +478,67 @@ def test_login_secondary_throttle_recovers_without_waiting_for_primary_reset(mon
     assert mod.ReviewClient(runner=runner, sleeper=waits.append).get_login() == "reviewer"
     assert waits == [60]
     assert runner.call_count == 2
+
+
+@pytest.mark.parametrize("stream", ["stdout", "stderr"])
+@pytest.mark.parametrize("headers, expected", [
+    ({}, 60),
+    ({"X-RateLimit-Remaining": "4999", "X-RateLimit-Reset": "4600"}, 60),
+    ({"Retry-After": "90", "X-RateLimit-Remaining": "4999"}, 90),
+    ({"Retry-After": "malformed", "X-RateLimit-Remaining": "4999"}, 60),
+    ({"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": "1120"}, 120),
+])
+def test_structured_secondary_limit_message_classifies_403_without_losing_timing(
+    monkeypatch, stream, headers, expected,
+):
+    mod = client_module()
+    monkeypatch.setattr(mod.time, "time", lambda: 1000)
+    content = framed(403, {
+        "message": "You have exceeded a secondary rate limit. "
+                   "Please wait a few minutes before you try again. secret ghp_sensitive",
+    }, headers=headers, suffix="\ngh: secret (HTTP 403)")
+    runner = Mock(return_value=subprocess.CompletedProcess(
+        [], 1, content if stream == "stdout" else b"",
+        content if stream == "stderr" else b"gh: secret (HTTP 403)",
+    ))
+    sleeper = Mock()
+    with pytest.raises(mod.PostingRateLimited) as caught:
+        mod.ReviewClient(runner=runner, sleeper=sleeper).create_review(REF, payload())
+    assert caught.value.status == 403
+    assert caught.value.retry_after == expected
+    assert "secret" not in str(caught.value)
+    assert "ghp_sensitive" not in repr(vars(caught.value))
+    runner.assert_called_once()
+    sleeper.assert_not_called()
+
+
+@pytest.mark.parametrize("value", [
+    {"message": "Resource not accessible by integration"},
+    {"message": "This is not a secondary rate limit. secret"},
+    {"message": None},
+    {"message": {"message": "You have exceeded a secondary rate limit. secret"}},
+    ["You have exceeded a secondary rate limit. secret"],
+])
+def test_secondary_limit_diagnostic_cannot_turn_ordinary_403_into_throttle(value):
+    mod = client_module()
+    runner = Mock(return_value=response(
+        403, value, headers={"X-RateLimit-Remaining": "4999"},
+        suffix="\ngh: You have exceeded a secondary rate limit. secret (HTTP 429)",
+    ))
+    with pytest.raises(mod.PostingRejected) as caught:
+        mod.ReviewClient(runner=runner).create_review(REF, payload())
+    assert not isinstance(caught.value, mod.PostingRateLimited)
+    assert caught.value.status == 403
+    assert "secret" not in str(caught.value)
+    runner.assert_called_once()
+
+
+def test_unframed_secondary_limit_diagnostic_remains_uncertain():
+    mod = client_module()
+    runner = Mock(return_value=subprocess.CompletedProcess(
+        [], 1, b"", b"gh: You have exceeded a secondary rate limit. secret (HTTP 403)",
+    ))
+    with pytest.raises(mod.PostingUncertain) as caught:
+        mod.ReviewClient(runner=runner).create_review(REF, payload())
+    assert "secret" not in str(caught.value)
+    runner.assert_called_once()

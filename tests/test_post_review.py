@@ -513,6 +513,77 @@ def test_actual_transport_uncertainty_recovers_via_paginated_reviews(captured, k
     assert post(run, verdict, client=FakePoster()) == receipt
 
 
+@pytest.mark.parametrize("succeeds", [True, False])
+def test_actual_transport_secondary_limit_persists_throttle_and_bounds_retries(
+    captured, monkeypatch, succeeds,
+):
+    import subprocess
+
+    from scrutare.poster import PostingRateLimited, ReviewClient
+    run, verdict = captured
+    clock = clocked(monkeypatch)
+    requests = []
+    payloads = []
+
+    def runner(args, **kwargs):
+        requests.append(args)
+        if "POST" not in args:
+            assert args == ["gh", "api", "repos/owner/repo/pulls/12"]
+            return subprocess.CompletedProcess(args, 0, json.dumps(metadata()).encode(), b"")
+        payloads.append(kwargs["input"])
+        journal = json.loads((run / "posting.json").read_bytes())
+        assert journal["status"] == "sending" and journal["attempts"] == len(payloads)
+        assert journal["failure"] is None and journal["retry_at"] is None
+        if succeeds and len(payloads) == 3:
+            body = json.loads(kwargs["input"])
+            receipt = {"id": 42,
+                       "html_url": "https://github.com/owner/repo/pull/12#pullrequestreview-42",
+                       "commit_id": SHA, "body": body["body"], "state": "CHANGES_REQUESTED",
+                       "user": {"login": "scrutare[bot]"}}
+            return subprocess.CompletedProcess(
+                args, 0, b"HTTP/2 200\n\n" + json.dumps(receipt).encode(), b"",
+            )
+        return subprocess.CompletedProcess(
+            args, 1, b"",
+            b'HTTP/2 403\nX-RateLimit-Remaining: 4999\n\n'
+            b'{"message":"You have exceeded a secondary rate limit. secret ghp_sensitive"}'
+            b'\ngh: secret (HTTP 403)',
+        )
+
+    client = ReviewClient(runner=runner)
+    for _ in range(2):
+        with pytest.raises(PostingRateLimited) as caught:
+            post(run, verdict, client=client, sleeper=lambda seconds: None)
+        assert caught.value.retry_after == 60 and caught.value.status == 403
+        journal = json.loads((run / "posting.json").read_bytes())
+        assert journal["status"] == "rejected" and journal["failure"] == "throttle"
+        assert journal["retry_at"] == 1060 and journal["attempts"] == 1
+        assert journal["http_status"] == 403
+        assert "ghp_sensitive" not in (run / "posting.json").read_text()
+    assert len(payloads) == 1
+
+    def wait(seconds):
+        journal = json.loads((run / "posting.json").read_bytes())
+        assert journal["status"] == "rejected" and journal["failure"] == "throttle"
+        assert journal["retry_at"] == clock.now + seconds
+        clock.sleep(seconds)
+
+    if succeeds:
+        receipt = post(run, verdict, client=client, sleeper=wait)
+        assert receipt.review_id == 42
+        assert post(run, verdict, client=client, sleeper=wait) == receipt
+    else:
+        for _ in range(2):
+            with pytest.raises(PostingRejected, match="budget is exhausted"):
+                post(run, verdict, client=client, sleeper=wait)
+        journal = json.loads((run / "posting.json").read_bytes())
+        assert journal["failure"] == "throttle" and journal["retry_at"] == 1180
+    assert clock.waits == [60, 60]
+    assert len(payloads) == 3 and payloads[0] == payloads[1] == payloads[2]
+    assert ["POST" in args for args in requests] == [False, True] * 3
+    assert json.loads((run / "posting.json").read_bytes())["attempts"] == 3
+
+
 def test_atomic_write_failure_cleans_temporary_and_preserves_journal(captured, monkeypatch):
     from pathlib import Path
 

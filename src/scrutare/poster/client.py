@@ -126,8 +126,13 @@ def _parse_response(output: bytes, *, failed: bool) -> _Response:
     )
     if not delays or malformed_timing:
         delays.append(60.0)
+    secondary_limited = (
+        isinstance(value, dict) and isinstance(value.get("message"), str)
+        and re.match(r"you have exceeded a secondary rate limit\b", value["message"],
+                     re.IGNORECASE) is not None
+    )
     limited = status == 429 or (
-        status == 403 and (retry is not None or primary_exhausted)
+        status == 403 and (retry is not None or primary_exhausted or secondary_limited)
     )
     return _Response(status, value, limited, max(delays))
 

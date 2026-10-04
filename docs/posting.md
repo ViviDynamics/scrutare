@@ -96,9 +96,10 @@ for a run, including attempts across restarts and proven unsent launches.
 
 The poster persists the server wait deadline and respects Retry-After and
 applicable exhausted-quota reset guidance. Secondary throttling without usable
-timing waits at least 60 seconds. It waits at most 60 seconds in an invocation;
-a larger remaining wait raises `PostingRateLimited` with that delay. A restart
-cannot bypass the saved deadline. After waiting, it rechecks lifecycle and
+timing waits at least 60 seconds. Each retry wait is at most 60 seconds, with at
+most two waits within the three create attempts. A larger remaining wait raises
+`PostingRateLimited` with that delay. A restart cannot bypass the saved deadline.
+After waiting, it rechecks lifecycle and
 persists `sending` again. Exhausted attempts raise a safe retry-later rejection
 and never send another review. An injected sleeper must actually satisfy the
 required wait; tests use an advancing fake clock.
