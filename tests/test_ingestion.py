@@ -106,6 +106,47 @@ def test_complete_artifact_structure_and_verbatim_config(tmp_path):
     }
 
 
+def test_provided_config_bytes_and_normalized_data_are_persisted(tmp_path):
+    raw = b"# exact bytes\r\nmodels: {default: {model: test-model}}\r\n"
+    normalized = {"models": {"default": {"provider": "anthropic", "model": "test-model"}}}
+    run = ingestion().ingest_pr(
+        FakeClient(), REF, tmp_path / "runs", config_bytes=raw, config_data=normalized
+    )
+    assert (run / "config.yaml").read_bytes() == raw
+    assert read_json(run, "config.json") == normalized
+
+
+def test_conflicting_config_bytes_and_path_fail_before_capture(tmp_path):
+    source = tmp_path / "source.yaml"
+    source.write_bytes(b"legacy source")
+    client = FakeClient()
+    with pytest.raises(ValueError, match="config_bytes.*config_path|config_path.*config_bytes"):
+        ingestion().ingest_pr(client, REF, tmp_path / "runs", source, config_bytes=b"bytes")
+    assert client.snapshot == 0
+    assert not (tmp_path / "runs").exists()
+
+
+def test_config_json_write_failure_removes_only_fresh_run(tmp_path, monkeypatch):
+    existing = tmp_path / "run-existing"
+    existing.mkdir()
+    (existing / "keep").write_text("saved")
+    original = Path.write_text
+
+    def fail_config_json(path, *args, **kwargs):
+        if path.name == "config.json":
+            assert (path.parent / "config.yaml").read_bytes() == b"original"
+            raise OSError("disk full")
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "write_text", fail_config_json)
+    with pytest.raises(OSError, match="disk full"):
+        ingestion().ingest_pr(
+            FakeClient(), REF, tmp_path, config_bytes=b"original", config_data={"strategy": "panel"}
+        )
+    assert list(tmp_path.iterdir()) == [existing]
+    assert (existing / "keep").read_text() == "saved"
+
+
 @pytest.mark.parametrize("changes", [{"state": "closed"}, {"merged": True}])
 @pytest.mark.parametrize("final", [False, True])
 def test_closed_or_merged_at_either_read_leaves_no_run(tmp_path, changes, final):
