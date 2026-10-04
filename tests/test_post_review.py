@@ -631,3 +631,29 @@ def test_good_candidate_with_another_malformed_marker_remains_uncertain(captured
         post(run, verdict, client=client)
     assert len(client.creates) == 1
     assert json.loads((run / "posting.json").read_bytes())["status"] == "unknown"
+
+
+@pytest.mark.parametrize("repository", [None, 12, True, [], {}, "", " \t\n"],
+                         ids=["null", "number", "boolean", "array", "object", "empty", "blank"])
+def test_invalid_captured_repository_never_resolves_ambient_checkout(
+    captured, monkeypatch, repository,
+):
+    import subprocess
+    run, verdict = captured
+    data = json.loads((run / "metadata.json").read_bytes())
+    data["repository"] = repository
+    (run / "metadata.json").write_text(json.dumps(data))
+    calls = []
+
+    def forbidden_subprocess(args, **kwargs):
+        calls.append(args)
+        raise OSError("secret-ambient-resolution")
+
+    monkeypatch.setattr(subprocess, "run", forbidden_subprocess)
+    client = FakePoster()
+    with pytest.raises(PostingError) as error:
+        post(run, verdict, client=client)
+    assert "secret" not in str(error.value)
+    assert calls == []
+    assert client.reads == [] and client.creates == []
+    assert not (run / "posting.json").exists()

@@ -41,7 +41,10 @@ def _capture(run_dir: Path, verdict: Verdict) -> tuple[PullRequestRef, str, Revi
             raise ValueError
         if metadata["schema_version"] != 1 or type(metadata["pr_number"]) is not int:
             raise ValueError
-        ref = resolve_pr(str(metadata["pr_number"]), repository=metadata["repository"])
+        repository = metadata["repository"]
+        if not isinstance(repository, str) or not repository.strip():
+            raise ValueError
+        ref = resolve_pr(str(metadata["pr_number"]), repository=repository)
         nested = metadata["pull_request"]
         assert_pr_open(nested)
         head = metadata["head_sha"]
