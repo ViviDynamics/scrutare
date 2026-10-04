@@ -5,3 +5,9 @@ from scrutare.findings.models import Anchor as Anchor
 from scrutare.findings.models import Finding as Finding
 from scrutare.findings.models import FindingError as FindingError
 from scrutare.findings.models import parse_finding as parse_finding
+from scrutare.findings.verification import AnchorCheck as AnchorCheck
+from scrutare.findings.verification import DroppedFinding as DroppedFinding
+from scrutare.findings.verification import ReanchorCorrection as ReanchorCorrection
+from scrutare.findings.verification import VerificationResult as VerificationResult
+from scrutare.findings.verification import check_anchors as check_anchors
+from scrutare.findings.verification import finish_reanchor as finish_reanchor
