@@ -280,10 +280,13 @@ def _github(value: object) -> GitHubSettings:
     )
 
 
-def _check_yaml(node: Node, path: str, ancestors: set[int]) -> None:
-    if id(node) in ancestors:
+def _check_yaml(node: Node, path: str, ancestors: set[int], checked: set[int]) -> None:
+    node_id = id(node)
+    if node_id in ancestors:
         raise ConfigError("config: recursive YAML aliases are not supported")
-    ancestors.add(id(node))
+    if node_id in checked:
+        return
+    ancestors.add(node_id)
     if isinstance(node, MappingNode):
         seen = set[str]()
         for key, value in node.value:
@@ -293,11 +296,12 @@ def _check_yaml(node: Node, path: str, ancestors: set[int]) -> None:
             if key.value in seen:
                 raise ConfigError(f"{child_path}: duplicate key")
             seen.add(key.value)
-            _check_yaml(value, child_path, ancestors)
+            _check_yaml(value, child_path, ancestors, checked)
     elif isinstance(node, SequenceNode):
         for i, item in enumerate(node.value):
-            _check_yaml(item, f"{path}[{i}]", ancestors)
-    ancestors.remove(id(node))
+            _check_yaml(item, f"{path}[{i}]", ancestors, checked)
+    ancestors.remove(node_id)
+    checked.add(node_id)
 
 
 def _load_yaml(data: bytes | str) -> object:
@@ -307,7 +311,7 @@ def _load_yaml(data: bytes | str) -> object:
         node = loader.get_single_node()
         if node is None:
             return None
-        _check_yaml(node, "", set())
+        _check_yaml(node, "", set(), set())
         try:
             return loader.construct_document(node)
         except (ValueError, KeyError, IndexError, AttributeError):

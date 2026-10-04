@@ -1,5 +1,7 @@
 """Configuration boundary tests with literal, independently specified expectations."""
 
+import subprocess
+import sys
 from dataclasses import FrozenInstanceError
 
 import pytest
@@ -550,6 +552,67 @@ def test_yaml_aliases_cannot_hide_duplicate_keys():
         "  overrides:\n    security: *rail\n"
     )
     with pytest.raises(ConfigError, match="models.default.model: duplicate key"):
+        parse_config(data)
+
+
+def test_large_acyclic_alias_graph_reaches_schema_validation_promptly():
+    data = "a0: &a0 [secret-leaf]\n" + "".join(
+        f"a{i}: &a{i} [*a{i - 1}, *a{i - 1}]\n" for i in range(1, 41)
+    )
+    # A compact graph must not expand into trillions of validation visits.
+    # Isolate the parse so a regression is killed, with ample CI startup time.
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            """
+import sys
+from scrutare.config import ConfigError, parse_config
+
+try:
+    parse_config(sys.stdin.read())
+except ConfigError as error:
+    print(error)
+else:
+    raise AssertionError("Expected schema validation to reject unknown fields")
+""",
+        ],
+        input=data,
+        capture_output=True,
+        text=True,
+        timeout=20,
+        check=True,
+    )
+    assert "a0: unknown field" in result.stdout
+    assert "secret-leaf" not in result.stdout
+    assert result.stderr == ""
+
+
+def test_nonrecursive_mapping_and_sequence_aliases_are_valid_config():
+    config = parse_config(
+        "models:\n"
+        "  default: &rail {provider: openai, model: alias-model}\n"
+        "  overrides: {security: *rail, devops: *rail}\n"
+        "github:\n"
+        "  paths: {include: &paths [src/**, tests/**], exclude: *paths}\n"
+    )
+    for name in ("security", "devops"):
+        rail = config.models.for_persona(name)
+        assert (rail.provider, rail.base_url, rail.model) == ("openai", None, "alias-model")
+    assert config.github.paths.include == ("src/**", "tests/**")
+    assert config.github.paths.exclude == ("src/**", "tests/**")
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        "models: &loop {default: *loop}",
+        "github: {paths: {include: &loop [*loop]}}",
+        "github: &loop {paths: {include: [*loop]}}",
+    ],
+)
+def test_recursive_mapping_and_sequence_aliases_are_rejected(data):
+    with pytest.raises(ConfigError, match="config: recursive YAML aliases are not supported"):
         parse_config(data)
 
 
