@@ -27,6 +27,9 @@ class PreparedReviewInputs:
     head_sha: str
     effective_files: tuple[str, ...]
 
+    def __post_init__(self) -> None:
+        validate_prepared_inputs(self)
+
 
 def _encoded(data: object) -> bytes:
     return (json.dumps(data, ensure_ascii=False, sort_keys=True, indent=2,

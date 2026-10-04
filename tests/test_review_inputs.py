@@ -404,11 +404,11 @@ def test_changed_capture_cannot_silently_replace_a_started_view(capture, mutatio
 def test_prepared_validation_rejects_descriptor_fields_that_disagree(capture, mutation):
     module = preparation()
     inputs = module.prepare_review_inputs(capture, parse_config(CONFIG))
-    forged = replace(inputs, **{
-        "root": {"root": capture}, "head": {"head_sha": "different"},
-        "files": {"effective_files": ("docs/secret.md",)},
-    }[mutation])
     with pytest.raises(module.ReviewInputError):
+        forged = replace(inputs, **{
+            "root": {"root": capture}, "head": {"head_sha": "different"},
+            "files": {"effective_files": ("docs/secret.md",)},
+        }[mutation])
         module.validate_prepared_inputs(forged)
 
 

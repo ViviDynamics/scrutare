@@ -1,4 +1,4 @@
-"""Ingest pull request inputs; review and posting stages are not implemented yet."""
+"""Capture PR inputs and prepare a filtered view; live review and posting are unfinished."""
 
 from __future__ import annotations
 
@@ -20,7 +20,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="scrutare", description=__doc__)
     parser.add_argument("--version", action="version", version=f"scrutare {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
-    review = commands.add_parser("review", help="capture PR inputs only; no review or posting")
+    review = commands.add_parser(
+        "review", help="capture PR inputs and prepare a filtered view; no live review or posting",
+        description=__doc__,
+    )
     review.add_argument("--pr", required=True, help="GitHub PR URL or number in the current repo")
     review.add_argument(
         "--config",
