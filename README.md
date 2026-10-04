@@ -57,10 +57,10 @@ models:
 
 ## Status
 
-PR ingestion and YAML configuration validation are implemented. The review
-panel, model sessions, findings, verdicts, posting, replay, and execution of
-configured settings are planned. The design
-and milestone order are in [docs/SPEC.md](docs/SPEC.md).
+PR ingestion, YAML configuration validation, and the persona registry are
+implemented. The review panel, model sessions, findings, verdicts, posting,
+replay, and execution of configured settings are planned. The design and
+milestone order are in [docs/SPEC.md](docs/SPEC.md).
 
 ## Capture a pull request
 
@@ -91,7 +91,9 @@ GitHub access. `models.default.model` is required; no model is selected
 automatically. Omitted settings use the documented defaults, including the
 panel strategy, four built-in personas, and anthropic provider. See the
 [configuration reference](docs/config.md) for every field, accepted values,
-defaults, and model overrides. Invalid settings report the affected field.
+defaults, and model overrides. The [persona authoring guide](docs/writing-personas.md)
+explains the four perspectives, custom prompts, and registry API. Invalid
+settings report the affected field.
 
 The command captures inputs only and makes no model calls or GitHub writes.
 It returns a nonzero exit code with a concise error if capture fails, including
