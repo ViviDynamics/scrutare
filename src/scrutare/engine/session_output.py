@@ -10,8 +10,11 @@ from pathlib import Path
 from typing import Any, NoReturn
 
 from scrutare.config import CATEGORIES
+from scrutare.engine.persona_inputs import PersonaReanchorInput
+from scrutare.engine.reanchor import parse_reanchor_output
 from scrutare.engine.session_models import TokenUsage
 from scrutare.findings.models import Finding, parse_finding
+from scrutare.findings.verification import ReanchorCorrection
 
 
 class SessionProtocolError(ValueError):
@@ -32,6 +35,39 @@ class DecodedSession:
     nare_version: str | None
     contract: int | None
     turns: int | None
+
+
+@dataclass(frozen=True)
+class DecodedReanchorSession:
+    session_id: str | None
+    status: str | None
+    stop_reason: str | None
+    exit_code: int
+    usage: TokenUsage
+    corrections: tuple[ReanchorCorrection, ...]
+    output_available: bool
+    budget_limit: int
+    partial: bool
+    nare_version: str | None
+    contract: int | None
+    turns: int | None
+
+
+@dataclass(frozen=True)
+class _DecodedEvidence:
+    session_id: str | None
+    status: str | None
+    stop_reason: str | None
+    exit_code: int
+    usage: TokenUsage
+    output_available: bool
+    budget_limit: int
+    partial: bool
+    nare_version: str | None
+    contract: int | None
+    turns: int | None
+    output: object
+    saved_output: object
 
 
 def findings_schema() -> dict[str, object]:
@@ -180,21 +216,19 @@ def _findings(value: object, persona: str) -> tuple[Finding, ...]:
     return tuple(parse_finding(_object(item), persona=persona) for item in document["findings"])
 
 
-def decode_session(
-    stdout: bytes, session_document: bytes | None, *, persona: str, exit_code: int,
+def _decode_evidence(
+    stdout: bytes, session_document: bytes | None, *, exit_code: int,
     expected_limit: int, expected_root: Path,
-) -> DecodedSession:
-    """Reconcile fresh-session stream, saved session and exit without inferring a verdict."""
+) -> _DecodedEvidence:
+    """Reconcile fresh execution and saved evidence independently of the typed payload."""
     try:
         _integer(expected_limit, positive=True)
         if (type(exit_code) is not int or exit_code not in (0, 1, 2)
-                or not isinstance(expected_root, Path) or not expected_root.is_absolute()
-                or not isinstance(persona, str)
-                or not re.fullmatch(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*", persona)):
+                or not isinstance(expected_root, Path) or not expected_root.is_absolute()):
             _fail()
         if exit_code == 2 and stdout == b"" and session_document is None:
-            return DecodedSession(None, None, None, 2, TokenUsage(), (), False,
-                                  expected_limit, False, None, None, None)
+            return _DecodedEvidence(None, None, None, 2, TokenUsage(), False,
+                                    expected_limit, False, None, None, None, None, None)
         if exit_code == 2 or session_document is None:
             _fail()
         assert session_document is not None
@@ -249,7 +283,6 @@ def decode_session(
         output = result["output"]
         if output is None and status == "done":
             _fail()
-        findings = () if output is None else _findings(output, persona)
         saved = _json(session_document)
         if (_text(saved["id"]) != identity or _text(saved["status"]) != status
                 or saved["stop_reason"] != stop or _integer(saved["contract"], positive=True) != 1
@@ -258,20 +291,72 @@ def decode_session(
         saved_usage, saved_cost = _usage(saved["usage"])
         if saved_usage != total_usage or not _same_cost(saved_cost, cost):
             _fail()
-        # Validate the saved document as well, so bool/int equality cannot conceal corruption.
-        if saved["output"] is not None:
-            _findings(saved["output"], persona)
         _budget(saved["budget"], expected_limit)
         policy = _object(saved["policy"])
         if policy["tools"] != ["read"] or policy["root"] != str(expected_root):
             _fail()
         if "turns" in saved and _integer(saved["turns"]) != count:
             _fail()
-        return DecodedSession(identity, status, stop, exit_code, total_usage, findings,
-                              output is not None, expected_limit,
-                              (status == "error" and stop == "budget")
-                              or total_usage.total > expected_limit,
-                              version, contract, count)
+        return _DecodedEvidence(identity, status, stop, exit_code, total_usage,
+                                output is not None, expected_limit,
+                                (status == "error" and stop == "budget")
+                                or total_usage.total > expected_limit,
+                                version, contract, count, output, saved["output"])
+    except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
+        raise SessionProtocolError(
+            "Session evidence is invalid or inconsistent; inspect private capture."
+        ) from None
+
+
+def decode_session(
+    stdout: bytes, session_document: bytes | None, *, persona: str, exit_code: int,
+    expected_limit: int, expected_root: Path,
+) -> DecodedSession:
+    """Reconcile fresh findings evidence, attributing candidates only to the caller."""
+    try:
+        if (not isinstance(persona, str)
+                or not re.fullmatch(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*", persona)):
+            _fail()
+        evidence = _decode_evidence(stdout, session_document, exit_code=exit_code,
+                                    expected_limit=expected_limit, expected_root=expected_root)
+        findings = () if evidence.output is None else _findings(evidence.output, persona)
+        # Validate saved semantics independently: bool/int equality can conceal corruption.
+        if evidence.saved_output is not None:
+            _findings(evidence.saved_output, persona)
+        return DecodedSession(
+            evidence.session_id, evidence.status, evidence.stop_reason, evidence.exit_code,
+            evidence.usage, findings, evidence.output_available, evidence.budget_limit,
+            evidence.partial, evidence.nare_version, evidence.contract, evidence.turns,
+        )
+    except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
+        raise SessionProtocolError(
+            "Session evidence is invalid or inconsistent; inspect private capture."
+        ) from None
+
+
+def decode_reanchor_session(
+    stdout: bytes, session_document: bytes | None, *, descriptor: PersonaReanchorInput,
+    exit_code: int, expected_limit: int,
+) -> DecodedReanchorSession:
+    """Reconcile fresh anchor-only evidence against the descriptor's exact originals."""
+    try:
+        if not isinstance(descriptor, PersonaReanchorInput):
+            _fail()
+        descriptor.__post_init__()
+        evidence = _decode_evidence(
+            stdout, session_document, exit_code=exit_code, expected_limit=expected_limit,
+            expected_root=descriptor.inputs.root,
+        )
+        corrections = () if evidence.output is None else parse_reanchor_output(
+            evidence.output, descriptor.requests,
+        )
+        if evidence.saved_output is not None:
+            parse_reanchor_output(evidence.saved_output, descriptor.requests)
+        return DecodedReanchorSession(
+            evidence.session_id, evidence.status, evidence.stop_reason, evidence.exit_code,
+            evidence.usage, corrections, evidence.output_available, evidence.budget_limit,
+            evidence.partial, evidence.nare_version, evidence.contract, evidence.turns,
+        )
     except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
         raise SessionProtocolError(
             "Session evidence is invalid or inconsistent; inspect private capture."

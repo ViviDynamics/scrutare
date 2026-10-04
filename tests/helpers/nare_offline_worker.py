@@ -52,6 +52,7 @@ observations = {
     "version": None,
     "credential_names": [n for n in os.environ if "KEY" in n or "TOKEN" in n],
     "nare_controls": {n: v for n, v in os.environ.items() if n.startswith("NARE_")},
+    "arguments": arguments,
 }
 
 
@@ -149,7 +150,23 @@ class FakeProvider:
 
 def make_transport(provider, **kwargs):
     observations["factory_calls"].append({"provider": provider, **kwargs})
+    invocation_path = artifact / "invocation.json" if artifact is not None else None
+    invocation = (json.loads(invocation_path.read_bytes())
+                  if invocation_path is not None and invocation_path.is_file() else {})
+    selection = {
+        "purpose": invocation.get("purpose", "review"),
+        "attempt": artifact.name if artifact is not None else None,
+        "prompt": arguments[1] if arguments and arguments[0] == "run" else None,
+    }
+    observations["selection"] = selection
     scenario = spec.get("systems", {}).get(option("--system"), spec.get("default", {}))
+    for candidate in spec.get("scenarios", []):
+        if (candidate["purpose"] == selection["purpose"]
+                and candidate["attempt"] == selection["attempt"]
+                and (selection["prompt"] or "").startswith(candidate["prompt_prefix"])
+                and candidate.get("system", option("--system")) == option("--system")):
+            scenario = candidate["scenario"]
+            break
     return FakeProvider(scenario)
 
 

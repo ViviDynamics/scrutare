@@ -4,24 +4,29 @@ import asyncio
 import json
 import os
 import shlex
+import shutil
 import subprocess
 import time
+from dataclasses import asdict
 from pathlib import Path
 
 import pytest
 from test_fanout import configure
 from test_review_inputs import capture as capture
 
-from scrutare.config import BudgetSettings
+from scrutare.config import BudgetSettings, parse_config
 from scrutare.engine.budgets import ReviewBudgetLedger
 from scrutare.engine.fanout import fan_out
 from scrutare.engine.nare_session import inspect_nare_runtime, run_persona_session
-from scrutare.engine.persona_inputs import prepare_persona_inputs
+from scrutare.engine.persona_inputs import PersonaReanchorInput, prepare_persona_inputs
+from scrutare.engine.reanchor import ReanchorRequest, reanchor_schema
 from scrutare.engine.review_inputs import prepare_review_inputs
 from scrutare.engine.session_artifacts import create_attempt_directory
 from scrutare.engine.session_models import NareRuntime, TokenUsage
 from scrutare.engine.session_output import decode_session
+from scrutare.engine.strategy import run_review
 from scrutare.personas import load_persona
+from scrutare.replay import replay_run
 
 SETTING = "SCRUTARE_TEST_NARE_EXECUTABLE"
 WORKER = Path(__file__).parent / "helpers" / "nare_offline_worker.py"
@@ -279,13 +284,14 @@ def direct_cli(
     resume=None,
     max_tokens=None,
     observation_name="offline-observations.json",
+    schema_document=None,
 ):
     from scrutare.engine.session_output import findings_schema
 
     artifact = tmp_path / "direct-artifacts" if resume is None else resume.parent
     artifact.mkdir(exist_ok=True)
     schema = artifact / "schema.json"
-    schema.write_text(json.dumps(findings_schema()))
+    schema.write_text(json.dumps(findings_schema() if schema_document is None else schema_document))
     runtime = offline_runtime(tmp_path, installed, default={"replies": replies})
     spec = tmp_path / "offline-spec.json"
     document = load(spec)
@@ -331,7 +337,7 @@ def direct_cli(
     assert observed["guard_violations"] == [] and observed["credential_names"] == []
     decoded = (
         None
-        if resume is not None
+        if resume is not None or schema_document is not None
         else decode_session(
             process.stdout,
             session.read_bytes(),
@@ -342,6 +348,83 @@ def direct_cli(
         )
     )
     return process, decoded, observed, session
+
+
+CORRECTION_SCHEMA = {
+    "type": "object",
+    "properties": {"corrections": {
+        "type": "array", "items": {
+            "type": "object", "properties": {
+                "request_id": {"type": "string"}, "file": {"type": "string"},
+                "line": {"type": "integer"},
+                "side": {"type": "string", "enum": ["LEFT", "RIGHT"]},
+            }, "required": ["request_id", "file", "line", "side"],
+            "additionalProperties": False,
+        },
+    }},
+    "required": ["corrections"],
+    "additionalProperties": False,
+}
+
+
+def test_actual_proof_literal_schema_matches_production():
+    # Keep the preimplementation literal above as proof provenance, and bind drift explicitly.
+    assert CORRECTION_SCHEMA == reanchor_schema()
+
+
+@pytest.mark.parametrize("document", [
+    {"corrections": []},
+    {"corrections": [{"request_id": "r0001", "file": "src/app.py", "line": 3,
+                       "side": "RIGHT"}]},
+])
+def test_actual_correction_schema_accepts_anchor_only_documents(tmp_path, installed, document):
+    root = tmp_path / "read-root"
+    root.mkdir()
+    process, _, observed, session = direct_cli(
+        tmp_path, installed, [text(document)], root=root, schema_document=CORRECTION_SCHEMA,
+    )
+    terminal = json.loads(process.stdout.splitlines()[-1])
+    assert process.returncode == 0 and terminal["status"] == "done"
+    assert terminal["output"] == load(session)["output"] == document
+    assert terminal["usage"] == load(session)["usage"]
+    assert len(observed["calls"]) == 1
+    assert load(session)["policy"] == {"tools": ["read"], "root": str(root)}
+
+
+@pytest.mark.parametrize("mutation", [
+    "boolean-line", "invalid-side", "missing-side", "extra-field", "extra-verdict",
+])
+def test_actual_correction_schema_rejects_invalid_model_output_then_accepts_empty(
+    tmp_path, installed, mutation,
+):
+    item = {"request_id": "r0001", "file": "src/app.py", "line": 3, "side": "LEFT"}
+    bad = {"corrections": [item]}
+    if mutation == "boolean-line":
+        item["line"] = True
+    elif mutation == "invalid-side":
+        item["side"] = "BOTH"
+    elif mutation == "missing-side":
+        del item["side"]
+    elif mutation == "extra-field":
+        item["problem"] = "Changed"
+    else:
+        bad["verdict"] = "approve"
+    root = tmp_path / "read-root"
+    root.mkdir()
+    process, _, observed, session = direct_cli(
+        tmp_path, installed, [text(bad), text({"corrections": []})], root=root,
+        schema_document=CORRECTION_SCHEMA,
+    )
+    records = [json.loads(line) for line in process.stdout.splitlines()]
+    assert process.returncode == 0 and records[-1]["status"] == "done"
+    assert records[-1]["output"] == load(session)["output"] == {"corrections": []}
+    assert len(observed["calls"]) == 2
+    assert [r["detail"]["output"] for r in records if r["type"] == "output"] == [
+        {"corrections": []},
+    ]
+    assert "did not satisfy the required JSON Schema" in json.dumps(
+        observed["calls"][1]["messages"]
+    )
 
 
 def test_actual_read_only_tool_dispatch_refuses_fabricated_tools_and_path_escapes(
@@ -615,3 +698,352 @@ def test_actual_latest_valid_empty_replaces_earlier_candidates(capture, tmp_path
     assert outcome.findings == ()
     assert load(outcome.artifact_directory / "session.json")["output"] == {"findings": []}
     assert len(observations(outcome)["calls"]) == 2
+
+
+BAD_ANCHOR = {"findings": [{**FINDING["findings"][0], "line": 99}]}
+CORRECTED = {"corrections": [
+    {"request_id": "r0001", "file": "src/app.py", "line": 1, "side": "RIGHT"},
+]}
+
+
+def actual_panel(capture, tmp_path, installed, request, *, initial, correction=None,
+                 limit=100, personas=None, systems=None, max_turns=10):
+    """Use the complete producer with transport scripts selected by unchanged invocation data."""
+    config = configure(capture, personas=personas or ["senior-dev"], review=limit, per=limit)
+    inputs = prepare_review_inputs(capture, config)
+    before = {p: p.read_bytes() for p in capture.rglob("*") if p.is_file()}
+    runtime = offline_runtime(tmp_path, installed, systems=systems)
+    runtime = NareRuntime(runtime.executable, max_turns=max_turns, timeout_seconds=15)
+    spec_path = tmp_path / "offline-spec.json"
+    spec = load(spec_path)
+    spec["scenarios"] = [{
+        "purpose": "review", "attempt": "attempt-0001", "prompt_prefix": "Review the captured",
+        "scenario": initial,
+    }]
+    if correction is not None:
+        spec["scenarios"].append({
+            "purpose": "reanchor", "attempt": "attempt-0002",
+            "prompt_prefix": "Correct only the anchors", "scenario": correction,
+        })
+    # Explicit system-specific selections may override the wave scenario, without rewriting it.
+    for system, scenario in (systems or {}).items():
+        spec["scenarios"].insert(0, {
+            "purpose": "review", "attempt": "attempt-0001",
+            "prompt_prefix": "Review the captured", "system": system, "scenario": scenario,
+        })
+    spec_path.write_text(json.dumps(spec))
+    try:
+        result = asyncio.run(run_review(capture, config, runtime=runtime))
+    finally:
+        # Preserve real invocation/session/output/guard evidence before pytest deletes tmp_path.
+        destination = os.environ.get("SCRUTARE_TEST_EVIDENCE_DIR")
+        if destination:
+            target = Path(destination) / request.node.name
+            target.mkdir(parents=True, exist_ok=False)
+            shutil.copytree(capture, target / "run")
+            shutil.copy2(spec_path, target / spec_path.name)
+            shutil.copy2(runtime.executable, target / "offline-nare")
+    assert all(p.read_bytes() == contents for p, contents in before.items())
+    return result, inputs, config
+
+
+def assert_panel_evidence(result, inputs, config):
+    """Reconcile real persisted and streamed evidence with the public producer result."""
+    panel = load(result.run_dir / "panel.json")
+    assert panel["strategy"] == "panel" and panel["convergence_passes"] == 1
+    assert panel["status"] == result.status and panel["head_sha"] == "abc123"
+    assert panel["initial"] == {"purpose": "review", "result": result.initial.to_dict()}
+    assert panel["ledger"]["usage"] == result.usage.to_dict()
+    assert panel["ledger"]["active_reservations"] == []
+    assert panel["ledger"]["accounting_complete"] == result.accounting_complete
+    assert load(result.run_dir / "fanout.json")["result"] == result.initial.to_dict()
+    assert sum(o.usage.total for o in (*result.initial.outcomes, *result.corrections)) == (
+        result.usage.total
+    )
+    descriptors = {d.persona.name: d for d in prepare_persona_inputs(inputs, config.personas)}
+    for outcome in (*result.initial.outcomes, *result.corrections):
+        assert load(outcome.artifact_directory / "result.json")["status"] == outcome.status
+        if outcome.status == "not_started":
+            assert {p.name for p in outcome.artifact_directory.iterdir()} == {"result.json"}
+            continue
+        observed = observations(outcome)
+        assert "selection" in observed, "offline fixture must select by purpose/prompt/attempt"
+        invocation = load(outcome.artifact_directory / "invocation.json")
+        persisted = load(outcome.artifact_directory / "session.json")
+        terminal = json.loads(
+            (outcome.artifact_directory / "stdout.jsonl").read_text().splitlines()[-1]
+        )
+        assert persisted["policy"] == {"tools": ["read"], "root": str(inputs.root)}
+        assert persisted["usage"] == terminal["usage"]
+        if outcome.accounting_complete:
+            assert persisted["usage"] == {"cost": None, **{
+                key: getattr(outcome.usage, key)
+                for key in ("input", "output", "cache_read", "cache_write")
+            }}
+            assert persisted["turns"] == len(observed["calls"])
+        assert persisted["output"] == terminal["output"]
+        assert persisted["budget"]["tokens"] == outcome.invocation_limit
+        assert persisted["turns"] <= len(observed["calls"]) <= invocation["max_turns"]
+        assert invocation["allocated_tokens"] == invocation["invocation_limit"] == (
+            outcome.allocated_tokens
+        )
+        purpose = "reanchor" if outcome in result.corrections else "review"
+        assert observed["selection"]["purpose"] == purpose
+        assert observed["selection"]["attempt"] == outcome.artifact_directory.name
+        assert observed["arguments"] == invocation["argv"][1:]
+        descriptor = descriptors[outcome.persona]
+        factory = observed["factory_calls"][0]
+        assert factory["system"] == descriptor.persona.system_prompt
+        rail = config.models.for_persona(outcome.persona)
+        assert (factory["provider"], factory["model"], factory["base_url"]) == (
+            rail.provider, rail.model, rail.base_url,
+        )
+        assert all([t["name"] for t in call["tools"]] == ["read"] for call in observed["calls"])
+        if purpose == "review":
+            assert observed["selection"]["prompt"] == descriptor.prompt
+        else:
+            assert invocation["purpose"] == "reanchor"
+            assert invocation["session_key"] == f"{outcome.persona}/attempt-0002"
+            assert load(outcome.artifact_directory / "reanchor.schema.json") == CORRECTION_SCHEMA
+            requests = tuple(ReanchorRequest(item["request_id"], next(
+                finding for initial in result.initial.outcomes for finding in initial.findings
+                if asdict(finding) == item["original"]
+            )) for item in invocation["requests"])
+            assert observed["selection"]["prompt"] == PersonaReanchorInput(
+                inputs, descriptor.persona, requests,
+            ).prompt
+        visible = json.dumps(observed["calls"])
+        assert all(sentinel not in visible for sentinel in (
+            "EXCLUDED_SENTINEL", "RAW_BODY_SENTINEL", "DISCUSSION_SENTINEL", "HOSTILE_FIELD",
+        ))
+    assert not list(result.run_dir.glob("sessions/*/attempt-0003"))
+    if result.verdict is None:
+        assert not (result.run_dir / "findings.json").exists()
+        assert not (result.run_dir / "verdict.json").exists()
+    else:
+        assert load(result.run_dir / "findings.json") == [
+            f.to_dict() for f in result.verdict.findings
+        ]
+        assert (result.run_dir / "verdict.json").read_bytes() == result.verdict.to_bytes()
+        assert result.verdict.exhaustion is None
+        replay = replay_run(result.run_dir)
+        assert replay.exit_code == 0 and replay.saved_identical is True
+        assert replay.posted_identical is None and replay.posting.status == "absent"
+
+
+def test_actual_panel_complete_correction_uses_only_remaining_allowance(
+    capture, tmp_path, installed, request,
+):
+    initial = {"replies": [tool(document=BAD_ANCHOR), tool(call_id="two"),
+                           tool(call_id="three"), text(BAD_ANCHOR)]}
+    correction = {"replies": [tool(), text(CORRECTED)]}
+    result, inputs, config = actual_panel(
+        capture, tmp_path, installed, request, initial=initial, correction=correction,
+    )
+    assert result.status == "complete" and result.verdict.verdict == "changes_requested"
+    assert result.initial.usage.total == 60 and result.usage.total == 90
+    assert result.corrections[0].allocated_tokens == result.corrections[0].invocation_limit == 40
+    assert result.corrections[0].usage.total == 30
+    finding = result.verdict.findings[0]
+    assert finding.anchor.file == "src/app.py" and finding.anchor.line == 1
+    assert finding.problem == "Candidate" and finding.categories == ("correctness",)
+    assert [f.persona for f in finding.sources] == ["senior-dev"]
+    sessions = load(capture / "panel.json")["ledger"]["sessions"]
+    assert [s["session_key"] for s in sessions] == [
+        "senior-dev/attempt-0001", "senior-dev/attempt-0002",
+    ]
+    assert [s["usage"]["total"] for s in sessions] == [60, 30]
+    assert_panel_evidence(result, inputs, config)
+
+
+@pytest.mark.parametrize("limit,correction,want,available,usage,verdict", [
+    (60, {"replies": [text(CORRECTED)]}, "not_started", False, 60, "approve"),
+    (100, {"replies": [tool(), tool(call_id="two"), tool(call_id="three")]},
+     "partial", False, 105, "approve"),
+    (85, {"replies": [tool(document=CORRECTED), tool(call_id="two")]},
+     "partial", True, 90, "changes_requested"),
+    (85, {"replies": [tool(document={"corrections": []}), tool(call_id="two")]},
+     "partial", True, 90, "approve"),
+    (100, {"error": "offline correction failure"}, "failed", False, 60, None),
+    (100, {"replies": [text({"corrections": [
+        {"request_id": "r9999", "file": "src/app.py", "line": 1, "side": "RIGHT"},
+    ]})]}, "failed", False, 75, None),
+    (100, {"replies": [text({"corrections": [
+        {"request_id": "r0001", "file": "docs/secret.md", "line": 1, "side": "RIGHT"},
+    ]})]}, "complete", True, 75, "approve"),
+])
+def test_actual_panel_correction_budget_and_fatal_boundaries(
+    capture, tmp_path, installed, request, limit, correction, want, available, usage, verdict,
+):
+    result, inputs, config = actual_panel(
+        capture, tmp_path, installed, request, limit=limit,
+        initial={"replies": [tool(document=BAD_ANCHOR), tool(call_id="two"),
+                             tool(call_id="three"), text(BAD_ANCHOR)]},
+        correction=correction,
+    )
+    assert len(result.corrections) == 1, "scripted initial findings must reach correction"
+    assert result.corrections[0].status == want
+    assert result.corrections[0].output_available == available and result.usage.total == usage
+    assert result.status == ("failed" if verdict is None else (
+        "complete" if want == "complete" else "partial"))
+    assert (None if result.verdict is None else result.verdict.verdict) == verdict
+    if verdict == "approve":
+        assert result.verification.accepted == () and len(result.verification.dropped) == 1
+    assert load(capture / "panel.json")["ledger"]["overshoot_tokens"] == max(0, usage - limit)
+    assert_panel_evidence(result, inputs, config)
+
+
+@pytest.mark.parametrize("initial,limit,want,available,verdict", [
+    ({"replies": [tool(document=FINDING), tool(call_id="two")]}, 25, "partial", True,
+     "changes_requested"),
+    ({"replies": [tool(document={"findings": []}), tool(call_id="two")]}, 25,
+     "partial", True, "approve"),
+    ({"replies": [tool(), tool(call_id="two")]}, 25, "partial", False, None),
+    ({"error": "offline initial failure"}, 100, "failed", False, None),
+])
+def test_actual_panel_partial_initial_documents_and_missing_output(
+    capture, tmp_path, installed, request, initial, limit, want, available, verdict,
+):
+    result, inputs, config = actual_panel(
+        capture, tmp_path, installed, request, initial=initial, limit=limit,
+    )
+    assert result.initial.outcomes[0].status == want
+    assert result.initial.outcomes[0].output_available == available
+    assert result.corrections == ()
+    assert result.status == ("failed" if verdict is None else "partial")
+    assert (None if result.verdict is None else result.verdict.verdict) == verdict
+    assert_panel_evidence(result, inputs, config)
+
+
+def test_actual_panel_unadmitted_initial_fails_without_verdict(
+    capture, tmp_path, installed, request,
+):
+    result, inputs, config = actual_panel(
+        capture, tmp_path, installed, request, limit=1, personas=["senior-dev", "security"],
+        initial={"replies": [text(FINDING)]},
+    )
+    assert [o.status for o in result.initial.outcomes] == ["partial", "not_started"]
+    assert result.status == "failed" and result.verdict is None and result.corrections == ()
+    assert_panel_evidence(result, inputs, config)
+
+
+def test_actual_panel_correction_tools_preserve_filtered_root(
+    capture, tmp_path, installed, request,
+):
+    correction = {"replies": [
+        tool(args={"path": "diff.patch"}, call_id="diff"),
+        tool(args={"path": "files.json"}, call_id="files"),
+        tool(args={"path": "context.json"}, call_id="context"),
+        tool(args={"path": "../diff.patch"}, call_id="raw"),
+        tool(args={"path": str(capture / "diff.patch")}, call_id="absolute-raw"),
+        tool(args={"path": "../sessions/senior-dev/attempt-0001/session.json"}, call_id="sibling"),
+        tool(args={"path": "docs/secret.md"}, call_id="excluded"),
+        tool("write", {"path": "diff.patch", "content": "changed"}, call_id="write"),
+        tool("edit", {"path": "diff.patch", "old": "new", "new": "changed"}, call_id="edit"),
+        tool("bash", {"command": "false"}, call_id="bash"),
+        text(CORRECTED),
+    ]}
+    result, inputs, config = actual_panel(
+        capture, tmp_path, installed, request, initial={"replies": [text(BAD_ANCHOR)]},
+        # Eleven real turns, including final output, need room under the fixture turn bound.
+        correction=correction, limit=200, max_turns=12,
+    )
+    assert result.status == "complete" and result.verdict.verdict == "changes_requested"
+    assert result.usage.total == 180
+    observed = observations(result.corrections[0])
+    blocks = [b for m in observed["calls"][-1]["messages"] for b in m["content"]
+              if b["type"] == "tool_result"]
+    assert len(blocks) == 10
+    assert [b["is_error"] for b in blocks] == [False, False, False, True, True, True,
+                                             True, True, True, True]
+    assert blocks[0]["content"] == (inputs.root / "diff.patch").read_text().rstrip("\n")
+    assert json.loads(blocks[1]["content"]) == load(inputs.root / "files.json")
+    assert json.loads(blocks[2]["content"]) == load(inputs.root / "context.json")
+    assert all("outside the root" in b["content"] for b in blocks[3:6])
+    assert all("not allowed" in b["content"] for b in blocks[7:])
+    assert_panel_evidence(result, inputs, config)
+
+
+def test_actual_panel_failed_initial_preserves_completed_sibling(
+    capture, tmp_path, installed, request,
+):
+    result, inputs, config = actual_panel(
+        capture, tmp_path, installed, request, limit=100,
+        personas=["senior-dev", {"name": "custom", "system_prompt": "Custom SYSTEM"}],
+        initial={"replies": [text(FINDING)]},
+        systems={
+            load_persona("senior-dev").system_prompt: {"replies": [text(FINDING)],
+                                                       "barrier_participants": 2},
+            "Custom SYSTEM": {"error": "offline sibling failure", "barrier_participants": 2},
+        },
+    )
+    assert [o.status for o in result.initial.outcomes] == ["complete", "failed"]
+    assert result.status == "failed" and result.verdict is None and not result.accounting_complete
+    assert result.initial.outcomes[0].findings and result.corrections == ()
+    assert_panel_evidence(result, inputs, config)
+
+
+def test_actual_panel_order_duplicates_conflicts_and_exact_correction_rails(
+    capture, tmp_path, installed, request, monkeypatch,
+):
+    config = configure(capture, review=200, per=100)
+    document = config.to_dict()
+    document["rounds"] = {"max": 7}
+    document["models"]["overrides"] = {"custom": {
+        "provider": "openai", "model": "custom-model", "base_url": "https://offline.invalid/v1",
+    }}
+    config = parse_config(json.dumps(document))
+    (capture / "config.yaml").write_text(json.dumps(document))
+    (capture / "config.json").write_text(json.dumps(config.to_dict()))
+    inputs = prepare_review_inputs(capture, config)
+    before = {p: p.read_bytes() for p in capture.rglob("*") if p.is_file()}
+    monkeypatch.setenv("NARE_TOOLS", "write,bash")
+    monkeypatch.setenv("NARE_BASE_URL", "https://ambient.invalid/v1")
+    monkeypatch.setenv("OPENAI_API_KEY", "offline-sentinel")
+    advisory = {**FINDING["findings"][0], "category": "style", "problem": "Advisory"}
+    senior = {"findings": [*BAD_ANCHOR["findings"], *BAD_ANCHOR["findings"], advisory]}
+    custom = {"findings": [{**BAD_ANCHOR["findings"][0], "category": "docs"}]}
+    runtime = offline_runtime(tmp_path, installed, systems={
+        load_persona("senior-dev").system_prompt: {"replies": [text(senior)],
+                                                   "barrier_participants": 2,
+                                                   "delay_seconds": 0.1},
+        "Custom SYSTEM": {"replies": [text(custom)], "barrier_participants": 2},
+    })
+    spec_path = tmp_path / "offline-spec.json"
+    spec = load(spec_path)
+    spec["scenarios"] = [{
+        "purpose": "reanchor", "attempt": "attempt-0002",
+        "prompt_prefix": "Correct only the anchors",
+        "scenario": {"replies": [text(CORRECTED)]},
+    }]
+    spec_path.write_text(json.dumps(spec))
+    result = asyncio.run(run_review(capture, config, runtime=runtime))
+    if destination := os.environ.get("SCRUTARE_TEST_EVIDENCE_DIR"):
+        target = Path(destination) / request.node.name
+        target.mkdir(parents=True, exist_ok=False)
+        shutil.copytree(capture, target / "run")
+        shutil.copy2(spec_path, target / spec_path.name)
+        shutil.copy2(runtime.executable, target / "offline-nare")
+    assert all(p.read_bytes() == contents for p, contents in before.items())
+    assert result.status == "complete" and result.verdict.verdict == "changes_requested"
+    assert [o.persona for o in result.initial.outcomes] == ["senior-dev", "custom"]
+    assert [o.persona for o in result.corrections] == ["senior-dev", "custom"]
+    assert [o.allocated_tokens for o in result.corrections] == [85, 85]
+    assert result.initial.usage.total == 30 and result.usage.total == 60
+    candidate, advisory = result.verdict.findings
+    assert candidate.problem == "Candidate" and advisory.problem == "Advisory"
+    assert [(f.persona, f.category, f.problem, f.reason) for f in candidate.sources] == [
+        ("senior-dev", "correctness", "Candidate", "Review"),
+        ("senior-dev", "correctness", "Candidate", "Review"),
+        ("custom", "docs", "Candidate", "Review"),
+    ]
+    assert candidate.categories == ("correctness", "docs")
+    panel = load(capture / "panel.json")
+    assert [len(group["requests"]) for group in panel["corrections"]] == [1, 1]
+    assert [[r["request_id"] for r in group["requests"]] for group in panel["corrections"]] == [
+        ["r0001"], ["r0001"],
+    ]
+    observed = [observations(o) for o in result.initial.outcomes]
+    assert observed[1]["calls"][0]["end"] < observed[0]["calls"][0]["end"]
+    assert len({o.session_id for o in (*result.initial.outcomes, *result.corrections)}) == 4
+    assert_panel_evidence(result, inputs, config)

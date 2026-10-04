@@ -187,11 +187,25 @@ When the strategy's rounds are exhausted without convergence:
 
 ## 8. Failure paths
 
-- A persona session fails (model or provider error): bounded retries from
-  config, then the run fails without posting a verdict. Artifacts name the
-  failed persona, and an Action run goes red.
-- Findings unanchorable after one re-anchor round: dropped, and the verdict is
-  derived from the survivors only.
+- For the M1 panel, any failed or unadmitted initial persona, uncertain
+  accounting, or unavailable validated initial findings document fails the run
+  with artifacts and no verdict. A valid partial document counts, including an
+  explicitly empty findings array. Missing initial output cannot become an empty
+  review. The panel does not retry initial sessions.
+- Findings unanchorable after one re-anchor opportunity are dropped, and the
+  verdict is derived from the survivors only. The panel groups requests by the
+  original persona and admits at most one fresh correction invocation per persona
+  against the same live budget. Denied corrections or a known budget-stopped
+  correction without output leave requests missing and drop their originals,
+  retaining valid initial evidence. Valid partial correction documents count.
+  Failed, protocol-invalid, or uncertain correction execution fails the panel
+  without a verdict. Corrections may change only anchors.
+- The panel performs one convergence pass regardless of positive `rounds.max`.
+  Correction is part of that pass. Blocking findings, failures, and budget stops
+  do not create exhaustion or escalation. It installs exclusive `findings.json`
+  and `panel.json` before exact `verdict.json` bytes, preserving prior evidence.
+  Installation is per artifact, so a publication failure can leave partial
+  evidence without a verdict. A fresh captured run is required to retry.
 - A nare budget stop or reported usage strictly above the invocation allocation
   marks the persona partial, even if nare reports `done` with exit 0. Valid
   candidate findings remain available and artifacts record actual usage and
