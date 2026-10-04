@@ -16,10 +16,15 @@ from scrutare.engine.session_artifacts import SessionArtifactError
 
 @pytest.mark.parametrize("name", ["sessions", "fanout.json", "panel.json", "findings.json",
                                   "verdict.json", "posting.json", "review-payload.json",
-                                  "escalation.json", ".posting.lock"])
+                                  "escalation.json", "reviewer-request.json", ".posting.lock"])
 @pytest.mark.parametrize("kind", ["regular", "link", "directory", "fifo"])
-def test_stale_evidence_refused_before_preparation(capture, name, kind):
-    strategy, _, _ = modules()
+def test_stale_evidence_refused_before_preparation(capture, monkeypatch, name, kind):
+    strategy, _, wave = modules()
+
+    async def inspect(runtime):
+        raise AssertionError("Stale evidence must be refused before runtime inspection")
+
+    monkeypatch.setattr(wave, "inspect_nare_runtime", inspect)
     config = configure(capture)
     path = capture / name
     if kind == "regular":
@@ -30,11 +35,21 @@ def test_stale_evidence_refused_before_preparation(capture, name, kind):
         os.mkfifo(path)
     else:
         path.mkdir()
+    before = path.lstat()
+    entries = set(capture.iterdir())
     with pytest.raises(SessionArtifactError):
         run(strategy, capture, config)
     assert not (capture / "review-inputs").exists()
+    assert set(capture.iterdir()) == entries
+    after = path.lstat()
+    assert (after.st_dev, after.st_ino, after.st_mode) == (
+        before.st_dev, before.st_ino, before.st_mode)
     if kind == "regular":
         assert path.read_bytes() == b"prior evidence"
+    elif kind == "link":
+        assert path.readlink() == capture / "absent"
+    elif kind == "directory":
+        assert not list(path.iterdir())
 
 
 def test_exact_byte_writer_refuses_overwrite_and_only_engine_destinations(capture):
