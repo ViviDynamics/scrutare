@@ -9,6 +9,7 @@ from urllib.parse import urlsplit
 import yaml
 from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
 
+from scrutare.personas.definition import PersonaDefinition as PersonaDefinition
 from scrutare.personas.names import BUILTIN_PERSONA_NAMES
 
 Strategy = Literal["panel", "iterative", "debate"]
@@ -27,12 +28,6 @@ CATEGORIES: tuple[Category, ...] = (
 
 class ConfigError(ValueError):
     """An invalid configuration with a safe field-path diagnostic."""
-
-
-@dataclass(frozen=True)
-class PersonaDefinition:
-    name: str
-    system_prompt: str
 
 
 @dataclass(frozen=True)

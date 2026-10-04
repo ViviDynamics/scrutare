@@ -62,7 +62,9 @@ letters and digits separated by single hyphens, matching
 `[a-z][a-z0-9]*(?:-[a-z0-9]+)*`. `system_prompt` is a nonempty string;
 its whitespace is preserved. An inline definition can replace a built-in
 name, but every name must occur only once in the configured panel.
-An undefined custom name cannot be used as a bare string.
+An undefined custom name cannot be used as a bare string. See the
+[persona authoring guide](writing-personas.md) for the built-in perspectives,
+complete custom and replacement examples, prompt guidance, and registry API.
 
 ## Model inheritance
 
