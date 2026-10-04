@@ -166,7 +166,7 @@ uv run --locked --extra dev mypy src
 uv build --wheel
 ```
 
-CI also installs nare 2026.10.0 in a separate Python 3.14 environment pinned
+CI also installs nare 2026.10.4 in a separate Python 3.14 environment pinned
 to its public release commit and locked dependencies. Each matrix job runs
 offline tests through that installed CLI. To include the same proof locally,
 set `SCRUTARE_TEST_NARE_EXECUTABLE` to the absolute path of the separately
