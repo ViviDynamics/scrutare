@@ -12,28 +12,32 @@ import stat
 import tempfile
 from collections.abc import Iterator
 from contextlib import ExitStack, contextmanager
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import BinaryIO, TypeVar
+from typing import BinaryIO, Literal, TypedDict, TypeVar
 from urllib.parse import urlsplit
 
 from scrutare import __version__
 from scrutare.config import ModelRail
 from scrutare.engine.budgets import BudgetLease, ReviewBudgetLedger
-from scrutare.engine.persona_inputs import PersonaReviewInput
+from scrutare.engine.persona_inputs import PersonaReanchorInput, PersonaReviewInput
+from scrutare.engine.reanchor import reanchor_schema
 from scrutare.engine.review_inputs import ReviewInputError, validate_prepared_inputs
 from scrutare.engine.session_artifacts import SessionArtifactError, write_owned_json
 from scrutare.engine.session_models import (
     NareCapability,
     NareRuntime,
+    ReanchorOutcome,
     SessionOutcome,
     SessionStatus,
     TokenUsage,
 )
 from scrutare.engine.session_output import (
+    DecodedReanchorSession,
     DecodedSession,
     SessionProtocolError,
     decode_cost_event,
+    decode_reanchor_session,
     decode_session,
     findings_schema,
 )
@@ -322,28 +326,52 @@ async def _execute(argv: list[str], environment: dict[str, str], cwd: Path,
     return process.returncode
 
 
+class _OutcomeMetadata(TypedDict):
+    persona: str
+    status: SessionStatus
+    reason: str
+    output_available: bool
+    usage: TokenUsage
+    accounting_complete: bool
+    allocated_tokens: int
+    overshoot_tokens: int
+    session_id: str | None
+    artifact_directory: Path
+    invocation_limit: int
+    nare_status: str | None
+    stop_reason: str | None
+    exit_code: int | None
+
+
 def _outcome(lease: BudgetLease, path: Path, evidence: _Evidence, *, status: SessionStatus,
-             reason: str, complete: bool, decoded: DecodedSession | None,
-             exit_code: int | None) -> SessionOutcome:
-    return SessionOutcome(
-        persona=lease.persona, status=status, reason=reason,
-        findings=() if decoded is None else decoded.findings,
-        output_available=decoded is not None and decoded.output_available,
-        usage=evidence.usage, accounting_complete=complete,
-        allocated_tokens=lease.allocated_tokens,
-        overshoot_tokens=max(0, evidence.usage.total - lease.limit_tokens),
-        session_id=None if decoded is None else decoded.session_id,
-        artifact_directory=path, invocation_limit=lease.limit_tokens,
-        nare_status=None if decoded is None else decoded.status,
-        stop_reason=None if decoded is None else decoded.stop_reason, exit_code=exit_code,
-    )
+             reason: str, complete: bool, decoded: DecodedSession | DecodedReanchorSession | None,
+             exit_code: int | None, purpose: Literal["review", "reanchor"],
+             ) -> SessionOutcome | ReanchorOutcome:
+    metadata: _OutcomeMetadata = {
+        "persona": lease.persona, "status": status, "reason": reason,
+        "output_available": decoded is not None and decoded.output_available,
+        "usage": evidence.usage, "accounting_complete": complete,
+        "allocated_tokens": lease.allocated_tokens,
+        "overshoot_tokens": max(0, evidence.usage.total - lease.limit_tokens),
+        "session_id": None if decoded is None else decoded.session_id,
+        "artifact_directory": path, "invocation_limit": lease.limit_tokens,
+        "nare_status": None if decoded is None else decoded.status,
+        "stop_reason": None if decoded is None else decoded.stop_reason, "exit_code": exit_code,
+    }
+    if purpose == "reanchor":
+        assert decoded is None or isinstance(decoded, DecodedReanchorSession)
+        return ReanchorOutcome(
+            corrections=() if decoded is None else decoded.corrections, **metadata,
+        )
+    assert decoded is None or isinstance(decoded, DecodedSession)
+    return SessionOutcome(findings=() if decoded is None else decoded.findings, **metadata)
 
 
-async def run_persona_session(
-    descriptor: PersonaReviewInput, rail: ModelRail, lease: BudgetLease, *,
+async def _run_session(
+    descriptor: PersonaReviewInput | PersonaReanchorInput, rail: ModelRail, lease: BudgetLease, *,
     ledger: ReviewBudgetLedger, artifact_directory: Path, runtime: NareRuntime,
-    capability: NareCapability,
-) -> SessionOutcome:
+    capability: NareCapability, purpose: Literal["review", "reanchor"],
+) -> SessionOutcome | ReanchorOutcome:
     """Execute one fresh lease, retaining reported lower bounds and private raw evidence.
 
     Timeout and cancellation are liveness limits. Token bounds are passed to nare for
@@ -355,19 +383,24 @@ async def run_persona_session(
     except (ValueError, AttributeError):
         raise SessionRuntimeError("lease: expected an active unobserved ledger lease") from None
     evidence = _Evidence(lease.baseline)
-    decoded: DecodedSession | None = None
+    decoded: DecodedSession | DecodedReanchorSession | None = None
     status: SessionStatus = "failed"
     reason = "invocation"
     complete = True
     exit_code: int | None = None
     cancelled = False
     prepared_root: Path | None = None
+    binding: dict[str, object] = {}
     try:
-        if (not isinstance(descriptor, PersonaReviewInput)
+        expected_descriptor = PersonaReanchorInput if purpose == "reanchor" else PersonaReviewInput
+        if (not isinstance(descriptor, expected_descriptor)
                 or descriptor.persona.name != lease.persona
                 or lease.baseline != TokenUsage()):
             raise SessionRuntimeError("session: expected a fresh matching persona descriptor")
         prepared_root = descriptor.inputs.root
+        if isinstance(descriptor, PersonaReanchorInput):
+            binding = {"purpose": "reanchor",
+                       "requests": [asdict(request) for request in descriptor.requests]}
         reason = "inputs"
         validate_prepared_inputs(descriptor.inputs)
         input_args = descriptor.nare_input_args()
@@ -380,7 +413,11 @@ async def run_persona_session(
         if not isinstance(capability, NareCapability) or capability.contract != 1:
             raise SessionRuntimeError("capability: expected inspected contract 1")
         _version(capability.version)
+        if purpose == "reanchor" and lease.session_key != f"{lease.persona}/attempt-0002":
+            raise SessionRuntimeError("session_key: expected the fresh correction identity")
         reason = "artifacts"
+        if purpose == "reanchor" and artifact_directory.name != "attempt-0002":
+            raise SessionArtifactError("artifact_directory: expected the correction attempt")
         with _attempt(artifact_directory, prepared_root, lease.persona) as directory:
             if os.listdir(directory):
                 raise SessionArtifactError("artifact_directory: expected an unused attempt")
@@ -390,17 +427,20 @@ async def run_persona_session(
                     "--provider", rail.provider, "--model=" + rail.model]
             if rail.base_url is not None:
                 argv.extend(("--base-url", rail.base_url))
+            schema_name = ("reanchor.schema.json" if purpose == "reanchor"
+                           else "findings.schema.json")
+            schema = reanchor_schema() if purpose == "reanchor" else findings_schema()
             argv.extend(("--jsonl", "--yes", "--contract", "1", "--schema",
-                         str(artifact_directory / "findings.schema.json"), "--budget-tokens",
+                         str(artifact_directory / schema_name), "--budget-tokens",
                          str(lease.limit_tokens), "--session",
                          str(artifact_directory / "session.json"),
                          "--max-turns", str(runtime.max_turns)))
-            write_owned_json(artifact_directory / "findings.schema.json", findings_schema(),
+            write_owned_json(artifact_directory / schema_name, schema,
                              prepared_root=prepared_root)
             write_owned_json(artifact_directory / "invocation.json", {
                 "schema_version": 1, "scrutare_version": __version__,
                 "nare_version": capability.version, "contract": capability.contract,
-                "persona": lease.persona, "session_key": lease.session_key,
+                "persona": lease.persona, "session_key": lease.session_key, **binding,
                 "argv": argv, "rail": {"provider": rail.provider, "model": rail.model,
                                         "base_url": rail.base_url},
                 "allocated_tokens": lease.allocated_tokens, "invocation_limit": lease.limit_tokens,
@@ -420,9 +460,20 @@ async def run_persona_session(
             saved = _session_document(directory)
             if evidence.corrupt:
                 raise SessionProtocolError("session: corrupted event evidence")
-            decoded = decode_session(evidence.stdout, saved, persona=lease.persona,
-                                     exit_code=exit_code, expected_limit=lease.limit_tokens,
-                                     expected_root=prepared_root)
+            if isinstance(descriptor, PersonaReanchorInput):
+                try:
+                    validate_prepared_inputs(descriptor.inputs)
+                except ReviewInputError:
+                    ledger.mark_uncertain(lease)
+                    raise
+                decoded = decode_reanchor_session(
+                    evidence.stdout, saved, descriptor=descriptor,
+                    exit_code=exit_code, expected_limit=lease.limit_tokens,
+                )
+            else:
+                decoded = decode_session(evidence.stdout, saved, persona=lease.persona,
+                                         exit_code=exit_code, expected_limit=lease.limit_tokens,
+                                         expected_root=prepared_root)
             if decoded.status is not None and (
                     decoded.nare_version != capability.version
                     or decoded.contract != capability.contract):
@@ -462,19 +513,51 @@ async def run_persona_session(
     except (SessionProtocolError, ValueError, TypeError, OverflowError, RecursionError):
         reason, status, complete = "protocol", "failed", False
     outcome = _outcome(lease, artifact_directory, evidence, status=status, reason=reason,
-                       complete=complete, decoded=decoded, exit_code=exit_code)
+                       complete=complete, decoded=decoded, exit_code=exit_code, purpose=purpose)
     ledger.settle(lease, evidence.usage, complete)
     if prepared_root is not None:
         try:
             write_owned_json(artifact_directory / "result.json", {
                 "schema_version": 1, "scrutare_version": __version__,
                 "nare_version": capability.version, "contract": capability.contract,
-                "session_key": lease.session_key, **outcome.to_dict(),
+                "session_key": lease.session_key, **binding, **outcome.to_dict(),
             }, prepared_root=prepared_root)
         except (SessionArtifactError, AttributeError):
             outcome = _outcome(lease, artifact_directory, evidence, status="failed",
                                reason="artifacts", complete=complete, decoded=decoded,
-                               exit_code=exit_code)
+                               exit_code=exit_code, purpose=purpose)
     if cancelled:
         raise asyncio.CancelledError
+    return outcome
+
+
+async def run_persona_session(
+    descriptor: PersonaReviewInput, rail: ModelRail, lease: BudgetLease, *,
+    ledger: ReviewBudgetLedger, artifact_directory: Path, runtime: NareRuntime,
+    capability: NareCapability,
+) -> SessionOutcome:
+    """Execute one fresh review lease through the common private lifecycle."""
+    outcome = await _run_session(
+        descriptor, rail, lease, ledger=ledger, artifact_directory=artifact_directory,
+        runtime=runtime, capability=capability, purpose="review",
+    )
+    assert isinstance(outcome, SessionOutcome)
+    return outcome
+
+
+async def run_reanchor_session(
+    descriptor: PersonaReanchorInput, rail: ModelRail, lease: BudgetLease, *,
+    ledger: ReviewBudgetLedger, artifact_directory: Path, runtime: NareRuntime,
+    capability: NareCapability,
+) -> ReanchorOutcome:
+    """Execute anchor-only corrections with a zero baseline and the M1 correction identity.
+
+    The caller must supply attempt-0002 and the session key persona/attempt-0002.
+    Correction scheduling and admission remain the caller's responsibility.
+    """
+    outcome = await _run_session(
+        descriptor, rail, lease, ledger=ledger, artifact_directory=artifact_directory,
+        runtime=runtime, capability=capability, purpose="reanchor",
+    )
+    assert isinstance(outcome, ReanchorOutcome)
     return outcome

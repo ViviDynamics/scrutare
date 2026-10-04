@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Literal
 
 from scrutare.findings.models import Finding
+from scrutare.findings.verification import ReanchorCorrection
 
 SessionStatus = Literal["complete", "partial", "failed", "not_started"]
 
@@ -107,36 +108,16 @@ class SessionOutcome:
     exit_code: int | None = None
 
     def __post_init__(self) -> None:
-        _persona(self.persona)
-        if self.status not in ("complete", "partial", "failed", "not_started"):
-            raise ValueError("status: expected a session status")
-        _text(self.reason, "reason")
+        _validate_execution_outcome(self)
         if not isinstance(self.findings, tuple) or any(
             not isinstance(finding, Finding) or finding.persona != self.persona
             for finding in self.findings
         ):
             raise ValueError("findings: expected a tuple of caller-attributed findings")
-        _boolean(self.output_available, "output_available")
-        _boolean(self.accounting_complete, "accounting_complete")
-        if not isinstance(self.usage, TokenUsage):
-            raise ValueError("usage: expected TokenUsage")
-        for field in ("allocated_tokens", "overshoot_tokens", "invocation_limit"):
-            _integer(getattr(self, field), field)
-        if self.overshoot_tokens != max(0, self.usage.total - self.invocation_limit):
-            raise ValueError("overshoot_tokens: inconsistent with cumulative usage and limit")
-        if not isinstance(self.artifact_directory, Path):
-            raise ValueError("artifact_directory: expected a Path")
-        for field in ("session_id", "nare_status", "stop_reason"):
-            if getattr(self, field) is not None:
-                _text(getattr(self, field), field)
-        if self.exit_code is not None and type(self.exit_code) is not int:
-            raise ValueError("exit_code: expected an integer or null")
 
     def to_dict(self) -> dict[str, object]:
         return {
-            "persona": self.persona,
-            "status": self.status,
-            "reason": self.reason,
+            **_execution_dict(self),
             "findings": [
                 {
                     "file": finding.anchor.file,
@@ -149,18 +130,95 @@ class SessionOutcome:
                 }
                 for finding in self.findings
             ],
-            "output_available": self.output_available,
-            "usage": self.usage.to_dict(),
-            "accounting_complete": self.accounting_complete,
-            "allocated_tokens": self.allocated_tokens,
-            "overshoot_tokens": self.overshoot_tokens,
-            "session_id": self.session_id,
-            "artifact_directory": str(self.artifact_directory),
-            "invocation_limit": self.invocation_limit,
-            "nare_status": self.nare_status,
-            "stop_reason": self.stop_reason,
-            "exit_code": self.exit_code,
         }
+
+
+@dataclass(frozen=True)
+class ReanchorOutcome:
+    """A fresh correction attempt with anchor-only candidates and honest execution metadata."""
+
+    persona: str
+    status: SessionStatus
+    reason: str
+    corrections: tuple[ReanchorCorrection, ...]
+    output_available: bool
+    usage: TokenUsage
+    accounting_complete: bool
+    allocated_tokens: int
+    overshoot_tokens: int
+    session_id: str | None
+    artifact_directory: Path
+    invocation_limit: int
+    nare_status: str | None = None
+    stop_reason: str | None = None
+    exit_code: int | None = None
+
+    def __post_init__(self) -> None:
+        _validate_execution_outcome(self)
+        if not isinstance(self.corrections, tuple) or any(
+            not isinstance(correction, ReanchorCorrection)
+            or correction.original.persona != self.persona for correction in self.corrections
+        ):
+            raise ValueError("corrections: expected a tuple of caller-attributed corrections")
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            **_execution_dict(self),
+            "corrections": [
+                {"original": {
+                    "file": correction.original.anchor.file,
+                    "line": correction.original.anchor.line,
+                    "side": correction.original.anchor.side,
+                    "category": correction.original.category,
+                    "problem": correction.original.problem,
+                    "reason": correction.original.reason,
+                    "persona": correction.original.persona,
+                }, "anchor": {"file": correction.anchor.file, "line": correction.anchor.line,
+                              "side": correction.anchor.side}}
+                for correction in self.corrections
+            ],
+        }
+
+
+def _validate_execution_outcome(self: SessionOutcome | ReanchorOutcome) -> None:
+    _persona(self.persona)
+    if self.status not in ("complete", "partial", "failed", "not_started"):
+        raise ValueError("status: expected a session status")
+    _text(self.reason, "reason")
+    _boolean(self.output_available, "output_available")
+    _boolean(self.accounting_complete, "accounting_complete")
+    if not isinstance(self.usage, TokenUsage):
+        raise ValueError("usage: expected TokenUsage")
+    for field in ("allocated_tokens", "overshoot_tokens", "invocation_limit"):
+        _integer(getattr(self, field), field)
+    if self.overshoot_tokens != max(0, self.usage.total - self.invocation_limit):
+        raise ValueError("overshoot_tokens: inconsistent with cumulative usage and limit")
+    if not isinstance(self.artifact_directory, Path):
+        raise ValueError("artifact_directory: expected a Path")
+    for field in ("session_id", "nare_status", "stop_reason"):
+        if getattr(self, field) is not None:
+            _text(getattr(self, field), field)
+    if self.exit_code is not None and type(self.exit_code) is not int:
+        raise ValueError("exit_code: expected an integer or null")
+
+
+def _execution_dict(self: SessionOutcome | ReanchorOutcome) -> dict[str, object]:
+    return {
+        "persona": self.persona,
+        "status": self.status,
+        "reason": self.reason,
+        "output_available": self.output_available,
+        "usage": self.usage.to_dict(),
+        "accounting_complete": self.accounting_complete,
+        "allocated_tokens": self.allocated_tokens,
+        "overshoot_tokens": self.overshoot_tokens,
+        "session_id": self.session_id,
+        "artifact_directory": str(self.artifact_directory),
+        "invocation_limit": self.invocation_limit,
+        "nare_status": self.nare_status,
+        "stop_reason": self.stop_reason,
+        "exit_code": self.exit_code,
+    }
 
 
 @dataclass(frozen=True)

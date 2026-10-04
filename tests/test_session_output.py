@@ -7,6 +7,7 @@ import json
 from dataclasses import FrozenInstanceError
 
 import pytest
+from test_review_inputs import capture as capture
 
 from scrutare.engine.session_models import TokenUsage
 
@@ -389,3 +390,132 @@ def test_budget_event_cumulative_usage_and_limit_must_match_terminal(tmp_path):
                                     "usage": usage(input=4)}))
     with pytest.raises(module().SessionProtocolError):
         decode(tmp_path, events, saved, exit_code=1)
+
+
+@pytest.fixture
+def correction_descriptor(capture):
+    from test_persona_inputs import reanchor_descriptor
+
+    return reanchor_descriptor(capture)
+
+
+def decode_correction(descriptor, events, saved, *, exit_code=0, limit=26):
+    assert hasattr(module(), "decode_reanchor_session"), "typed correction decoder is missing"
+    return module().decode_reanchor_session(
+        b"\n".join(json.dumps(item).encode() for item in events),
+        None if saved is None else json.dumps(saved).encode(), descriptor=descriptor,
+        exit_code=exit_code, expected_limit=limit,
+    )
+
+
+@pytest.mark.parametrize("status,stop,exit_code,limit,partial", [
+    ("done", "end_turn", 0, 26, False), ("done", "end_turn", 0, 25, True),
+    ("error", "budget", 1, 26, True),
+])
+def test_correction_decoder_keeps_metadata_and_anchor_only_bindings(
+    correction_descriptor, status, stop, exit_code, limit, partial,
+):
+    from scrutare.findings import Anchor, ReanchorCorrection
+
+    descriptor = correction_descriptor
+    output = {"corrections": [{"request_id": "r0002", "file": "src/app.py", "line": 3,
+                               "side": "LEFT"}]}
+    events, saved = fixture(descriptor.inputs.root, status=status, stop=stop,
+                            output=output, limit=limit)
+    result = decode_correction(descriptor, events, saved, exit_code=exit_code, limit=limit)
+    assert result.corrections == (ReanchorCorrection(descriptor.requests[1].original,
+                                                    Anchor("src/app.py", 3, "LEFT")),)
+    assert (result.session_id, result.status, result.stop_reason, result.exit_code,
+            result.usage, result.output_available, result.budget_limit, result.partial,
+            result.nare_version, result.contract, result.turns) == (
+        "session-1", status, stop, exit_code, TokenUsage(3, 5, 7, 11), True, limit, partial,
+        "2026.10.0", 1, 1,
+    )
+    with pytest.raises(FrozenInstanceError):
+        result.corrections = ()
+
+
+@pytest.mark.parametrize("available", [False, True])
+def test_correction_decoder_distinguishes_missing_from_empty_partial(
+    correction_descriptor, available,
+):
+    descriptor = correction_descriptor
+    events, saved = fixture(descriptor.inputs.root, status="error", stop="budget",
+                            output={"corrections": []})
+    if not available:
+        events[-1]["output"] = saved["output"] = None
+    result = decode_correction(descriptor, events, saved, exit_code=1)
+    assert result.corrections == () and result.partial
+    assert result.output_available is available
+
+
+@pytest.mark.parametrize("mutation", [
+    "saved-bool-line", "unknown-id", "duplicate-id", "extra-field", "missing-side",
+    "saved-mismatch", "missing-terminal", "duplicate-terminal", "missing-session",
+    "usage", "cost-event", "root", "tools", "budget", "contract", "exit",
+    "resume-cumulative", "duplicate-json-key",
+])
+def test_correction_decoder_refuses_payload_and_accounting_corruption(
+    correction_descriptor, mutation,
+):
+    descriptor = correction_descriptor
+    item = {"request_id": "r0001", "file": "src/app.py", "line": 1, "side": "RIGHT"}
+    events, saved = fixture(descriptor.inputs.root, output={"corrections": [item]})
+    exit_code = 0
+    if mutation == "saved-bool-line":
+        saved["output"]["corrections"][0]["line"] = True
+    elif mutation == "unknown-id":
+        item["request_id"] = "r9999"
+    elif mutation == "duplicate-id":
+        events[-1]["output"]["corrections"].append(copy.deepcopy(item))
+    elif mutation == "extra-field":
+        item["persona"] = "MODEL_SECRET"
+    elif mutation == "missing-side":
+        del item["side"]
+    elif mutation == "saved-mismatch":
+        saved["output"]["corrections"] = []
+    elif mutation == "missing-terminal":
+        events.pop()
+    elif mutation == "duplicate-terminal":
+        events.append(copy.deepcopy(events[-1]))
+    elif mutation == "missing-session":
+        saved = None
+    elif mutation == "usage":
+        events[-1]["usage"]["input"] = True
+    elif mutation == "cost-event":
+        events.pop(0)
+    elif mutation == "root":
+        saved["policy"]["root"] = str(descriptor.inputs.root.parent)
+    elif mutation == "tools":
+        saved["policy"]["tools"] = ["read", "write"]
+    elif mutation == "budget":
+        saved["budget"]["tokens"] = 25
+    elif mutation == "contract":
+        saved["contract"] = True
+    elif mutation == "exit":
+        exit_code = 1
+    elif mutation == "resume-cumulative":
+        events[-1]["usage"]["input"] += 10
+        saved["usage"]["input"] += 10
+        events[-1]["budget"]["used_tokens"] += 10
+    elif mutation == "duplicate-json-key":
+        with pytest.raises(module().SessionProtocolError):
+            assert hasattr(module(), "decode_reanchor_session"), "correction decoder is missing"
+            module().decode_reanchor_session(
+                b'{"type":"result","type":"result"}', json.dumps(saved).encode(),
+                descriptor=descriptor, exit_code=0, expected_limit=26,
+            )
+        return
+    with pytest.raises(module().SessionProtocolError) as raised:
+        decode_correction(descriptor, events, saved, exit_code=exit_code)
+    assert "MODEL_SECRET" not in str(raised.value)
+
+
+def test_correction_decoder_never_started_has_zero_accounting(correction_descriptor):
+    assert hasattr(module(), "decode_reanchor_session"), "typed correction decoder is missing"
+    result = module().decode_reanchor_session(
+        b"", None, descriptor=correction_descriptor, exit_code=2, expected_limit=26,
+    )
+    assert result.session_id is None and result.status is None
+    assert result.usage == TokenUsage() and result.corrections == ()
+    assert not result.output_available and not result.partial
