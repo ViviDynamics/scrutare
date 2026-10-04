@@ -47,7 +47,7 @@ Out: full review CLI and releases (#7), configurable retries (#12), iterative (#
 ## Tasks
 
 - [x] 1. Typed correction inputs and protocol.
-- [ ] 2. Shared execution context and correction adapter.
+- [x] 2. Shared execution context and correction adapter.
 - [ ] 3. Panel strategy and exclusive final evidence.
 - [ ] 4. Actual nare panel proof and user documentation.
 
@@ -69,11 +69,11 @@ Out: full review CLI and releases (#7), configurable retries (#12), iterative (#
 
 **Interfaces:** Preserve async fan_out(run_dir, config, *, runtime) -> FanOutResult. Internal _ExecutionContext owns inputs, descriptors, ledger, capability, runtime, config and run directory. async _prepare_execution(run_dir, config, *, runtime) -> _ExecutionContext; async _run_initial_wave(context) -> FanOutResult. Frozen ReanchorOutcome has execution/accounting metadata compatible with SessionOutcome and corrections: tuple[ReanchorCorrection, ...], never fake findings. async run_reanchor_session(descriptor: PersonaReanchorInput, rail: ModelRail, lease: BudgetLease, *, ledger, artifact_directory, runtime, capability) -> ReanchorOutcome. Correction wave scheduling belongs to task 3.
 
-- [ ] Write RED tests demonstrating a shared context keeps initial usage: initial 60 of allocation 100 leaves at most 40 for a fresh correction. Exact threshold denies correction; overshoot is recorded once; malformed live usage seals later admission before terminal while active siblings still settle.
-- [ ] Extract setup/initial-wave behavior without changing public fan_out output, manifest, reservation, cancellation or order. Keep fanout.json an immutable initial snapshot and retain live ledger separately. Inspect runtime once, reserve all initial leases synchronously before concurrency.
-- [ ] Factor the common subprocess lifecycle privately for the two typed adapters, preserving private environment/root/tools, exact system and rail, independent pipe drain, immediate uncertainty sealing, timeout/TERM/KILL/reap/repeated cancellation and exclusive evidence writes. Schema/decoder selection is controlled by adapter purpose. Fresh baseline remains zero.
-- [ ] Correction attempt uses attempt-0002, distinct fresh session key, and explicit purpose/request binding in its evidence. It does not mutate attempt-0001 or invent retry semantics. Verify prepared root before and after correction.
-- [ ] Run focused existing budget/fanout/session/protocol regressions and new adapter tests, Ruff and strict mypy. Record RED/GREEN and self-review, then commit.
+- [x] Write RED tests demonstrating a shared context keeps initial usage: initial 60 of allocation 100 leaves at most 40 for a fresh correction. Exact threshold denies correction; overshoot is recorded once; malformed live usage seals later admission before terminal while active siblings still settle.
+- [x] Extract setup/initial-wave behavior without changing public fan_out output, manifest, reservation, cancellation or order. Keep fanout.json an immutable initial snapshot and retain live ledger separately. Inspect runtime once, reserve all initial leases synchronously before concurrency.
+- [x] Factor the common subprocess lifecycle privately for the two typed adapters, preserving private environment/root/tools, exact system and rail, independent pipe drain, immediate uncertainty sealing, timeout/TERM/KILL/reap/repeated cancellation and exclusive evidence writes. Schema/decoder selection is controlled by adapter purpose. Fresh baseline remains zero.
+- [x] Correction attempt uses attempt-0002, distinct fresh session key, and explicit purpose/request binding in its evidence. It does not mutate attempt-0001 or invent retry semantics. Verify prepared root before and after correction.
+- [x] Run focused existing budget/fanout/session/protocol regressions and new adapter tests, Ruff and strict mypy. Record RED/GREEN and self-review, then commit.
 
 ### Task 3: Panel strategy and exclusive final evidence
 

@@ -188,3 +188,93 @@ def test_cancellation_awaits_every_child_cleanup(capture, monkeypatch):
 
     asyncio.run(scenario())
     assert not (capture / "fanout.json").exists()
+
+
+@pytest.mark.parametrize(
+    "initial,remaining,overshoot", [(60, 40, 0), (100, None, 0), (110, None, 10)]
+)
+def test_shared_context_preserves_initial_usage_and_immutable_snapshot(
+        capture, tmp_path, initial, remaining, overshoot):
+    from test_nare_session import running_executable
+
+    config = configure(capture, personas=["security"], review=100, per=100)
+    wave = wave_module()
+    runtime = NareRuntime(running_executable(tmp_path, input_tokens=initial - 6))
+
+    async def scenario():
+        context = await wave._prepare_execution(capture, config, runtime=runtime)
+        result = await wave._run_initial_wave(context)
+        before = (capture / "fanout.json").read_bytes()
+        assert context.ledger.usage.total == result.usage.total == initial
+        assert context.ledger.snapshot()["overshoot_tokens"] == overshoot
+        lease = context.ledger.admit("security", "security/attempt-0002")
+        if remaining is None:
+            assert lease is None
+        else:
+            assert lease.baseline == TokenUsage()
+            assert lease.allocated_tokens == lease.limit_tokens == 40
+            context.ledger.settle(lease, TokenUsage(20), True)
+            assert context.ledger.usage.total == 80
+        assert (capture / "fanout.json").read_bytes() == before
+        assert json.loads(before)["ledger"]["usage"]["total"] == initial
+
+    asyncio.run(scenario())
+
+
+def test_shared_context_runs_fresh_correction_without_reinspection_or_snapshot_mutation(
+        capture, tmp_path, monkeypatch):
+    from test_nare_session import running_executable
+
+    from scrutare.engine.nare_session import run_reanchor_session
+    from scrutare.engine.persona_inputs import PersonaReanchorInput
+    from scrutare.engine.reanchor import make_reanchor_requests
+    from scrutare.engine.session_artifacts import create_attempt_directory
+    from scrutare.findings.models import Anchor, Finding
+
+    config = configure(capture, personas=["security"], review=100, per=100)
+    wave = wave_module()
+    path = running_executable(tmp_path, input_tokens=54)
+    text = path.read_text().replace('"input": 54', '"input": (14 if a.prompt.startswith("Correct") '
+                                    'else 54)')
+    text = text.replace("{'findings': []}",
+                        "({'corrections': [{'request_id': 'r0001', 'file': 'src/app.py', "
+                        "'line': 2, 'side': 'RIGHT'}]} if a.prompt.startswith('Correct') "
+                        "else {'findings': []})")
+    path.write_text(text)
+    runtime = NareRuntime(path)
+    inspect = wave.inspect_nare_runtime
+    inspections = []
+
+    async def counted_inspection(value):
+        inspections.append(value)
+        return await inspect(value)
+
+    monkeypatch.setattr(wave, "inspect_nare_runtime", counted_inspection)
+
+    async def scenario():
+        context = await wave._prepare_execution(capture, config, runtime=runtime)
+        initial = await wave._run_initial_wave(context)
+        manifest = (capture / "fanout.json").read_bytes()
+        first = context.initial_attempts[0]
+        before = {p: p.read_bytes() for p in first.rglob("*") if p.is_file()}
+        original = Finding(Anchor("src/app.py", 999, "RIGHT"), "correctness", "Problem", "Reason",
+                           "security")
+        descriptor = PersonaReanchorInput(context.inputs, context.descriptors[0].persona,
+                                          make_reanchor_requests((original,)))
+        lease = context.ledger.admit("security", "security/attempt-0002")
+        attempt = create_attempt_directory(context.run_dir, "security", 2,
+                                           prepared_root=context.inputs.root)
+        corrected = await run_reanchor_session(
+            descriptor, config.models.for_persona("security"), lease, ledger=context.ledger,
+            artifact_directory=attempt, runtime=context.runtime, capability=context.capability)
+        assert initial.usage.total == 60
+        assert corrected.status == "complete" and corrected.usage.total == 20
+        assert corrected.invocation_limit == 40
+        assert corrected.corrections[0].original == original
+        assert context.ledger.usage.total == 80
+        assert len(context.ledger.snapshot()["sessions"]) == 2
+        assert (capture / "fanout.json").read_bytes() == manifest
+        assert all(p.read_bytes() == value for p, value in before.items())
+        assert inspections == [runtime]
+
+    asyncio.run(scenario())

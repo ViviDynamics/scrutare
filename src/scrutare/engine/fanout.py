@@ -4,23 +4,33 @@ from __future__ import annotations
 
 import asyncio
 import os
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from hashlib import sha256
 from pathlib import Path
 
 from scrutare import __version__
 from scrutare.config import ReviewConfig
-from scrutare.engine.budgets import ReviewBudgetLedger
+from scrutare.engine.budgets import BudgetLease, ReviewBudgetLedger
 from scrutare.engine.nare_session import inspect_nare_runtime, run_persona_session
-from scrutare.engine.persona_inputs import prepare_persona_inputs
-from scrutare.engine.review_inputs import prepare_review_inputs, validate_prepared_inputs
+from scrutare.engine.persona_inputs import PersonaReviewInput, prepare_persona_inputs
+from scrutare.engine.review_inputs import (
+    PreparedReviewInputs,
+    prepare_review_inputs,
+    validate_prepared_inputs,
+)
 from scrutare.engine.session_artifacts import (
     SessionArtifactError,
     _directory,
     create_attempt_directory,
     write_owned_json,
 )
-from scrutare.engine.session_models import FanOutResult, NareRuntime, SessionOutcome, TokenUsage
+from scrutare.engine.session_models import (
+    FanOutResult,
+    NareCapability,
+    NareRuntime,
+    SessionOutcome,
+    TokenUsage,
+)
 
 
 def _reserve_wave(run: Path) -> None:
@@ -40,8 +50,25 @@ def _reserve_wave(run: Path) -> None:
         ) from None
 
 
-async def fan_out(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime) -> FanOutResult:
-    """Review the exact prepared capture once, leaving verification and verdicts to callers."""
+@dataclass(frozen=True)
+class _ExecutionContext:
+    """One prepared run and its live ledger shared across fresh invocation phases."""
+
+    inputs: PreparedReviewInputs
+    descriptors: tuple[PersonaReviewInput, ...]
+    ledger: ReviewBudgetLedger
+    capability: NareCapability
+    runtime: NareRuntime
+    config: ReviewConfig
+    run_dir: Path
+    initial_attempts: tuple[Path, ...]
+    initial_leases: tuple[BudgetLease | None, ...]
+
+
+async def _prepare_execution(
+    run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime,
+) -> _ExecutionContext:
+    """Prepare and reserve every ordered initial grant before inspecting the runtime."""
     inputs = prepare_review_inputs(run_dir, config)
     descriptors = prepare_persona_inputs(inputs, config.personas)
     run = inputs.root.parent
@@ -56,6 +83,15 @@ async def fan_out(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime) 
         ledger.admit(d.persona.name, f"{d.persona.name}/attempt-0001") for d in descriptors
     )
     capability = await inspect_nare_runtime(runtime)
+    return _ExecutionContext(inputs, descriptors, ledger, capability, runtime, config, run,
+                             attempts, leases)
+
+
+async def _run_initial_wave(context: _ExecutionContext) -> FanOutResult:
+    """Settle initial sessions and preserve their immutable manifest beside the live ledger."""
+    inputs, descriptors, ledger = context.inputs, context.descriptors, context.ledger
+    config, runtime, capability = context.config, context.runtime, context.capability
+    run, attempts, leases = context.run_dir, context.initial_attempts, context.initial_leases
     tasks: list[asyncio.Task[SessionOutcome]] = []
     admitted: list[int] = []
     outcomes: list[SessionOutcome | None] = [None] * len(descriptors)
@@ -159,3 +195,9 @@ async def fan_out(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime) 
         prepared_root=inputs.root,
     )
     return result
+
+
+async def fan_out(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime) -> FanOutResult:
+    """Review the exact prepared capture once, leaving verification and verdicts to callers."""
+    context = await _prepare_execution(run_dir, config, runtime=runtime)
+    return await _run_initial_wave(context)
