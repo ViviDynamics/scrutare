@@ -23,7 +23,7 @@ def ingest_pr(
     runs_root: Path,
     config_path: Path | None = None,
 ) -> Path:
-    """Persist inputs only when two surrounding metadata reads agree on the head."""
+    """Persist inputs only when surrounding metadata reads agree on head and base."""
     for _ in range(3):
         before = client.get_pr(ref)
         assert_pr_open(before)
@@ -36,10 +36,23 @@ def ingest_pr(
         }
         captured = client.get_pr(ref)
         assert_pr_open(captured)
-        if before["head"]["sha"] == captured["head"]["sha"]:
+        if (
+            before["head"]["sha"] == captured["head"]["sha"]
+            and before["base"]["ref"] == captured["base"]["ref"]
+            and before["base"]["sha"] == captured["base"]["sha"]
+            and before["base"]["repo"]["full_name"] == captured["base"]["repo"]["full_name"]
+        ):
             break
     else:
-        raise GitHubError("Pull request head changed during all three capture attempts; retry.")
+        raise GitHubError(
+            "Pull request head or base changed during all three capture attempts; retry."
+        )
+
+    if len(inputs["files.json"]) != captured["changed_files"]:
+        raise GitHubError(
+            "Incomplete file capture: file count differs from PR metadata; "
+            "GitHub limits the files API to 3000 files. Retry or review a smaller pull request."
+        )
 
     metadata = {
         "schema_version": 1,
@@ -53,7 +66,7 @@ def ingest_pr(
     runs_root.mkdir(parents=True, exist_ok=True)
     run_dir = Path(tempfile.mkdtemp(prefix="run-", dir=runs_root))
     try:
-        (run_dir / "diff.patch").write_text(diff, encoding="utf-8")
+        (run_dir / "diff.patch").write_bytes(diff.encode("utf-8"))
         for filename, data in inputs.items():
             (run_dir / filename).write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
         if config_path is not None:

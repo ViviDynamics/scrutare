@@ -19,6 +19,8 @@ def metadata(sha="abc123", **changes):
         "number": 12,
         "state": "open",
         "merged": False,
+        "base": {"ref": "main", "sha": "base123", "repo": {"full_name": "owner/repo"}},
+        "changed_files": 1,
         "head": {"sha": sha},
         "title": "A useful change",
         "body": "Prior context",
@@ -75,8 +77,13 @@ def test_complete_artifact_structure_and_verbatim_config(tmp_path):
     run = ingestion().ingest_pr(FakeClient(), REF, tmp_path / "runs", config)
     assert run.parent == tmp_path / "runs"
     assert {p.name for p in run.iterdir()} == {
-        "diff.patch", "files.json", "reviews.json", "comments.json",
-        "review_comments.json", "metadata.json", "config.yaml",
+        "diff.patch",
+        "files.json",
+        "reviews.json",
+        "comments.json",
+        "review_comments.json",
+        "metadata.json",
+        "config.yaml",
     }
     assert (run / "diff.patch").read_bytes() == DIFF.encode()
     assert (run / "config.yaml").read_bytes() == raw_config
@@ -183,3 +190,89 @@ def test_force_push_after_capture_keeps_stored_sha_and_lifecycle_guard_allows_it
     run = ingestion().ingest_pr(client, REF, tmp_path)
     ingestion().check_pr_open(client, REF)
     assert read_json(run, "metadata.json")["head_sha"] == "captured"
+
+
+@pytest.mark.parametrize(
+    "base",
+    [
+        {"ref": "release", "sha": "base123", "repo": {"full_name": "owner/repo"}},
+        {"ref": "main", "sha": "base456", "repo": {"full_name": "owner/repo"}},
+        {"ref": "main", "sha": "base123", "repo": {"full_name": "other/repo"}},
+    ],
+)
+def test_base_change_with_unchanged_head_discards_diff_and_files(tmp_path, base):
+    class AttemptDiffClient(FakeClient):
+        def get_diff(self, ref):
+            return super().get_diff(ref) + f"# attempt-{self.snapshot}\n"
+
+    client = AttemptDiffClient(
+        [
+            metadata(),
+            metadata(base=base),
+            metadata(base=base),
+            metadata(base=base),
+        ]
+    )
+    run = ingestion().ingest_pr(client, REF, tmp_path)
+    assert (run / "diff.patch").read_bytes() == (DIFF + "# attempt-2\n").encode()
+    assert read_json(run, "files.json") == [{"filename": "attempt-2.py", "status": "modified"}]
+    assert read_json(run, "metadata.json")["pull_request"]["base"] == base
+    assert len(list(tmp_path.iterdir())) == 1
+
+
+def test_continuous_base_changes_stop_without_persisting(tmp_path):
+    client = FakeClient(
+        [
+            metadata(base={"ref": "main", "sha": str(n), "repo": {"full_name": "owner/repo"}})
+            for n in range(6)
+        ]
+    )
+    with pytest.raises(GitHubError, match="base|changed|stable"):
+        ingestion().ingest_pr(client, REF, tmp_path)
+    assert client.snapshot == 3
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("base", [None, {}, {"ref": "main", "sha": "base123", "repo": {}}])
+def test_malformed_base_leaves_no_run(tmp_path, base):
+    with pytest.raises(GitHubError, match="malformed PR metadata"):
+        ingestion().ingest_pr(FakeClient([metadata(base=base), metadata(base=base)]), REF, tmp_path)
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_real_subprocess_diff_bytes_survive_full_capture(tmp_path, fake_gh):
+    run = ingestion().ingest_pr(GitHubClient(), REF, tmp_path / "runs")
+    assert (run / "diff.patch").read_bytes() == fake_gh
+    assert read_json(run, "files.json") == [{"filename": "example.py", "status": "modified"}]
+    assert read_json(run, "metadata.json")["status"] == "ingested"
+
+
+@pytest.mark.parametrize("expected, fetched", [(2, 1), (0, 1), (3001, 3000)])
+def test_incomplete_file_capture_leaves_no_run(tmp_path, expected, fetched):
+    class FilesClient(FakeClient):
+        def get_files(self, ref):
+            return [{"filename": f"file-{n}.py"} for n in range(fetched)]
+
+    client = FilesClient([metadata(changed_files=expected), metadata(changed_files=expected)])
+    with pytest.raises(GitHubError, match="Incomplete file capture.*GitHub.*limit"):
+        ingestion().ingest_pr(client, REF, tmp_path / "runs")
+    assert not (tmp_path / "runs").exists()
+
+
+def test_file_count_is_checked_against_captured_metadata(tmp_path):
+    client = FakeClient([metadata(changed_files=1), metadata(changed_files=2)])
+    with pytest.raises(GitHubError, match="Incomplete file capture"):
+        ingestion().ingest_pr(client, REF, tmp_path)
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_zero_changed_files_can_be_captured_completely(tmp_path):
+    class EmptyFilesClient(FakeClient):
+        def get_files(self, ref):
+            return []
+
+    run = ingestion().ingest_pr(
+        EmptyFilesClient([metadata(changed_files=0), metadata(changed_files=0)]), REF, tmp_path
+    )
+    assert read_json(run, "files.json") == []
+    assert read_json(run, "metadata.json")["pull_request"]["changed_files"] == 0

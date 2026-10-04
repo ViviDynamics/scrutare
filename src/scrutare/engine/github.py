@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-Runner = Callable[..., subprocess.CompletedProcess[str]]
+Runner = Callable[..., subprocess.CompletedProcess[bytes]]
 _TIMEOUT_SECONDS = 60
 _OWNER = r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?"
 _REPO = r"[A-Za-z0-9_.-]+"
@@ -44,9 +45,10 @@ def _run(args: list[str], runner: Runner) -> str:
         result = runner(
             args,
             capture_output=True,
-            text=True,
+            text=False,
             shell=False,
             timeout=_TIMEOUT_SECONDS,
+            env={**os.environ, "GH_HOST": "github.com"},
         )
     except FileNotFoundError:
         raise GitHubError("Install the GitHub CLI (gh) and run gh auth login.") from None
@@ -58,7 +60,10 @@ def _run(args: list[str], runner: Runner) -> str:
         raise GitHubError(
             "GitHub request failed; check gh auth status, repository access, and connectivity."
         ) from None
-    return result.stdout
+    try:
+        return result.stdout.decode("utf-8")
+    except UnicodeDecodeError:
+        raise GitHubError("GitHub returned invalid UTF-8; refetch the pull request.") from None
 
 
 def _json(output: str) -> Any:
@@ -99,13 +104,28 @@ def _validate_metadata(metadata: Any) -> dict[str, Any]:
         not isinstance(metadata, dict)
         or type(metadata.get("number")) is not int
         or metadata["number"] <= 0
+        or type(metadata.get("changed_files")) is not int
+        or metadata["changed_files"] < 0
         or metadata.get("state") not in ("open", "closed")
         or type(metadata.get("merged")) is not bool
         or not isinstance(metadata.get("head"), dict)
         or not isinstance(metadata["head"].get("sha"), str)
         or not metadata["head"]["sha"].strip()
+        or not isinstance(metadata.get("base"), dict)
+        or not isinstance(metadata["base"].get("ref"), str)
+        or not metadata["base"]["ref"].strip()
+        or not isinstance(metadata["base"].get("sha"), str)
+        or not metadata["base"]["sha"].strip()
+        or not isinstance(metadata["base"].get("repo"), dict)
+        or not isinstance(metadata["base"]["repo"].get("full_name"), str)
     ):
         raise GitHubError("GitHub returned malformed PR metadata; refetch the pull request.")
+    try:
+        _repository(metadata["base"]["repo"]["full_name"])
+    except GitHubError:
+        raise GitHubError(
+            "GitHub returned malformed PR metadata; refetch the pull request."
+        ) from None
     return metadata
 
 

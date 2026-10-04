@@ -21,7 +21,7 @@ def cli_main(argv: list[str]) -> int:
 def gh(monkeypatch: pytest.MonkeyPatch) -> list[list[str]]:
     calls: list[list[str]] = []
 
-    def run(args: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+    def run(args: list[str], **kwargs: Any) -> subprocess.CompletedProcess[bytes]:
         calls.append(args)
         assert args[:2] in (["gh", "api"], ["gh", "repo"])
         assert "--method" not in args and "-X" not in args
@@ -33,9 +33,16 @@ def gh(monkeypatch: pytest.MonkeyPatch) -> list[list[str]]:
             output = '[[{"id":1}]]'
         else:
             output = json.dumps(
-                {"number": 12, "state": "open", "merged": False, "head": {"sha": "abc123"}}
+                {
+                    "number": 12,
+                    "state": "open",
+                    "merged": False,
+                    "head": {"sha": "abc123"},
+                    "base": {"ref": "main", "sha": "base123", "repo": {"full_name": "owner/repo"}},
+                    "changed_files": 1,
+                }
             )
-        return subprocess.CompletedProcess(args, 0, output, "")
+        return subprocess.CompletedProcess(args, 0, output.encode("utf-8"), b"")
 
     monkeypatch.setattr(github.subprocess, "run", run)
     return calls
@@ -66,7 +73,7 @@ def test_review_snapshots_config_and_reports_ingestion(
         "run_dir": result["run_dir"],
     }
     run = Path(result["run_dir"])
-    assert run.parent == Path(".scrutare/runs")
+    assert run.parent.resolve() == Path(".scrutare/runs").resolve()
     assert (run / "config.yaml").read_bytes() == b"not parsed: [\n"
     assert json.loads((run / "metadata.json").read_text())["pull_request"]["number"] == 12
     assert {p.name for p in run.iterdir()} == {
@@ -137,20 +144,22 @@ def test_github_failures_have_nonzero_concise_errors(
 ) -> None:
     monkeypatch.chdir(tmp_path)
 
-    def run(args: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+    def run(args: list[str], **kwargs: Any) -> subprocess.CompletedProcess[bytes]:
         if failure == "missing-gh":
             raise FileNotFoundError
         if failure == "transport":
-            return subprocess.CompletedProcess(args, 1, "", "secret-token")
+            return subprocess.CompletedProcess(args, 1, b"", b"secret-token")
         output = json.dumps(
             {
                 "number": 12,
                 "state": "closed" if failure == "closed" else "open",
                 "merged": failure == "merged",
+                "base": {"ref": "main", "sha": "base123", "repo": {"full_name": "owner/repo"}},
+                "changed_files": 1,
                 "head": {"sha": "abc123"},
             }
         )
-        return subprocess.CompletedProcess(args, 0, output, "")
+        return subprocess.CompletedProcess(args, 0, output.encode("utf-8"), b"")
 
     monkeypatch.setattr(github.subprocess, "run", run)
     assert cli_main(["review", "--pr", "https://github.com/owner/repo/pull/12"]) != 0
