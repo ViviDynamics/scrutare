@@ -105,33 +105,54 @@ def _contract_pairs(pairs: list[tuple[str, object]]) -> dict[str, object]:
     return document
 
 
-async def _probe(executable: Path, args: tuple[str, ...], root: Path,
-                 runtime: NareRuntime) -> bytes:
+async def _start_process(
+    argv: list[str], environment: dict[str, str], cwd: Path,
+) -> tuple[asyncio.subprocess.Process, bool]:
+    """Own startup through cancellation, including a raced no-child spawn error."""
     spawning = asyncio.create_task(asyncio.create_subprocess_exec(
-        str(executable), *args, cwd=root, env=_environment(root, root),
-        stdin=asyncio.subprocess.DEVNULL, stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE, start_new_session=True,
+        *argv, cwd=cwd, env=environment, stdin=asyncio.subprocess.DEVNULL,
+        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+        start_new_session=True,
     ))
-    cancelled = False
     try:
-        process = await asyncio.shield(spawning)
+        return await asyncio.shield(spawning), False
     except asyncio.CancelledError:
-        cancelled = True
         try:
-            process = await _finish(spawning)
+            return await _finish(spawning), True
         except OSError:
             raise asyncio.CancelledError from None
-    capture = asyncio.create_task(process.communicate())
+
+
+async def _cleanup_capture(
+    process: asyncio.subprocess.Process, capture: asyncio.Future[_T],
+) -> _T:
+    """Reap the owned group and finish either capture strategy before settlement."""
+    await _finish(asyncio.create_task(_terminate(process)))
+    return await _finish(capture)
+
+
+async def _wait_capture(
+    process: asyncio.subprocess.Process, capture: asyncio.Future[_T], timeout: float, *,
+    cancelled: bool,
+) -> _T:
+    """Preserve capture while applying the common liveness and cancellation policy."""
     if cancelled:
-        await _finish(asyncio.create_task(_terminate(process)))
-        await _finish(capture)
+        await _cleanup_capture(process, capture)
         raise asyncio.CancelledError
     try:
-        stdout, _ = await asyncio.wait_for(asyncio.shield(capture), runtime.timeout_seconds)
+        return await asyncio.wait_for(asyncio.shield(capture), timeout)
     except (asyncio.TimeoutError, asyncio.CancelledError):
-        await _finish(asyncio.create_task(_terminate(process)))
-        await _finish(capture)
+        await _cleanup_capture(process, capture)
         raise
+
+
+async def _probe(executable: Path, args: tuple[str, ...], root: Path,
+                 runtime: NareRuntime) -> bytes:
+    process, cancelled = await _start_process(
+        [str(executable), *args], _environment(root, root), root,
+    )
+    capture = asyncio.create_task(process.communicate())
+    stdout, _ = await _wait_capture(process, capture, runtime.timeout_seconds, cancelled=cancelled)
     if process.returncode != 0:
         raise SessionRuntimeError("inspection: nare capability command failed")
     return stdout
@@ -272,41 +293,21 @@ async def _execute(argv: list[str], environment: dict[str, str], cwd: Path,
                    runtime: NareRuntime, stdout: BinaryIO, stderr: BinaryIO,
                    evidence: _Evidence, ledger: ReviewBudgetLedger,
                    lease: BudgetLease) -> int:
-    spawning = asyncio.create_task(asyncio.create_subprocess_exec(
-        *argv, cwd=cwd, env=environment, stdin=asyncio.subprocess.DEVNULL,
-        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
-        start_new_session=True,
-    ))
-    cancelled = False
-    try:
-        process = await asyncio.shield(spawning)
-    except asyncio.CancelledError:
-        cancelled = True
-        try:
-            process = await _finish(spawning)
-        except OSError:
-            raise asyncio.CancelledError from None
+    process, cancelled = await _start_process(argv, environment, cwd)
     evidence.started = True
     assert process.stdout is not None and process.stderr is not None
     drainage = asyncio.gather(_stdout(process.stdout, stdout, evidence, ledger, lease),
                               _stderr(process.stderr, stderr), process.wait(),
                               return_exceptions=True)
-    if cancelled:
-        await _finish(asyncio.create_task(_terminate(process)))
-        await _finish(drainage)
-        raise asyncio.CancelledError
     try:
-        results = await asyncio.wait_for(asyncio.shield(drainage), runtime.timeout_seconds)
+        results = await _wait_capture(
+            process, drainage, runtime.timeout_seconds, cancelled=cancelled,
+        )
         for result in results:
             if isinstance(result, BaseException):
                 raise result
-    except (asyncio.TimeoutError, asyncio.CancelledError, OSError):
-        await _finish(asyncio.create_task(_terminate(process)))
-        # The killed group cannot retain the pipes. Finish captured evidence before settling.
-        try:
-            await _finish(drainage)
-        except OSError:
-            pass
+    except OSError:
+        await _cleanup_capture(process, drainage)
         raise
     assert process.returncode is not None
     return process.returncode
