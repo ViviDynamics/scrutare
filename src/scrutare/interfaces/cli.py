@@ -1,4 +1,4 @@
-"""Capture PR inputs and prepare a filtered view; live review and posting are unfinished."""
+"""Capture PR inputs or audit stored verdict artifacts offline."""
 
 from __future__ import annotations
 
@@ -13,16 +13,17 @@ from scrutare.config import ConfigError, parse_config
 from scrutare.engine.github import GitHubClient, GitHubError, resolve_pr
 from scrutare.engine.ingestion import ingest_pr
 from scrutare.engine.review_inputs import ReviewInputError
+from scrutare.replay import ReplayError, replay_run
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Return a process exit code and emit JSON only for successful ingestion."""
+    """Emit ingestion or replay JSON and return the command's process exit code."""
     parser = argparse.ArgumentParser(prog="scrutare", description=__doc__)
     parser.add_argument("--version", action="version", version=f"scrutare {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
     review = commands.add_parser(
         "review", help="capture PR inputs and prepare a filtered view; no live review or posting",
-        description=__doc__,
+        description="Capture PR inputs and prepare a filtered view; no live review or posting.",
     )
     review.add_argument("--pr", required=True, help="GitHub PR URL or number in the current repo")
     review.add_argument(
@@ -31,10 +32,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         default=Path("scrutare.yaml"),
         help="validate YAML settings (default: scrutare.yaml); models.default.model is required",
     )
+    replay = commands.add_parser(
+        "replay", help="audit a stored verdict offline; no model or network",
+        description="Recompute a stored verdict and compare saved and recorded posted identity.",
+    )
+    replay.add_argument("dir", type=Path, help="directory containing captured review artifacts")
     try:
         args = parser.parse_args(argv)
     except SystemExit as exc:
         return int(exc.code) if isinstance(exc.code, int) else 1
+
+    if args.command == "replay":
+        try:
+            result = replay_run(args.dir)
+        except ReplayError as exc:
+            print(f"scrutare: {exc}", file=sys.stderr)
+            return 2
+        print(json.dumps(result.to_dict()))
+        return result.exit_code
 
     config: Path = args.config
     try:

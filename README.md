@@ -67,9 +67,11 @@ validated input, diff anchors, one supplied correction round, and lossless
 dedupe. The [posting guide](docs/posting.md) covers captured-head reviews,
 durable receipts, bounded retries and uncertain-delivery recovery. The
 [escalation guide](docs/escalation.md) covers code-derived exhaustion, COMMENT
-summaries and durable human review requests through the Python API. The review
-panel, live model sessions, replay CLI, and execution of the remaining configured
-settings through the CLI are planned. The design and milestone order are in
+summaries and durable human review requests through the Python API. The
+[replay guide](docs/replay.md) covers offline verdict recomputation and separate
+saved and locally recorded posted comparisons. The review panel, live model
+sessions, and execution of the remaining configured settings through the CLI
+are planned. The design and milestone order are in
 [docs/SPEC.md](docs/SPEC.md).
 
 ## Capture a pull request
@@ -130,6 +132,23 @@ root. Discussion bodies and PR title/body are omitted from the reviewer view.
 See the [path filters guide](docs/path-filters.md) for matching rules, empty
 selections, artifacts, and the Python integration contract. `ingested` means
 raw inputs and their filtered view were saved; a review verdict does not yet exist.
+
+## Audit a saved verdict offline
+
+```sh
+scrutare replay "/path/to/run artifacts"
+python -m scrutare replay "/path/to/run artifacts"
+```
+
+Replay needs stored `findings.json`, effective `config.json`, and `verdict.json`,
+without authentication, network, models or current-directory configuration.
+It reads artifacts without changing them and prints one JSON result with
+separate saved and locally recorded posted identity. Exit codes are 0 for
+identity, 1 for differences and 2 for incomplete or invalid evidence. An
+ingestion-only run lacks the verdict evidence needed for replay. Saved identity
+alone does not confirm posting; recorded exhaustion does not prove strategy
+execution. See the [replay guide](docs/replay.md) for target availability,
+request delivery status, evidence formats and the trust boundary.
 
 ## Development checks
 
