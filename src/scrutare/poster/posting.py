@@ -22,6 +22,7 @@ from scrutare.poster.errors import (
 )
 from scrutare.poster.journal import atomic_write, canonical, read_json, run_lock
 from scrutare.poster.payload import ReviewPayload, build_review_payload
+from scrutare.poster.reviewers import normalize_human_reviewers
 
 _UNCERTAIN = "Review delivery is uncertain; reconcile the saved run before posting again."
 
@@ -207,80 +208,121 @@ def _wait_retry(state: dict[str, Any], sleeper: Callable[[float], None]) -> None
             raise PostingRateLimited(status=state["http_status"], retry_after=remaining)
 
 
+def _begin_attempt(
+    path: Path, state: dict[str, Any], write: Callable[[Path, bytes], None],
+) -> None:
+    """Persist sending before either stage performs its external write."""
+    state.update(status="sending", attempts=state["attempts"] + 1,
+                 failure=None, retry_at=None, http_status=None)
+    write(path, canonical(state))
+
+
+def _record_rejection(
+    path: Path, state: dict[str, Any], error: PostingRejected,
+    write: Callable[[Path, bytes], None],
+) -> bool:
+    """Persist a known rejection, or require reconciliation for an invalid deadline."""
+    if isinstance(error, PostingRateLimited):
+        deadline = _now() + error.retry_after
+        if not math.isfinite(deadline):
+            return False
+        state.update(status="rejected", failure="throttle", retry_at=deadline,
+                     http_status=error.status)
+    else:
+        state.update(status="rejected", failure="unsent" if error.unsent else "permanent",
+                     http_status=error.status)
+    write(path, canonical(state))
+    return True
+
+
 def post_review(
     run_dir: Path, verdict: Verdict, *, client: ReviewClient | None = None,
     sleeper: Callable[[float], None] | None = None,
 ) -> PostedReview:
-    """Post once from captured inputs, or reconcile and return a confirmed receipt."""
+    """Post or recover only the review stage, including an escalated COMMENT."""
+    with run_lock(run_dir):
+        return _post_review_locked(run_dir, verdict, client=client, sleeper=sleeper)
+
+
+def _post_review_locked(
+    run_dir: Path, verdict: Verdict, *, client: ReviewClient | None = None,
+    sleeper: Callable[[float], None] | None = None,
+) -> PostedReview:
+    """Internal review operation; caller must hold the run lock throughout."""
     if not isinstance(verdict, Verdict):
         raise PostingError("verdict: expected a code-derived Verdict")
     try:
         verdict_bytes = verdict.to_bytes()
     except (TypeError, ValueError):
         raise PostingError("Verdict evidence must be encodable as UTF-8 JSON.") from None
-    with run_lock(run_dir):
-        ref, head, config, diff = _capture(run_dir, verdict)
-        path = run_dir / "posting.json"
-        existing = path.exists()
-        saved = read_json(path) if existing else {}
-        if not isinstance(saved, dict):
-            raise PostingError("Invalid posting journal; inspect the saved run.")
-        state: dict[str, Any] = saved
-        run_id = state.get("run_id") if existing else uuid4().hex
-        if not isinstance(run_id, str) or re.fullmatch(r"[0-9a-f]{32}", run_id) is None:
-            raise PostingError("Invalid posting run identity; inspect the saved run.")
-        payload = build_review_payload(verdict, diff, head_sha=head, strategy=config.strategy,
-                                       post_mode=config.github.post_mode, run_id=run_id)
-        intent = {"schema_version": 1, "repository": f"{ref.owner}/{ref.repo}",
-                  "pr_number": ref.number, "head_sha": head, "event": payload.event,
-                  "run_id": run_id, "payload_sha256": _hash(payload.to_bytes()),
-                  "verdict_sha256": _hash(verdict_bytes), "diff_sha256": _hash(diff),
-                  "config_sha256": _hash(canonical(config.to_dict()))}
-        if existing:
-            _validate_state(state, intent)
-            try:
-                if (run_dir / "review-payload.json").read_bytes() != payload.to_bytes():
-                    raise PostingError("Saved review payload differs from captured evidence.")
-            except OSError:
-                raise PostingError("Saved review payload is missing; inspect the run.") from None
-        _evidence(run_dir, verdict)
-        if not existing:
-            if (run_dir / "review-payload.json").exists():
-                raise PostingError("Review payload has no journal; inspect the run before posting.")
-            state = intent | {"status": "prepared", "attempts": 0, "receipt": None,
-                              "failure": None, "retry_at": None, "http_status": None}
-            atomic_write(path, canonical(state))
-            atomic_write(run_dir / "review-payload.json", payload.to_bytes())
-        if state["status"] == "posted":
-            return _saved_receipt(state["receipt"], ref, payload)
-        transport = client if client is not None else ReviewClient(sleeper=sleeper)
-        if state["status"] in ("sending", "unknown"):
-            return _reconcile(transport, ref, payload, path, state)
-        wait = sleeper if sleeper is not None else sleep
-        while True:
-            _wait_retry(state, wait)
-            assert_pr_open(transport.get_pr(ref))
-            state.update(status="sending", attempts=state["attempts"] + 1,
-                         failure=None, retry_at=None, http_status=None)
-            atomic_write(path, canonical(state))
-            try:
-                receipt = transport.create_review(ref, payload)
-                if not isinstance(receipt, PostedReview):
-                    raise PostingUncertain(_UNCERTAIN)
-                _saved_receipt(asdict(receipt), ref, payload)
-            except PostingRateLimited as error:
-                deadline = _now() + error.retry_after
-                if not math.isfinite(deadline):
-                    return _reconcile(transport, ref, payload, path, state)
-                state.update(status="rejected", failure="throttle", retry_at=deadline,
-                             http_status=error.status)
-                atomic_write(path, canonical(state))
-                continue
-            except PostingRejected as error:
-                state.update(status="rejected", failure="unsent" if error.unsent else "permanent",
-                             http_status=error.status)
-                atomic_write(path, canonical(state))
-                raise
-            except Exception:
+    ref, head, config, diff = _capture(run_dir, verdict)
+    reviewers: tuple[str, ...] = ()
+    if verdict.exhaustion is not None:
+        if (verdict.exhaustion.strategy != config.strategy
+                or verdict.exhaustion.round_limit != config.rounds.max):
+            raise PostingError("Exhaustion differs from the captured strategy or round bound.")
+        reviewers = normalize_human_reviewers(config.github.human_reviewers)
+    path = run_dir / "posting.json"
+    existing = path.exists()
+    saved = read_json(path) if existing else {}
+    if not isinstance(saved, dict):
+        raise PostingError("Invalid posting journal; inspect the saved run.")
+    state: dict[str, Any] = saved
+    run_id = state.get("run_id") if existing else uuid4().hex
+    if not isinstance(run_id, str) or re.fullmatch(r"[0-9a-f]{32}", run_id) is None:
+        raise PostingError("Invalid posting run identity; inspect the saved run.")
+    payload = build_review_payload(verdict, diff, head_sha=head, strategy=config.strategy,
+                                   post_mode=config.github.post_mode, run_id=run_id,
+                                   human_reviewers=reviewers)
+    intent = {"schema_version": 1, "repository": f"{ref.owner}/{ref.repo}",
+              "pr_number": ref.number, "head_sha": head, "event": payload.event,
+              "run_id": run_id, "payload_sha256": _hash(payload.to_bytes()),
+              "verdict_sha256": _hash(verdict_bytes), "diff_sha256": _hash(diff),
+              "config_sha256": _hash(canonical(config.to_dict()))}
+    if existing:
+        _validate_state(state, intent)
+        try:
+            if (run_dir / "review-payload.json").read_bytes() != payload.to_bytes():
+                raise PostingError("Saved review payload differs from captured evidence.")
+        except OSError:
+            raise PostingError("Saved review payload is missing; inspect the run.") from None
+    # Both public entrypoints must validate the other stage before any network.
+    from scrutare.poster.escalation import _validate_existing
+
+    confirmed = _saved_receipt(state["receipt"], ref, payload) if state.get(
+        "status") == "posted" else None
+    _validate_existing(run_dir, intent, confirmed, reviewers,
+                       escalated=verdict.exhaustion is not None)
+    _evidence(run_dir, verdict)
+    if not existing:
+        if (run_dir / "review-payload.json").exists():
+            raise PostingError("Review payload has no journal; inspect the run before posting.")
+        state = intent | {"status": "prepared", "attempts": 0, "receipt": None,
+                          "failure": None, "retry_at": None, "http_status": None}
+        atomic_write(path, canonical(state))
+        atomic_write(run_dir / "review-payload.json", payload.to_bytes())
+    if state["status"] == "posted":
+        return _saved_receipt(state["receipt"], ref, payload)
+    transport = client if client is not None else ReviewClient(sleeper=sleeper)
+    if state["status"] in ("sending", "unknown"):
+        return _reconcile(transport, ref, payload, path, state)
+    wait = sleeper if sleeper is not None else sleep
+    while True:
+        _wait_retry(state, wait)
+        assert_pr_open(transport.get_pr(ref))
+        _begin_attempt(path, state, atomic_write)
+        try:
+            receipt = transport.create_review(ref, payload)
+            if not isinstance(receipt, PostedReview):
+                raise PostingUncertain(_UNCERTAIN)
+            _saved_receipt(asdict(receipt), ref, payload)
+        except PostingRateLimited as error:
+            if not _record_rejection(path, state, error, atomic_write):
                 return _reconcile(transport, ref, payload, path, state)
-            return _confirm(path, state, receipt, ref, payload)
+            continue
+        except PostingRejected as error:
+            _record_rejection(path, state, error, atomic_write)
+            raise
+        except Exception:
+            return _reconcile(transport, ref, payload, path, state)
+        return _confirm(path, state, receipt, ref, payload)
