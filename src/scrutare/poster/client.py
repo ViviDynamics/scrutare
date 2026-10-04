@@ -112,18 +112,22 @@ def _parse_response(output: bytes, *, failed: bool) -> _Response:
     except (UnicodeError, ValueError, TypeError, RecursionError):
         raise PostingUncertain(_UNCERTAIN) from None
     retry = _timing(headers["retry-after"], date=True) if "retry-after" in headers else None
-    reset = _timing(headers["x-ratelimit-reset"]) if "x-ratelimit-reset" in headers else None
+    primary_exhausted = headers.get("x-ratelimit-remaining") == "0"
+    reset = (
+        _timing(headers["x-ratelimit-reset"])
+        if primary_exhausted and "x-ratelimit-reset" in headers else None
+    )
     delays = [max(0.0, reset - time.time())] if reset is not None else []
     if retry is not None:
         delays.append(retry)
     malformed_timing = (
         ("retry-after" in headers and retry is None)
-        or ("x-ratelimit-reset" in headers and reset is None)
+        or (primary_exhausted and "x-ratelimit-reset" in headers and reset is None)
     )
     if not delays or malformed_timing:
         delays.append(60.0)
     limited = status == 429 or (
-        status == 403 and (retry is not None or headers.get("x-ratelimit-remaining") == "0")
+        status == 403 and (retry is not None or primary_exhausted)
     )
     return _Response(status, value, limited, max(delays))
 

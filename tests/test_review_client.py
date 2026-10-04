@@ -207,7 +207,7 @@ def test_receipt_confirms_each_event_and_header_framing(event, state, version, n
 
 
 @pytest.mark.parametrize("headers, expected", [
-    ({"Retry-After": "90", "X-RateLimit-Reset": "1120"}, 120),
+    ({"Retry-After": "90", "X-RateLimit-Remaining": "0", "X-RateLimit-Reset": "1120"}, 120),
     ({"Retry-After": "Sat, 03 Oct 2026 16:00:00 GMT"}, 1791042200),
     ({"Retry-After": "999999999999999"}, 999999999999999),
     ({"Retry-After": "nan"}, 60), ({"Retry-After": "-1"}, 60),
@@ -408,7 +408,10 @@ def test_malformed_timing_does_not_reduce_known_server_delay(monkeypatch):
     mod = client_module()
     monkeypatch.setattr(mod.time, "time", lambda: 1000)
     runner = Mock(return_value=response(
-        429, {}, headers={"Retry-After": "secret malformed", "X-RateLimit-Reset": "1120"},
+        429, {}, headers={
+            "Retry-After": "secret malformed", "X-RateLimit-Remaining": "0",
+            "X-RateLimit-Reset": "1120",
+        },
     ))
     with pytest.raises(mod.PostingRateLimited) as caught:
         mod.ReviewClient(runner=runner).create_review(REF, payload())
@@ -422,3 +425,56 @@ def test_receipt_accepts_github_canonical_repository_casing():
     review = client_module().ReviewClient(runner=runner).create_review(REF, payload())
     assert review.review_id == 123
     assert review.html_url == "https://github.com/Owner/Repo/pull/12#pullrequestreview-123"
+
+
+@pytest.mark.parametrize("status, headers, expected", [
+    (403, {"Retry-After": "60", "X-RateLimit-Remaining": "4999",
+           "X-RateLimit-Reset": "4600"}, 60),
+    (403, {"Retry-After": "90", "X-RateLimit-Remaining": "0",
+           "X-RateLimit-Reset": "1120"}, 120),
+    (403, {"Retry-After": "150", "X-RateLimit-Remaining": "0",
+           "X-RateLimit-Reset": "1120"}, 150),
+    (429, {"Retry-After": "60", "X-RateLimit-Reset": "4600"}, 60),
+    (429, {"Retry-After": "60", "X-RateLimit-Remaining": "malformed",
+           "X-RateLimit-Reset": "4600"}, 60),
+    (403, {"Retry-After": "10", "X-RateLimit-Remaining": "4999",
+           "X-RateLimit-Reset": "malformed"}, 10),
+    (403, {"Retry-After": "10", "X-RateLimit-Remaining": "4999",
+           "X-RateLimit-Reset": "9" * 400}, 10),
+    (403, {"Retry-After": "60", "X-RateLimit-Remaining": "0"}, 60),
+    (403, {"Retry-After": "10", "X-RateLimit-Remaining": "0",
+           "X-RateLimit-Reset": "malformed"}, 60),
+    (403, {"X-RateLimit-Remaining": "0"}, 60),
+    (403, {"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": "malformed"}, 60),
+    (429, {"X-RateLimit-Remaining": "4999", "X-RateLimit-Reset": "4600"}, 60),
+    (429, {"Retry-After": "malformed", "X-RateLimit-Remaining": "4999",
+           "X-RateLimit-Reset": "4600"}, 60),
+    (429, {"Retry-After": "90", "X-RateLimit-Remaining": "0",
+           "X-RateLimit-Reset": "malformed"}, 90),
+])
+def test_reset_delay_applies_only_when_primary_quota_is_exhausted(
+    monkeypatch, status, headers, expected,
+):
+    mod = client_module()
+    monkeypatch.setattr(mod.time, "time", lambda: 1000)
+    runner = Mock(return_value=response(status, {}, headers=headers))
+    with pytest.raises(mod.PostingRateLimited) as caught:
+        mod.ReviewClient(runner=runner).create_review(REF, payload())
+    assert caught.value.retry_after == expected
+    assert caught.value.status == status
+    runner.assert_called_once()
+
+
+def test_login_secondary_throttle_recovers_without_waiting_for_primary_reset(monkeypatch):
+    mod = client_module()
+    monkeypatch.setattr(mod.time, "time", lambda: 1000)
+    runner = Mock(side_effect=[
+        response(403, {}, headers={
+            "Retry-After": "60", "X-RateLimit-Remaining": "4999", "X-RateLimit-Reset": "4600",
+        }),
+        response(value={"login": "reviewer"}),
+    ])
+    waits = []
+    assert mod.ReviewClient(runner=runner, sleeper=waits.append).get_login() == "reviewer"
+    assert waits == [60]
+    assert runner.call_count == 2
