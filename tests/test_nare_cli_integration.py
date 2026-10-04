@@ -117,7 +117,7 @@ def single(capture, tmp_path, installed, scenario, *, limit=100, empty=False, ti
     lease = ledger.admit("senior-dev", "session")
     directory = create_attempt_directory(capture, "senior-dev", prepared_root=inputs.root)
     runtime = offline_runtime(tmp_path, installed, default=scenario)
-    runtime = NareRuntime(runtime.executable, max_turns=10, timeout_seconds=timeout)
+    session_runtime = NareRuntime(runtime.executable, max_turns=10, timeout_seconds=timeout)
 
     async def execute():
         capability = await inspect_nare_runtime(runtime)
@@ -127,7 +127,7 @@ def single(capture, tmp_path, installed, scenario, *, limit=100, empty=False, ti
             lease,
             ledger=ledger,
             artifact_directory=directory,
-            runtime=runtime,
+            runtime=session_runtime,
             capability=capability,
         )
 
@@ -523,9 +523,32 @@ def assert_reaped(pid):
         os.kill(pid, 0)
 
 
+def test_single_timeout_applies_to_session_after_runtime_inspection(capture, tmp_path, monkeypatch):
+    inspected = []
+    executed = []
+    result = object()
+
+    async def inspect(runtime):
+        inspected.append(runtime.timeout_seconds)
+        return "verified"
+
+    async def run(*args, runtime, capability, **kwargs):
+        executed.append((runtime.timeout_seconds, capability))
+        return result
+
+    monkeypatch.setattr(__import__(__name__), "inspect_nare_runtime", inspect)
+    monkeypatch.setattr(__import__(__name__), "run_persona_session", run)
+    outcome, _, _ = single(
+        capture, tmp_path, (Path("/offline/nare"), "/usr/bin/python3"), {}, timeout=0.7
+    )
+    assert outcome is result
+    assert inspected == [15]
+    assert executed == [(0.7, "verified")]
+
+
 def test_actual_timeout_reaps_runtime_and_marks_accounting_uncertain(capture, tmp_path, installed):
     outcome, ledger, _ = single(
-        capture, tmp_path, installed, {"replies": [text()], "delay_seconds": 10}, timeout=0.7
+        capture, tmp_path, installed, {"replies": [text()], "delay_seconds": 30}, timeout=5
     )
     assert outcome.status == "failed" and outcome.reason == "timeout"
     assert not outcome.accounting_complete and not ledger.accounting_complete
