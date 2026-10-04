@@ -17,11 +17,11 @@ from scrutare.replay.differences import diff_verdicts
 from scrutare.replay.models import (
     AuditIssue,
     CapturedPolicy,
-    PostingAudit,
     ReplayDifference,
     ReplayError,
     ReplayResult,
 )
+from scrutare.replay.posting import inspect_posting
 
 
 def _yaml_issues(run_dir: Path, policy: CapturedPolicy) -> tuple[AuditIssue, ...]:
@@ -89,14 +89,15 @@ def replay_run(run_dir: Path) -> ReplayResult:
         read_artifact(run_dir / "config.json"), artifact="config.json",
     ))
     issues = findings_issues + _yaml_issues(run_dir, policy)
-    posting = PostingAudit("absent", None, "absent", ())
+    posting = inspect_posting(run_dir)
+    posted_sha256 = posting.verdict_sha256
     raw = None
     try:
         raw = read_artifact(run_dir / "verdict.json")
         saved = parse_saved_verdict(raw)
     except ReplayError:
         return ReplayResult(None, None, None, sha256(raw).hexdigest() if raw is not None else None,
-                            None, posting, (), issues + (
+                            posted_sha256, posting, (), issues + (
                                 AuditIssue("saved_verdict_unavailable", "verdict.json",
                                            "incomplete"),
                             ))
@@ -104,7 +105,7 @@ def replay_run(run_dir: Path) -> ReplayResult:
     try:
         exhaustion = validate_exhaustion(saved, policy)
     except ReplayError:
-        return ReplayResult(None, None, None, saved_sha256, None, posting, (), issues + (
+        return ReplayResult(None, None, None, saved_sha256, posted_sha256, posting, (), issues + (
             AuditIssue("exhaustion_config_disagrees", "verdict.exhaustion", "incomplete"),
         ))
     verdict = derive_verdict(findings, policy.settings, exhaustion=exhaustion)
@@ -114,4 +115,8 @@ def replay_run(run_dir: Path) -> ReplayResult:
     if not identical and not differences:
         differences = (ReplayDifference("verdict.encoding", "encoding", saved_sha256,
                                         sha256(candidate_bytes).hexdigest()),)
-    return ReplayResult(verdict, identical, None, saved_sha256, None, posting, differences, issues)
+    posted_identical = (
+        sha256(candidate_bytes).hexdigest() == posted_sha256 if posted_sha256 is not None else None
+    )
+    return ReplayResult(verdict, identical, posted_identical, saved_sha256, posted_sha256,
+                        posting, differences, issues)
