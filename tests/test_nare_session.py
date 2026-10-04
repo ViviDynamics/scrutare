@@ -372,7 +372,11 @@ child = os.fork()
 if child == 0:
     while True:
         time.sleep(1)
-Path("pids.json").write_text(json.dumps([os.getpid(), child]))
+with Path("pids.json.tmp").open("w") as publication:
+    Path("pids-writing.marker").touch()
+    time.sleep(0.0)  # PID_PUBLICATION_DELAY: expose open-before-complete readiness.
+    publication.write(json.dumps([os.getpid(), child]))
+Path("pids.json.tmp").replace("pids.json")
 while True:
     time.sleep(1)
 '''
@@ -386,10 +390,27 @@ def alive(pid):
         return False
 
 
+async def fixture_pids(path, task, *, spawned=None):
+    """Wait for the fixture's atomically published PID marker, with a clear bound."""
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + 1.0
+    while True:
+        if path.exists() and (spawned is None or spawned):
+            return json.loads(path.read_text())
+        if task.done():
+            pytest.fail("Fixture session ended before publishing its complete PID marker")
+        if loop.time() >= deadline:
+            pytest.fail("Fixture did not publish its complete PID marker within 1 second")
+        await asyncio.sleep(0.005)
+
+
 @pytest.mark.parametrize("cancel", [False, True])
-def test_timeout_and_cancellation_kill_owned_group_and_settle(capture, tmp_path, cancel):
+@pytest.mark.parametrize("publication_delay", [0.0, 0.05])
+def test_timeout_and_cancellation_kill_owned_group_and_settle(capture, tmp_path, cancel,
+                                                            publication_delay):
     descriptor, ledger, lease, attempt = setup(capture)
     body = RUN_BODY.split("EXTRA")[0].replace("INPUT", "4") + HANG_BODY
+    body = body.replace("time.sleep(0.0)", f"time.sleep({publication_delay})")
     path = executable(tmp_path, body=body)
 
     async def lifecycle():
@@ -398,26 +419,28 @@ def test_timeout_and_cancellation_kill_owned_group_and_settle(capture, tmp_path,
             ledger=ledger, artifact_directory=attempt,
             runtime=NareRuntime(path, timeout_seconds=5 if cancel else 0.2),
             capability=NareCapability("2026.10.0", 1)))
-        for _ in range(200):
-            if (attempt / "cwd" / "pids.json").exists():
-                break
-            await asyncio.sleep(0.005)
-        pids = json.loads((attempt / "cwd" / "pids.json").read_text())
-        if cancel:
-            task.cancel()
-            with pytest.raises(asyncio.CancelledError):
-                await task
-        else:
-            outcome = await task
-            assert outcome.status == "failed" and outcome.reason == "timeout"
-        assert all(not alive(pid) for pid in pids)
-        assert not Path(f"/proc/{pids[0]}").exists()
-        assert ledger.usage == TokenUsage(4, 2, 3, 1)
-        assert not ledger.accounting_complete
-        assert ledger.snapshot()["active_reservations"] == []
-        result = json.loads((attempt / "result.json").read_bytes())
-        assert result["reason"] == ("cancelled" if cancel else "timeout")
-        assert b'"type": "cost"' in (attempt / "stdout.jsonl").read_bytes()
+        try:
+            pids = await fixture_pids(attempt / "cwd" / "pids.json", task)
+            assert (attempt / "cwd" / "pids-writing.marker").exists()
+            if cancel:
+                task.cancel()
+                with pytest.raises(asyncio.CancelledError):
+                    await task
+            else:
+                outcome = await task
+                assert outcome.status == "failed" and outcome.reason == "timeout"
+            assert all(not alive(pid) for pid in pids)
+            assert not Path(f"/proc/{pids[0]}").exists()
+            assert ledger.usage == TokenUsage(4, 2, 3, 1)
+            assert not ledger.accounting_complete
+            assert ledger.snapshot()["active_reservations"] == []
+            result = json.loads((attempt / "result.json").read_bytes())
+            assert result["reason"] == ("cancelled" if cancel else "timeout")
+            assert b'"type": "cost"' in (attempt / "stdout.jsonl").read_bytes()
+        finally:
+            if not task.done():
+                task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
 
     asyncio.run(lifecycle())
 
@@ -476,9 +499,7 @@ def test_cancellation_during_spawn_still_reaps_the_owned_group(capture, tmp_path
             artifact_directory=attempt, runtime=NareRuntime(path),
             capability=NareCapability("2026.10.0", 1)))
         try:
-            while not spawned or not (attempt / "cwd" / "pids.json").exists():
-                await asyncio.sleep(0.005)
-            pids = json.loads((attempt / "cwd" / "pids.json").read_text())
+            pids = await fixture_pids(attempt / "cwd" / "pids.json", task, spawned=spawned)
             task.cancel()
             with pytest.raises(asyncio.CancelledError):
                 await task
@@ -486,7 +507,10 @@ def test_cancellation_during_spawn_still_reaps_the_owned_group(capture, tmp_path
             assert not Path(f"/proc/{pids[0]}").exists()
             assert not ledger.accounting_complete
         finally:
-            # A RED fixture must also leave no active external process behind.
+            if not task.done():
+                task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            # A failed assertion must also leave no active external process behind.
             for process in spawned:
                 try:
                     os.killpg(process.pid, signal.SIGKILL)
