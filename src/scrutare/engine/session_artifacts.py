@@ -86,10 +86,11 @@ def create_attempt_directory(
                 or not 1 <= attempt <= 9999):
             _fail()
         name = f"attempt-{attempt:04d}"
+        destination, _ = _boundary(run / "sessions" / persona / name, prepared_root)
         with _directory(run) as parent, _child(parent, "sessions") as sessions:
             with _child(sessions, persona) as owner, _child(owner, name, exclusive=True):
                 pass
-        return run / "sessions" / persona / name
+        return destination
     except (OSError, ValueError, TypeError):
         raise SessionArtifactError(
             "Cannot create private session attempt; inspect run ownership and destination."

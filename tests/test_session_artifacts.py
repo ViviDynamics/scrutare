@@ -240,3 +240,22 @@ def test_exclusive_temporary_creation_never_deletes_another_file(tmp_path, monke
     assert existing.is_file(), "an unowned temporary collision was deleted"
     assert existing.read_bytes() == b"other owner's data"
     assert not (attempt / "outcome.json").exists()
+
+
+@pytest.mark.parametrize("root_exists", [False, True])
+def test_prospective_attempt_inside_prepared_sessions_root_fails_before_creation(
+    tmp_path, root_exists,
+):
+    prepared_root = tmp_path / "sessions"
+    if root_exists:
+        prepared_root.mkdir(mode=0o700)
+        (prepared_root / "existing-input.json").write_bytes(b"preserve prepared input")
+    with pytest.raises(module().SessionArtifactError):
+        module().create_attempt_directory(tmp_path, "security", prepared_root=prepared_root)
+    if root_exists:
+        assert {path.name for path in prepared_root.iterdir()} == {"existing-input.json"}
+        assert (prepared_root / "existing-input.json").read_bytes() == b"preserve prepared input"
+        assert stat.S_IMODE(prepared_root.stat().st_mode) == 0o700
+    else:
+        assert not prepared_root.exists()
+    assert not (prepared_root / "security").exists()
