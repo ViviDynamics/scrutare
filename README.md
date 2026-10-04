@@ -59,12 +59,15 @@ models:
 
 PR ingestion, YAML configuration validation, the persona registry, and the pure
 findings pipeline, code-derived verdicts, and durable Python poster API are
-implemented. The [findings guide](docs/findings.md) covers
+implemented. Capture prepares filtered artifacts and the public per-persona
+input API fixes each persona's read root and read-only tool policy. The
+[path filters guide](docs/path-filters.md) describes this boundary. The
+[findings guide](docs/findings.md) covers
 validated input, diff anchors, one supplied correction round, and lossless
 dedupe. The [posting guide](docs/posting.md) covers captured-head reviews,
 durable receipts, bounded retries and uncertain-delivery recovery. The review
-panel, live model sessions, replay CLI, and execution of configured settings
-through the CLI are planned. The design and milestone order are in
+panel, live model sessions, replay CLI, and execution of the remaining configured
+settings through the CLI are planned. The design and milestone order are in
 [docs/SPEC.md](docs/SPEC.md).
 
 ## Capture a pull request
@@ -100,7 +103,9 @@ defaults, and model overrides. The [persona authoring guide](docs/writing-person
 explains the four perspectives, custom prompts, and registry API. Invalid
 settings report the affected field.
 
-The command captures inputs only and makes no model calls or GitHub writes.
+The command captures raw inputs and prepares a filtered reviewer view using
+`github.paths.include` and `github.paths.exclude`. It makes no model calls or
+GitHub writes. Default exclusions omit `docs/**` and Markdown files at any depth.
 It returns a nonzero exit code with a concise error if capture fails, including
 when the PR closes or merges. Success prints one JSON object:
 
@@ -116,7 +121,13 @@ canonical configuration artifact with effective defaults and resolved model
 overrides. Metadata records the complete PR object under `pull_request`,
 the captured head, repository, PR number, schema version, and application
 version. Capture retries if the head changes while inputs are being fetched.
-`ingested` means the inputs were saved; a review verdict does not yet exist.
+The run also contains `effective-files.json` and a separate `review-inputs/`
+directory with only the selected `diff.patch`, minimal `files.json`, and safe
+`context.json`. The manifest and full raw capture stay outside the persona read
+root. Discussion bodies and PR title/body are omitted from the reviewer view.
+See the [path filters guide](docs/path-filters.md) for matching rules, empty
+selections, artifacts, and the Python integration contract. `ingested` means
+raw inputs and their filtered view were saved; a review verdict does not yet exist.
 
 ## Development checks
 

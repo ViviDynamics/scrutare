@@ -1,6 +1,8 @@
 """Finding validation, side-aware verification, dedupe, verdicts, and persistence."""
 
+from scrutare.findings.anchors import DiffSection as DiffSection
 from scrutare.findings.anchors import parse_diff as parse_diff
+from scrutare.findings.anchors import parse_diff_sections as parse_diff_sections
 from scrutare.findings.artifacts import VerdictArtifactError as VerdictArtifactError
 from scrutare.findings.artifacts import write_verdict as write_verdict
 from scrutare.findings.dedupe import MergedFinding as MergedFinding
