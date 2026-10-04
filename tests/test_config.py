@@ -7,7 +7,7 @@ from dataclasses import FrozenInstanceError
 import pytest
 import yaml
 
-from scrutare.config import ConfigError, PersonaDefinition, parse_config
+from scrutare.config import ConfigError, PersonaDefinition, VerdictSettings, parse_config
 
 MINIMAL = "models:\n  default:\n    model: test-model\n"
 SPEC_EXAMPLE = """
@@ -27,6 +27,52 @@ github:
   human_reviewers: []
   paths: {include: [], exclude: ["docs/**", "*.md"]}
 """
+
+
+def test_programmatic_verdict_settings_canonicalize_immutable_category_order():
+    settings = VerdictSettings(
+        ("docs", "style"), ("consistency", "regression", "security", "correctness")
+    )
+    assert settings.blocking_categories == ("style", "docs")
+    assert settings.advisory_categories == ("correctness", "security", "regression", "consistency")
+    with pytest.raises(FrozenInstanceError):
+        settings.blocking_categories = ()
+
+
+@pytest.mark.parametrize("field", ["blocking_categories", "advisory_categories"])
+@pytest.mark.parametrize("value", [None, [], {}, "secret-category", 1, True])
+def test_programmatic_verdict_settings_require_tuples(field, value):
+    with pytest.raises(ConfigError, match=f"verdict.{field}: expected a tuple") as error:
+        VerdictSettings(**{field: value})
+    assert "secret-category" not in str(error.value)
+
+
+@pytest.mark.parametrize("field", ["blocking_categories", "advisory_categories"])
+@pytest.mark.parametrize("value", [None, [], {}, "secret-category", 1, True, " "])
+def test_programmatic_verdict_settings_reject_invalid_categories(field, value):
+    with pytest.raises(ConfigError, match=rf"verdict.{field}\[0\]") as error:
+        VerdictSettings(**{field: (value,)})
+    assert "secret-category" not in str(error.value)
+
+
+@pytest.mark.parametrize("field", ["blocking_categories", "advisory_categories"])
+def test_programmatic_verdict_settings_reject_duplicate_categories(field):
+    with pytest.raises(ConfigError, match=rf"verdict.{field}\[1\]: duplicate category"):
+        VerdictSettings(**{field: ("style", "style")})
+
+
+@pytest.mark.parametrize("blocking,advisory,diagnostic", [
+    (("correctness", "security", "regression", "style"),
+     ("style", "consistency", "docs"), "must not overlap"),
+    (("correctness", "security"), ("style", "consistency", "docs"),
+     "partition missing: regression"),
+    ((), (), "partition missing"),
+])
+def test_programmatic_verdict_settings_require_complete_disjoint_partition(
+    blocking, advisory, diagnostic
+):
+    with pytest.raises(ConfigError, match=diagnostic):
+        VerdictSettings(blocking, advisory)
 
 
 def test_minimal_config_resolves_spec_defaults():

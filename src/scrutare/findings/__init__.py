@@ -1,4 +1,4 @@
-"""Pure finding validation, side-aware anchor verification, and lossless dedupe."""
+"""Pure finding validation, side-aware verification, lossless dedupe, and verdicts."""
 
 from scrutare.findings.anchors import parse_diff as parse_diff
 from scrutare.findings.dedupe import MergedFinding as MergedFinding
@@ -7,6 +7,8 @@ from scrutare.findings.models import Anchor as Anchor
 from scrutare.findings.models import Finding as Finding
 from scrutare.findings.models import FindingError as FindingError
 from scrutare.findings.models import parse_finding as parse_finding
+from scrutare.findings.verdict import Verdict as Verdict
+from scrutare.findings.verdict import derive_verdict as derive_verdict
 from scrutare.findings.verification import AnchorCheck as AnchorCheck
 from scrutare.findings.verification import DroppedFinding as DroppedFinding
 from scrutare.findings.verification import ReanchorCorrection as ReanchorCorrection
