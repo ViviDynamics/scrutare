@@ -2,10 +2,12 @@
 
 `scrutare.findings` provides pure Python functions for parsing findings and
 diffs, verifying anchors, finalizing one supplied correction round, and
-deduplicating the survivors. Its frozen data classes validate direct construction
-as well as wire input. These functions perform no I/O or model calls.
-Model sessions, collection, verdict derivation, posting, and artifact persistence
-remain later stages. The design authority is [SPEC.md](SPEC.md).
+deduplicating the survivors, then deriving a verdict from configured categories.
+Its frozen data classes validate direct construction as well as wire input.
+Derivation and serialization perform no I/O or model calls. The separate
+`write_verdict` helper persists an artifact in an existing run directory.
+Model sessions, collection, and posting remain later stages.
+The design authority is [SPEC.md](SPEC.md).
 
 ## Input and attribution
 
@@ -89,24 +91,84 @@ caller-owned `persona`. These are output artifact fields, not accepted model
 wire fields. Lists and source dictionaries are recreated on every call, so a
 caller can prepare a future artifact without mutating the merged finding.
 
+## Verdict derivation and persistence
+
+Call `derive_verdict(merged, config.verdict)` with deduplicated, verified
+survivors and a `VerdictSettings` policy. This API accepts verified survivors;
+it does not verify anchors or reanchor findings itself. It snapshots the input
+in a frozen `Verdict`, retaining every merged group and source in caller order.
+Models cannot supply a verdict or classification policy.
+
+Any source category in `blocking_categories` makes the verdict
+`changes_requested`, with rule `any_blocking_finding`. Otherwise the verdict is
+`approve`, with rule `no_blocking_findings`, including when no findings survive.
+Advisory-only groups remain in the artifact and never block. A merged advisory
+source cannot erase a blocking source.
+
+By default, correctness, security, and regression block; style, consistency,
+and docs are advisory. The configured blocking and advisory categories must
+partition exactly `scrutare.config.CATEGORIES`, without overlap or missing
+categories. `VerdictSettings` validates this for programmatic construction as
+well as loaded configuration. Reclassification follows the supplied policy,
+so the same verified evidence can produce a different verdict. Replay through
+the CLI comes in issue #13.
+
+`Verdict.to_dict()` returns fresh artifact data with these fields:
+
+| Field | Value |
+| --- | --- |
+| `schema_version` | `1` |
+| `verdict` | `approve` or `changes_requested` |
+| `rule` | `no_blocking_findings` or `any_blocking_finding` |
+| `config` | The effective `blocking_categories` and `advisory_categories` lists |
+| `findings` | Every merged group's existing artifact fields, plus `blocking` and `blocking_categories` |
+
+Each group's `blocking_categories` contains its source categories that block
+under the effective policy. Categories use `CATEGORIES` order; source order
+and all persona, category, reason, original problem, anchor, and side evidence
+are preserved. `Verdict.to_bytes()` serializes the same data as UTF-8 JSON with
+sorted keys, two-space indentation, and a trailing newline.
+
+`write_verdict(run_dir: Path, verdict: Verdict) -> Path` writes those canonical
+bytes to `run_dir / "verdict.json"`. It requires an existing run directory and
+validates and encodes the typed verdict before starting filesystem operations.
+A complete temporary sibling replaces the destination atomically. Repeat
+writes are byte-identical; changed evidence or policy replaces the old artifact.
+The helper leaves unrelated run artifacts in place and performs no network,
+subprocess, or model calls. It does not create a new run.
+
+Invalid input, encoding errors, missing directories, and filesystem failures
+raise `VerdictArtifactError`, a `ValueError` with safe, actionable diagnostics
+that omit finding text, paths, and underlying error details. Failed writes or
+replacements preserve any prior `verdict.json` and remove the temporary sibling.
+If filesystem permissions also prevent temporary-file cleanup, the error
+identifies that cleanup failure.
+
 ## Runnable composition
 
 From a checkout with development dependencies installed, run the following
 shell block. The example supplies two corrections as caller data, demonstrates
-both terminal drop reasons, then merges only the verified survivors:
+both terminal drop reasons, then merges only the verified survivors. It derives
+and persists a verdict in a caller-owned temporary run, then reclassifies the
+same evidence and replaces the artifact:
 
 ```sh
 uv run --locked --extra dev python - <<'PY'
 import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
+from scrutare.config import VerdictSettings
 from scrutare.findings import (
     Anchor,
     ReanchorCorrection,
     check_anchors,
     dedupe_findings,
+    derive_verdict,
     finish_reanchor,
     parse_diff,
     parse_finding,
+    write_verdict,
 )
 
 diff = """diff --git a/src/main.py b/src/main.py
@@ -150,7 +212,36 @@ assert len(merged[0].sources) == 2
 artifact = json.loads(json.dumps(merged[0].to_dict()))
 assert artifact["sources"][1]["problem"] == "Wrong\tresult"
 print(f"accepted={len(result.accepted)} dropped={len(result.dropped)} merged={len(merged)}")
+verdict = derive_verdict(merged, VerdictSettings())
+assert verdict.verdict == "changes_requested"
+assert verdict.rule == "any_blocking_finding"
+reclassified = derive_verdict(merged, VerdictSettings(
+    blocking_categories=("security", "regression"),
+    advisory_categories=("correctness", "style", "consistency", "docs"),
+))
+assert reclassified.verdict == "approve"
+assert reclassified.rule == "no_blocking_findings"
+assert reclassified.findings == verdict.findings
+with TemporaryDirectory() as directory:
+    run_dir = Path(directory)  # An existing directory supplied by the caller.
+    (run_dir / "diff.patch").write_text(diff, encoding="utf-8")
+    destination = write_verdict(run_dir, verdict)
+    assert destination.read_bytes() == verdict.to_bytes()
+    assert write_verdict(run_dir, verdict).read_bytes() == verdict.to_bytes()
+    write_verdict(run_dir, reclassified)
+    saved = json.loads(destination.read_bytes())
+    assert destination.read_bytes() == reclassified.to_bytes()
+    assert saved["findings"][0]["personas"] == ["junior-dev", "senior-dev"]
+    assert len(saved["findings"][0]["sources"]) == 2
+    assert (run_dir / "diff.patch").read_text(encoding="utf-8") == diff
+    assert sorted(path.name for path in run_dir.iterdir()) == ["diff.patch", "verdict.json"]
+    print(f"artifact={destination.name} verdict={saved['verdict']} rule={saved['rule']}")
 PY
 ```
 
-Expected output: `accepted=2 dropped=2 merged=1`.
+Expected output:
+
+```text
+accepted=2 dropped=2 merged=1
+artifact=verdict.json verdict=approve rule=no_blocking_findings
+```
