@@ -62,6 +62,19 @@ class VerdictSettings:
     blocking_categories: tuple[Category, ...] = ("correctness", "security", "regression")
     advisory_categories: tuple[Category, ...] = ("style", "consistency", "docs")
 
+    def __post_init__(self) -> None:
+        blocking = _categories(self.blocking_categories, "verdict.blocking_categories")
+        advisory = _categories(self.advisory_categories, "verdict.advisory_categories")
+        if set(blocking) & set(advisory):
+            raise ConfigError(
+                "verdict: blocking_categories and advisory_categories must not overlap"
+            )
+        missing = set(CATEGORIES) - set(blocking) - set(advisory)
+        if missing:
+            raise ConfigError(f"verdict: category partition missing: {', '.join(sorted(missing))}")
+        object.__setattr__(self, "blocking_categories", blocking)
+        object.__setattr__(self, "advisory_categories", advisory)
+
 
 @dataclass(frozen=True)
 class PathSettings:
@@ -230,8 +243,10 @@ def _models(value: object, personas: tuple[str | PersonaDefinition, ...]) -> Mod
 
 
 def _categories(value: object, path: str) -> tuple[Category, ...]:
+    if not isinstance(value, tuple):
+        raise ConfigError(f"{path}: expected a tuple")
     result = []
-    for i, item in enumerate(_list(value, path)):
+    for i, item in enumerate(value):
         item_path = f"{path}[{i}]"
         category = _choice(item, item_path, CATEGORIES)
         if category in result:
@@ -243,19 +258,18 @@ def _categories(value: object, path: str) -> tuple[Category, ...]:
 def _verdict(value: object) -> VerdictSettings:
     fields = _mapping(value, "verdict", ("blocking_categories", "advisory_categories"))
     defaults = VerdictSettings()
-    blocking = _categories(
-        fields.get("blocking_categories", list(defaults.blocking_categories)),
-        "verdict.blocking_categories",
+    blocking = tuple(
+        _list(
+            fields.get("blocking_categories", list(defaults.blocking_categories)),
+            "verdict.blocking_categories",
+        )
     )
-    advisory = _categories(
-        fields.get("advisory_categories", list(defaults.advisory_categories)),
-        "verdict.advisory_categories",
+    advisory = tuple(
+        _list(
+            fields.get("advisory_categories", list(defaults.advisory_categories)),
+            "verdict.advisory_categories",
+        )
     )
-    if set(blocking) & set(advisory):
-        raise ConfigError("verdict: blocking_categories and advisory_categories must not overlap")
-    missing = set(CATEGORIES) - set(blocking) - set(advisory)
-    if missing:
-        raise ConfigError(f"verdict: category partition missing: {', '.join(sorted(missing))}")
     return VerdictSettings(blocking, advisory)
 
 
