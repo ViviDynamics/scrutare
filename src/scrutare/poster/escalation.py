@@ -1,6 +1,5 @@
 """Durable human escalation after a confirmed captured-head COMMENT review."""
 
-import math
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -137,9 +136,7 @@ def _request(
     while True:
         posting._wait_retry(state, sleeper)
         assert_pr_open(transport.get_pr(ref))
-        state.update(status="sending", attempts=state["attempts"] + 1,
-                     failure=None, retry_at=None, http_status=None)
-        atomic_write(path, canonical(state))
+        posting._begin_attempt(path, state, atomic_write)
         try:
             receipt = transport.request_reviewers(ref, reviewers)
             if (not isinstance(receipt, ReviewerRequestReceipt)
@@ -147,17 +144,11 @@ def _request(
                 raise PostingUncertain(_UNCERTAIN)
             _saved_request(_receipt_dict(receipt), reviewers)
         except PostingRateLimited as error:
-            deadline = posting._now() + error.retry_after
-            if not math.isfinite(deadline):
+            if not posting._record_rejection(path, state, error, atomic_write):
                 return _reconcile(transport, ref, path, state)
-            state.update(status="rejected", failure="throttle", retry_at=deadline,
-                         http_status=error.status)
-            atomic_write(path, canonical(state))
             continue
         except PostingRejected as error:
-            state.update(status="rejected", failure="unsent" if error.unsent else "permanent",
-                         http_status=error.status)
-            atomic_write(path, canonical(state))
+            posting._record_rejection(path, state, error, atomic_write)
             raise
         except Exception:
             return _reconcile(transport, ref, path, state)

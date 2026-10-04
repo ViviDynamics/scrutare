@@ -72,7 +72,9 @@ One nonblocking `.posting.lock` covers the complete operation. The existing
 [review journal and artifacts](posting.md#durable-artifacts) keep their meanings.
 Before either public posting entrypoint makes any network call, it validates all
 available review and request artifacts and their links to captured evidence.
-Orphan, missing, changed or malformed artifacts fail without overwriting them.
+Orphan, missing, changed or malformed linked delivery artifacts fail without
+overwriting them. As in ordinary review posting, missing `verdict.json` or
+`findings.json` evidence can be regenerated from the supplied matching verdict.
 
 After the COMMENT is confirmed, escalation writes two additional artifacts:
 

@@ -208,6 +208,33 @@ def _wait_retry(state: dict[str, Any], sleeper: Callable[[float], None]) -> None
             raise PostingRateLimited(status=state["http_status"], retry_after=remaining)
 
 
+def _begin_attempt(
+    path: Path, state: dict[str, Any], write: Callable[[Path, bytes], None],
+) -> None:
+    """Persist sending before either stage performs its external write."""
+    state.update(status="sending", attempts=state["attempts"] + 1,
+                 failure=None, retry_at=None, http_status=None)
+    write(path, canonical(state))
+
+
+def _record_rejection(
+    path: Path, state: dict[str, Any], error: PostingRejected,
+    write: Callable[[Path, bytes], None],
+) -> bool:
+    """Persist a known rejection, or require reconciliation for an invalid deadline."""
+    if isinstance(error, PostingRateLimited):
+        deadline = _now() + error.retry_after
+        if not math.isfinite(deadline):
+            return False
+        state.update(status="rejected", failure="throttle", retry_at=deadline,
+                     http_status=error.status)
+    else:
+        state.update(status="rejected", failure="unsent" if error.unsent else "permanent",
+                     http_status=error.status)
+    write(path, canonical(state))
+    return True
+
+
 def post_review(
     run_dir: Path, verdict: Verdict, *, client: ReviewClient | None = None,
     sleeper: Callable[[float], None] | None = None,
@@ -283,26 +310,18 @@ def _post_review_locked(
     while True:
         _wait_retry(state, wait)
         assert_pr_open(transport.get_pr(ref))
-        state.update(status="sending", attempts=state["attempts"] + 1,
-                     failure=None, retry_at=None, http_status=None)
-        atomic_write(path, canonical(state))
+        _begin_attempt(path, state, atomic_write)
         try:
             receipt = transport.create_review(ref, payload)
             if not isinstance(receipt, PostedReview):
                 raise PostingUncertain(_UNCERTAIN)
             _saved_receipt(asdict(receipt), ref, payload)
         except PostingRateLimited as error:
-            deadline = _now() + error.retry_after
-            if not math.isfinite(deadline):
+            if not _record_rejection(path, state, error, atomic_write):
                 return _reconcile(transport, ref, payload, path, state)
-            state.update(status="rejected", failure="throttle", retry_at=deadline,
-                         http_status=error.status)
-            atomic_write(path, canonical(state))
             continue
         except PostingRejected as error:
-            state.update(status="rejected", failure="unsent" if error.unsent else "permanent",
-                         http_status=error.status)
-            atomic_write(path, canonical(state))
+            _record_rejection(path, state, error, atomic_write)
             raise
         except Exception:
             return _reconcile(transport, ref, payload, path, state)
