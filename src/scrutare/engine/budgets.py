@@ -131,6 +131,11 @@ class ReviewBudgetLedger:
         if not isinstance(lease, BudgetLease) or self._active.get(lease.persona) is not lease:
             raise ValueError("lease: expected the active ledger-issued lease")
 
+    def mark_uncertain(self, lease: BudgetLease) -> None:
+        """Seal new admission immediately, without invalidating admitted accounting."""
+        self._validate_lease(lease)
+        self._accounting_complete = False
+
     def observe(self, lease: BudgetLease, cumulative_usage: TokenUsage) -> None:
         self._validate_lease(lease)
         previous = self._sessions[lease.session_key][1]

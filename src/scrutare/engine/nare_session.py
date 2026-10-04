@@ -264,6 +264,7 @@ class _Evidence:
                 self.usage = cumulative
         except (SessionProtocolError, ValueError):
             self.corrupt = True
+            ledger.mark_uncertain(lease)
 
 
 async def _stdout(stream: asyncio.StreamReader, destination: BinaryIO, evidence: _Evidence,
@@ -280,13 +281,21 @@ async def _stdout(stream: asyncio.StreamReader, destination: BinaryIO, evidence:
                 evidence.event(line, ledger, lease)
         if pending:
             evidence.event(pending, ledger, lease)
+    except OSError:
+        ledger.mark_uncertain(lease)
+        raise
     finally:
         evidence.stdout = b"".join(chunks)
 
 
-async def _stderr(stream: asyncio.StreamReader, destination: BinaryIO) -> None:
-    while chunk := await stream.read(65536):
-        destination.write(chunk)
+async def _stderr(stream: asyncio.StreamReader, destination: BinaryIO,
+                  ledger: ReviewBudgetLedger, lease: BudgetLease) -> None:
+    try:
+        while chunk := await stream.read(65536):
+            destination.write(chunk)
+    except OSError:
+        ledger.mark_uncertain(lease)
+        raise
 
 
 async def _execute(argv: list[str], environment: dict[str, str], cwd: Path,
@@ -297,7 +306,7 @@ async def _execute(argv: list[str], environment: dict[str, str], cwd: Path,
     evidence.started = True
     assert process.stdout is not None and process.stderr is not None
     drainage = asyncio.gather(_stdout(process.stdout, stdout, evidence, ledger, lease),
-                              _stderr(process.stderr, stderr), process.wait(),
+                              _stderr(process.stderr, stderr, ledger, lease), process.wait(),
                               return_exceptions=True)
     try:
         results = await _wait_capture(

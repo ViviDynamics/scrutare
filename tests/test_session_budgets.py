@@ -429,3 +429,40 @@ def test_public_operations_reject_invalid_values_without_mutating():
     with pytest.raises(ValueError):
         value.settle(lease, models().TokenUsage(), 1)
     assert value.usage.total == 0
+
+
+def test_live_uncertainty_seals_new_work_without_invalidating_admitted_accounting():
+    value = ledger(("one", "two", "three"), persona=100, review=300)
+    first = value.admit("one", "first")
+    second = value.admit("two", "second")
+    value.observe(first, models().TokenUsage(15, 5))
+    before = value.snapshot()
+    value.mark_uncertain(first)
+    assert value.admit("three", "later") is None
+    assert not value.accounting_complete and not value.exhausted
+    assert value.usage == models().TokenUsage(15, 5)
+    assert value.snapshot()["active_reservations"] == before["active_reservations"]
+    value.mark_uncertain(first)
+    value.observe(first, models().TokenUsage(20, 5))
+    value.observe(second, models().TokenUsage(cache_read=10))
+    value.settle(first, models().TokenUsage(20, 5), True)
+    value.settle(second, models().TokenUsage(cache_read=10), True)
+    assert value.usage == models().TokenUsage(20, 5, 10)
+    assert not value.accounting_complete
+    assert value.admit("three", "still-denied") is None
+    assert value.snapshot()["active_reservations"] == []
+
+
+def test_live_uncertainty_rejects_forged_foreign_and_stale_leases_without_sealing():
+    value = ledger()
+    active = value.admit("security", "active")
+    foreign = ledger().admit("security", "active")
+    for bad in (replace(active), replace(active, session_key="other"), foreign, None):
+        with pytest.raises(ValueError):
+            value.mark_uncertain(bad)
+        assert value.accounting_complete and value.usage == models().TokenUsage()
+    value.settle(active, models().TokenUsage(5), True)
+    with pytest.raises(ValueError):
+        value.mark_uncertain(active)
+    assert value.accounting_complete and value.usage == models().TokenUsage(5)
+    assert value.admit("senior-dev", "valid-after-rejections") is not None

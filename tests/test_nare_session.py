@@ -601,3 +601,100 @@ def test_cancelled_spawn_failure_preserves_cancellation_and_known_no_start(captu
         assert ledger.snapshot()["active_reservations"] == []
 
     asyncio.run(cancel())
+
+
+@pytest.mark.parametrize("failure", ["malformed", "stdout", "stderr"])
+def test_detected_live_accounting_failure_denies_later_admission_before_terminal(
+        capture, tmp_path, monkeypatch, failure):
+    descriptor, _, _, attempt = setup(capture, limit=50)
+    ledger = ReviewBudgetLedger(("security", "sibling", "other"), BudgetSettings(50, 150))
+    lease = ledger.admit("security", "running")
+    sibling = ledger.admit("sibling", "already-admitted")
+    original_event = module()._Evidence.event
+    original_capture = module()._new_capture
+    detected = asyncio.Event()
+    barrier = attempt / "cwd" / "cost-consumed.marker"
+
+    def observe_event(evidence, line, *args):
+        original_event(evidence, line, *args)
+        if evidence.usage.total >= 10:
+            barrier.touch()
+        if evidence.corrupt:
+            detected.set()
+
+    class FailingCapture:
+        def __init__(self, stream):
+            self.stream = stream
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            self.stream.close()
+
+        def write(self, data):
+            if b"capture-failure-marker" in data:
+                detected.set()
+                raise OSError("private-capture-failure")
+            return self.stream.write(data)
+
+    def open_capture(directory, name):
+        stream = original_capture(directory, name)
+        return FailingCapture(stream) if name == failure + "." + (
+            "jsonl" if failure == "stdout" else "txt"
+        ) else stream
+
+    monkeypatch.setattr(module()._Evidence, "event", observe_event)
+    monkeypatch.setattr(module(), "_new_capture", open_capture)
+    emission = {
+        "malformed": 'print("malformed-accounting", flush=True)',
+        "stdout": 'print(json.dumps({"type": "progress", "text": "capture-failure-marker", '
+                  '"detail": {}, "timestamp": "now"}), flush=True)',
+        "stderr": 'sys.stderr.write("capture-failure-marker"); sys.stderr.flush()',
+    }[failure]
+    extra = '''
+import time
+while not Path("cost-consumed.marker").exists():
+    time.sleep(0.005)
+Path("child-pid.json").write_text(json.dumps(os.getpid()))
+''' + emission + '''
+time.sleep(0.3)
+turn = {"input": 1, "output": 1, "cache_read": 1, "cache_write": 1, "cost": None}
+print(json.dumps({"type": "cost", "text": "", "detail": turn, "timestamp": "now"}), flush=True)
+USAGE = {"input": 5, "output": 3, "cache_read": 4, "cache_write": 2, "cost": None}
+'''
+    path = running_executable(tmp_path, extra=extra)
+
+    async def scenario():
+        task = asyncio.create_task(module().run_persona_session(
+            descriptor, ModelRail("openai", None, "fixture"), lease, ledger=ledger,
+            artifact_directory=attempt, runtime=NareRuntime(path, timeout_seconds=5),
+            capability=NareCapability("2026.10.0", 1)))
+        try:
+            await asyncio.wait_for(detected.wait(), 2)
+            assert not task.done(), "corruption must be checked before terminal settlement"
+            assert ledger.usage == TokenUsage(4, 2, 3, 1)
+            assert ledger.admit("other", "later") is None
+            assert not ledger.accounting_complete and not ledger.exhausted
+            assert len(ledger.snapshot()["active_reservations"]) == 2
+            ledger.observe(sibling, TokenUsage(7))
+            ledger.settle(sibling, TokenUsage(7), True)
+            outcome = await task
+            assert outcome.status == "failed" and not outcome.accounting_complete
+            assert outcome.usage == (TokenUsage(4, 2, 3, 1) if failure == "stdout"
+                                     else TokenUsage(5, 3, 4, 2))
+            assert outcome.exit_code == (0 if failure == "malformed" else None)
+            pid = json.loads((attempt / "cwd" / "child-pid.json").read_bytes())
+            assert not Path(f"/proc/{pid}").exists()
+            assert ledger.usage.total == outcome.usage.total + 7
+            assert ledger.snapshot()["active_reservations"] == []
+            assert not ledger.accounting_complete
+            assert (attempt / "stdout.jsonl").read_bytes()
+            assert (attempt / "session.json").is_file()
+            assert json.loads((attempt / "result.json").read_bytes())["status"] == "failed"
+        finally:
+            if not task.done():
+                task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+
+    asyncio.run(scenario())
