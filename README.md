@@ -69,9 +69,13 @@ durable receipts, bounded retries and uncertain-delivery recovery. The
 [escalation guide](docs/escalation.md) covers code-derived exhaustion, COMMENT
 summaries and durable human review requests through the Python API. The
 [replay guide](docs/replay.md) covers offline verdict recomputation and separate
-saved and locally recorded posted comparisons. The review panel, live model
-sessions, and execution of the remaining configured settings through the CLI
-are planned. The design and milestone order are in
+saved and locally recorded posted comparisons. The Python
+[session fan-out API](docs/session-fanout.md) runs an initial concurrent wave
+through an external nare executable, with isolated artifacts, reported token
+accounting and candidate findings. Anchor verification, convergence and posting
+remain caller-owned stages. The review CLI still captures inputs only;
+execution of the panel and remaining settings through the CLI is planned.
+The design and milestone order are in
 [docs/SPEC.md](docs/SPEC.md).
 
 ## Capture a pull request
@@ -161,6 +165,14 @@ uv run --locked --extra dev ruff check .
 uv run --locked --extra dev mypy src
 uv build --wheel
 ```
+
+CI also installs nare 2026.10.0 in a separate Python 3.14 environment pinned
+to its public release commit and locked dependencies. Each matrix job runs
+offline tests through that installed CLI. To include the same proof locally,
+set `SCRUTARE_TEST_NARE_EXECUTABLE` to the absolute path of the separately
+installed release's `nare` executable before running pytest. An absent setting
+skips this supplemental suite locally; a configured but unusable runtime fails.
+The suite makes no live model calls and strips provider credentials.
 
 The full preflight table, including a wheel installation check, is in
 [.agents/test-commands.md](.agents/test-commands.md). `repo.env.example`
