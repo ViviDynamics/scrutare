@@ -40,8 +40,8 @@ Out: new YAML keys, session retries, iterative/debate implementation, recovery C
 ## Tasks
 
 - [x] 1. Producer version and exclusive artifact manifest.
-- [ ] 2. Full review service and CLI orchestration.
-- [ ] 3. Container and tagged release packaging.
+- [x] 2. Full review service and CLI orchestration.
+- [x] 3. Container and tagged release packaging.
 - [x] 4. Installed-wheel pipeline proof and user documentation.
 
 ### Task 1: Producer version and exclusive artifact manifest
