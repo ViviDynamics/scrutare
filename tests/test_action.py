@@ -225,6 +225,8 @@ def install_docker(tmp_path, env, scenario):
         ' "https://github.com/Owner/Repo/pull/17#pullrequestreview-42", "commit_id": "b" * 40,\n'
         ' "body": "reviewed captured head", "state": "APPROVED", "login": "github-actions[bot]"}}\n'
         'record.update(scenario.get("record", {}))\n'
+        'if "receipt" in scenario: record["review"].update(scenario["receipt"])\n'
+        'for key in scenario.get("missing", []): record.pop(key)\n'
         'raw = (json.dumps(record, indent=2, sort_keys=True) + "\\n").encode()\n'
         'if scenario.get("duplicate"):\n'
         "    raw = raw.rsplit(b'}', 1)[0] + b', \"verdict\": \"approve\"}\\n'\n"
@@ -265,7 +267,16 @@ def test_review_publishes_only_valid_cli_success(runner, tmp_path, verdict):
     env, prepared, source, docker = review_context(
         runner,
         tmp_path,
-        {"record": {"verdict": verdict}},
+        {
+            "record": {
+                "verdict": verdict,
+                "rule": {
+                    "approve": "no_blocking_findings",
+                    "changes_requested": "any_blocking_finding",
+                    "escalated": "rounds_exhausted_without_convergence",
+                }[verdict],
+            }
+        },
         config="nested directory/配置 $(touch hacked).yaml",
     )
     env["GH_TOKEN"] = "synthetic-github-secret"
@@ -394,8 +405,7 @@ def test_review_refuses_ambiguous_or_nonfinite_json(runner, tmp_path, scenario):
     assert outputs(env) == {}
 
 
-def test_review_cancellation_stops_only_owned_container_and_reaps_launcher(runner, tmp_path):
-    env, prepared, _, docker = review_context(runner, tmp_path)
+def install_blocking_docker(docker):
     docker.write_text(
         f"#!{sys.executable}\n"
         "import json, os, pathlib, signal, sys, time\n"
@@ -408,6 +418,11 @@ def test_review_cancellation_stops_only_owned_container_and_reaps_launcher(runne
         'base.with_suffix(".pid").write_text(str(os.getpid()))\n'
         "while True: time.sleep(0.1)\n",
     )
+
+
+def test_review_cancellation_stops_only_owned_container_and_reaps_launcher(runner, tmp_path):
+    env, prepared, _, docker = review_context(runner, tmp_path)
+    install_blocking_docker(docker)
     wrapper = subprocess.Popen(
         [sys.executable, str(ADAPTER), "review"],
         env=env,
@@ -449,3 +464,154 @@ def test_prepare_refuses_nonscalar_action_without_a_traceback(runner):
     assert b"Traceback" not in result.stderr
     assert outputs(env) == {}
     assert list(Path(env["RUNNER_TEMP"]).iterdir()) == []
+
+
+@pytest.mark.parametrize(
+    "scenario",
+    [
+        *(
+            {"missing": [field]}
+            for field in (
+                "rule",
+                "panel_status",
+                "usage",
+                "accounting_complete",
+                "review",
+            )
+        ),
+        {"record": {"accounting_complete": False}},
+        {"record": {"accounting_complete": 1}},
+        {"record": {"accounting_complete": "true"}},
+        {"record": {"panel_status": "failed"}},
+        {"record": {"panel_status": "not_started"}},
+        {"record": {"panel_status": []}},
+        {"record": {"rule": "invented_rule"}},
+        {"record": {"rule": None}},
+        {"record": {"rule": "any_blocking_finding"}},
+        {"record": {"usage": None}},
+        {"record": {"usage": []}},
+        {"record": {"usage": {"input": 1, "output": 2, "cache_read": 0, "cache_write": 0}}},
+        {
+            "record": {
+                "usage": {"input": -1, "output": 2, "cache_read": 0, "cache_write": 0, "total": 1}
+            }
+        },
+        {
+            "record": {
+                "usage": {"input": True, "output": 2, "cache_read": 0, "cache_write": 0, "total": 3}
+            }
+        },
+        {
+            "record": {
+                "usage": {"input": 1.0, "output": 2, "cache_read": 0, "cache_write": 0, "total": 3}
+            }
+        },
+        {
+            "record": {
+                "usage": {"input": "1", "output": 2, "cache_read": 0, "cache_write": 0, "total": 3}
+            }
+        },
+        {
+            "record": {
+                "usage": {"input": 1, "output": 2, "cache_read": 0, "cache_write": 0, "total": 4}
+            }
+        },
+        {"record": {"review": None}},
+        {"record": {"review": {}}},
+        {"receipt": {"review_id": True}},
+        {"receipt": {"review_id": 0}},
+        {"receipt": {"html_url": "https://github.com/Other/Repo/pull/17#pullrequestreview-42"}},
+        {"receipt": {"html_url": "https://github.com/Owner/Repo/pull/18#pullrequestreview-42"}},
+        {"receipt": {"html_url": "https://github.com/Owner/Repo/pull/17#pullrequestreview-99"}},
+        {"receipt": {"commit_id": "c" * 40}},
+        {"receipt": {"body": None}},
+        {"receipt": {"state": "PENDING"}},
+        {"receipt": {"login": "invalid login"}},
+    ],
+)
+def test_review_refuses_incomplete_or_malformed_success_contract(runner, tmp_path, scenario):
+    env, prepared, _, docker = review_context(runner, tmp_path, scenario)
+    assert invoke(env, "review").returncode == 1
+    assert outputs(env) == {}
+    evidence = Path(prepared["evidence-root"])
+    run = evidence / "work/.scrutare/runs/captured"
+    assert (evidence / "cli-stdout.bin").read_bytes() == (run / "result.json").read_bytes()
+    assert len(docker.with_suffix(".log").read_text().splitlines()) == 1
+
+
+@pytest.mark.parametrize(
+    "record,receipt",
+    [
+        ({"panel_status": "partial"}, {"body": "first line\nsecond line"}),
+        (
+            {"usage": {"input": 0, "output": 0, "cache_read": 0, "cache_write": 0, "total": 0}},
+            {"state": "COMMENTED"},
+        ),
+    ],
+)
+def test_review_accepts_valid_partial_and_comment_receipts(runner, tmp_path, record, receipt):
+    env, _, _, _ = review_context(runner, tmp_path, {"record": record, "receipt": receipt})
+    assert invoke(env, "review").returncode == 0
+    assert outputs(env)["head-sha"] == HEAD_SHA
+
+
+def test_review_defers_cancellation_until_launcher_handle_is_owned(runner, tmp_path):
+    env, prepared, _, docker = review_context(runner, tmp_path)
+    install_blocking_docker(docker)
+    wrapper_script = tmp_path / "cancel_at_acquisition.py"
+    wrapper_script.write_text(
+        "import os, pathlib, runpy, signal, subprocess, time\n"
+        f"module = runpy.run_path({str(ADAPTER)!r})\n"
+        'signal.signal(signal.SIGTERM, module["interrupt"])\n'
+        "real_popen = subprocess.Popen\n"
+        "def acquire(args, *positional, **kwargs):\n"
+        "    child = real_popen(args, *positional, **kwargs)\n"
+        '    if args[:2] == ["docker", "run"]:\n'
+        f"        pid_file = pathlib.Path({str(docker.with_suffix('.pid'))!r})\n"
+        "        deadline = time.monotonic() + 5\n"
+        "        while not pid_file.exists() and time.monotonic() < deadline:\n"
+        "            time.sleep(0.01)\n"
+        "        assert pid_file.exists()\n"
+        "        os.kill(os.getpid(), signal.SIGTERM)\n"
+        "    return child\n"
+        "subprocess.Popen = acquire\n"
+        'raise SystemExit(module["main"](["review"]))\n',
+    )
+    wrapper = subprocess.Popen(
+        [sys.executable, str(wrapper_script)],
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    pid = None
+    try:
+        stdout, stderr = wrapper.communicate(timeout=10)
+        pid = int(docker.with_suffix(".pid").read_text())
+        assert wrapper.returncode == 130, (stdout, stderr)
+        assert outputs(env) == {}
+        calls = [json.loads(line) for line in docker.with_suffix(".log").read_text().splitlines()]
+        name = Path(prepared["state-file"]).parent.name
+        assert calls[-1] == ["stop", "--time", "10", name]
+        with pytest.raises(ProcessLookupError):
+            os.kill(pid, 0)
+    finally:
+        if wrapper.poll() is None:
+            wrapper.kill()
+            wrapper.communicate()
+        if pid is not None:
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+
+
+def test_review_receipt_repository_binding_matches_producer_case_rules(runner, tmp_path):
+    env, _, _, _ = review_context(
+        runner,
+        tmp_path,
+        {
+            "receipt": {"html_url": "https://github.com/owner/repo/pull/17#pullrequestreview-42"},
+        },
+    )
+    assert invoke(env, "review").returncode == 0
+    assert outputs(env)["head-sha"] == HEAD_SHA

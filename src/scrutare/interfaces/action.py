@@ -172,7 +172,7 @@ def prepare() -> int:
     return 0
 
 
-def stop_owned_process(process: subprocess.Popen[bytes], name: str) -> None:
+def stop_owned_process(process: subprocess.Popen[bytes] | None, name: str) -> None:
     """Stop this invocation's container, then reap its launcher."""
     try:
         subprocess.run(
@@ -184,6 +184,8 @@ def stop_owned_process(process: subprocess.Popen[bytes], name: str) -> None:
         )
     except (OSError, subprocess.TimeoutExpired):
         pass
+    if process is None:
+        return
     if process.poll() is None:
         process.terminate()
     try:
@@ -191,6 +193,59 @@ def stop_owned_process(process: subprocess.Popen[bytes], name: str) -> None:
     except subprocess.TimeoutExpired:
         process.kill()
         process.wait()
+
+
+def validate_success(
+    result: dict[str, object], verdict: str, head: str, repo: str, pr: int
+) -> None:
+    """Validate the producer's success envelope without recomputing its verdict."""
+    if result.get("accounting_complete") is not True:
+        raise ActionError("successful accounting must be complete")
+    if scalar(result.get("panel_status")) not in {"complete", "partial"}:
+        raise ActionError("invalid successful panel status")
+    rules = {
+        "approve": "no_blocking_findings",
+        "changes_requested": "any_blocking_finding",
+        "escalated": "rounds_exhausted_without_convergence",
+    }
+    if scalar(result.get("rule")) != rules[verdict]:
+        raise ActionError("invalid recorded verdict rule")
+    usage = mapping(result.get("usage"))
+    counters: list[int] = []
+    for field in ("input", "output", "cache_read", "cache_write", "total"):
+        value = usage.get(field)
+        if type(value) is not int or value < 0:
+            raise ActionError("invalid successful token counter")
+        counters.append(value)
+    if sum(counters[:4]) != counters[4]:
+        raise ActionError("inconsistent successful token total")
+    receipt = mapping(result.get("review"))
+    review_id = positive_number(receipt.get("review_id"))
+    expected_url = (
+        rf"https://github\.com/(?i:{re.escape(repo)})/pull/{pr}"
+        f"#pullrequestreview-{review_id}"
+    )
+    if (
+        re.fullmatch(expected_url, scalar(receipt.get("html_url"))) is None
+        or receipt.get("commit_id") != head
+    ):
+        raise ActionError("review receipt does not bind this PR and captured head")
+    if not isinstance(receipt.get("body"), str) or scalar(receipt.get("state")) not in {
+        "APPROVED",
+        "CHANGES_REQUESTED",
+        "COMMENTED",
+    }:
+        raise ActionError("invalid review receipt content")
+    login = scalar(receipt.get("login"))
+    if (
+        len(login.removesuffix("[bot]")) > 39
+        or re.fullmatch(
+            r"[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*(?:\[bot\])?",
+            login,
+        )
+        is None
+    ):
+        raise ActionError("invalid review receipt identity")
 
 
 def review() -> int:
@@ -264,12 +319,32 @@ def review() -> int:
             "--config",
             "/scrutare-config.yaml",
         ]
-        process = subprocess.Popen(command, cwd=work, stdout=stdout, stderr=stderr)
+        process: subprocess.Popen[bytes] | None = None
+        cancelled = False
+
+        def defer_interrupt(_number: int, _frame: object) -> None:
+            nonlocal cancelled
+            cancelled = True
+
+        handlers = {}
         try:
+            # A recording handler defers parent cancellation without inheriting a
+            # blocked signal mask in the container launcher. Own the handle first.
+            for number_signal in (signal.SIGINT, signal.SIGTERM):
+                handlers[number_signal] = signal.signal(number_signal, defer_interrupt)
+            process = subprocess.Popen(command, cwd=work, stdout=stdout, stderr=stderr)
+            for number_signal, handler in handlers.items():
+                signal.signal(number_signal, handler)
+            if cancelled:
+                raise KeyboardInterrupt
             code = process.wait()
         except KeyboardInterrupt:
+            # The name is known before acquisition, even if acquisition raises.
             stop_owned_process(process, name)
             return 130
+        finally:
+            for number_signal, handler in handlers.items():
+                signal.signal(number_signal, handler)
     if code != 0:
         return code if code > 0 else 128 - code
     raw = stdout_path.read_bytes()
@@ -285,6 +360,7 @@ def review() -> int:
     head = scalar(result.get("head_sha"))
     if verdict not in {"approve", "changes_requested", "escalated"} or SHA.fullmatch(head) is None:
         raise ActionError("invalid successful result scalars")
+    validate_success(result, verdict, head, repo, number)
     run_text = scalar(result.get("run_dir"))
     run_path = Path(run_text)
     if run_path.is_absolute():
