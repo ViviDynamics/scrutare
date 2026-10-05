@@ -12,7 +12,7 @@ from scrutare.findings.verdict import Verdict
 _PRIOR_EVIDENCE = (
     "sessions", "fanout.json", "panel.json", "findings.json", "verdict.json",
     "posting.json", "review-payload.json", "escalation.json", "reviewer-request.json",
-    ".posting.lock",
+    ".posting.lock", "artifacts.json", "result.json",
 )
 
 

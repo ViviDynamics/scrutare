@@ -6,6 +6,7 @@ from dataclasses import replace
 
 import pytest
 
+from scrutare import __version__
 from scrutare.config import VerdictSettings
 from scrutare.findings import Anchor, Finding, dedupe_findings, derive_verdict
 from scrutare.findings.dedupe import MergedFinding
@@ -236,7 +237,8 @@ def test_result_has_fresh_json_data_and_independent_saved_and_posted_comparisons
     result = replay_run(tmp_path)
     digest = hashlib.sha256(original.to_bytes()).hexdigest()
     assert result.to_dict() == {
-        "schema_version": 1, "status": "identical", "verdict": "changes_requested",
+        "schema_version": 1, "scrutare_version": __version__,
+        "status": "identical", "verdict": "changes_requested",
         "rule": "any_blocking_finding", "recomputed_sha256": digest,
         "saved_verdict": {"byte_identical": True, "sha256": digest},
         "posted_verdict": {"byte_identical": None, "sha256": None, "status": "absent"},
@@ -305,3 +307,13 @@ def test_exhaustion_basis_does_not_ignore_original_provenance_issues(tmp_path, i
                      posted_sha256=result.saved_sha256, posted_identical=True)
     assert result.to_dict()["exhaustion_basis"] == "unverified_recorded_assertion"
     assert result.exit_code == 2
+
+
+def test_replay_envelope_stamps_executing_version_without_changing_verdict(tmp_path):
+    from scrutare.replay import replay_run
+
+    original = bundle(tmp_path)
+    result = replay_run(tmp_path)
+    assert result.to_dict()["scrutare_version"] == __version__
+    assert result.verdict.to_bytes() == original.to_bytes()
+    assert "scrutare_version" not in result.verdict.to_dict()

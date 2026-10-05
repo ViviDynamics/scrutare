@@ -1,0 +1,302 @@
+"""Installed wheel through real capture, nare, panel, poster and offline replay.
+
+Only GitHub's executable boundary and nare's vendor factory are substituted.
+A missing post, fabricated empty output or drift in canonical bytes must fail here.
+"""
+
+import hashlib
+import json
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+from test_nare_cli_integration import (
+    BAD_ANCHOR,
+    CORRECTED,
+    FINDING,
+    offline_runtime,
+    text,
+    tool,
+)
+from test_nare_cli_integration import (
+    installed as installed,
+)
+from test_review_inputs import DOCS, SOURCE
+
+ROOT = Path(__file__).resolve().parents[1]
+GH_WORKER = ROOT / "tests/helpers/installed_gh.py"
+VERSION = "2026.10.0"
+
+
+def load(path):
+    return json.loads(path.read_bytes())
+
+
+def digest(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+@pytest.fixture(scope="session")
+def wheel_cli(tmp_path_factory):
+    root = tmp_path_factory.mktemp("installed-wheel")
+    # Build this exact source, without trusting stale dist/ contents.
+    for command in (
+        ["uv", "build", "--python", sys.executable, "--wheel", "--out-dir", str(root / "dist")],
+        ["uv", "venv", "--python", sys.executable, str(root / "venv")],
+    ):
+        result = subprocess.run(command, cwd=ROOT, capture_output=True, timeout=120)
+        assert result.returncode == 0, result.stderr.decode()
+    wheel, = (root / "dist").glob("*.whl")
+    python = root / "venv/bin/python"
+    result = subprocess.run(
+        ["uv", "pip", "install", "--python", str(python), str(wheel)],
+        capture_output=True, timeout=120,
+    )
+    assert result.returncode == 0, result.stderr.decode()
+    return root, python, root / "venv/bin/scrutare", wheel
+
+
+CASES = [
+    ("approval", {"replies": [tool(), text({"findings": []})]}, 100, 0, "approve"),
+    ("blocking", {"replies": [text(FINDING)]}, 100, 0, "changes_requested"),
+    ("correction", {"replies": [text(BAD_ANCHOR)]}, 100, 0, "changes_requested"),
+    ("comment", {"replies": [text(FINDING)]}, 100, 0, "changes_requested"),
+    ("partial", {"replies": [tool(document=FINDING)]}, 1, 0, "changes_requested"),
+    ("failed", {"error": "offline initial failure"}, 100, 1, None),
+    ("missing", {"replies": [tool()]}, 1, 1, None),
+    ("closed", {"replies": [text(FINDING)]}, 100, 1, "changes_requested"),
+    ("uncertain", {"replies": [text(FINDING)]}, 100, 1, "changes_requested"),
+    ("iterative", {}, 100, 1, None),
+    ("debate", {}, 100, 1, None),
+    ("no-runtime", {}, 100, 1, None),
+]
+
+
+@pytest.mark.parametrize("case,initial,limit,exit_code,verdict", CASES,
+                         ids=[item[0] for item in CASES])
+def test_installed_review_pipeline(
+    tmp_path, installed, wheel_cli, request, case, initial, limit, exit_code, verdict,
+):
+    root, python, console, wheel = wheel_cli
+    runtime = offline_runtime(tmp_path, installed)
+    spec = {"scenarios": [
+        {"purpose": "review", "attempt": "attempt-0001", "prompt_prefix": "Review the captured",
+         "scenario": initial},
+        {"purpose": "reanchor", "attempt": "attempt-0002",
+         "prompt_prefix": "Correct only the anchors", "scenario": {"replies": [text(CORRECTED)]}},
+    ]}
+    (tmp_path / "offline-spec.json").write_text(json.dumps(spec))
+    home = tmp_path / "home"
+    home.mkdir()
+    working = tmp_path / "outside checkout café"
+    working.mkdir()
+    binary = tmp_path / "bin"
+    binary.mkdir()
+    gh = binary / "gh"
+    gh.write_text(f"#!{sys.executable}\n" + GH_WORKER.read_text())
+    gh.chmod(0o700)
+    gh_spec = tmp_path / "gh-spec.json"
+    gh_log = tmp_path / "gh.jsonl"
+    gh_spec.write_text(json.dumps({
+        "case": case, "diff": (SOURCE + DOCS).decode(),
+        "files": [{"filename": "src/app.py", "status": "modified", "patch": "HOSTILE_FIELD"},
+                  {"filename": "docs/secret.md", "status": "modified"}],
+        "metadata": {"number": 12, "state": "open", "merged": False,
+                     "head": {"sha": "a" * 40}, "changed_files": 2,
+                     "body": "RAW_BODY_SENTINEL", "base": {"ref": "main", "sha": "base123",
+                     "repo": {"full_name": "owner/repo"}}},
+    }))
+    config = (
+        "# exact raw config: café\r\n"
+        "personas: [senior-dev]\r\n"
+        "models: {default: {provider: openai, model: offline-model, "
+        "base_url: 'https://offline.invalid/v1'}}\r\n"
+        f"budgets: {{review_max_tokens: {limit}, per_persona_tokens: {limit}}}\r\n"
+        f"strategy: {case if case in ('iterative', 'debate') else 'panel'}\r\n"
+        f"github: {{post_mode: {'comment' if case == 'comment' else 'review'}}}\r\n"
+    ).encode()
+    (working / "scrutare.yaml").write_bytes(config)
+    env = {"PATH": f"{binary}:/usr/bin:/bin", "HOME": str(home), "LANG": "C.UTF-8",
+           "SCRUTARE_GH_SPEC": str(gh_spec), "SCRUTARE_GH_LOG": str(gh_log),
+           "PYTHONDONTWRITEBYTECODE": "1"}
+    commands = []
+
+    def execute(arguments, name):
+        result = subprocess.run([str(a) for a in arguments], cwd=working, env=env,
+                                capture_output=True, timeout=60)
+        (tmp_path / f"{name}.stdout").write_bytes(result.stdout)
+        (tmp_path / f"{name}.stderr").write_bytes(result.stderr)
+        commands.append({"argv": [str(a) for a in arguments], "cwd": str(working),
+                         "exit": result.returncode, "stdout": f"{name}.stdout",
+                         "stderr": f"{name}.stderr"})
+        return result
+
+    try:
+        identity = execute([python, "-c",
+            "import importlib.metadata,json,pathlib,scrutare; "
+            "from scrutare.personas import load_persona; "
+            "print(json.dumps({'path':str(pathlib.Path(scrutare.__file__).resolve()),"
+            "'version':scrutare.__version__,'metadata':importlib.metadata.version('scrutare'),"
+            "'system':load_persona('senior-dev').system_prompt}))"], "identity")
+        assert identity.returncode == 0, identity.stderr
+        info = json.loads(identity.stdout)
+        assert Path(info["path"]).is_relative_to(root / "venv")
+        assert "site-packages" in Path(info["path"]).parts
+        assert info["version"] == info["metadata"] == VERSION
+        for name, entrypoint in (("console-version", [console]),
+                                 ("module-version", [python, "-m", "scrutare"])):
+            version = execute([*entrypoint, "--version"], name)
+            assert version.returncode == 0 and version.stdout == f"scrutare {VERSION}\n".encode()
+        entrypoint = [python, "-m", "scrutare"] if case == "comment" else [console]
+        result = execute([*entrypoint, "review", "--pr", "12", "--nare-executable",
+                          tmp_path / "missing-nare" if case == "no-runtime"
+                          else runtime.executable], "review")
+        assert result.returncode == exit_code, result.stderr.decode()
+        calls = [json.loads(line) for line in gh_log.read_text().splitlines()] if (
+            gh_log.exists()) else []
+        assert all(call["credential_names"] == [] for call in calls)
+        posts = [call for call in calls if "POST" in call["args"]]
+        if case in ("iterative", "debate", "no-runtime"):
+            assert calls == [] and not (working / ".scrutare").exists()
+            assert result.stdout == b""
+            assert (b"not yet implemented" if case != "no-runtime" else
+                    b"cannot locate an executable nare runtime") in result.stderr
+            return
+        run, = (working / ".scrutare/runs").iterdir()
+        assert (run / "config.yaml").read_bytes() == config
+        assert (run / "diff.patch").read_bytes() == SOURCE + DOCS
+        assert (run / "review-inputs/diff.patch").read_bytes() == SOURCE
+        assert {p.name for p in (run / "review-inputs").iterdir()} == {
+            "diff.patch", "files.json", "context.json"}
+        manifest = load(run / "artifacts.json")
+        assert manifest["scrutare_version"] == VERSION
+        inventory = [{"path": p.relative_to(run).as_posix(), "sha256": digest(p),
+                      "size_bytes": p.stat().st_size}
+                     for p in sorted(run.rglob("*")) if p.is_file()
+                     and p.name not in ("artifacts.json", ".posting.lock")]
+        assert manifest["artifacts"] == inventory
+        panel = load(run / "panel.json")
+        assert panel["head_sha"] == "a" * 40 and panel["strategy"] == "panel"
+        assert panel["scrutare_version"] == VERSION
+        assert panel["convergence_passes"] == 1
+        assert panel["ledger"]["active_reservations"] == []
+        attempts = sorted(run.glob("sessions/*/attempt-*"))
+        assert len(attempts) == (2 if case == "correction" else 1)
+        totals = []
+        for attempt in attempts:
+            observed = load(attempt / "offline-observations.json")
+            invocation = load(attempt / "invocation.json")
+            session = load(attempt / "session.json")
+            outcome = load(attempt / "result.json")
+            totals.append(outcome["usage"]["total"])
+            assert observed["guard_violations"] == observed["credential_names"] == []
+            assert observed["nare_controls"] == {} and observed["version"] == "2026.10.4"
+            assert observed["arguments"] == invocation["argv"][1:]
+            assert observed["selection"]["purpose"] == (
+                "reanchor" if attempt.name == "attempt-0002" else "review")
+            assert observed["selection"]["attempt"] == attempt.name
+            factory, = observed["factory_calls"]
+            assert factory["system"] == info["system"]
+            assert (factory["provider"], factory["model"], factory["base_url"]) == (
+                "openai", "offline-model", "https://offline.invalid/v1")
+            assert session["policy"] == {"tools": ["read"],
+                                         "root": str(run / "review-inputs")}
+            assert all([t["name"] for t in call["tools"]] == ["read"]
+                       for call in observed["calls"])
+            assert all(Path(p).is_relative_to(attempt) for p in observed["writes"])
+            terminal = json.loads((attempt / "stdout.jsonl").read_text().splitlines()[-1])
+            assert session["usage"] == terminal["usage"]
+            assert session["output"] == terminal["output"]
+            if outcome["accounting_complete"]:
+                assert session["usage"] == {"cost": None, **{
+                    key: outcome["usage"][key] for key in
+                    ("input", "output", "cache_read", "cache_write")}}
+            assert session["budget"]["tokens"] == invocation["invocation_limit"]
+            visible = json.dumps(observed["calls"])
+            assert all(s not in visible for s in (
+                "EXCLUDED_SENTINEL", "RAW_BODY_SENTINEL", "DISCUSSION_SENTINEL", "HOSTILE_FIELD"))
+        assert sum(totals) == panel["ledger"]["usage"]["total"]
+        if case == "correction":
+            assert [load(a / "invocation.json")["invocation_limit"] for a in attempts] == [100, 85]
+            assert totals == [15, 15]
+        if case in ("failed", "missing"):
+            assert posts == [] and result.stdout == b"" and b"Run: " in result.stderr
+            assert panel["status"] == "failed"
+            assert not (run / "verdict.json").exists() and not (run / "findings.json").exists()
+            assert not (run / "result.json").exists()
+            return
+        assert panel["status"] == ("partial" if case == "partial" else "complete")
+        assert panel["ledger"]["accounting_complete"] is True
+        if case == "partial":
+            assert totals == [15] and load(attempts[0] / "result.json")["status"] == "partial"
+        canonical = load(run / "verdict.json")
+        assert canonical["verdict"] == verdict and canonical["schema_version"] == 1
+        assert set(canonical) == {"schema_version", "verdict", "rule", "config", "findings"}
+        assert (run / "verdict.json").read_bytes() == (
+            json.dumps(canonical, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode()
+        assert isinstance(load(run / "findings.json"), list)
+        if case == "closed":
+            assert posts == [] and result.stdout == b"" and b"closed or merged" in result.stderr
+        else:
+            post, = posts
+            assert post["args"][:3] == ["api", "--method", "POST"]
+            assert "repos/owner/repo/pulls/12/reviews" in post["args"]
+            assert "--include" in post["args"] and "--input" in post["args"]
+            assert post["artifacts_before_post"] == {
+                name: digest(run / name) for name in
+                ("diff.patch", "config.yaml", "config.json", "findings.json", "verdict.json")}
+            assert post["stdin"].encode() == (run / "review-payload.json").read_bytes()
+            payload = json.loads(post["stdin"])
+            assert payload["commit_id"] == "a" * 40
+            assert payload["event"] == ("COMMENT" if case == "comment" else
+                                          "APPROVE" if case == "approval" else "REQUEST_CHANGES")
+            assert len(payload["comments"]) == (0 if case == "approval" else 1)
+            if payload["comments"]:
+                assert {key: payload["comments"][0][key] for key in ("path", "line", "side")} == {
+                    "path": "src/app.py", "line": 1, "side": "RIGHT"}
+            if case == "uncertain":
+                assert result.stdout == b"" and b"uncertain" in result.stderr
+                assert load(run / "posting.json")["status"] == "unknown"
+            else:
+                assert result.stdout == (run / "result.json").read_bytes()
+                saved = json.loads(result.stdout)
+                assert "café".encode() in result.stdout
+                assert saved["status"] == "posted" and saved["verdict"] == verdict
+                assert saved["scrutare_version"] == VERSION and saved["run_dir"] == str(run)
+                assert saved["panel_status"] == panel["status"]
+                assert saved["usage"] == panel["ledger"]["usage"]
+                assert saved["accounting_complete"] is True
+                assert saved["review"]["review_id"] == 901
+        if exit_code:
+            assert not (run / "result.json").exists() and b"Run: " in result.stderr
+        before = {p: p.read_bytes() for p in run.rglob("*") if p.is_file()}
+        before_gh = gh_log.read_bytes()
+        replay = execute([python, "-m", "scrutare", "replay", run], "replay")
+        replayed = json.loads(replay.stdout)
+        assert replayed["saved_verdict"]["byte_identical"] is True
+        assert replayed["saved_verdict"]["sha256"] == digest(run / "verdict.json")
+        assert replayed["recomputed_sha256"] == digest(run / "verdict.json")
+        assert replayed["scrutare_version"] == VERSION
+        if exit_code == 0:
+            assert replay.returncode == 0 and replayed["posted_verdict"]["byte_identical"] is True
+        else:
+            assert replayed["posted_verdict"]["byte_identical"] is None
+        assert all(p.read_bytes() == content for p, content in before.items())
+        assert gh_log.read_bytes() == before_gh
+    finally:
+        (tmp_path / "commands.json").write_text(json.dumps(commands, indent=2))
+        (tmp_path / "wheel.json").write_text(json.dumps({"name": wheel.name,
+                                                       "sha256": digest(wheel)}))
+        destination = os.environ.get("SCRUTARE_TEST_EVIDENCE_DIR")
+        if destination:
+            target = Path(destination) / request.node.name
+            target.mkdir(parents=True, exist_ok=False)
+            # Only this scenario's regular files, no virtualenvs or other pytest fixtures.
+            for path in tmp_path.rglob("*"):
+                if path.is_file() and not path.is_symlink():
+                    saved = target / path.relative_to(tmp_path)
+                    saved.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(path, saved)

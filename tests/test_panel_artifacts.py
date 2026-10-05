@@ -16,7 +16,8 @@ from scrutare.engine.session_artifacts import SessionArtifactError
 
 @pytest.mark.parametrize("name", ["sessions", "fanout.json", "panel.json", "findings.json",
                                   "verdict.json", "posting.json", "review-payload.json",
-                                  "escalation.json", "reviewer-request.json", ".posting.lock"])
+                                  "escalation.json", "reviewer-request.json", ".posting.lock",
+                                  "artifacts.json", "result.json"])
 @pytest.mark.parametrize("kind", ["regular", "link", "directory", "fifo"])
 def test_stale_evidence_refused_before_preparation(capture, monkeypatch, name, kind):
     strategy, _, wave = modules()
@@ -56,7 +57,7 @@ def test_exact_byte_writer_refuses_overwrite_and_only_engine_destinations(captur
     module = importlib.import_module("scrutare.engine.session_artifacts")
     config = configure(capture)
     inputs = prepare_review_inputs(capture, config)
-    for name in ("findings.json", "panel.json", "verdict.json"):
+    for name in ("findings.json", "panel.json", "verdict.json", "artifacts.json", "result.json"):
         path = capture / name
         module.write_owned_bytes(path, b"exact\r\n", prepared_root=inputs.root)
         assert path.read_bytes() == b"exact\r\n"

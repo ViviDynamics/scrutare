@@ -8,16 +8,16 @@ with its own perspective (senior developer, junior developer, security,
 devops), surveys the diff and the surrounding code read-only, and reports
 structured findings. Code verifies that every finding is anchored to the diff,
 derives the verdict by rule, and produces replayable review artifacts. The
-Python posting API can then post one review with inline comments. The default
+CLI posts one captured-head review with inline comments and durable receipts. The default
 panel performs one convergence pass; failed coverage withholds a verdict.
 
 scrutare sits beside [nare](https://github.com/ViviDynamics/nare),
 [qare](https://github.com/ViviDynamics/qare), and
 [coordinare](https://github.com/ViviDynamics/coordinare) in the Coordinare
 project family: an orchestrator calls nare to develop, scrutare to review, and
-qare to QA. The engine is standalone, with a Python review API. A complete
-review CLI, GitHub Action, MCP server, and conductor/coordinare reviewer
-integration are planned interfaces.
+qare to QA. The engine is standalone, with a complete review CLI and Python API. A reusable
+GitHub Action, MCP server, and conductor/coordinare reviewer integration are
+planned interfaces.
 
 ## Three ways to converge
 
@@ -77,21 +77,33 @@ corrects anchors against filtered inputs, dedupes, and writes findings, panel
 evidence and a code-derived verdict. A valid partial findings document counts,
 including an explicitly empty array; missing or failed initial output withholds
 the verdict. Corrections share the initial wave's remaining reported token
-allowance. Limits apply after turns and can overshoot. Posting remains a
-separate caller action. The lower-level
+allowance. Limits apply after turns and can overshoot. The CLI posts the resulting review and records delivery; Python panel callers
+choose when to post. The lower-level
 [session fan-out API](docs/session-fanout.md) remains available for candidate
-findings. The review CLI still captures inputs only; full review CLI and release
-work remain planned under #7.
+findings. The [review CLI](docs/cli.md) captures, runs the panel and posts one review.
+[Release packaging](docs/releases.md) builds a wheel and a non-root image from
+the same package version.
 The design and milestone order are in
 [docs/SPEC.md](docs/SPEC.md).
 
-## Capture a pull request
+## Install and review a pull request
 
-Install Python 3.10 or newer, [uv](https://docs.astral.sh/uv/), and the
-[GitHub CLI](https://cli.github.com/). `gh` must already be authenticated with
-read access to the repository. Scrutare uses that existing authentication.
+The first Scrutare release has not been published. Once the `2026.10.0`
+[GitHub release](https://github.com/ViviDynamics/scrutare/releases) and its
+assets are available, install its pinned wheel with Python 3.10 or newer:
 
-Create `scrutare.yaml` in the current repository with an explicit model:
+```sh
+uv tool install --python 3.10 \
+  https://github.com/ViviDynamics/scrutare/releases/download/2026.10.0/scrutare-2026.10.0-py3-none-any.whl
+```
+
+Wheel users also need the [GitHub CLI](https://cli.github.com/) on PATH and a
+separate [nare 2026.10.4 installation](docs/session-fanout.md). Use existing
+authorized GitHub access with permission to read the PR and submit reviews,
+and credentials for the selected model provider. Every model call goes through
+nare. Scrutare does not install nare into its own environment.
+
+Create `scrutare.yaml` in your repository:
 
 ```yaml
 models:
@@ -100,49 +112,48 @@ models:
 ```
 
 ```sh
-uv sync --locked --extra dev
-uv run --locked scrutare --version
-uv run --locked scrutare review --pr https://github.com/owner/repo/pull/12
-uv run --locked scrutare review --pr 12 --config path/to/settings.yaml
+scrutare review --pr https://github.com/owner/repo/pull/12 \
+  --nare-executable /absolute/path/to/nare-environment/bin/nare
+scrutare review --pr 12 --config path/to/settings.yaml
 ```
 
-A numeric PR reference resolves the repository from the current checkout
-through `gh repo view`. `python -m scrutare` exposes the same interface.
-`--config` defaults to `scrutare.yaml` in the current directory and must name
-an accessible regular file. Scrutare reads and validates the YAML before any
-GitHub access. `models.default.model` is required; no model is selected
-automatically. Omitted settings use the documented defaults, including the
-panel strategy, four built-in personas, and anthropic provider. See the
-[configuration reference](docs/config.md) for every field, accepted values,
-defaults, and model overrides. The [persona authoring guide](docs/writing-personas.md)
-explains the four perspectives, custom prompts, and registry API. Invalid
-settings report the affected field.
+`--nare-executable` defaults to `nare` on PATH. A numeric PR resolves the
+repository through `gh repo view` from the current checkout. The command reads
+configuration once before GitHub access, captures a coherent PR, runs the panel,
+and posts the verdict against the captured head. Success prints the exact JSON
+saved in the run's `result.json`, after recording delivery and `artifacts.json`.
+A delivered changes-requested verdict still exits 0. Failure exits 1 with no
+success document; usage errors exit 2 and interruption exits 130.
 
-The command captures raw inputs and prepares a filtered reviewer view using
-`github.paths.include` and `github.paths.exclude`. It makes no model calls or
-GitHub writes. Default exclusions omit `docs/**` and Markdown files at any depth.
-It returns a nonzero exit code with a concise error if capture fails, including
-when the PR closes or merges. Success prints one JSON object:
+After the corresponding image is published, the pinned container includes gh,
+git and the separate nare runtime:
 
-```json
-{"status":"ingested","run_dir":".scrutare/runs/run-example","head_sha":"captured-head-sha","scrutare_version":"0.1.0"}
+```sh
+docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp \
+  -e GH_TOKEN -e ANTHROPIC_API_KEY -v "$PWD:/work" \
+  ghcr.io/vividynamics/scrutare:2026.10.0 review --pr 12
 ```
 
-Each unique run directory contains `diff.patch`, `files.json`, `reviews.json`,
-`comments.json`, `review_comments.json`, `metadata.json`, `config.yaml`, and
-`config.json`. `config.yaml` preserves the exact bytes validated before
-GitHub access, including comments and line endings. `config.json` is the
-canonical configuration artifact with effective defaults and resolved model
-overrides. Metadata records the complete PR object under `pull_request`,
-the captured head, repository, PR number, schema version, and application
-version. Capture retries if the head changes while inputs are being fetched.
-The run also contains `effective-files.json` and a separate `review-inputs/`
-directory with only the selected `diff.patch`, minimal `files.json`, and safe
-`context.json`. The manifest and full raw capture stay outside the persona read
-root. Discussion bodies and PR title/body are omitted from the reviewer view.
-See the [path filters guide](docs/path-filters.md) for matching rules, empty
-selections, artifacts, and the Python integration contract. `ingested` means
-raw inputs and their filtered view were saved; a review verdict does not yet exist.
+This forwards credentials already supplied for an authorized run. Choose the
+credential variable matching your configured provider. The image defaults to
+UID/GID 10001; the example uses your host identity so mounted run artifacts stay
+writable. See [releases](docs/releases.md) for local installation before the
+first release and container details.
+
+The default panel verifies anchors, allows one correction opportunity and derives
+the verdict in code. Valid partial findings can produce a verdict; missing or
+failed initial output withholds it. Token limits apply after turns and can
+overshoot. Check `panel_status`, coverage and accounting evidence even on a
+successful approval. Iterative and debate strategies are rejected before GitHub
+access. Review does not manufacture escalation from failure or a budget stop.
+
+Every run retains raw capture and configuration bytes, a filtered three-file
+reviewer root, sessions, findings, verdict and delivery evidence when available.
+Default filters exclude `docs/**` and Markdown files. The manifest inventories a
+quiescent local snapshot; it does not authenticate artifacts or prove remote
+delivery. Replay continues to use canonical findings, policy and verdict bytes.
+See [CLI usage](docs/cli.md), [configuration](docs/config.md),
+[path filters](docs/path-filters.md) and [persona authoring](docs/writing-personas.md).
 
 ## Audit a saved verdict offline
 
@@ -169,7 +180,7 @@ CI checks Python 3.10 and 3.14. Use the same commands locally:
 uv sync --locked --extra dev
 uv run --locked --extra dev pytest
 uv run --locked --extra dev ruff check .
-uv run --locked --extra dev mypy src
+uv run --locked --extra dev mypy src scripts/check-release.py
 uv build --wheel
 ```
 
@@ -185,8 +196,8 @@ The full preflight table, including a wheel installation check, is in
 [.agents/test-commands.md](.agents/test-commands.md). `repo.env.example`
 contains shared Vivi Dynamics workflow settings. Copy it to local `repo.env`
 for the workflow tools. Authentication uses already configured, authorized `gh`
-access; keep login commands and credentials outside the example. Scrutare
-ingestion itself requires no application environment variables.
+access; keep login commands and credentials outside the example. Scrutare runtime selection uses `--nare-executable`; provider credentials belong
+to the selected model rail.
 
 ## Licensing
 

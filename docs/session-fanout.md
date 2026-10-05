@@ -1,8 +1,8 @@
 # Initial persona session fan-out
 
 The Python API runs one initial concurrent wave against a captured run. The
-review CLI currently performs ingestion only. Fan-out returns candidate session
-records. Use the [panel API](panel.md), `scrutare.engine.strategy.run_review`,
+[review CLI](cli.md) runs capture, the complete panel and posting. Fan-out
+returns candidate session records. Use the [panel API](panel.md), `scrutare.engine.strategy.run_review`,
 for anchor verification, bounded corrections, deduplication, convergence and
 verdict derivation; posting remains caller-owned. Fan-out creates neither
 `findings.json` nor `verdict.json`, and a complete empty candidate output is not
@@ -37,7 +37,8 @@ release. For the pinned integration runtime, clone the public
 [ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.10.4),
 verify commit `79405f9d2e3db2efe4a3ffda35faaf1680000acd`, and run
 `uv sync --project /path/to/nare-checkout --python 3.14 --locked --no-dev`.
-Point `NareRuntime.executable` at that checkout's `.venv/bin/nare`. Nare is
+Point `NareRuntime.executable`, or the CLI option `--nare-executable`, at that
+checkout's `.venv/bin/nare`. The CLI defaults to `nare` on PATH. Nare is
 an external process, without a Scrutare production import or dependency.
 Inspection checks its version and contract once per wave before any session
 launch. All model calls go through nare.
@@ -174,7 +175,18 @@ fatal correction results, filtered correction tools, duplicate/conflicting
 source preservation, exact correction rails and replay of producer artifacts.
 Scenario selection reads existing purpose, positional prompt and attempt data;
 it never rewrites the persona system or changes the runner's invocation.
-No network, credential or model access is needed.
+The installed-wheel proof in `tests/test_installed_review.py` also launches
+Scrutare's real console/module entrypoints outside the source checkout. It uses
+the same nare factory substitution and a fake gh executable with actual HTTP
+header/receipt framing and recorded POST input. Capture, service orchestration,
+panel, posting journal and replay remain production code. Scenarios cover
+approval, blocking findings, correction, comment mode, partial coverage, failed
+or missing output, closure, unsupported strategies, missing runtime and uncertain
+delivery. It checks installed import paths, version agreement, exact result
+bytes, complete manifest digests and saved/posted canonical replay identity.
+No live GitHub or model delivery is established by these offline fixtures.
+No network, credential or model access is needed during the scenario runs;
+building and installing the test wheel can download public build dependencies.
 
 Absent runtime configuration permits an explicit local skip. A configured
 missing, nonexecutable or incompatible runtime fails. CI installs the pinned

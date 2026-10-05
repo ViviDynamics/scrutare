@@ -728,3 +728,21 @@ def test_invalid_captured_repository_never_resolves_ambient_checkout(
     assert calls == []
     assert client.reads == [] and client.creates == []
     assert not (run / "posting.json").exists()
+
+
+def test_confirmation_persistence_failure_retains_validated_receipt(captured, monkeypatch):
+    from scrutare.poster import posting
+    run, verdict = captured
+    original = posting.atomic_write
+    def fail_confirmation(path, data):
+        if path.name == "posting.json" and json.loads(data)["status"] == "posted":
+            raise OSError("SECRET disk failure")
+        original(path, data)
+    monkeypatch.setattr(posting, "atomic_write", fail_confirmation)
+    client = FakePoster()
+    with pytest.raises(PostingError) as error:
+        post(run, verdict, client=client)
+    assert error.value.confirmed_posting
+    assert error.value.confirmed_review == client.receipt
+    assert "SECRET" not in str(error.value)
+    assert json.loads((run / "posting.json").read_bytes())["status"] == "sending"

@@ -1,0 +1,8 @@
+# Deny all local content, including .git, .agents, .superpowers, worktrees,
+# virtualenvs, .scrutare runs, caches, environment/auth files and token files.
+**
+!Dockerfile
+!.dockerignore
+!dist/
+dist/**
+!dist/scrutare-*-py3-none-any.whl

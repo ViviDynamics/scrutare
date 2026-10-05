@@ -6,12 +6,13 @@ from pathlib import Path
 from time import sleep
 from typing import Any, Literal
 
-from scrutare.engine.github import PullRequestRef, assert_pr_open, resolve_pr
+from scrutare.engine.github import GitHubError, PullRequestRef, assert_pr_open, resolve_pr
 from scrutare.findings import Verdict
 from scrutare.poster import posting
 from scrutare.poster.client import PostedReview, ReviewClient
 from scrutare.poster.errors import (
     PostingError,
+    PostingInterruptedError,
     PostingRateLimited,
     PostingRejected,
     PostingUncertain,
@@ -166,24 +167,36 @@ def post_escalation(
     with run_lock(run_dir):
         transport = client if client is not None else ReviewClient(sleeper=sleeper)
         review = posting._post_review_locked(run_dir, verdict, client=transport, sleeper=sleeper)
-        # The review helper validated captured inputs and both stages before any network.
-        review_state = read_json(run_dir / "posting.json")
-        review_intent = {key: value for key, value in review_state.items()
-                         if key not in _STAGE_FIELDS}
-        _, _, config, _ = posting._capture(run_dir, verdict)
-        reviewers = normalize_human_reviewers(config.github.human_reviewers)
-        state = _validate_existing(run_dir, review_intent, review, reviewers, escalated=True)
-        path = run_dir / "escalation.json"
-        if state is None:
-            state = _intent(review_intent, review, reviewers) | {
-                "status": "prepared" if reviewers else "skipped", "attempts": 0,
-                "receipt": (None if reviewers
-                            else _receipt_dict(ReviewerRequestReceipt((), "no_targets"))),
-                "failure": None, "retry_at": None, "http_status": None,
-            }
-            atomic_write(path, canonical(state))
-            atomic_write(run_dir / "reviewer-request.json",
-                         canonical({"reviewers": list(reviewers)}))
-        ref = resolve_pr(str(review_intent["pr_number"]), repository=review_intent["repository"])
-        receipt = _request(transport, ref, path, state, sleeper if sleeper is not None else sleep)
-        return PostedEscalation(review, receipt)
+        try:
+            # The review helper validated captured inputs and both stages before any network.
+            review_state = read_json(run_dir / "posting.json")
+            review_intent = {key: value for key, value in review_state.items()
+                             if key not in _STAGE_FIELDS}
+            _, _, config, _ = posting._capture(run_dir, verdict)
+            reviewers = normalize_human_reviewers(config.github.human_reviewers)
+            state = _validate_existing(run_dir, review_intent, review, reviewers, escalated=True)
+            path = run_dir / "escalation.json"
+            if state is None:
+                state = _intent(review_intent, review, reviewers) | {
+                    "status": "prepared" if reviewers else "skipped", "attempts": 0,
+                    "receipt": (None if reviewers
+                                else _receipt_dict(ReviewerRequestReceipt((), "no_targets"))),
+                    "failure": None, "retry_at": None, "http_status": None,
+                }
+                atomic_write(path, canonical(state))
+                atomic_write(run_dir / "reviewer-request.json",
+                             canonical({"reviewers": list(reviewers)}))
+            ref = resolve_pr(str(review_intent["pr_number"]),
+                             repository=review_intent["repository"])
+            receipt = _request(transport, ref, path, state,
+                               sleeper if sleeper is not None else sleep)
+            return PostedEscalation(review, receipt)
+        except KeyboardInterrupt:
+            raise PostingInterruptedError(review) from None
+        except PostingError as error:
+            error.confirmed_review = review
+            raise
+        except (OSError, GitHubError) as error:
+            message = (str(error) if isinstance(error, GitHubError)
+                       else "Cannot persist escalation artifacts; inspect the saved run.")
+            raise PostingError(message, confirmed_review=review) from None
