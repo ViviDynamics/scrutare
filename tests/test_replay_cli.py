@@ -22,7 +22,7 @@ def block_live_paths(monkeypatch):
 
     for target in (
         "scrutare.interfaces.cli.parse_config", "scrutare.interfaces.cli.resolve_pr",
-        "scrutare.interfaces.cli.GitHubClient", "scrutare.interfaces.cli.ingest_pr",
+        "scrutare.interfaces.cli.preflight_review", "scrutare.interfaces.cli.review_pr",
     ):
         monkeypatch.setattr(target, forbidden)
     for name in ("GH_TOKEN", "GITHUB_TOKEN", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"):
@@ -258,14 +258,18 @@ def test_process_entrypoints_replay_without_auth_config_or_external_operations(
         "def forbidden(*args, **kwargs):\n"
         "    raise AssertionError('offline replay attempted external operation')\n"
         "subprocess.Popen = subprocess.run = forbidden\n"
-        "socket.socket = socket.create_connection = forbidden\n"
+        "class NoSocket(socket.socket):\n"
+        "    def __new__(cls, *args, **kwargs):\n"
+        "        forbidden()\n"
+        "socket.socket = NoSocket\n"
+        "socket.create_connection = forbidden\n"
         "class NoModels:\n"
         "    def find_spec(self, fullname, path=None, target=None):\n"
         "        if fullname.split('.')[0] in ('nare', 'openai', 'anthropic'):\n"
         "            forbidden()\n"
         "sys.meta_path.insert(0, NoModels())\n"
         "import scrutare.interfaces.cli as cli\n"
-        "cli.parse_config = cli.resolve_pr = cli.GitHubClient = cli.ingest_pr = forbidden\n"
+        "cli.parse_config = cli.resolve_pr = cli.preflight_review = cli.review_pr = forbidden\n"
     )
     environment = {
         "PATH": "", "PYTHONDONTWRITEBYTECODE": "1",

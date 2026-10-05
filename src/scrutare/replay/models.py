@@ -5,6 +5,7 @@ from dataclasses import asdict, dataclass
 from hashlib import sha256
 from typing import Any, Literal
 
+from scrutare import __version__
 from scrutare.config import Strategy, VerdictSettings
 from scrutare.findings.verdict import Exhaustion, Verdict
 
@@ -107,6 +108,7 @@ class ReplayResult:
                 basis = "recorded_assertion"
         return {
             "schema_version": 1,
+            "scrutare_version": __version__,
             "status": {0: "identical", 1: "different", 2: "incomplete"}[self.exit_code],
             "verdict": self.verdict.verdict if self.verdict is not None else None,
             "rule": self.verdict.rule if self.verdict is not None else None,

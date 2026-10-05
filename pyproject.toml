@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "scrutare"
-version = "0.1.0"
+dynamic = ["version"]
 description = "A standalone code review meta harness"
 requires-python = ">=3.10"
 dependencies = [
@@ -21,6 +21,9 @@ dev = [
     "mypy>=1.14",
     "types-pyyaml>=6.0",
 ]
+
+[tool.hatch.version]
+path = "src/scrutare/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/scrutare"]

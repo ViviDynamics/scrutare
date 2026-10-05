@@ -3,9 +3,9 @@
 Panel is the default implemented review strategy. The Python engine runs one
 independent concurrent wave of personas, verifies findings against the filtered
 diff, offers one anchor correction opportunity per affected persona, dedupes
-surviving findings and derives the verdict in code. Posting is a separate caller
-action. The current `scrutare review` CLI performs ingestion only; a complete
-review CLI and release are planned under #7.
+surviving findings and derives the verdict in code. Python callers choose when
+to post. The [review CLI](cli.md) runs capture, panel execution and posting, then persists its result and artifact manifest before
+printing success.
 
 ```python
 import asyncio

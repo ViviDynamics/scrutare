@@ -1,8 +1,9 @@
-"""Capture PR inputs or audit stored verdict artifacts offline."""
+"""Review a pull request or audit stored verdict artifacts offline."""
 
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import sys
 from collections.abc import Sequence
@@ -10,20 +11,25 @@ from pathlib import Path
 
 from scrutare import __version__
 from scrutare.config import ConfigError, parse_config
-from scrutare.engine.github import GitHubClient, GitHubError, resolve_pr
-from scrutare.engine.ingestion import ingest_pr
-from scrutare.engine.review_inputs import ReviewInputError
+from scrutare.engine.github import GitHubError, resolve_pr
+from scrutare.engine.review import (
+    ReviewInterruptedError,
+    ReviewRunError,
+    preflight_review,
+    review_pr,
+)
+from scrutare.engine.session_models import NareRuntime
 from scrutare.replay import ReplayError, replay_run
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Emit ingestion or replay JSON and return the command's process exit code."""
+    """Emit completed review or replay JSON and return the command's process exit code."""
     parser = argparse.ArgumentParser(prog="scrutare", description=__doc__)
     parser.add_argument("--version", action="version", version=f"scrutare {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
     review = commands.add_parser(
-        "review", help="capture PR inputs and prepare a filtered view; no live review or posting",
-        description="Capture PR inputs and prepare a filtered view; no live review or posting.",
+        "review", help="review a PR and post the captured-head verdict",
+        description="Capture, review and post a verdict with durable local artifacts.",
     )
     review.add_argument("--pr", required=True, help="GitHub PR URL or number in the current repo")
     review.add_argument(
@@ -31,6 +37,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         type=Path,
         default=Path("scrutare.yaml"),
         help="validate YAML settings (default: scrutare.yaml); models.default.model is required",
+    )
+    review.add_argument(
+        "--nare-executable", type=Path, default=Path("nare"), metavar="PATH",
+        help="separately installed nare executable (default: nare on PATH)",
     )
     replay = commands.add_parser(
         "replay", help="audit a stored verdict offline; no model or network",
@@ -44,12 +54,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.command == "replay":
         try:
-            result = replay_run(args.dir)
+            replay_result = replay_run(args.dir)
         except ReplayError as exc:
             print(f"scrutare: {exc}", file=sys.stderr)
             return 2
-        print(json.dumps(result.to_dict()))
-        return result.exit_code
+        print(json.dumps(replay_result.to_dict()))
+        return replay_result.exit_code
 
     config: Path = args.config
     try:
@@ -64,40 +74,29 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 1
     try:
         review_config = parse_config(config_bytes)
-        config_data = review_config.to_dict()
     except ConfigError as exc:
         print(f"scrutare: {exc}", file=sys.stderr)
         return 1
 
     try:
+        runtime = NareRuntime(args.nare_executable)
+        preflight_review(review_config, runtime)
         ref = resolve_pr(args.pr)
-        run_dir = ingest_pr(
-            GitHubClient(),
-            ref,
-            Path(".scrutare/runs"),
-            config_bytes=config_bytes,
-            config_data=config_data,
-            review_config=review_config,
-        )
-        metadata = json.loads((run_dir / "metadata.json").read_text(encoding="utf-8"))
-    except (GitHubError, ReviewInputError) as exc:
+        result = asyncio.run(review_pr(
+            ref, review_config, config_bytes=config_bytes,
+            runs_root=Path(".scrutare/runs"), runtime=runtime,
+        ))
+    except ReviewRunError as exc:
+        location = f" Run: {exc.run_dir}" if exc.run_dir is not None else ""
+        print(f"scrutare: {exc}{location}", file=sys.stderr)
+        return 130 if isinstance(exc, ReviewInterruptedError) else 1
+    except GitHubError as exc:
         print(f"scrutare: {exc}", file=sys.stderr)
         return 1
-    except OSError:
-        print(
-            "scrutare: filesystem operation failed; check config and run directory access.",
-            file=sys.stderr,
-        )
-        return 1
+    except KeyboardInterrupt:
+        print("scrutare: review interrupted.", file=sys.stderr)
+        return 130
 
-    print(
-        json.dumps(
-            {
-                "status": "ingested",
-                "run_dir": str(run_dir),
-                "head_sha": metadata["head_sha"],
-                "scrutare_version": __version__,
-            }
-        )
-    )
+    # This exact document was installed before the manifest and before any success output.
+    sys.stdout.buffer.write(result.to_bytes())
     return 0

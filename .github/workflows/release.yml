@@ -1,0 +1,128 @@
+name: Release
+
+on:
+  push:
+    tags: ['[0-9]*.[0-9]*.[0-9]*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate tag and main history
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^[0-9]{4}\.([1-9]|1[0-2])\.(0|[1-9][0-9]*)$ ]]
+          test "$(git rev-parse HEAD)" = "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")"
+          git merge-base --is-ancestor HEAD origin/main
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install locked development environment
+        run: uv sync --locked --extra dev
+      - name: Install pinned external nare runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          nare_checkout="$RUNNER_TEMP/scrutare-nare-2026.10.4"
+          git clone --depth 1 --branch 2026.10.4 https://github.com/ViviDynamics/nare.git "$nare_checkout"
+          test "$(git -C "$nare_checkout" rev-parse HEAD)" = "79405f9d2e3db2efe4a3ffda35faaf1680000acd"
+          uv python install 3.14
+          uv sync --project "$nare_checkout" --python 3.14 --locked --no-dev
+          echo "SCRUTARE_TEST_NARE_EXECUTABLE=$nare_checkout/.venv/bin/nare" >> "$GITHUB_ENV"
+      - name: Tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -x "$SCRUTARE_TEST_NARE_EXECUTABLE"
+          uv run --locked --extra dev pytest
+      - name: Lint
+        run: uv run --locked --extra dev ruff check .
+      - name: Strict typecheck
+        run: uv run --locked --extra dev mypy src scripts/check-release.py
+
+  publish:
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    env:
+      RELEASE_TAG: ${{ github.ref_name }}
+      IMAGE: ghcr.io/vividynamics/scrutare:${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.14"
+      - name: Install locked development environment
+        run: uv sync --locked --extra dev
+      - name: Build and validate the release wheel
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -d dist
+          uv build --wheel
+          shopt -s nullglob
+          wheels=(dist/*.whl)
+          test "${#wheels[@]}" -eq 1
+          wheel=${wheels[0]}
+          uv run --locked --extra dev python scripts/check-release.py "$RELEASE_TAG" "$wheel"
+          echo "WHEEL=$wheel" >> "$GITHUB_ENV"
+      - name: Install pinned external nare runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          nare_checkout="$RUNNER_TEMP/scrutare-nare-2026.10.4"
+          git clone --depth 1 --branch 2026.10.4 https://github.com/ViviDynamics/nare.git "$nare_checkout"
+          test "$(git -C "$nare_checkout" rev-parse HEAD)" = "79405f9d2e3db2efe4a3ffda35faaf1680000acd"
+          uv python install 3.14
+          uv sync --project "$nare_checkout" --python 3.14 --locked --no-dev
+          echo "SCRUTARE_TEST_NARE_EXECUTABLE=$nare_checkout/.venv/bin/nare" >> "$GITHUB_ENV"
+      - name: Installed CLI smoke check
+        run: scripts/smoke-cli.sh
+      - name: Build the same wheel into the image
+        run: docker build --build-arg "SCRUTARE_WHEEL=$WHEEL" --tag "$IMAGE" .
+      - name: Offline container smoke check
+        run: scripts/smoke-container.sh "$IMAGE" "$RELEASE_TAG"
+      - name: Create release with wheel asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          wheel=$WHEEL
+          gh release create "$RELEASE_TAG" "$wheel" --verify-tag --title "$RELEASE_TAG" --generate-notes
+      - name: Publish versioned image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_ACTOR: ${{ github.actor }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          export DOCKER_CONFIG="$RUNNER_TEMP/scrutare-docker-auth"
+          trap 'rm -rf "$DOCKER_CONFIG"' EXIT
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GH_ACTOR" --password-stdin
+          docker push "$IMAGE"

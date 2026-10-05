@@ -1,12 +1,34 @@
 """Safe domain errors shared by payload rendering and review posting."""
 
+from __future__ import annotations
+
 import math
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from scrutare.poster.client import PostedReview
 
 from scrutare.engine.github import GitHubError
 
 
 class PostingError(GitHubError):
     """Review input or posting failed with a safe, actionable explanation."""
+
+    def __init__(self, message: str, *, confirmed_review: PostedReview | None = None) -> None:
+        super().__init__(message)
+        self.confirmed_review = confirmed_review
+
+    @property
+    def confirmed_posting(self) -> bool:
+        return self.confirmed_review is not None
+
+
+class PostingInterruptedError(KeyboardInterrupt):
+    """Synchronous interruption after a validated review receipt was obtained."""
+
+    def __init__(self, confirmed_review: PostedReview) -> None:
+        super().__init__("Review interrupted after confirmed delivery.")
+        self.confirmed_review = confirmed_review
 
 
 class PostingRejected(PostingError):
