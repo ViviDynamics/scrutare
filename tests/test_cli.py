@@ -97,7 +97,7 @@ def test_review_snapshots_config_and_reports_ingestion(
     assert result == {
         "status": "ingested",
         "head_sha": "abc123",
-        "scrutare_version": "0.1.0",
+        "scrutare_version": "2026.10.0",
         "run_dir": result["run_dir"],
     }
     run = Path(result["run_dir"])
@@ -146,7 +146,7 @@ def test_number_uses_repository_context(
 
 def test_version_needs_no_github(capsys: pytest.CaptureFixture[str]) -> None:
     assert cli_main(["--version"]) == 0
-    assert "0.1.0" in capsys.readouterr().out
+    assert capsys.readouterr().out == "scrutare 2026.10.0\n"
 
 
 @pytest.mark.parametrize("kind", ["missing", "directory", "unreadable"])

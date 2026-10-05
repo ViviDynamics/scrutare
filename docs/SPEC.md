@@ -247,6 +247,18 @@ rewrite. See the [replay guide](replay.md) for evidence requirements and exits.
   verdict deriver, poster, CLI, config, path filters, replay, escalation,
   failure paths, reusable GitHub Action. Releases publish a wheel and a
   container image; the version is stamped into artifacts.
+  The producer version uses unprefixed CalVer, authored in the package's
+  `__init__.py`. A versioned `artifacts.json` manifest records a quiescent run
+  snapshot as sorted relative POSIX paths with SHA-256 digests and byte sizes.
+  The manifest excludes itself, `.posting.lock`, and `.scrutare-*.tmp` or
+  `.posting-*.tmp` staging files. Directories are traversed, while symlinks and
+  nonregular entries are refused. Installation is private and exclusive.
+  Raw captures and configuration bytes, bare findings arrays, and canonical
+  schema-1 Verdict bytes retain their formats. Replay result envelopes identify
+  the executing package version without changing recomputed Verdict bytes.
+  Legacy runs need no manifest, and replay does not verify manifest integrity.
+  A snapshot of a failed run does not assert successful execution or posting;
+  the manifest proves neither authenticity nor remote delivery.
 - **M2**: iterative strategy; MCP server mirroring qare's surface.
 - **M3**: debate strategy with the chair session.
 - **M4**: GitHub App front door: a webhook listener for `pull_request`

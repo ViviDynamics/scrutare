@@ -1,3 +1,3 @@
 """Scrutare code review harness."""
 
-__version__ = "0.1.0"
+__version__ = "2026.10.0"
