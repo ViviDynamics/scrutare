@@ -138,6 +138,8 @@ class FakeProvider:
         if not self.replies:
             raise AssertionError("Offline transport exhausted scripted replies")
         reply = self.replies.pop(0)
+        if reply.get("error"):
+            raise RuntimeError(reply["error"])
         observations["calls"][-1]["end"] = time.monotonic()
         return Reply(
             content=reply["content"],
