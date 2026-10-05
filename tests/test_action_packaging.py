@@ -78,6 +78,7 @@ def test_pipeline_caller_is_exactly_ten_lines_and_fixed_release():
     assert len(caller.splitlines()) == 10
     assert "ViviDynamics/scrutare@2026.10.1" in caller
     assert "checkout" not in caller
+    assert "runs-on: ubuntu-24.04" in caller
 
 
 def test_hosted_acceptance_is_explicitly_gated_and_uses_released_action():
@@ -93,7 +94,8 @@ def test_hosted_acceptance_is_explicitly_gated_and_uses_released_action():
     for name, job in jobs.items():
         assert f"scrutare-action-acceptance-{name}" in job["if"]
         assert "github.event.pull_request.head.repo.full_name == github.repository" in job["if"]
-        assert "branch14-action-acceptance" in job["if"]
+        assert "github.event.pull_request.head.ref == '14-action-acceptance'" in job["if"]
+        assert job["runs-on"] == "ubuntu-24.04"
         (action,) = job["steps"]
         assert action["uses"] == "ViviDynamics/scrutare@2026.10.1"
         assert not action.get("continue-on-error", False)

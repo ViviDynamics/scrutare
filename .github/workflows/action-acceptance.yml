@@ -17,10 +17,10 @@ jobs:
     if: >-
       github.repository == 'ViviDynamics/scrutare' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      github.event.pull_request.head.ref == 'branch14-action-acceptance' &&
+      github.event.pull_request.head.ref == '14-action-acceptance' &&
       contains(github.event.pull_request.labels.*.name, 'scrutare-action-acceptance-success') &&
       !contains(github.event.pull_request.labels.*.name, 'scrutare-action-acceptance-failure')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: ViviDynamics/scrutare@2026.10.1
         with:
@@ -32,10 +32,10 @@ jobs:
     if: >-
       github.repository == 'ViviDynamics/scrutare' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      github.event.pull_request.head.ref == 'branch14-action-acceptance' &&
+      github.event.pull_request.head.ref == '14-action-acceptance' &&
       contains(github.event.pull_request.labels.*.name, 'scrutare-action-acceptance-failure') &&
       !contains(github.event.pull_request.labels.*.name, 'scrutare-action-acceptance-success')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: ViviDynamics/scrutare@2026.10.1
         with:

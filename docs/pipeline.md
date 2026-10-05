@@ -21,7 +21,7 @@ on: {pull_request_target: {types: [opened, reopened, synchronize, ready_for_revi
 permissions: {contents: read, pull-requests: write}
 jobs:
   review:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: ViviDynamics/scrutare@2026.10.1
         env: {GH_TOKEN: '${{ github.token }}', OPENAI_API_KEY: '${{ secrets.OPENAI_API_KEY }}'}
@@ -111,7 +111,7 @@ Action; a failed job alone does not prove no remote review exists. See
 
 [The acceptance workflow](../.github/workflows/action-acceptance.yml) remains
 inactive until a maintainer intentionally pushes to a same-repository PR from
-`branch14-action-acceptance` with exactly one acceptance label. After merge and
+`14-action-acceptance` with exactly one acceptance label. After merge and
 publication of `2026.10.1`, create a draft temporary PR named
 **Scrutare 2026.10.1 Action acceptance** from current main. Add
 `scrutare-action-acceptance-success`, then push a tiny harmless change only to

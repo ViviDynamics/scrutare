@@ -3,7 +3,7 @@
 Use the procedure in [pipeline.md](../../../docs/pipeline.md) only after
 `2026.10.1` is published, the secret `OPENAI_API_KEY` is explicitly installed,
 and authorized GitHub review-write access is available. No normal PR or label event activates this
-workflow. A same-repository PR must use `branch14-action-acceptance`, exactly
+workflow. A same-repository PR must use `14-action-acceptance`, exactly
 one acceptance label, and a new `synchronize` event. Name the temporary PR
 **Scrutare 2026.10.1 Action acceptance**. Change only `target.py` in that PR.
 
