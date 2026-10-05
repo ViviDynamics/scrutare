@@ -35,7 +35,7 @@ The user explicitly approved following SPEC: no initial retries; #12 proves CLI 
 ## Tasks
 
 - [x] Task 1: Installed failure and partial evidence.
-- [ ] Task 2: Captured-head delivery, caller propagation and failure guidance.
+- [x] Task 2: Captured-head delivery, caller propagation and failure guidance.
 
 ### Task 1: Installed failure and partial evidence
 
@@ -55,11 +55,11 @@ The user explicitly approved following SPEC: no initial retries; #12 proves CLI 
 **Consumes:** Existing installed setup and Task 1 cases/helpers. CLI exit/result, panel eligibility and posting schemas remain unchanged.
 **Produces:** Successful changed-live-head proof, real shell/module failure propagation and linked operator failure guide. Actual reusable Action remains #14.
 
-- [ ] Step 1: Add a force-push fixture case: ingestion sees head A (`a` repeated 40), pre-write lifecycle sees open head B (`b` repeated 40), accepted receipt binds the posted payload. Before adding the gh transition, require evidence that both heads were observed; retain the meaningful missing-transition RED.
-- [ ] Step 2: Implement the minimal gh metadata transition and observation evidence. Assert one POST and exit 0; captured metadata, payload commit_id, review body Head SHA, receipt and result stay at A; fresh lifecycle read proves B. No live API or engine replacement.
-- [ ] Step 3: Run the installed module through `bash -e` over an existing actual provider failure scenario, followed by a continuation marker. Assert shell exit 1, missing marker, empty stdout, retained run and zero POSTs. Keep direct console rows. This proves caller propagation without creating or claiming a reusable Action.
-- [ ] Step 4: Write a concise guide mapping execution failure, validated partial success, missing output, uncertain accounting, closure, force-push, corrections and posting uncertainty to artifacts and exits. Initial retries are absent; correction and existing posting recovery are separate. Raw provider errors remain private captures; budgets are after-turn thresholds without a hard spending ceiling. Link from CLI guidance and explicitly leave Action wiring/verification to #14.
-- [ ] Step 5: Run the focused installed, native nare and CLI suites, Ruff and strict types; retain native evidence and hashes, commit and report. Coordinator reviews, marks the plan complete, then runs final whole-branch review and both full six-gate Python lanes on the committed head before push.
+- [x] Step 1: Add a force-push fixture case: ingestion sees head A (`a` repeated 40), pre-write lifecycle sees open head B (`b` repeated 40), accepted receipt binds the posted payload. Before adding the gh transition, require evidence that both heads were observed; retain the meaningful missing-transition RED.
+- [x] Step 2: Implement the minimal gh metadata transition and observation evidence. Assert one POST and exit 0; captured metadata, payload commit_id, review body Head SHA, receipt and result stay at A; fresh lifecycle read proves B. No live API or engine replacement.
+- [x] Step 3: Run the installed module through `bash -e` over an existing actual provider failure scenario, followed by a continuation marker. Assert shell exit 1, missing marker, empty stdout, retained run and zero POSTs. Keep direct console rows. This proves caller propagation without creating or claiming a reusable Action.
+- [x] Step 4: Write a concise guide mapping execution failure, validated partial success, missing output, uncertain accounting, closure, force-push, corrections and posting uncertainty to artifacts and exits. Initial retries are absent; correction and existing posting recovery are separate. Raw provider errors remain private captures; budgets are after-turn thresholds without a hard spending ceiling. Link from CLI guidance and explicitly leave Action wiring/verification to #14.
+- [x] Step 5: Run the focused installed, native nare and CLI suites, Ruff and strict types; retain native evidence and hashes, commit and report. Coordinator reviews, marks the plan complete, then runs final whole-branch review and both full six-gate Python lanes on the committed head before push.
 
 ## Verification and delivery
 
