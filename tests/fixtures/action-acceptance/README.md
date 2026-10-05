@@ -2,7 +2,7 @@
 
 Use the procedure in [pipeline.md](../../../docs/pipeline.md) only after
 `2026.10.1` is published, the secret `OPENAI_API_KEY` is explicitly installed,
-and bot approval is authorized. No normal PR or label event activates this
+and authorized GitHub review-write access is available. No normal PR or label event activates this
 workflow. A same-repository PR must use `branch14-action-acceptance`, exactly
 one acceptance label, and a new `synchronize` event. Name the temporary PR
 **Scrutare 2026.10.1 Action acceptance**. Change only `target.py` in that PR.
@@ -10,7 +10,10 @@ one acceptance label, and a new `synchronize` event. Name the temporary PR
 The success configuration reviews only `tests/fixtures/action-acceptance/target.py`
 with one senior-dev persona, the approved LiteLLM OpenAI rail, and 10000 tokens
 for both after-turn allowances. This is focused bot identity and delivery
-acceptance. Any valid posted verdict is a successful execution. The failure
+acceptance using `github.post_mode: comment`. Any valid posted verdict is a
+successful execution; the remote review state must be COMMENTED. This does not
+prove APPROVE permission or require an organization approval policy change.
+Native cases separately cover default review approval and blocking. The failure
 configuration is deliberately invalid and must stop before a model invocation.
 
 The coordinator collects real remote evidence, using already authorized access.
@@ -57,7 +60,7 @@ gh api repos/ViviDynamics/scrutare/pulls/<caller-pr-number>/reviews/<review-id> 
 ```
 
 Require the remote login `github-actions[bot]`, the captured commit ID and the
-recorded receipt/content to agree. Save the remote URL, conclusion and archive
+recorded receipt/content to agree, with remote state COMMENTED. Save the remote URL, conclusion and archive
 hashes with that comparison. Local receipts alone do not prove remote delivery.
 
 For failure, remove the success label, add the failure label, then push another

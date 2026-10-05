@@ -116,14 +116,18 @@ publication of `2026.10.1`, create a draft temporary PR named
 **Scrutare 2026.10.1 Action acceptance** from current main. Add
 `scrutare-action-acceptance-success`, then push a tiny harmless change only to
 `tests/fixtures/action-acceptance/target.py`. Only a `synchronize` event admits
-this focused identity/delivery run. The trusted success fixture uses senior-dev,
+this focused identity/delivery run. The trusted success fixture uses
+`github.post_mode: comment` and senior-dev,
 OpenAI `gpt-6.1-sol` at `https://litellm.vividynamics.com/v1`, and 10000 tokens for
 both persona and review after-turn allowances. It reviews only that fixture
-path, not the whole PR. Any valid delivered verdict demonstrates execution.
+path, not the whole PR. Any valid delivered verdict demonstrates execution;
+the posted review is COMMENT and does not prove permission to APPROVE. Native
+container cases separately verify default review approval and blocking semantics.
 
 Required operation still pending: authorize and install the repository secret
-`OPENAI_API_KEY` for that rail, and enable bot approval policy if disabled. Do not
-add the label until publication, credential setup and settings are verified.
+`OPENAI_API_KEY` for that rail. Hosted comment-mode acceptance does not require
+changing organization approval policy. Do not add the label until publication
+and credential setup are verified.
 Save the caller PR URL, workflow run URL/head, captured CLI SHA, actual remote
 bot review ID/login/receipt, downloaded artifact SHA-256 and every extracted
 file digest, using the [evidence collection commands](../tests/fixtures/action-acceptance/README.md).

@@ -118,6 +118,7 @@ def test_acceptance_config_focuses_approved_rail_and_invalid_case_stops_early():
     assert config.budgets.per_persona_tokens == config.budgets.review_max_tokens == 10000
     assert config.github.paths.include == ("tests/fixtures/action-acceptance/target.py",)
     assert config.github.paths.exclude == ()
+    assert config.github.post_mode == "comment"
     import pytest
 
     with pytest.raises(ValueError):

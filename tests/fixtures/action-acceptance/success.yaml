@@ -10,7 +10,7 @@ models:
     base_url: https://litellm.vividynamics.com/v1
     model: gpt-6.1-sol
 github:
-  post_mode: review
+  post_mode: comment
   paths:
     include: [tests/fixtures/action-acceptance/target.py]
     exclude: []
