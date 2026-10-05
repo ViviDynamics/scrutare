@@ -1,9 +1,12 @@
 # Release installation and packaging
 
-The first Scrutare release is pending publication. The `2026.10.0` wheel and
-image commands below describe the pinned release interfaces and become usable
-when those assets appear in [GitHub releases](https://github.com/ViviDynamics/scrutare/releases)
-and GHCR. There is no PyPI installation claim.
+Scrutare `2026.10.0` is published with a GitHub release wheel and public GHCR
+image. It does not include the reusable Action. The `2026.10.1` candidate adds
+that Action, but its tag, wheel, image and literal hosted caller acceptance are
+still pending. The `2026.10.1` commands below become usable only after both
+assets appear in [GitHub releases](https://github.com/ViviDynamics/scrutare/releases)
+and GHCR. There is no PyPI installation claim. See the [pipeline guide](pipeline.md)
+for the pinned caller, prerequisites and hosted evidence requirements.
 
 ## Wheel
 
@@ -11,7 +14,7 @@ Scrutare supports Python 3.10 and newer. After publication:
 
 ```sh
 uv tool install --python 3.10 \
-  https://github.com/ViviDynamics/scrutare/releases/download/2026.10.0/scrutare-2026.10.0-py3-none-any.whl
+  https://github.com/ViviDynamics/scrutare/releases/download/2026.10.1/scrutare-2026.10.1-py3-none-any.whl
 scrutare --version
 ```
 
@@ -35,7 +38,7 @@ Before publication, build and install from a reviewed checkout:
 ```sh
 uv sync --python 3.14 --locked --extra dev
 uv build --wheel
-uv tool install --python 3.14 ./dist/scrutare-2026.10.0-py3-none-any.whl
+uv tool install --python 3.14 ./dist/scrutare-2026.10.1-py3-none-any.whl
 ```
 
 ## Container
@@ -45,10 +48,10 @@ runtime. It starts directly with `scrutare`, works in `/work` and defaults to
 UID/GID 10001. After publication:
 
 ```sh
-docker run --rm ghcr.io/vividynamics/scrutare:2026.10.0 --version
+docker run --rm ghcr.io/vividynamics/scrutare:2026.10.1 --version
 docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp \
   -e GH_TOKEN -e ANTHROPIC_API_KEY -v "$PWD:/work" \
-  ghcr.io/vividynamics/scrutare:2026.10.0 review --pr 12
+  ghcr.io/vividynamics/scrutare:2026.10.1 review --pr 12
 ```
 
 The second command explicitly forwards credentials already present for an
@@ -60,9 +63,9 @@ baked into the image. For a local image before publication, use the same wheel:
 
 ```sh
 docker buildx build --builder default --load \
-  --build-arg SCRUTARE_WHEEL=dist/scrutare-2026.10.0-py3-none-any.whl \
-  --tag scrutare:2026.10.0 .
-scripts/smoke-container.sh scrutare:2026.10.0 2026.10.0
+  --build-arg SCRUTARE_WHEEL=dist/scrutare-2026.10.1-py3-none-any.whl \
+  --tag scrutare:2026.10.1 .
+scripts/smoke-container.sh scrutare:2026.10.1 2026.10.1
 ```
 
 The smoke runs with networking disabled and no host credential forwarding.
@@ -94,7 +97,11 @@ it does not establish an arm64 build or remote publication.
 
 The full local acceptance commands are in
 [.agents/test-commands.md](../.agents/test-commands.md). Run both lanes in order
-with the selected actual nare executable and no skips. Installed pipeline tests
+with the selected actual nare executable, native Docker and no skips. The mandatory
+Action tests build the exact candidate wheel into the production Dockerfile and
+run the adapter against that installed image with networking disabled. They
+verify real nare execution, accounting, canonical bytes, explicit UID/GID and
+hidden evidence archive readability. Installed pipeline tests
 substitute only the provider factory and GitHub transport boundary; real model
 access, a literal live PR review, and published asset availability remain
 separate acceptance evidence.

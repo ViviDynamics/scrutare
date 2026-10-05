@@ -1,0 +1,16 @@
+# Focused identity and delivery acceptance, intentionally not whole-PR coverage.
+strategy: panel
+personas: [senior-dev]
+budgets:
+  per_persona_tokens: 10000
+  review_max_tokens: 10000
+models:
+  default:
+    provider: openai
+    base_url: https://litellm.vividynamics.com/v1
+    model: gpt-6.1-sol
+github:
+  post_mode: review
+  paths:
+    include: [tests/fixtures/action-acceptance/target.py]
+    exclude: []
