@@ -42,7 +42,7 @@ Out: new YAML keys, session retries, iterative/debate implementation, recovery C
 - [x] 1. Producer version and exclusive artifact manifest.
 - [ ] 2. Full review service and CLI orchestration.
 - [ ] 3. Container and tagged release packaging.
-- [ ] 4. Installed-wheel pipeline proof and user documentation.
+- [x] 4. Installed-wheel pipeline proof and user documentation.
 
 ### Task 1: Producer version and exclusive artifact manifest
 
@@ -93,11 +93,11 @@ Out: new YAML keys, session retries, iterative/debate implementation, recovery C
 
 **Interfaces:** Execute the installed wheel outside the checkout through its real console/module entrypoints. Reuse the actual nare worker's sole vendor factory substitution. Fake gh supplies capture/lifecycle and actual POST protocol responses; all production ingestion, execution, poster and replay code remains real.
 
-- [ ] Observe RED end-to-end cases for approval/blocking/correction, comment mode, valid partial output, failed/missing initial output without POST, PR closure, unsupported strategy/missing runtime before side effects and uncertain delivery without success. Fake gh records stdin payloads and returns valid included HTTP headers/receipts; assert exactly one correct POST where eligible.
-- [ ] Verify saved/posted replay identity, exact persisted/stdout result, version agreement, complete manifest digests/exclusions, unchanged canonical bytes, actual systems/rails/root/accounting and zero offline guard/credential observations. Neither the fake GitHub endpoint nor substituted model transport is literal live-PR evidence.
-- [ ] README installs the pinned GitHub release wheel or pinned GHCR image and documents gh plus separate nare for wheel users. Do not claim PyPI installation or published assets before a release exists. Explain operational executable selection, exits, partial coverage, manifest snapshot/trust limits, canonical replay and unsupported strategies.
-- [ ] Run all six exact gates on Python 3.10 then 3.14 with selected actual nare, no shared-venv overlap or skips. Retain commands/native outputs, actual pipeline evidence and tested/committed hashes. Repeat the final container smoke if packaged contents changed since Task 3.
-- [ ] Commit and report any remaining literal live-PR/publication acceptance gate for coordinator handling after a fully reviewable result exists.
+- [x] Observe RED end-to-end cases for approval/blocking/correction, comment mode, valid partial output, failed/missing initial output without POST, PR closure, unsupported strategy/missing runtime before side effects and uncertain delivery without success. Fake gh records stdin payloads and returns valid included HTTP headers/receipts; assert exactly one correct POST where eligible.
+- [x] Verify saved/posted replay identity, exact persisted/stdout result, version agreement, complete manifest digests/exclusions, unchanged canonical bytes, actual systems/rails/root/accounting and zero offline guard/credential observations. Neither the fake GitHub endpoint nor substituted model transport is literal live-PR evidence.
+- [x] README installs the pinned GitHub release wheel or pinned GHCR image and documents gh plus separate nare for wheel users. Do not claim PyPI installation or published assets before a release exists. Explain operational executable selection, exits, partial coverage, manifest snapshot/trust limits, canonical replay and unsupported strategies.
+- [x] Run all six exact gates on Python 3.10 then 3.14 with selected actual nare, no shared-venv overlap or skips. Retain commands/native outputs, actual pipeline evidence and tested/committed hashes. Repeat the final container smoke if packaged contents changed since Task 3.
+- [x] Commit and report any remaining literal live-PR/publication acceptance gate for coordinator handling after a fully reviewable result exists.
 
 ## Completion
 
