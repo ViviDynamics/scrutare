@@ -10,6 +10,16 @@ spec = json.loads(Path(os.environ["SCRUTARE_GH_SPEC"]).read_bytes())
 log = Path(os.environ["SCRUTARE_GH_LOG"])
 args = sys.argv[1:]
 payload = sys.stdin.buffer.read() if "POST" in args else b""
+endpoint = next((arg for arg in args if arg.startswith("repos/")), None)
+metadata = None
+if args == ["api", "repos/owner/repo/pulls/12"]:
+    reads = 1 + (sum(json.loads(line)["args"] == args
+                     for line in log.read_text().splitlines()) if log.exists() else 0)
+    metadata = spec["metadata"]
+    if spec["case"] == "closed" and reads >= 3:
+        metadata["state"] = "closed"
+    if spec["case"] == "force-push" and reads >= 3:
+        metadata["head"]["sha"] = "b" * 40
 snapshots = {}
 if payload:
     run, = Path(".scrutare/runs").iterdir()
@@ -18,10 +28,10 @@ if payload:
                               "verdict.json")}
 with log.open("a", encoding="utf-8") as stream:
     stream.write(json.dumps({"args": args, "stdin": payload.decode("utf-8"),
+                             "metadata_response": metadata,
                              "artifacts_before_post": snapshots,
                              "credential_names": [n for n in os.environ
                                                   if "KEY" in n or "TOKEN" in n]}) + "\n")
-endpoint = next((arg for arg in args if arg.startswith("repos/")), None)
 if args == ["repo", "view", "--json", "nameWithOwner"]:
     print(json.dumps({"nameWithOwner": "owner/repo"}))
 elif "POST" in args:
@@ -49,10 +59,6 @@ elif "--paginate" in args:
     else:
         print(json.dumps([[{"body": "DISCUSSION_SENTINEL"}]]))
 elif endpoint == "repos/owner/repo/pulls/12":
-    reads = sum(json.loads(line)["args"] == ["api", endpoint]
-                for line in log.read_text().splitlines())
-    if spec["case"] == "closed" and reads >= 3:
-        spec["metadata"]["state"] = "closed"
-    print(json.dumps(spec["metadata"]))
+    print(json.dumps(metadata))
 else:
     raise AssertionError(f"Unexpected gh arguments: {args}")

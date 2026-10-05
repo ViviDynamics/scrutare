@@ -34,7 +34,7 @@ The user explicitly approved following SPEC: no initial retries; #12 proves CLI 
 
 ## Tasks
 
-- [ ] Task 1: Installed failure and partial evidence.
+- [x] Task 1: Installed failure and partial evidence.
 - [ ] Task 2: Captured-head delivery, caller propagation and failure guidance.
 
 ### Task 1: Installed failure and partial evidence
@@ -43,11 +43,11 @@ The user explicitly approved following SPEC: no initial retries; #12 proves CLI 
 **Consumes:** Existing `wheel_cli`, `offline_runtime`, `tool`, `text`, factory scenario selection and installed evidence capture.
 **Produces:** Installed cases proving attributed mixed failure, provider failure after a valid document, and explicit empty partial approval. Preserve existing test fixture APIs for Task 2; report any added reusable setup interface.
 
-- [ ] Step 1: Add mixed initial coverage with two personas and a two-process barrier: one valid explicit empty document and one provider error. Assert exit 1, empty stdout, no POST, no findings/verdict/success result or posting journal/payload, retained clean sibling document, named failed persona/provider reason, raw private error sentinel, exactly one attempt per persona, no correction/retry, incomplete accounting and no active reservations.
-- [ ] Step 2: Add a real factory-scripted failure on the provider call after a valid empty findings document plus read tool call. Assert earlier evidence survives, but uncertain accounting and provider failure prevent verdict/posting. Use per-reply `{error: <sentinel>}` in the offline transport, not rewritten nare artifacts or an engine mock. Run the new regression before adding fixture support, retain the observed failure and identify it honestly as proof-harness support rather than a production safety defect.
-- [ ] Step 3: Implement the minimal per-reply factory error behavior; retain existing global-error scenarios and all guards. Add explicit partial-empty installed success next to partial blocking: allocation/limit 1, actual usage 15, overshoot 14, panel partial, findings empty, code approve, one APPROVE POST with no inline comments and persisted result bytes.
-- [ ] Step 4: Strengthen existing missing/failed/partial installed rows to reconcile outcome, allocation, invocation limit, actual usage, overshoot and ledger confidence; prove absent posting artifacts on execution failure. Keep success replay/manifest/byte checks and actual factory-only boundaries.
-- [ ] Step 5: Run `uv run --python 3.14 --locked --extra dev pytest tests/test_installed_review.py tests/test_nare_cli_integration.py`, with the pinned external executable configured. Run Ruff and strict types. Retain commands, outputs, input hashes and fixture failures without claiming unobserved REDs. Commit and write the task report. Coordinator independently reviews before Task 2.
+- [x] Step 1: Add mixed initial coverage with two personas and a two-process barrier: one valid explicit empty document and one provider error. Assert exit 1, empty stdout, no POST, no findings/verdict/success result or posting journal/payload, retained clean sibling document, named failed persona/provider reason, raw private error sentinel, exactly one attempt per persona, no correction/retry, incomplete accounting and no active reservations.
+- [x] Step 2: Add a real factory-scripted failure on the provider call after a valid empty findings document plus read tool call. Assert earlier evidence survives, but uncertain accounting and provider failure prevent verdict/posting. Use per-reply `{error: <sentinel>}` in the offline transport, not rewritten nare artifacts or an engine mock. Run the new regression before adding fixture support, retain the observed failure and identify it honestly as proof-harness support rather than a production safety defect.
+- [x] Step 3: Implement the minimal per-reply factory error behavior; retain existing global-error scenarios and all guards. Add explicit partial-empty installed success next to partial blocking: allocation/limit 1, actual usage 15, overshoot 14, panel partial, findings empty, code approve, one APPROVE POST with no inline comments and persisted result bytes.
+- [x] Step 4: Strengthen existing missing/failed/partial installed rows to reconcile outcome, allocation, invocation limit, actual usage, overshoot and ledger confidence; prove absent posting artifacts on execution failure. Keep success replay/manifest/byte checks and actual factory-only boundaries.
+- [x] Step 5: Run `uv run --python 3.14 --locked --extra dev pytest tests/test_installed_review.py tests/test_nare_cli_integration.py`, with the pinned external executable configured. Run Ruff and strict types. Retain commands, outputs, input hashes and fixture failures without claiming unobserved REDs. Commit and write the task report. Coordinator independently reviews before Task 2.
 
 ### Task 2: Captured-head delivery, caller propagation and failure guidance
 

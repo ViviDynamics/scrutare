@@ -62,6 +62,7 @@ def wheel_cli(tmp_path_factory):
 
 CASES = [
     ("approval", {"replies": [tool(), text({"findings": []})]}, 100, 0, "approve"),
+    ("force-push", {"replies": [text(FINDING)]}, 100, 0, "changes_requested"),
     ("blocking", {"replies": [text(FINDING)]}, 100, 0, "changes_requested"),
     ("correction", {"replies": [text(BAD_ANCHOR)]}, 100, 0, "changes_requested"),
     ("comment", {"replies": [text(FINDING)]}, 100, 0, "changes_requested"),
@@ -72,6 +73,7 @@ CASES = [
     ("after-document", {"replies": [tool(document={"findings": []}),
                                    {"error": PRIVATE_ERROR}]}, 100, 1, None),
     ("failed", {"error": "offline initial failure"}, 100, 1, None),
+    ("failed-shell", {"error": "offline initial failure"}, 100, 1, None),
     ("missing", {"replies": [tool()]}, 1, 1, None),
     ("closed", {"replies": [text(FINDING)]}, 100, 1, "changes_requested"),
     ("uncertain", {"replies": [text(FINDING)]}, 100, 1, "changes_requested"),
@@ -86,6 +88,9 @@ CASES = [
 def test_installed_review_pipeline(
     tmp_path, installed, wheel_cli, request, case, initial, limit, exit_code, verdict,
 ):
+    shell_caller = case == "failed-shell"
+    if shell_caller:
+        case = "failed"
     root, python, console, wheel = wheel_cli
     runtime = offline_runtime(tmp_path, installed)
     spec = {"scenarios": [
@@ -168,15 +173,31 @@ def test_installed_review_pipeline(
                 },
             }}
             (tmp_path / "offline-spec.json").write_text(json.dumps(spec))
-        entrypoint = [python, "-m", "scrutare"] if case == "comment" else [console]
-        result = execute([*entrypoint, "review", "--pr", "12", "--nare-executable",
-                          tmp_path / "missing-nare" if case == "no-runtime"
-                          else runtime.executable], "review")
+        entrypoint = [python, "-m", "scrutare"] if case == "comment" or shell_caller else [console]
+        arguments = [*entrypoint, "review", "--pr", "12", "--nare-executable",
+                     tmp_path / "missing-nare" if case == "no-runtime" else runtime.executable]
+        if shell_caller:
+            arguments = ["/bin/bash", "-e", "-c",
+                         '"$@"\nprintf continued > continuation-marker\n', "review-caller",
+                         *arguments]
+        result = execute(arguments, "review")
         assert result.returncode == exit_code, result.stderr.decode()
+        if shell_caller:
+            assert not (working / "continuation-marker").exists()
         calls = [json.loads(line) for line in gh_log.read_text().splitlines()] if (
             gh_log.exists()) else []
         assert all(call["credential_names"] == [] for call in calls)
         posts = [call for call in calls if "POST" in call["args"]]
+        if case == "force-push":
+            # Observe the external transition before checking capture binding, so
+            # an unchanged fake head cannot make this success proof vacuous.
+            metadata_calls = [call for call in calls if call["metadata_response"] is not None]
+            assert len(metadata_calls) == 3
+            assert [call["metadata_response"]["head"]["sha"] for call in metadata_calls] == [
+                "a" * 40, "a" * 40, "b" * 40]
+            assert all(call["metadata_response"]["state"] == "open"
+                       and call["metadata_response"]["merged"] is False for call in metadata_calls)
+            assert calls.index(metadata_calls[-1]) < calls.index(posts[0])
         if case in ("iterative", "debate", "no-runtime"):
             assert calls == [] and not (working / ".scrutare").exists()
             assert result.stdout == b""
@@ -184,6 +205,9 @@ def test_installed_review_pipeline(
                     b"cannot locate an executable nare runtime") in result.stderr
             return
         run, = (working / ".scrutare/runs").iterdir()
+        if case == "force-push":
+            captured = load(run / "metadata.json")
+            assert captured["head_sha"] == captured["pull_request"]["head"]["sha"] == "a" * 40
         assert (run / "config.yaml").read_bytes() == config
         assert (run / "diff.patch").read_bytes() == SOURCE + DOCS
         assert (run / "review-inputs/diff.patch").read_bytes() == SOURCE
@@ -359,6 +383,9 @@ def test_installed_review_pipeline(
             assert post["stdin"].encode() == (run / "review-payload.json").read_bytes()
             payload = json.loads(post["stdin"])
             assert payload["commit_id"] == "a" * 40
+            if case == "force-push":
+                assert f"Head SHA: {'a' * 40}\n" in payload["body"]
+                assert "b" * 40 not in payload["body"]
             assert payload["event"] == ("COMMENT" if case == "comment" else
                                           "APPROVE" if verdict == "approve" else "REQUEST_CHANGES")
             assert len(payload["comments"]) == (0 if verdict == "approve" else 1)
@@ -378,6 +405,14 @@ def test_installed_review_pipeline(
                 assert saved["usage"] == panel["ledger"]["usage"]
                 assert saved["accounting_complete"] is True
                 assert saved["review"]["review_id"] == 901
+                if case == "force-push":
+                    posting = load(run / "posting.json")
+                    assert posting["status"] == "posted" and posting["attempts"] == 1
+                    assert posting["head_sha"] == saved["head_sha"] == "a" * 40
+                    assert posting["receipt"] == saved["review"]
+                    assert saved["review"]["commit_id"] == "a" * 40
+                    assert saved["review"]["body"] == payload["body"]
+                    assert posting["payload_sha256"] == digest(run / "review-payload.json")
         if exit_code:
             assert not (run / "result.json").exists() and b"Run: " in result.stderr
         before = {p: p.read_bytes() for p in run.rglob("*") if p.is_file()}
