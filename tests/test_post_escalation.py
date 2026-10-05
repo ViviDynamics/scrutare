@@ -564,3 +564,14 @@ def test_invalid_direct_response_cannot_claim_success(captured, receipt):
     with pytest.raises(PostingUncertain):
         post(run, verdict, client=client)
     assert state(run)["status"] == "unknown" and len(client.requests) == 1
+
+
+def test_second_stage_failure_retains_confirmed_review(captured):
+    run, verdict = captured
+    client = Escalator(run, outcomes=[PostingRejected("Reviewer request rejected", status=422)])
+    with pytest.raises(PostingRejected) as error:
+        post(run, verdict, client=client)
+    assert error.value.confirmed_posting
+    assert error.value.confirmed_review == client.receipt
+    assert state(run, "posting.json")["status"] == "posted"
+    assert state(run)["status"] == "rejected"
