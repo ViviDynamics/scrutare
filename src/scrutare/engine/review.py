@@ -27,6 +27,7 @@ from scrutare.poster import (
     post_escalation,
     post_review,
 )
+from scrutare.poster.errors import PostingInterruptedError
 from scrutare.provenance import ProvenanceError, write_artifact_manifest
 
 
@@ -111,7 +112,7 @@ async def review_pr(
     try:
         run_dir = ingest_pr(capture_client if capture_client is not None else GitHubClient(),
                             ref, runs_root, config_bytes=config_bytes,
-                            config_data=config.to_dict(), review_config=config)
+                            config_data=config.to_dict(), review_config=config).absolute()
         panel = await run_review(run_dir, config, runtime=runtime)
         if (panel.status not in ("complete", "partial") or not panel.accounting_complete
                 or not isinstance(panel.verdict, Verdict)):
@@ -124,20 +125,31 @@ async def review_pr(
         else:
             receipt = post_review(run_dir, verdict, client=review_client)
         confirmed = True
+        # Deliver pending native SIGINT cancellation while this run and receipt are owned.
+        await asyncio.sleep(0)
         result = ReviewRunResult(run_dir, receipt.commit_id, verdict.verdict, verdict.rule,
                                  panel.status, panel.usage, panel.accounting_complete,
                                  receipt, request)
         write_owned_bytes(run_dir / "result.json", result.to_bytes(),
                           prepared_root=run_dir / "review-inputs")
+        await asyncio.sleep(0)
         manifest_attempted = True
         write_artifact_manifest(run_dir)
+        await asyncio.sleep(0)
         return result
     except (asyncio.CancelledError, KeyboardInterrupt) as error:
+        confirmed = confirmed or isinstance(error, PostingInterruptedError)
         failure: ReviewRunError = ReviewInterruptedError(
             "review interrupted.", run_dir=run_dir, confirmed_posting=confirmed)
         raise failure from error
     except Exception as error:
         confirmed = confirmed or (isinstance(error, PostingError) and error.confirmed_posting)
+        # A synchronous failure may coincide with SIGINT, including a rejected second stage.
+        try:
+            await asyncio.sleep(0)
+        except (asyncio.CancelledError, KeyboardInterrupt):
+            raise ReviewInterruptedError(
+                "review interrupted.", run_dir=run_dir, confirmed_posting=confirmed) from None
         raise ReviewRunError(_safe_error(error), run_dir=run_dir,
                              confirmed_posting=confirmed) from None
     finally:
@@ -145,6 +157,11 @@ async def review_pr(
             # Awaited engine failure/cancellation guarantees child cleanup has quiesced.
             # Posting is synchronous and has released its lock before reaching here.
             try:
-                write_artifact_manifest(run_dir)
-            except (OSError, ProvenanceError):
-                pass  # A secondary snapshot failure must not hide the primary diagnostic.
+                try:
+                    write_artifact_manifest(run_dir)
+                except (OSError, ProvenanceError):
+                    pass  # A secondary snapshot failure must not hide the primary diagnostic.
+                await asyncio.sleep(0)
+            except (asyncio.CancelledError, KeyboardInterrupt):
+                raise ReviewInterruptedError(
+                    "review interrupted.", run_dir=run_dir, confirmed_posting=confirmed) from None

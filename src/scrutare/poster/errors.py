@@ -23,6 +23,14 @@ class PostingError(GitHubError):
         return self.confirmed_review is not None
 
 
+class PostingInterruptedError(KeyboardInterrupt):
+    """Synchronous interruption after a validated review receipt was obtained."""
+
+    def __init__(self, confirmed_review: PostedReview) -> None:
+        super().__init__("Review interrupted after confirmed delivery.")
+        self.confirmed_review = confirmed_review
+
+
 class PostingRejected(PostingError):
     """An explicit HTTP rejection, or a launch proven not to have sent."""
 

@@ -12,6 +12,7 @@ from scrutare.poster import posting
 from scrutare.poster.client import PostedReview, ReviewClient
 from scrutare.poster.errors import (
     PostingError,
+    PostingInterruptedError,
     PostingRateLimited,
     PostingRejected,
     PostingUncertain,
@@ -190,6 +191,8 @@ def post_escalation(
             receipt = _request(transport, ref, path, state,
                                sleeper if sleeper is not None else sleep)
             return PostedEscalation(review, receipt)
+        except KeyboardInterrupt:
+            raise PostingInterruptedError(review) from None
         except PostingError as error:
             error.confirmed_review = review
             raise

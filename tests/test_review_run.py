@@ -299,3 +299,54 @@ def test_service_passes_same_normalized_config_to_capture_and_engine(tmp_path, m
         runtime=NareRuntime(Path(sys.executable)), capture_client=CaptureClient(),
         review_client=FakePoster()))
     assert result.verdict == "approve"
+
+
+@pytest.mark.parametrize("phase", ["posting", "result", "manifest"])
+def test_service_wraps_native_sigint_with_retained_context(tmp_path, monkeypatch, phase):
+    import signal
+
+    module = service()
+    install(monkeypatch, {})
+    receipt_returned = phase != "posting"
+    if phase == "posting":
+        class InterruptedPoster(FakePoster):
+            def create_review(self, ref, payload):
+                nonlocal receipt_returned
+                receipt = super().create_review(ref, payload)
+                signal.raise_signal(signal.SIGINT)
+                receipt_returned = True
+                return receipt
+        poster = InterruptedPoster()
+    else:
+        poster = FakePoster()
+        name = "write_owned_bytes" if phase == "result" else "write_artifact_manifest"
+        original = getattr(module, name)
+        def interrupted(*args, **kwargs):
+            original(*args, **kwargs)
+            signal.raise_signal(signal.SIGINT)
+        monkeypatch.setattr(module, name, interrupted)
+    # Catch bare KeyboardInterrupt too so a regression cannot stop the test runner.
+    try:
+        invoke(tmp_path, client=poster)
+    except (module.ReviewInterruptedError, KeyboardInterrupt) as error:
+        assert isinstance(error, module.ReviewInterruptedError)
+        assert error.confirmed_posting == receipt_returned
+        assert error.run_dir.is_dir()
+        assert (error.run_dir / "artifacts.json").is_file()
+    else:
+        pytest.fail("Native interruption was reported as success")
+
+
+def test_relative_capture_directory_is_normalized_before_owned_persistence(tmp_path, monkeypatch):
+    module = service()
+    install(monkeypatch, {})
+    monkeypatch.chdir(tmp_path)
+    capture = module.ingest_pr
+    def relative_capture(*args, **kwargs):
+        run = capture(*args, **kwargs)
+        return run.relative_to(tmp_path) if run.is_absolute() else run
+    monkeypatch.setattr(module, "ingest_pr", relative_capture)
+    result = invoke(Path("runs"))
+    assert result.run_dir.is_absolute()
+    assert (result.run_dir / "result.json").read_bytes() == result.to_bytes()
+    assert (result.run_dir / "artifacts.json").is_file()

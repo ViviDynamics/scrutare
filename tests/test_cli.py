@@ -476,3 +476,107 @@ def test_stdout_bytes_match_persisted_utf8_even_with_non_utf8_terminal(
     terminal.flush()
     run = next((tmp_path / ".scrutare/runs").iterdir())
     assert stream.getvalue() == (run / "result.json").read_bytes()
+
+
+@pytest.mark.parametrize("phase", ["posting", "result", "manifest", "confirmation"])
+def test_native_sigint_retains_run_and_confirmed_posting(
+        tmp_path, monkeypatch, capsys, gh, phase):
+    import signal
+
+    from scrutare.engine import review
+    from scrutare.poster import posting
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "scrutare.yaml").write_bytes(VALID_CONFIG)
+    receipt_returned = phase != "posting"
+    if phase == "posting":
+        class InterruptedPoster(FakePoster):
+            def create_review(self, ref, payload):
+                nonlocal receipt_returned
+                receipt = super().create_review(ref, payload)
+                signal.raise_signal(signal.SIGINT)
+                receipt_returned = True
+                return receipt
+        monkeypatch.setattr(posting, "ReviewClient", lambda **kwargs: InterruptedPoster())
+    elif phase == "confirmation":
+        original = posting.atomic_write
+        def interrupted_confirmation(path, data):
+            original(path, data)
+            if path.name == "posting.json" and json.loads(data)["status"] == "posted":
+                # First signal requests task cancellation, the second interrupts synchronous code.
+                signal.raise_signal(signal.SIGINT)
+                signal.raise_signal(signal.SIGINT)
+        monkeypatch.setattr(posting, "atomic_write", interrupted_confirmation)
+    else:
+        name = "write_owned_bytes" if phase == "result" else "write_artifact_manifest"
+        original = getattr(review, name)
+        def interrupted_write(*args, **kwargs):
+            original(*args, **kwargs)
+            signal.raise_signal(signal.SIGINT)
+        monkeypatch.setattr(review, name, interrupted_write)
+    assert cli_main(["review", "--pr", "12"]) == 130
+    output = capsys.readouterr()
+    run = next((tmp_path / ".scrutare/runs").iterdir())
+    assert output.out == ""
+    assert str(run.relative_to(tmp_path)) in output.err
+    assert ("confirmed" in output.err) == receipt_returned
+    assert "interrupt" in output.err
+    assert json.loads((run / "posting.json").read_bytes())["status"] == (
+        "posted" if receipt_returned else "sending")
+    assert (run / "artifacts.json").is_file()
+
+
+@pytest.mark.parametrize("outcome", ["return", "rejected", "interrupt"])
+def test_native_sigint_during_escalation_preserves_first_confirmed_review(
+        tmp_path, monkeypatch, capsys, gh, outcome):
+    import signal
+
+    from scrutare.engine import panel
+    from scrutare.findings import Exhaustion, derive_verdict
+    from scrutare.poster import PostingRejected, ReviewerRequestReceipt, escalation
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "scrutare.yaml").write_bytes(
+        VALID_CONFIG + b"github: {human_reviewers: [alice]}\n")
+    derive = panel.derive_verdict
+    # The real panel derives/installs a real exhausted Verdict at this controlled engine seam.
+    def exhausted(findings, config):
+        result = derive(findings, config)
+        return derive_verdict(result.findings, config, exhaustion=Exhaustion("panel", 3, 3))
+    monkeypatch.setattr(panel, "derive_verdict", exhausted)
+    class InterruptedEscalator(FakePoster):
+        def request_reviewers(self, ref, reviewers):
+            signal.raise_signal(signal.SIGINT)
+            if outcome == "rejected":
+                raise PostingRejected("Request rejected.", status=422)
+            if outcome == "interrupt":
+                signal.raise_signal(signal.SIGINT)
+            return ReviewerRequestReceipt(reviewers, "post_response")
+    monkeypatch.setattr(escalation, "ReviewClient", lambda **kwargs: InterruptedEscalator())
+    assert cli_main(["review", "--pr", "12"]) == 130
+    output = capsys.readouterr()
+    run = next((tmp_path / ".scrutare/runs").iterdir())
+    assert output.out == "" and str(run.relative_to(tmp_path)) in output.err
+    assert "confirmed" in output.err and "interrupt" in output.err
+    assert json.loads((run / "posting.json").read_bytes())["status"] == "posted"
+    assert (run / "artifacts.json").is_file()
+
+
+def test_native_sigint_during_failed_run_snapshot_keeps_unconfirmed_context(
+        tmp_path, monkeypatch, capsys, gh):
+    import signal
+
+    from scrutare.engine import review
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "scrutare.yaml").write_bytes(VALID_CONFIG)
+    install(monkeypatch, {}, initial_available=False)
+    original = review.write_artifact_manifest
+    def interrupted_manifest(run):
+        original(run)
+        signal.raise_signal(signal.SIGINT)
+    monkeypatch.setattr(review, "write_artifact_manifest", interrupted_manifest)
+    assert cli_main(["review", "--pr", "12"]) == 130
+    output = capsys.readouterr()
+    run = next((tmp_path / ".scrutare/runs").iterdir())
+    assert output.out == "" and str(run.relative_to(tmp_path)) in output.err
+    assert "interrupt" in output.err and "confirmed" not in output.err
+    assert (run / "artifacts.json").is_file()
+    assert not (run / "posting.json").exists()

@@ -16,6 +16,7 @@ from scrutare.findings import Verdict, VerdictArtifactError, write_verdict
 from scrutare.poster.client import PostedReview, ReviewClient, _receipt
 from scrutare.poster.errors import (
     PostingError,
+    PostingInterruptedError,
     PostingRateLimited,
     PostingRejected,
     PostingUncertain,
@@ -156,6 +157,8 @@ def _confirm(
                        "retry_at": None, "http_status": None}
     try:
         atomic_write(path, canonical(updated))
+    except KeyboardInterrupt:
+        raise PostingInterruptedError(validated) from None
     except (OSError, PostingError):
         raise PostingError(
             "Review delivery was confirmed but its receipt could not be persisted.",
