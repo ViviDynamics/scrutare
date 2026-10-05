@@ -32,7 +32,10 @@ RUN test -n "$SCRUTARE_WHEEL" \
     && uv pip install --python /opt/scrutare/bin/python /tmp/wheels/*.whl
 
 FROM runtime
-RUN useradd --create-home --uid 10001 scrutare \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --uid 10001 scrutare \
     && mkdir /work && chown scrutare:scrutare /work
 COPY --from=builder /usr/local/bin/gh /usr/local/bin/gh
 COPY --from=builder /opt/nare /opt/nare

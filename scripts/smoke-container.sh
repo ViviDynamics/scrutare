@@ -32,6 +32,20 @@ run.mkdir(parents=True)
 (run / "writable").write_text("local smoke\n")
 for name in ("senior-dev", "junior-dev", "security", "devops"):
     assert load_persona(name).system_prompt.strip()
+# Numeric PR inputs require gh to discover the current checkout via git.
+checkout = run / "checkout"
+subprocess.run(["git", "init", "--quiet", str(checkout)], check=True)
+origin = "https://github.com/ViviDynamics/scrutare.git"
+subprocess.run(["git", "-C", str(checkout), "remote", "add", "origin", origin], check=True)
+nested = checkout / "nested"
+nested.mkdir()
+assert Path(subprocess.check_output(
+    ["git", "rev-parse", "--show-toplevel"], cwd=nested, text=True,
+).strip()) == checkout.resolve()
+assert subprocess.check_output(
+    ["git", "remote", "get-url", "origin"], cwd=nested, text=True,
+).strip() == origin
+print("Local git checkout: root and origin discovered from nested directory")
 # Capture requires gh pagination to return an array of pages.
 assert "--slurp" in subprocess.check_output(["gh", "api", "--help"], text=True)
 version = subprocess.check_output(["nare", "--version"], text=True).strip()
