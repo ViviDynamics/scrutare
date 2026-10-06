@@ -50,8 +50,10 @@ Starting a fresh CLI review creates a new run and is not a recovery command for
 an earlier uncertain POST.
 See [failure paths](failure-paths.md) for coverage, lifecycle and delivery
 diagnostics, and shell caller behavior. The [pipeline guide](pipeline.md)
-describes the fixed-version reusable Action, trusted configuration, uploaded
-evidence and pending publication and hosted acceptance for candidate `2026.10.2`.
+describes the published `2026.10.2` reusable Action, trusted configuration,
+uploaded evidence and audited hosted success and invalid-config failure. See the
+[dated acceptance record](action-acceptance.md) for those observed outcomes and
+their evidence limits.
 
 ## Coverage and evidence
 
