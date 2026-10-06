@@ -1,0 +1,2 @@
+# Invalid configuration must fail before GitHub capture or any model invocation.
+strategy: invalid-acceptance-strategy

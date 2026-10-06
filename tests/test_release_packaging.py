@@ -11,7 +11,7 @@ import pytest
 import yaml
 
 ROOT = Path(__file__).parents[1]
-VERSION = "2026.10.0"
+VERSION = "2026.10.1"
 
 
 def release_tree(tmp_path):
@@ -23,7 +23,7 @@ def release_tree(tmp_path):
             shutil.copyfile(source, scripts / name)
     package = tmp_path / "src/scrutare"
     package.mkdir(parents=True)
-    (package / "__init__.py").write_text('__version__ = "2026.10.0"\n')
+    (package / "__init__.py").write_text('__version__ = "2026.10.1"\n')
     return tmp_path
 
 
@@ -53,8 +53,8 @@ def test_matching_tag_source_and_wheel_are_accepted(tmp_path):
 
 
 @pytest.mark.parametrize("tag", [
-    "v2026.10.0", "2026.01.0", "2026.0.0", "2026.13.0", "2026.10.01",
-    "2026.10", "2026.10.0rc1", "2026.10.0\n", "2026.10.0/evil",
+    "v2026.10.1", "2026.01.0", "2026.0.0", "2026.13.0", "2026.10.01",
+    "2026.10", "2026.10.1rc1", "2026.10.1\n", "2026.10.1/evil",
 ])
 def test_noncanonical_release_tags_are_refused(tmp_path, tag):
     root = release_tree(tmp_path)
@@ -69,15 +69,15 @@ def test_disagreeing_release_identity_is_refused(tmp_path, changed):
     metadata = f"Name: scrutare\nVersion: {VERSION}\n"
     name = f"scrutare-{VERSION}-py3-none-any.whl"
     if changed == "source":
-        (root / "src/scrutare/__init__.py").write_text('__version__ = "2026.10.1"\n')
+        (root / "src/scrutare/__init__.py").write_text('__version__ = "2026.10.2"\n')
     elif changed == "metadata":
-        metadata = "Name: scrutare\nVersion: 2026.10.1\n"
+        metadata = "Name: scrutare\nVersion: 2026.10.2\n"
     elif changed == "filename":
-        name = "scrutare-2026.10.1-py3-none-any.whl"
+        name = "scrutare-2026.10.2-py3-none-any.whl"
     elif changed == "package":
         metadata = f"Name: other-package\nVersion: {VERSION}\n"
     elif changed == "duplicate":
-        metadata += "Version: 2026.10.1\n"
+        metadata += "Version: 2026.10.2\n"
     result = check(root, VERSION, wheel(root, name=name, metadata=metadata))
     assert result.returncode != 0
     assert "release check failed:" in result.stderr.lower()

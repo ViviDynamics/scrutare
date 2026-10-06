@@ -2,8 +2,11 @@
 
 Run these from the repository root before proposing a change.
 CI runs every gate on Python 3.10 and 3.14. Tests replace external gh calls
-and need neither authentication nor network access. All initial lanes run
-for every change, in the same order as CI.
+and need no authentication or live model access. Native Docker is mandatory: the
+Action container proof builds the actual candidate wheel/image in both test
+lanes. Image acquisition and Dockerfile dependency installation need network
+access on a cold cache; container review execution runs with networking disabled.
+All initial lanes run for every change, in the same order as CI.
 
 Run the complete table with `SCRUTARE_PYTHON=3.10`, then repeat with
 `SCRUTARE_PYTHON=3.14`. This checks both full test suites and all other gates

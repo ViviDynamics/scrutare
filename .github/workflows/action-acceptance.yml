@@ -1,0 +1,44 @@
+name: Released Action acceptance
+
+on:
+  pull_request_target:
+    types: [synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: scrutare-action-acceptance-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  success:
+    if: >-
+      github.repository == 'ViviDynamics/scrutare' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == '14-action-acceptance' &&
+      contains(github.event.pull_request.labels.*.name, 'scrutare-action-acceptance-success') &&
+      !contains(github.event.pull_request.labels.*.name, 'scrutare-action-acceptance-failure')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: ViviDynamics/scrutare@2026.10.1
+        with:
+          config: tests/fixtures/action-acceptance/success.yaml
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  failure:
+    if: >-
+      github.repository == 'ViviDynamics/scrutare' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == '14-action-acceptance' &&
+      contains(github.event.pull_request.labels.*.name, 'scrutare-action-acceptance-failure') &&
+      !contains(github.event.pull_request.labels.*.name, 'scrutare-action-acceptance-success')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: ViviDynamics/scrutare@2026.10.1
+        with:
+          config: tests/fixtures/action-acceptance/failure.yaml
+        env:
+          GH_TOKEN: ${{ github.token }}
