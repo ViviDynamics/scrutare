@@ -20,7 +20,7 @@ from test_nare_cli_integration import BAD_ANCHOR, CORRECTED, FINDING, text, tool
 from test_review_inputs import DOCS, SOURCE
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "2026.10.1"
+VERSION = "2026.10.2"
 
 
 def digest(path):

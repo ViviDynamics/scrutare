@@ -46,7 +46,7 @@ def runner(tmp_path):
         "GITHUB_WORKSPACE": str(workspace),
         "GITHUB_OUTPUT": str(output),
         "SCRUTARE_ACTION_CONFIG": "scrutare.yaml",
-        "SCRUTARE_ACTION_IMAGE": "ghcr.io/vividynamics/scrutare:2026.10.1",
+        "SCRUTARE_ACTION_IMAGE": "ghcr.io/vividynamics/scrutare:2026.10.2",
     }
     return env, payload
 
@@ -216,7 +216,7 @@ def install_docker(tmp_path, env, scenario):
         'base.with_suffix(".mode").write_text(str(config.stat().st_mode & 0o777))\n'
         'run = work / ".scrutare/runs/captured"\n'
         "run.mkdir(parents=True, mode=0o700)\n"
-        'record = {"schema_version": 1, "scrutare_version": "2026.10.1",\n'
+        'record = {"schema_version": 1, "scrutare_version": "2026.10.2",\n'
         ' "status": "posted", "run_dir": str(run), "head_sha": "b" * 40,\n'
         ' "verdict": "approve", "rule": "no_blocking_findings", "panel_status": "complete",\n'
         ' "usage": {"input": 1, "output": 2, "cache_read": 0,\n'
@@ -306,7 +306,7 @@ def test_review_publishes_only_valid_cli_success(runner, tmp_path, verdict):
         "--config",
         "/scrutare-config.yaml",
     ]
-    assert "ghcr.io/vividynamics/scrutare:2026.10.1" in args
+    assert "ghcr.io/vividynamics/scrutare:2026.10.2" in args
     forwarded = [args[i + 1] for i, value in enumerate(args) if value == "--env"]
     assert set(forwarded) == {"HOME=/tmp", "GH_TOKEN", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"}
     assert all("synthetic-" not in arg for arg in args)

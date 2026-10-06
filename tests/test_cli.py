@@ -115,7 +115,7 @@ def test_review_snapshots_config_and_reports_persisted_delivery(
     assert captured.err == ""
     assert result["status"] == "posted"
     assert result["head_sha"] == SHA
-    assert result["scrutare_version"] == "2026.10.1"
+    assert result["scrutare_version"] == "2026.10.2"
     assert result["verdict"] == "approve"
     assert result["review"]["state"] == "APPROVED"
     assert result["panel_status"] == "complete"
@@ -169,7 +169,7 @@ def test_number_uses_repository_context(
 
 def test_version_needs_no_github(capsys: pytest.CaptureFixture[str]) -> None:
     assert cli_main(["--version"]) == 0
-    assert capsys.readouterr().out == "scrutare 2026.10.1\n"
+    assert capsys.readouterr().out == "scrutare 2026.10.2\n"
 
 
 @pytest.mark.parametrize("kind", ["missing", "directory", "unreadable"])

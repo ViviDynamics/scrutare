@@ -7,7 +7,7 @@ import yaml
 from scrutare import __version__
 
 ROOT = Path(__file__).resolve().parents[1]
-IMAGE = "ghcr.io/vividynamics/scrutare:2026.10.1"
+IMAGE = "ghcr.io/vividynamics/scrutare:2026.10.2"
 
 
 def metadata():
@@ -17,7 +17,7 @@ def metadata():
 
 
 def test_candidate_package_and_fixed_runtime_agree():
-    assert __version__ == "2026.10.1"
+    assert __version__ == "2026.10.2"
     steps = metadata()["runs"]["steps"]
     assert steps[0]["env"]["SCRUTARE_ACTION_IMAGE"] == IMAGE
 
@@ -76,7 +76,7 @@ def test_pipeline_caller_is_exactly_ten_lines_and_fixed_release():
     blocks = path.read_text().split("```yaml\n")
     caller = blocks[1].split("```", 1)[0]
     assert len(caller.splitlines()) == 10
-    assert "ViviDynamics/scrutare@2026.10.1" in caller
+    assert "ViviDynamics/scrutare@2026.10.2" in caller
     assert "checkout" not in caller
     assert "runs-on: ubuntu-24.04" in caller
 
@@ -97,7 +97,7 @@ def test_hosted_acceptance_is_explicitly_gated_and_uses_released_action():
         assert "github.event.pull_request.head.ref == '14-action-acceptance'" in job["if"]
         assert job["runs-on"] == "ubuntu-24.04"
         (action,) = job["steps"]
-        assert action["uses"] == "ViviDynamics/scrutare@2026.10.1"
+        assert action["uses"] == "ViviDynamics/scrutare@2026.10.2"
         assert not action.get("continue-on-error", False)
         assert action["with"]["config"] == f"tests/fixtures/action-acceptance/{name}.yaml"
         assert action["env"]["GH_TOKEN"] == "${{ github.token }}"
