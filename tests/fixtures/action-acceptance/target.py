@@ -3,5 +3,6 @@
 
 
 # Focused target for the authorized hosted Spark COMMENT synchronize trigger.
+# Exercise invalid configuration failure on immutable 2026.10.2.
 def acceptance_message():
     return "Scrutare 2026.10.1 Action acceptance"
