@@ -7,8 +7,8 @@ budgets:
 models:
   default:
     provider: openai
-    base_url: https://litellm.vividynamics.com/v1
-    model: gpt-6.1-sol
+    base_url: https://llm.vividynamics.com/v1
+    model: spark/glm-5.3-flash
 github:
   post_mode: comment
   paths:
