@@ -1,10 +1,17 @@
 # Hosted acceptance fixtures
 
-Candidate `2026.10.2` publication and both hosted acceptance outcomes remain
-pending. The immutable published `2026.10.1` attempt failed with HTTP 524;
-streaming requires fresh hosted evidence before it can be called a live fix.
+`2026.10.2` is published with verified public wheel/image assets.
+[Hosted success 37459891906](https://github.com/ViviDynamics/scrutare/actions/runs/37459891906)
+delivered [bot COMMENTED review 5427984625](https://github.com/ViviDynamics/scrutare/pull/35#pullrequestreview-5427984625);
+[hosted invalid-config failure 37462193493](https://github.com/ViviDynamics/scrutare/actions/runs/37462193493)
+stopped before capture or model work, uploaded diagnostics and added no review.
+See the [dated acceptance record](../../../docs/action-acceptance.md) for exact
+identity and evidence limits. The immutable `2026.10.1` Spark attempt failed with
+HTTP 524. This streamed success establishes this focused run, not a universal
+timeout fix, and does not announce issue 14 or M1 closure.
 
-Use the procedure in [pipeline.md](../../../docs/pipeline.md) only after
+For a fresh authorized acceptance run, use the procedure in
+[pipeline.md](../../../docs/pipeline.md) only after
 `2026.10.2` is published, the secret `OPENAI_API_KEY` is explicitly installed,
 and authorized GitHub review-write access is available. No normal PR or label event activates this
 workflow. A same-repository PR must use `14-action-acceptance`, exactly
@@ -74,5 +81,6 @@ retained diagnostics, empty CLI success stdout, absent success outputs and no
 model session or posted review from this invalid-config invocation. This job
 must remain failed; do not enable `continue-on-error`. Download and hash this
 second archive by its own artifact ID. Remove the labels after evidence is
-saved. Keep issue #14 incomplete until both runs and both public release assets
-are verified.
+saved. Verify both actual runs and both public release assets before declaring
+release acceptance; issue and milestone closure require the coordinator's
+remaining checks.
