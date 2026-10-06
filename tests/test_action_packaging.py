@@ -115,8 +115,8 @@ def test_acceptance_config_focuses_approved_rail_and_invalid_case_stops_early():
     config = parse_config((root / "success.yaml").read_text())
     assert list(config.personas) == ["senior-dev"]
     assert config.models.default.provider == "openai"
-    assert config.models.default.base_url == "https://litellm.vividynamics.com/v1"
-    assert config.models.default.model == "gpt-6.1-sol"
+    assert config.models.default.base_url == "https://llm.vividynamics.com/v1"
+    assert config.models.default.model == "spark/glm-5.3-flash"
     assert config.budgets.per_persona_tokens == config.budgets.review_max_tokens == 10000
     assert config.github.paths.include == ("tests/fixtures/action-acceptance/target.py",)
     assert config.github.paths.exclude == ()
