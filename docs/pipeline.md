@@ -1,9 +1,15 @@
 # Reusable GitHub Action
 
-Scrutare `2026.10.1` includes the reusable Action and its fixed runtime pin.
+Scrutare candidate `2026.10.2` includes the reusable Action, its fixed runtime
+pin, and gated OpenAI streaming. Publication and both literal hosted
+success/failure acceptance outcomes for this candidate remain pending.
+The published `2026.10.1` release remains immutable; its hosted attempt completed
+one turn before Cloudflare HTTP 524 and did not establish successful acceptance.
 Before using this pin, verify the matching GitHub tag, release wheel, public
 GHCR image, and literal hosted caller success/failure acceptance evidence.
-Asset publication alone does not establish hosted acceptance.
+Asset publication alone does not establish hosted acceptance. Streaming is a
+candidate mitigation for that failure; it does not establish a fix for live
+HTTP 524 without hosted evidence.
 The published `2026.10.0` release has a wheel and image, but no reusable Action.
 
 Commit a reviewed `scrutare.yaml` to the PR's base branch first. Configure its
@@ -24,7 +30,7 @@ jobs:
   review:
     runs-on: ubuntu-24.04
     steps:
-      - uses: ViviDynamics/scrutare@2026.10.1
+      - uses: ViviDynamics/scrutare@2026.10.2
         env: {GH_TOKEN: '${{ github.token }}', OPENAI_API_KEY: '${{ secrets.OPENAI_API_KEY }}'}
         with: {config: scrutare.yaml}
 ```
@@ -59,7 +65,7 @@ implemented. Every model call goes through the separately pinned nare runtime.
 | `outputs.run-dir` | Absolute runner-local run directory, useful only in this job; download the uploaded artifact for durable evidence. |
 
 There are no command, engine, image, executable, model, budget, URL or identity
-inputs. Runtime is fixed to `ghcr.io/vividynamics/scrutare:2026.10.1`. The internal
+inputs. Runtime is fixed to `ghcr.io/vividynamics/scrutare:2026.10.2`. The internal
 checkout and uploader are pinned to official v7.0.1 commits. Internal checkout
 uses only the base repository and exact base SHA, without credential persistence,
 submodules or LFS. The Action copies only the regular trusted config into a
@@ -90,7 +96,11 @@ receipts prove local consistency, not genuine remote delivery or provider billin
 
 Budgets are after-turn allowances, not hard spending ceilings. Already admitted
 turns may overshoot. Actual usage and overshoot remain recorded without clipping.
-Missing initial findings or uncertain accounting fails the panel; initial sessions
+OpenAI sessions enable nare `--stream` on validated runtimes 2026.10.4 or newer;
+supported 2026.10.0 through 2026.10.3 keep buffered invocation, and Anthropic
+invocation is unchanged. Progress is private capture, never candidate findings.
+Interrupted streams or missing terminal usage fail without a verdict. Missing
+initial findings or uncertain accounting fails the panel; initial sessions
 are not retried. One anchor correction can consume remaining live allowance.
 
 For repeated pushes, add job concurrency with a group keyed by repository and PR,
@@ -113,8 +123,8 @@ Action; a failed job alone does not prove no remote review exists. See
 [The acceptance workflow](../.github/workflows/action-acceptance.yml) remains
 inactive until a maintainer intentionally pushes to a same-repository PR from
 `14-action-acceptance` with exactly one acceptance label. After merge and
-publication of `2026.10.1`, create a draft temporary PR named
-**Scrutare 2026.10.1 Action acceptance** from current main. Add
+publication of `2026.10.2`, create a draft temporary PR named
+**Scrutare 2026.10.2 Action acceptance** from current main. Add
 `scrutare-action-acceptance-success`, then push a tiny harmless change only to
 `tests/fixtures/action-acceptance/target.py`. Only a `synchronize` event admits
 this focused identity/delivery run. The trusted success fixture uses

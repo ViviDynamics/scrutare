@@ -22,7 +22,7 @@ jobs:
       !contains(github.event.pull_request.labels.*.name, 'scrutare-action-acceptance-failure')
     runs-on: ubuntu-24.04
     steps:
-      - uses: ViviDynamics/scrutare@2026.10.1
+      - uses: ViviDynamics/scrutare@2026.10.2
         with:
           config: tests/fixtures/action-acceptance/success.yaml
         env:
@@ -37,7 +37,7 @@ jobs:
       !contains(github.event.pull_request.labels.*.name, 'scrutare-action-acceptance-success')
     runs-on: ubuntu-24.04
     steps:
-      - uses: ViviDynamics/scrutare@2026.10.1
+      - uses: ViviDynamics/scrutare@2026.10.2
         with:
           config: tests/fixtures/action-acceptance/failure.yaml
         env:
