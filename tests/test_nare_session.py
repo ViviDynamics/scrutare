@@ -698,3 +698,35 @@ USAGE = {"input": 5, "output": 3, "cache_read": 4, "cache_write": 2, "cost": Non
             await asyncio.gather(task, return_exceptions=True)
 
     asyncio.run(scenario())
+
+
+@pytest.mark.parametrize("provider,version,stream", [
+    ("openai", "2026.10.0", False),
+    ("openai", "2026.10.1", False),
+    ("openai", "2026.10.2", False),
+    ("openai", "2026.10.3", False),
+    ("openai", "2026.10.4", True),
+    ("openai", "2026.10.10", True),
+    ("openai", "2027.1.0", True),
+    ("anthropic", "2026.10.0", False),
+    ("anthropic", "2026.10.4", False),
+    ("anthropic", "2027.1.0", False),
+])
+def test_streaming_argv_preserves_older_and_anthropic_runtimes(
+    capture, tmp_path, provider, version, stream
+):
+    descriptor, ledger, lease, attempt = setup(capture)
+    path = running_executable(tmp_path)
+    body = path.read_text().replace("2026.10.0", version)
+    if stream:
+        body = body.replace('a = parser.parse_args()',
+                            'parser.add_argument("--stream", action="store_true")\n'
+                            'a = parser.parse_args()')
+    path.write_text(body)
+    outcome = asyncio.run(module().run_persona_session(
+        descriptor, ModelRail(provider, None, "fixture-model"), lease,
+        ledger=ledger, artifact_directory=attempt, runtime=NareRuntime(path, 7, 5),
+        capability=NareCapability(version, 1)))
+    assert outcome.status == "complete"
+    observed = json.loads((attempt / "cwd" / "observed.json").read_bytes())
+    assert ("--stream" in observed["argv"]) is stream
