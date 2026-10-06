@@ -43,6 +43,16 @@ an external process, without a Scrutare production import or dependency.
 Inspection checks its version and contract once per wave before any session
 launch. All model calls go through nare.
 
+OpenAI sessions enable nare `--stream` only on validated runtimes 2026.10.4 or
+newer. Supported 2026.10.0 through 2026.10.3 keep buffered invocation; Anthropic
+invocation is unchanged. Streaming progress stays in private captures and never
+becomes candidate findings. Interrupted streams or missing terminal usage fail
+without a verdict, with incomplete accounting retained. After-turn budgets
+remain soft allowances and provider billing remains uncertain. Streaming is a
+candidate mitigation for the historical live HTTP 524 failure, not proof that
+slow first bytes or silent gaps are fixed. Candidate `2026.10.2` publication and
+both hosted acceptance outcomes remain pending.
+
 The supplied configuration must agree with the capture's canonical and raw
 configuration snapshots. Preparation validates the captured target and head,
 then copies only selected diff sections, minimal file records and safe context
@@ -175,6 +185,11 @@ fatal correction results, filtered correction tools, duplicate/conflicting
 source preservation, exact correction rails and replay of producer artifacts.
 Scenario selection reads existing purpose, positional prompt and attempt data;
 it never rewrites the persona system or changes the runner's invocation.
+The OpenAI SSE fixture replaces only the HTTP client boundary with fragmented
+SSE responses. It retains the actual installed parser, vendor transport, loop,
+tools, schema validation, accounting and persistence. It checks read tool-call
+assembly followed by final findings, exact disjoint usage, and failure without
+a verdict on interruption or missing usage. It makes no live provider claim.
 The installed-wheel proof in `tests/test_installed_review.py` also launches
 Scrutare's real console/module entrypoints outside the source checkout. It uses
 the same nare factory substitution and a fake gh executable with actual HTTP

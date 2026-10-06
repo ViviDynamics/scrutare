@@ -51,7 +51,7 @@ an earlier uncertain POST.
 See [failure paths](failure-paths.md) for coverage, lifecycle and delivery
 diagnostics, and shell caller behavior. The [pipeline guide](pipeline.md)
 describes the fixed-version reusable Action, trusted configuration, uploaded
-evidence and pending hosted acceptance for `2026.10.1`.
+evidence and pending publication and hosted acceptance for candidate `2026.10.2`.
 
 ## Coverage and evidence
 

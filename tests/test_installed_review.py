@@ -28,7 +28,7 @@ from test_review_inputs import DOCS, SOURCE
 
 ROOT = Path(__file__).resolve().parents[1]
 GH_WORKER = ROOT / "tests/helpers/installed_gh.py"
-VERSION = "2026.10.1"
+VERSION = "2026.10.2"
 PRIVATE_ERROR = "PRIVATE_PROVIDER_ERROR_SENTINEL"
 
 

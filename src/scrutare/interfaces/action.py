@@ -16,8 +16,8 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import cast
 
-IMAGE = "ghcr.io/vividynamics/scrutare:2026.10.1"
-VERSION = "2026.10.1"
+IMAGE = "ghcr.io/vividynamics/scrutare:2026.10.2"
+VERSION = "2026.10.2"
 REPOSITORY = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 SHA = re.compile(r"[0-9a-f]{40}")
 

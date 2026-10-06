@@ -22,7 +22,7 @@ runs:
       shell: bash
       env:
         SCRUTARE_ACTION_CONFIG: ${{ inputs.config }}
-        SCRUTARE_ACTION_IMAGE: ghcr.io/vividynamics/scrutare:2026.10.1
+        SCRUTARE_ACTION_IMAGE: ghcr.io/vividynamics/scrutare:2026.10.2
       run: python3 "$GITHUB_ACTION_PATH/src/scrutare/interfaces/action.py" prepare
     - id: checkout
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1

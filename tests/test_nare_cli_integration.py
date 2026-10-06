@@ -103,10 +103,10 @@ def load(path):
     return json.loads(path.read_bytes())
 
 
-def observations(outcome):
+def observations(outcome, *, http_sse=False):
     result = load(outcome.artifact_directory / "offline-observations.json")
     assert result["guard_violations"] == []
-    assert result["credential_names"] == []
+    assert result["credential_names"] == (["OPENAI_API_KEY"] if http_sse else [])
     assert result["nare_controls"] == {}
     assert result["version"] == "2026.10.4"
     assert result["python"].startswith("3.14.")
@@ -1047,3 +1047,103 @@ def test_actual_panel_order_duplicates_conflicts_and_exact_correction_rails(
     assert observed[1]["calls"][0]["end"] < observed[0]["calls"][0]["end"]
     assert len({o.session_id for o in (*result.initial.outcomes, *result.corrections)}) == 4
     assert_panel_evidence(result, inputs, config)
+
+
+def sse_choice(delta, finish=None):
+    return {"choices": [{"index": 0, "delta": delta, "finish_reason": finish}]}
+
+
+def sse_scenario(failure=None):
+    first = [
+        sse_choice({"tool_calls": [{"index": 0, "id": "read-", "function": {
+            "name": "re", "arguments": '{"path": "diff.'}}]}),
+        sse_choice({"tool_calls": [{"index": 0, "id": "1", "function": {
+            "name": "ad", "arguments": 'patch"}'}}]}),
+        sse_choice({}, "tool_calls"),
+        {"choices": [], "usage": {"prompt_tokens": 12, "completion_tokens": 3,
+                                  "prompt_tokens_details": {"cached_tokens": 5}}},
+        "[DONE]",
+    ]
+    findings = json.dumps(FINDING)
+    second = [
+        sse_choice({"content": findings[:23]}),
+        sse_choice({"content": findings[23:]}),
+        sse_choice({}, "stop"),
+        {"choices": [], "usage": {"prompt_tokens": 20, "completion_tokens": 9,
+                                  "prompt_tokens_details": {"cached_tokens": 8}}},
+        "[DONE]",
+    ]
+    if failure == "missing_usage":
+        second.pop(-2)
+    if failure == "interrupted":
+        second = second[:2]
+    return {"http_sse": {"turns": [{"frames": first}, {
+        "frames": second, "interrupt": failure == "interrupted"}]}}
+
+
+def streaming_review(capture, tmp_path, installed, failure=None):
+    config = configure(capture, personas=["senior-dev"], review=100, per=100)
+    document = config.to_dict()
+    document["models"]["default"] = {
+        "provider": "openai", "model": "offline-model", "base_url": "https://offline.invalid/v1"}
+    config = parse_config(json.dumps(document))
+    (capture / "config.yaml").write_text(json.dumps(document))
+    (capture / "config.json").write_text(json.dumps(config.to_dict()))
+    runtime = offline_runtime(tmp_path, installed, default=sse_scenario(failure))
+    spec_path = tmp_path / "offline-spec.json"
+    specification = load(spec_path)
+    # A public dummy credential lets the actual nare factory initialize. No live key is read.
+    specification["environment"] = {"OPENAI_API_KEY": "offline-test-key"}
+    spec_path.write_text(json.dumps(specification))
+    return asyncio.run(run_review(capture, config, runtime=runtime))
+
+
+def test_actual_openai_sse_tool_fragments_usage_and_verdict(capture, tmp_path, installed):
+    result = streaming_review(capture, tmp_path, installed)
+    outcome = result.initial.outcomes[0]
+    observed = observations(outcome, http_sse=True)
+    # Removing the version-gated --stream yields a buffered HTTP request and no verdict.
+    assert result.status == "complete", (outcome.reason, observed["calls"])
+    assert result.verdict.verdict == "changes_requested"
+    assert outcome.findings[0].problem == "Candidate"
+    assert outcome.usage == result.usage == TokenUsage(19, 12, 13, 0)
+    assert outcome.accounting_complete
+    assert load(capture / "fanout.json")["ledger"]["accounting_complete"]
+    assert len(observed["calls"]) == 2
+    assert observed["factory_calls"] == []
+    first, second = [call["payload"] for call in observed["calls"]]
+    assert first["stream"] is True and second["stream"] is True
+    assert [t["function"]["name"] for t in first["tools"]] == ["read"]
+    read_result = next(m for m in second["messages"] if m["role"] == "tool")
+    assert read_result["tool_call_id"] == "read-1"
+    assert "src/app.py" in read_result["content"]
+    session = load(outcome.artifact_directory / "session.json")
+    assert session["output"] == FINDING
+    assert session["usage"]["input"] == 19 and session["usage"]["cache_read"] == 13
+    assert replay_run(capture).saved_identical
+
+
+@pytest.mark.parametrize("failure", ["interrupted", "missing_usage"])
+def test_actual_openai_incomplete_sse_has_no_output_or_verdict(
+    capture, tmp_path, installed, failure
+):
+    result = streaming_review(capture, tmp_path, installed, failure)
+    outcome = result.initial.outcomes[0]
+    observed = observations(outcome, http_sse=True)
+    assert len(observed["calls"]) == 2
+    assert result.status == "failed" and result.verdict is None
+    assert outcome.status == "failed" and not outcome.output_available
+    assert outcome.findings == ()
+    assert outcome.usage == result.usage == TokenUsage(7, 3, 5, 0)
+    assert not outcome.accounting_complete
+    assert not load(capture / "fanout.json")["ledger"]["accounting_complete"]
+    assert not (capture / "verdict.json").exists()
+    session = load(outcome.artifact_directory / "session.json")
+    assert session["output"] is None
+    events = [json.loads(line) for line in
+              (outcome.artifact_directory / "stdout.jsonl").read_text().splitlines()]
+    assert any(e["type"] == "progress" and "Candidate" in e["text"] for e in events)
+    assert len([e for e in events if e["type"] == "cost"]) == 1
+    error = events[-1]["error"]
+    assert ("offline interrupted SSE" if failure == "interrupted"
+            else "incomplete model stream") in error

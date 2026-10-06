@@ -1,11 +1,15 @@
 # Hosted acceptance fixtures
 
+Candidate `2026.10.2` publication and both hosted acceptance outcomes remain
+pending. The immutable published `2026.10.1` attempt failed with HTTP 524;
+streaming requires fresh hosted evidence before it can be called a live fix.
+
 Use the procedure in [pipeline.md](../../../docs/pipeline.md) only after
-`2026.10.1` is published, the secret `OPENAI_API_KEY` is explicitly installed,
+`2026.10.2` is published, the secret `OPENAI_API_KEY` is explicitly installed,
 and authorized GitHub review-write access is available. No normal PR or label event activates this
 workflow. A same-repository PR must use `14-action-acceptance`, exactly
 one acceptance label, and a new `synchronize` event. Name the temporary PR
-**Scrutare 2026.10.1 Action acceptance**. Change only `target.py` in that PR.
+**Scrutare 2026.10.2 Action acceptance**. Change only `target.py` in that PR.
 
 The success configuration reviews only `tests/fixtures/action-acceptance/target.py`
 with one senior-dev persona, the approved LiteLLM OpenAI rail, and 10000 tokens
@@ -31,7 +35,7 @@ gh api repos/ViviDynamics/scrutare/actions/artifacts/<artifact-id>/zip > artifac
 sha256sum artifact.zip > artifact.sha256
 ```
 
-Retain the literal remote `ViviDynamics/scrutare@2026.10.1` invocation and
+Retain the literal remote `ViviDynamics/scrutare@2026.10.2` invocation and
 resolved release/runtime in logs. Match the artifact ID and unique name to this
 run. Compute archive and member hashes directly from the downloaded ZIP:
 

@@ -1,4 +1,4 @@
-"""Run an installed console script, replacing only nare.cli.make_transport.
+"""Run an installed console script with a factory or HTTP boundary fixture.
 
 This helper runs under nare's own interpreter, never the project's interpreter.
 All CLI, loop, tool, schema, usage, event and persistence behavior remains real.
@@ -172,7 +172,47 @@ def make_transport(provider, **kwargs):
     return FakeProvider(scenario)
 
 
-nare_cli.make_transport = make_transport
+if spec.get("default", {}).get("http_sse") is not None:
+    # Retain the real CLI factory and OpenAITransport; replace only HTTP I/O.
+    httpx = importlib.import_module("httpx2")
+    scenario = spec["default"]["http_sse"]
+    turns = iter(scenario["turns"])
+    original_client = httpx.AsyncClient
+
+    class SSEBytes(httpx.AsyncByteStream):
+        async def __aiter__(self):
+            turn = self.turn
+            for frame in turn["frames"]:
+                data = ("data: " + (frame if isinstance(frame, str) else json.dumps(frame))
+                        + "\n\n").encode()
+                # Split even SSE delimiters and JSON across network reads.
+                for offset in range(0, len(data), 7):
+                    yield data[offset:offset + 7]
+            if turn.get("interrupt"):
+                raise httpx.ReadError("offline interrupted SSE")
+
+        def __init__(self, turn):
+            self.turn = turn
+
+    async def http_boundary(request):
+        if request.method == "GET" and request.url.path == "/v1/model/info":
+            return httpx.Response(200, json={"data": [{"model_name": option("--model"),
+                "model_info": {"max_input_tokens": 100000}}]})
+        assert request.method == "POST" and request.url.path == "/v1/chat/completions"
+        payload = json.loads(request.content)
+        observations["calls"].append({"payload": payload})
+        if payload.get("stream") is not True:
+            return httpx.Response(400, json={"error": "offline endpoint requires SSE"})
+        assert payload.get("stream_options") == {"include_usage": True}
+        return httpx.Response(200, headers={"content-type": "text/event-stream"},
+                              stream=SSEBytes(next(turns)))
+
+    def http_client(*args, **kwargs):
+        return original_client(*args, **kwargs, transport=httpx.MockTransport(http_boundary))
+
+    httpx.AsyncClient = http_client
+else:
+    nare_cli.make_transport = make_transport
 sys.argv = [console, *arguments]
 try:
     runpy.run_path(console, run_name="__main__")

@@ -1,8 +1,12 @@
 # Release installation and packaging
 
 Scrutare `2026.10.0` is published with a GitHub release wheel and public GHCR
-image. It does not include the reusable Action. Scrutare `2026.10.1` includes
-that Action. Before using its pinned interfaces, verify the matching GitHub tag,
+image. It does not include the reusable Action. The published `2026.10.1`
+release includes that Action and remains immutable. Candidate `2026.10.2`
+adds gated OpenAI streaming and updates the fixed Action/runtime pins. Its
+publication and literal hosted success/failure acceptance remain pending; the
+commands below describe the candidate after publication. Before using its
+pinned interfaces, verify the matching GitHub tag,
 release wheel and public GHCR image. The commands below require the matching
 assets in [GitHub releases](https://github.com/ViviDynamics/scrutare/releases)
 and GHCR. Action use also requires literal hosted caller success/failure
@@ -16,7 +20,7 @@ Scrutare supports Python 3.10 and newer. After publication:
 
 ```sh
 uv tool install --python 3.10 \
-  https://github.com/ViviDynamics/scrutare/releases/download/2026.10.1/scrutare-2026.10.1-py3-none-any.whl
+  https://github.com/ViviDynamics/scrutare/releases/download/2026.10.2/scrutare-2026.10.2-py3-none-any.whl
 scrutare --version
 ```
 
@@ -40,7 +44,7 @@ Before publication, build and install from a reviewed checkout:
 ```sh
 uv sync --python 3.14 --locked --extra dev
 uv build --wheel
-uv tool install --python 3.14 ./dist/scrutare-2026.10.1-py3-none-any.whl
+uv tool install --python 3.14 ./dist/scrutare-2026.10.2-py3-none-any.whl
 ```
 
 ## Container
@@ -50,10 +54,10 @@ runtime. It starts directly with `scrutare`, works in `/work` and defaults to
 UID/GID 10001. After publication:
 
 ```sh
-docker run --rm ghcr.io/vividynamics/scrutare:2026.10.1 --version
+docker run --rm ghcr.io/vividynamics/scrutare:2026.10.2 --version
 docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp \
   -e GH_TOKEN -e ANTHROPIC_API_KEY -v "$PWD:/work" \
-  ghcr.io/vividynamics/scrutare:2026.10.1 review --pr 12
+  ghcr.io/vividynamics/scrutare:2026.10.2 review --pr 12
 ```
 
 The second command explicitly forwards credentials already present for an
@@ -65,9 +69,9 @@ baked into the image. For a local image before publication, use the same wheel:
 
 ```sh
 docker buildx build --builder default --load \
-  --build-arg SCRUTARE_WHEEL=dist/scrutare-2026.10.1-py3-none-any.whl \
-  --tag scrutare:2026.10.1 .
-scripts/smoke-container.sh scrutare:2026.10.1 2026.10.1
+  --build-arg SCRUTARE_WHEEL=dist/scrutare-2026.10.2-py3-none-any.whl \
+  --tag scrutare:2026.10.2 .
+scripts/smoke-container.sh scrutare:2026.10.2 2026.10.2
 ```
 
 The smoke runs with networking disabled and no host credential forwarding.

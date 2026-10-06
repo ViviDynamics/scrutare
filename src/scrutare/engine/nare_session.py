@@ -425,6 +425,9 @@ async def _run_session(
                 os.mkdir(name, mode=0o700, dir_fd=directory)
             argv = [str(executable), "run", *input_args, "--system=" + system,
                     "--provider", rail.provider, "--model=" + rail.model]
+            if (rail.provider == "openai"
+                    and tuple(map(int, capability.version.split("."))) >= (2026, 10, 4)):
+                argv.append("--stream")
             if rail.base_url is not None:
                 argv.extend(("--base-url", rail.base_url))
             schema_name = ("reanchor.schema.json" if purpose == "reanchor"
