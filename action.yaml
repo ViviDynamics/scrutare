@@ -1,0 +1,51 @@
+name: Scrutare
+description: Review a pull request with the fixed Scrutare panel runtime and retain its evidence.
+inputs:
+  config:
+    description: Relative YAML configuration path in the pull request's trusted base commit.
+    required: false
+    default: scrutare.yaml
+outputs:
+  verdict:
+    description: Recorded posted verdict, only after successful execution.
+    value: ${{ steps.review.outputs.verdict }}
+  head-sha:
+    description: Captured commit reviewed by Scrutare.
+    value: ${{ steps.review.outputs.head-sha }}
+  run-dir:
+    description: Runner-local evidence directory for the successful review.
+    value: ${{ steps.review.outputs.run-dir }}
+runs:
+  using: composite
+  steps:
+    - id: prepare
+      shell: bash
+      env:
+        SCRUTARE_ACTION_CONFIG: ${{ inputs.config }}
+        SCRUTARE_ACTION_IMAGE: ghcr.io/vividynamics/scrutare:2026.10.1
+      run: python3 "$GITHUB_ACTION_PATH/src/scrutare/interfaces/action.py" prepare
+    - id: checkout
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        repository: ${{ steps.prepare.outputs.repository }}
+        ref: ${{ steps.prepare.outputs.base-sha }}
+        path: ${{ steps.prepare.outputs.checkout-path }}
+        persist-credentials: false
+        fetch-depth: 1
+        submodules: false
+        lfs: false
+    - id: review
+      shell: bash
+      env:
+        SCRUTARE_ACTION_STATE_FILE: ${{ steps.prepare.outputs.state-file }}
+      run: python3 "$GITHUB_ACTION_PATH/src/scrutare/interfaces/action.py" review
+    - id: upload
+      if: ${{ always() && steps.prepare.outputs.evidence-root != '' }}
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      with:
+        name: ${{ steps.prepare.outputs.artifact-name }}
+        path: ${{ steps.prepare.outputs.evidence-root }}
+        include-hidden-files: true
+        if-no-files-found: error
+        retention-days: 7
+        overwrite: false

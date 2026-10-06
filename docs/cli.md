@@ -49,9 +49,9 @@ An uncertain delivery has no success result. Inspect `posting.json` and the
 Starting a fresh CLI review creates a new run and is not a recovery command for
 an earlier uncertain POST.
 See [failure paths](failure-paths.md) for coverage, lifecycle and delivery
-diagnostics, and shell caller behavior. Reusable GitHub Action wiring and
-verification are tracked separately in
-[#14](https://github.com/ViviDynamics/scrutare/issues/14).
+diagnostics, and shell caller behavior. The [pipeline guide](pipeline.md)
+describes the fixed-version reusable Action, trusted configuration, uploaded
+evidence and pending hosted acceptance for `2026.10.1`.
 
 ## Coverage and evidence
 
