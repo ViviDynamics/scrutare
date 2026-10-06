@@ -1,3 +1,4 @@
+# Exercise the immutable 2026.10.2 streamed Action runtime.
 """Harmless fixture for a temporary, authorized hosted Action acceptance PR."""
 
 
