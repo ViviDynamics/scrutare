@@ -1,11 +1,13 @@
 # Release installation and packaging
 
 Scrutare `2026.10.0` is published with a GitHub release wheel and public GHCR
-image. It does not include the reusable Action. The `2026.10.1` candidate adds
-that Action, but its tag, wheel, image and literal hosted caller acceptance are
-still pending. The `2026.10.1` commands below become usable only after both
-assets appear in [GitHub releases](https://github.com/ViviDynamics/scrutare/releases)
-and GHCR. There is no PyPI installation claim. See the [pipeline guide](pipeline.md)
+image. It does not include the reusable Action. Scrutare `2026.10.1` includes
+that Action. Before using its pinned interfaces, verify the matching GitHub tag,
+release wheel and public GHCR image. The commands below require the matching
+assets in [GitHub releases](https://github.com/ViviDynamics/scrutare/releases)
+and GHCR. Action use also requires literal hosted caller success/failure
+acceptance evidence; asset publication alone does not establish hosted
+acceptance. There is no PyPI installation claim. See the [pipeline guide](pipeline.md)
 for the pinned caller, prerequisites and hosted evidence requirements.
 
 ## Wheel

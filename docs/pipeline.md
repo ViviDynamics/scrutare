@@ -1,8 +1,9 @@
 # Reusable GitHub Action
 
-The `2026.10.1` Action and runtime are prepared here but not yet published or
-accepted on a hosted caller. Wait for the matching GitHub tag, release wheel,
-public GHCR image, and literal hosted acceptance evidence before using this pin.
+Scrutare `2026.10.1` includes the reusable Action and its fixed runtime pin.
+Before using this pin, verify the matching GitHub tag, release wheel, public
+GHCR image, and literal hosted caller success/failure acceptance evidence.
+Asset publication alone does not establish hosted acceptance.
 The published `2026.10.0` release has a wheel and image, but no reusable Action.
 
 Commit a reviewed `scrutare.yaml` to the PR's base branch first. Configure its
