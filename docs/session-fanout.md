@@ -48,10 +48,16 @@ newer. Supported 2026.10.0 through 2026.10.3 keep buffered invocation; Anthropic
 invocation is unchanged. Streaming progress stays in private captures and never
 becomes candidate findings. Interrupted streams or missing terminal usage fail
 without a verdict, with incomplete accounting retained. After-turn budgets
-remain soft allowances and provider billing remains uncertain. Streaming is a
-candidate mitigation for the historical live HTTP 524 failure, not proof that
-slow first bytes or silent gaps are fixed. Candidate `2026.10.2` publication and
-both hosted acceptance outcomes remain pending.
+remain soft allowances and provider billing remains uncertain. Published
+`2026.10.2` completed a
+[focused hosted Spark review](https://github.com/ViviDynamics/scrutare/actions/runs/37459891906)
+through nare `2026.10.4` streaming: two completed turns and 6,024 reported tokens,
+with confirmed bot COMMENT delivery. Its
+[hosted invalid-config failure](https://github.com/ViviDynamics/scrutare/actions/runs/37462193493)
+stopped before model work, retained diagnostics and added no review. See the
+[dated acceptance record](action-acceptance.md). The immutable `2026.10.1` Spark
+attempt failed with HTTP 524; this success does not prove that slow first bytes
+or silent gaps are fixed generally.
 
 The supplied configuration must agree with the capture's canonical and raw
 configuration snapshots. Preparation validates the captured target and head,

@@ -1,22 +1,26 @@
 # Release installation and packaging
 
-Scrutare `2026.10.0` is published with a GitHub release wheel and public GHCR
-image. It does not include the reusable Action. The published `2026.10.1`
-release includes that Action and remains immutable. Candidate `2026.10.2`
+Published [Scrutare 2026.10.2](https://github.com/ViviDynamics/scrutare/releases/tag/2026.10.2)
 adds gated OpenAI streaming and updates the fixed Action/runtime pins. Its
-publication and literal hosted success/failure acceptance remain pending; the
-commands below describe the candidate after publication. Before using its
-pinned interfaces, verify the matching GitHub tag,
-release wheel and public GHCR image. The commands below require the matching
-assets in [GitHub releases](https://github.com/ViviDynamics/scrutare/releases)
-and GHCR. Action use also requires literal hosted caller success/failure
-acceptance evidence; asset publication alone does not establish hosted
-acceptance. There is no PyPI installation claim. See the [pipeline guide](pipeline.md)
-for the pinned caller, prerequisites and hosted evidence requirements.
+public wheel and GHCR image are verified at commit
+`0e48f9904a398fe33520c85d44bcf73f3f0c8723`. Both
+[focused hosted success](https://github.com/ViviDynamics/scrutare/actions/runs/37459891906)
+and [invalid-config hosted failure](https://github.com/ViviDynamics/scrutare/actions/runs/37462193493)
+are recorded in the [dated acceptance record](action-acceptance.md), including
+asset digests and evidence limits. This does not announce issue 14 or M1 closure.
+
+The published `2026.10.1` includes the reusable Action and remains immutable;
+its hosted Spark attempt failed with HTTP 524. The published `2026.10.0` has a
+GitHub release wheel and public GHCR image, but no reusable Action. Installation
+requires matching tag, wheel and image assets in
+[GitHub releases](https://github.com/ViviDynamics/scrutare/releases) and GHCR.
+Asset publication alone does not establish hosted acceptance. There is no PyPI
+installation claim. See the [pipeline guide](pipeline.md) for the pinned caller,
+trusted configuration and prerequisites.
 
 ## Wheel
 
-Scrutare supports Python 3.10 and newer. After publication:
+Scrutare supports Python 3.10 and newer. Install the published wheel:
 
 ```sh
 uv tool install --python 3.10 \
@@ -39,7 +43,7 @@ Prepare `scrutare.yaml` and authorized provider credentials before review. The
 nare interpreter is independent of Scrutare's interpreter; nare is not a Python
 dependency of the wheel. See [CLI usage](cli.md) and [session fan-out](session-fanout.md).
 
-Before publication, build and install from a reviewed checkout:
+To build and install locally from a reviewed checkout:
 
 ```sh
 uv sync --python 3.14 --locked --extra dev
@@ -51,7 +55,7 @@ uv tool install --python 3.14 ./dist/scrutare-2026.10.2-py3-none-any.whl
 
 The image includes Scrutare, gh 2.100.0, git and the separately pinned nare
 runtime. It starts directly with `scrutare`, works in `/work` and defaults to
-UID/GID 10001. After publication:
+UID/GID 10001. Use the published image:
 
 ```sh
 docker run --rm ghcr.io/vividynamics/scrutare:2026.10.2 --version
@@ -65,7 +69,7 @@ authorized run; choose the provider variable matching the configuration. Numeric
 PRs need a mounted git checkout. Mount a directory writable by the runtime user
 so run artifacts survive container removal. The example selects your host UID
 and GID; otherwise provision the mount for UID/GID 10001. Credentials are not
-baked into the image. For a local image before publication, use the same wheel:
+baked into the image. For a local image, use the same wheel:
 
 ```sh
 docker buildx build --builder default --load \

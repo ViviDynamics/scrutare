@@ -1,16 +1,22 @@
 # Reusable GitHub Action
 
-Scrutare candidate `2026.10.2` includes the reusable Action, its fixed runtime
-pin, and gated OpenAI streaming. Publication and both literal hosted
-success/failure acceptance outcomes for this candidate remain pending.
-The published `2026.10.1` release remains immutable; its hosted attempt completed
-one turn before Cloudflare HTTP 524 and did not establish successful acceptance.
-Before using this pin, verify the matching GitHub tag, release wheel, public
-GHCR image, and literal hosted caller success/failure acceptance evidence.
-Asset publication alone does not establish hosted acceptance. Streaming is a
-candidate mitigation for that failure; it does not establish a fix for live
-HTTP 524 without hosted evidence.
-The published `2026.10.0` release has a wheel and image, but no reusable Action.
+Scrutare [2026.10.2](https://github.com/ViviDynamics/scrutare/releases/tag/2026.10.2)
+is published with the reusable Action, its fixed runtime pin and gated OpenAI
+streaming. Its public wheel and GHCR image are verified. A
+[focused hosted Spark review](https://github.com/ViviDynamics/scrutare/actions/runs/37459891906)
+delivered [bot review 5427984625](https://github.com/ViviDynamics/scrutare/pull/35#pullrequestreview-5427984625)
+in COMMENTED state; the
+[hosted invalid-config run](https://github.com/ViviDynamics/scrutare/actions/runs/37462193493)
+failed before capture or model work and retained uploaded diagnostics without a
+new review. See the [dated acceptance record](action-acceptance.md) for exact
+release identity, evidence and limits. These observed outcomes do not announce
+issue 14 or M1 closure.
+
+The immutable published `2026.10.1` hosted Spark attempt completed one turn
+before Cloudflare HTTP 524. The successful streamed run does not establish that
+slow first bytes or silent gaps cannot fail. Asset publication alone does not
+establish hosted acceptance. The published `2026.10.0` has a wheel and image,
+but no reusable Action.
 
 Commit a reviewed `scrutare.yaml` to the PR's base branch first. Configure its
 personas, provider rail, paths, and budgets using the existing
@@ -120,10 +126,14 @@ Action; a failed job alone does not prove no remote review exists. See
 
 ## Hosted release acceptance
 
+The [recorded release acceptance](action-acceptance.md) includes both audited
+hosted outcomes. For a fresh authorized acceptance run, use the procedure below.
+
 [The acceptance workflow](../.github/workflows/action-acceptance.yml) remains
 inactive until a maintainer intentionally pushes to a same-repository PR from
-`14-action-acceptance` with exactly one acceptance label. After merge and
-publication of `2026.10.2`, create a draft temporary PR named
+`14-action-acceptance` with exactly one acceptance label. With publication,
+trusted base configuration and credentials verified, create a draft temporary
+PR named
 **Scrutare 2026.10.2 Action acceptance** from current main. Add
 `scrutare-action-acceptance-success`, then push a tiny harmless change only to
 `tests/fixtures/action-acceptance/target.py`. Only a `synchronize` event admits
@@ -151,5 +161,6 @@ The invalid trusted config fails before any model call and forwards no provider
 secret. Confirm the composite review step and parent job fail, the internal
 uploader succeeds, diagnostics download intact, and success outputs are absent.
 Do not convert this expected failed job to an allowed failure. Remove acceptance
-labels afterwards. Never retry a run with uncertain posting. The issue remains
-incomplete until both real hosted outcomes and published assets are recorded.
+labels afterwards. Never retry a run with uncertain posting. Record both actual
+hosted outcomes and both public assets before declaring release acceptance;
+issue and milestone closure require the coordinator's remaining checks.
