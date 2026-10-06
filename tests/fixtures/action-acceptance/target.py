@@ -2,4 +2,4 @@
 
 
 def acceptance_message():
-    return "Scrutare Action acceptance"
+    return "Scrutare 2026.10.1 Action acceptance"
