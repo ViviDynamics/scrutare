@@ -16,8 +16,8 @@ The actual public Spark run completed one turn before Cloudflare HTTP524; WAF/Li
 
 ## Tasks
 
-- [ ] 1. Add the gated OpenAI --stream invocation and installed-nare HTTP/SSE proof. Red: actual installed OpenAI transport sees buffered payload without --stream. Green: fragmented tool/read turn and final findings with exact disjoint usage; incomplete/missing-usage stream never yields a verdict; legacy/provider flags remain unchanged.
-- [ ] 2. Prepare coherent2026.10.2 release/Action/documentation pins and narrow version expectations. Preserve allnative gates, exact trusted-base workflow, two labels, COMMENT/Spark allocation and uploader failure policy. Record publication and real hosted acceptance as pending.
+- [x] 1. Add the gated OpenAI --stream invocation and installed-nare HTTP/SSE proof. Red: actual installed OpenAI transport sees buffered payload without --stream. Green: fragmented tool/read turn and final findings with exact disjoint usage; incomplete/missing-usage stream never yields a verdict; legacy/provider flags remain unchanged.
+- [x] 2. Prepare coherent2026.10.2 release/Action/documentation pins and narrow version expectations. Preserve allnative gates, exact trusted-base workflow, two labels, COMMENT/Spark allocation and uploader failure policy. Record publication and real hosted acceptance as pending.
 
 ## Verification and review
 
