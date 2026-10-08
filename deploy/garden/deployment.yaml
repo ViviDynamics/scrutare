@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scrutare
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: scrutare
+  template:
+    metadata:
+      labels:
+        app: scrutare
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 45
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: app
+          # Replace with the published, immutable candidate digest before rollout.
+          image: ghcr.io/vividynamics/scrutare:app-build-required
+          command: [/opt/scrutare/bin/scrutare-app]
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: scrutare-app
+          env:
+            - name: SCRUTARE_APP_PRIVATE_KEY
+              value: /secrets/private-key.pem
+            - name: SCRUTARE_APP_DATA_DIR
+              value: /data
+            - name: SCRUTARE_APP_HOST
+              value: 0.0.0.0
+          volumeMounts:
+            - name: app-key
+              mountPath: /secrets
+              readOnly: true
+            - name: data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            timeoutSeconds: 5
+      volumes:
+        - name: app-key
+          secret:
+            secretName: scrutare-github-app
+            defaultMode: 0440
+        - name: data
+          persistentVolumeClaim:
+            claimName: scrutare-data
+        - name: tmp
+          emptyDir:
+            sizeLimit: 1Gi

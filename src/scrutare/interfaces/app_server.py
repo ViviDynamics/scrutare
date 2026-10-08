@@ -11,6 +11,7 @@ import sqlite3
 import subprocess
 import sys
 import threading
+from collections.abc import Callable
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any
@@ -37,7 +38,8 @@ def load_settings() -> AppSettings:
         raise AppError("invalid App environment; see docs/app.md") from None
 
 
-def make_server(settings: AppSettings, store: JobStore, host: str, port: int) -> HTTPServer:
+def make_server(settings: AppSettings, store: JobStore, host: str, port: int, *,
+                healthy: Callable[[], bool] = lambda: True) -> HTTPServer:
     class Handler(BaseHTTPRequestHandler):
         # No raw path, headers, credential, or payload access logs.
         def log_message(self, format: str, *args: Any) -> None:
@@ -81,6 +83,8 @@ def make_server(settings: AppSettings, store: JobStore, host: str, port: int) ->
         def do_GET(self) -> None:
             try:
                 if self.path == "/healthz":
+                    if not healthy():
+                        raise AppError("App worker is unavailable", 503)
                     self.respond(200, {"status": "ok"})
                 elif self.path.startswith("/api/jobs/"):
                     self.authenticate()
@@ -89,6 +93,8 @@ def make_server(settings: AppSettings, store: JobStore, host: str, port: int) ->
                     raise AppError("route not found", 404)
             except AppError as error:
                 self.respond(error.status, {"error": str(error)})
+            except (OSError, sqlite3.Error):
+                self.respond(503, {"error": "App storage is unavailable"})
 
         def do_POST(self) -> None:
             try:
@@ -106,7 +112,7 @@ def make_server(settings: AppSettings, store: JobStore, host: str, port: int) ->
                     settings.authorize(document.get("repository"), document.get("number"),
                                        document.get("installation"))
                     request_id = document.get("request_id")
-                    if not isinstance(request_id, str):
+                    if not isinstance(request_id, str) or not request_id:
                         raise AppError("request_id is required for idempotency")
                     result = store.enqueue("api:" + request_id, document["repository"],
                                            document["number"], document["installation"])
@@ -181,7 +187,8 @@ def main() -> int:
                         run_job(settings, store, job, runner=runner)
             thread = threading.Thread(target=worker, daemon=True)
             server = make_server(settings, store, os.environ.get("SCRUTARE_APP_HOST", "127.0.0.1"),
-                                 int(os.environ.get("SCRUTARE_APP_PORT", "8080")))
+                                 int(os.environ.get("SCRUTARE_APP_PORT", "8080")),
+                                 healthy=thread.is_alive)
             def terminate(signum: int, frame: Any) -> None:
                 raise KeyboardInterrupt
             signal.signal(signal.SIGTERM, terminate)

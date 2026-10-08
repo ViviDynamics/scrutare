@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import os
 import subprocess
@@ -122,9 +123,12 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
             client: Any = None, runner: Any = subprocess.run) -> None:
     """Run the same installed engine; retain every job directory on success or failure."""
     root = (settings.data_dir / "work" / job["id"]).absolute()
+    repository_root = (settings.data_dir / "repositories" / hashlib.sha256(
+        job["repository"].encode()).hexdigest()).absolute()
     try:
         settings.authorize(job["repository"], job["number"], job["installation"])
         root.mkdir(parents=True, exist_ok=False, mode=0o700)
+        repository_root.mkdir(parents=True, exist_ok=True, mode=0o700)
         api = client if client is not None else GitHubAppClient(settings)
         token = api.installation_token(job["repository"], job["installation"])
         raw = api.configuration(job["repository"], token)
@@ -137,7 +141,8 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
                 f"https://github.com/{job['repository']}/pull/{job['number']}",
                 "--config", str(config_path), "--nare-executable",
                 os.environ.get("SCRUTARE_APP_NARE_EXECUTABLE", "nare")]
-        completed = runner(argv, cwd=root, env=environment, capture_output=True, shell=False)
+        completed = runner(argv, cwd=repository_root, env=environment,
+                           capture_output=True, shell=False)
         # CLI diagnostics exclude credentials. Save both streams for failed-run inspection.
         (root / "stdout.json").write_bytes(completed.stdout)
         (root / "stderr.log").write_bytes(completed.stderr)
@@ -150,7 +155,7 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
         if not isinstance(result, dict) or result.get("status") != "posted":
             raise AppError("review CLI returned no confirmed result; inspect job artifacts")
         run_dir = Path(result["run_dir"])
-        if not run_dir.is_relative_to(root / ".scrutare" / "runs"):
+        if not run_dir.is_relative_to(repository_root / ".scrutare" / "runs"):
             raise AppError("review CLI returned an invalid artifact location")
         if json.loads((run_dir / "result.json").read_bytes()) != result:
             raise AppError("review CLI result disagrees with saved evidence")

@@ -153,6 +153,8 @@ def admit_webhook(settings: AppSettings, store: JobStore, event: str, delivery: 
         raise AppError("invalid webhook signature", 401)
     if len(body) > MAX_BODY:
         raise AppError("request body is too large", 413)
+    if not delivery:
+        raise AppError("delivery identity is required")
     try:
         document = json.loads(body)
         if not isinstance(document, dict):
