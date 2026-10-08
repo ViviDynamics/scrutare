@@ -14,7 +14,7 @@ class StrategyNotImplementedError(NotImplementedError):
 
 
 async def run_review(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime) -> PanelResult:
-    """Run the independent panel strategy without inventing later milestone behavior."""
+    """Dispatch the selected executable review strategy."""
     if config.strategy == "debate":
         return await run_debate(run_dir, config, runtime=runtime)
     if config.strategy == "iterative":

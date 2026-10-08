@@ -44,9 +44,10 @@ installation, read-only tools, environment isolation and runtime limits. The
 lower-level `fan_out` and `run_persona_session` APIs remain available for candidate
 findings without final review artifacts.
 
-`iterative` and `debate` are not yet implemented. Selecting either raises
-`StrategyNotImplementedError` before input preparation, runtime inspection or
-writes. Panel performs exactly one convergence pass regardless of positive
+[Iterative review](iterative-review.md) persists findings across pushes.
+`debate` is not yet implemented and raises `StrategyNotImplementedError` before
+input preparation, runtime inspection or writes. Panel performs exactly one
+convergence pass regardless of positive
 `rounds.max`. It does not construct exhaustion or escalation. Blocking findings,
 failed execution and budget stops do not trigger more rounds.
 
