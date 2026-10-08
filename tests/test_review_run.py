@@ -150,7 +150,7 @@ def test_secondary_manifest_failure_preserves_primary_failure(tmp_path, monkeypa
     assert "secret" not in str(error.value)
 
 
-@pytest.mark.parametrize("strategy", ["iterative", "debate"])
+@pytest.mark.parametrize("strategy", ["iterative"])
 def test_unsupported_strategy_precedes_capture(tmp_path, strategy):
     module = service()
     with pytest.raises(module.ReviewRunError, match="not yet implemented") as error:

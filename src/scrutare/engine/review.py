@@ -83,7 +83,7 @@ class ReviewRunResult:
 
 def preflight_review(config: ReviewConfig, runtime: NareRuntime) -> None:
     """Reject unsupported strategies or absent executables before any GitHub access."""
-    if config.strategy != "panel":
+    if config.strategy not in ("panel", "debate"):
         raise ReviewRunError(f"Strategy {config.strategy!r} is not yet implemented.")
     if not isinstance(runtime, NareRuntime) or shutil.which(str(runtime.executable)) is None:
         raise ReviewRunError("executable: cannot locate an executable nare runtime")

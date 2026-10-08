@@ -20,6 +20,7 @@ from urllib.parse import urlsplit
 from scrutare import __version__
 from scrutare.config import ModelRail
 from scrutare.engine.budgets import BudgetLease, ReviewBudgetLedger
+from scrutare.engine.debate_inputs import DebateInput
 from scrutare.engine.persona_inputs import PersonaReanchorInput, PersonaReviewInput
 from scrutare.engine.reanchor import reanchor_schema
 from scrutare.engine.review_inputs import ReviewInputError, validate_prepared_inputs
@@ -432,7 +433,8 @@ async def _run_session(
                 argv.extend(("--base-url", rail.base_url))
             schema_name = ("reanchor.schema.json" if purpose == "reanchor"
                            else "findings.schema.json")
-            schema = reanchor_schema() if purpose == "reanchor" else findings_schema()
+            schema = (descriptor.output_schema() if isinstance(descriptor, DebateInput) else
+                      reanchor_schema() if purpose == "reanchor" else findings_schema())
             argv.extend(("--jsonl", "--yes", "--contract", "1", "--schema",
                          str(artifact_directory / schema_name), "--budget-tokens",
                          str(lease.limit_tokens), "--session",
@@ -476,7 +478,10 @@ async def _run_session(
             else:
                 decoded = decode_session(evidence.stdout, saved, persona=lease.persona,
                                          exit_code=exit_code, expected_limit=lease.limit_tokens,
-                                         expected_root=prepared_root)
+                                         expected_root=prepared_root,
+                                         descriptor=(descriptor
+                                                     if isinstance(descriptor, DebateInput)
+                                                     else None))
             if decoded.status is not None and (
                     decoded.nare_version != capability.version
                     or decoded.contract != capability.contract):

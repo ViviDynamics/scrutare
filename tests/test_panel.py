@@ -90,7 +90,7 @@ def run(strategy, capture, config):
     return asyncio.run(strategy.run_review(capture, config, runtime=NareRuntime(capture / "nare")))
 
 
-@pytest.mark.parametrize("name", ["iterative", "debate"])
+@pytest.mark.parametrize("name", ["iterative"])
 def test_unsupported_dispatch_has_no_preparation_runtime_or_writes(capture, name):
     strategy, _, _ = modules()
     config = replace(configure(capture), strategy=name)
