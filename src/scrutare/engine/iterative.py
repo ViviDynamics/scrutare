@@ -163,13 +163,15 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
                     parse_diff_sections((inputs.root / "diff.patch").read_bytes())}
         comments = _read(run / "review_comments.json")
         generated_reviews = {review.get("id") for review in _read(run / "reviews.json")
-                             if isinstance(review, dict)
+                             if isinstance(review, dict) and type(review.get("id")) is int
+                             and review["id"] > 0
                              and isinstance(review.get("body"), str)
                              and review["body"].startswith("Scrutare review\n")
                              and "<!-- scrutare-run:" in review["body"]}
         fresh_comments = [comment for comment in comments
                           if isinstance(comment, dict) and comment.get("body")
-                          and comment.get("pull_request_review_id") not in generated_reviews
+                          and (comment.get("in_reply_to_id") is not None
+                               or comment.get("pull_request_review_id") not in generated_reviews)
                           and sha256(encode_panel(comment)).hexdigest() not in state["contests"]]
         contested = frozenset(
             _finding(entry).anchor for entry in state["pool"]

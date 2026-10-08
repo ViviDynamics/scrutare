@@ -291,3 +291,31 @@ def test_config_change_cannot_reset_history_bound(capture, monkeypatch):
     from scrutare.engine.review_inputs import ReviewInputError
     with pytest.raises(ReviewInputError, match="configuration changed"):
         run(second, modified)
+
+
+def test_human_reply_on_generated_review_contests_finding(capture, monkeypatch):
+    config = setup(capture)
+    install(monkeypatch, {"security": (finding(),)})
+    run(capture, config)
+    second = push(capture, "reply")
+    (second / "reviews.json").write_text(json.dumps([
+        {"id": 901, "body": "Scrutare review\n\n<!-- scrutare-run:abc -->"}]))
+    (second / "review_comments.json").write_text(json.dumps([
+        {"id": 8, "pull_request_review_id": 901, "in_reply_to_id": 7,
+         "path": "src/app.py", "line": 1, "body": "This is intentional."}]))
+    install(monkeypatch, {"security": ()})
+    assert run(second, config).verdict.verdict == "approve"
+    assert json.loads((second / "iterative.json").read_bytes())["rounds_completed"] == 2
+
+
+def test_missing_generated_review_id_cannot_suppress_unthreaded_contest(capture, monkeypatch):
+    config = setup(capture)
+    install(monkeypatch, {"security": (finding(),)})
+    run(capture, config)
+    second = push(capture, "malformed-review")
+    (second / "reviews.json").write_text(json.dumps([
+        {"body": "Scrutare review\n\n<!-- scrutare-run:abc -->"}]))
+    (second / "review_comments.json").write_text(json.dumps([
+        {"path": "src/app.py", "line": 1, "body": "This is intentional."}]))
+    install(monkeypatch, {"security": ()})
+    assert run(second, config).verdict.verdict == "approve"
