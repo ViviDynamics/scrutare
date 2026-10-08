@@ -18,7 +18,7 @@ Commands default to Python 3.10 when `SCRUTARE_PYTHON` is unset.
 | Locked environment | always | `uv sync --python "${SCRUTARE_PYTHON:-3.10}" --locked --extra dev` |
 | Full tests | always | `uv run --python "${SCRUTARE_PYTHON:-3.10}" --locked --extra dev pytest` |
 | Lint | always | `uv run --python "${SCRUTARE_PYTHON:-3.10}" --locked --extra dev ruff check .` |
-| Strict types | always | `uv run --python "${SCRUTARE_PYTHON:-3.10}" --locked --extra dev mypy src scripts/check-release.py` |
+| Strict types | always | `uv run --python "${SCRUTARE_PYTHON:-3.10}" --locked --extra dev mypy src scripts/check-release.py scripts/auto-release.py` |
 | Wheel | always | `uv build --python "${SCRUTARE_PYTHON:-3.10}" --wheel` |
 | Installed CLI | always | `scripts/smoke-cli.sh` |
 

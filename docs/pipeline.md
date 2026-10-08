@@ -44,6 +44,10 @@ jobs:
 The example uses the repository secret `OPENAI_API_KEY`. For an Anthropic rail,
 replace that variable with `ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}`.
 Provision the matching credential before admitting reviews.
+New releases select the immutable image matching the Action's canonical
+`YYYY.M.N` tag. Pin the desired release tag in `uses`; branch names and commit
+SHAs cannot select an image and are refused by the new adapter. The historical
+`2026.10.2` caller above retains its original fixed image.
 `pull_request_target` runs the trusted base workflow for forks and can expose
 secrets to model-driven reviews of untrusted diffs. Restrict admission to your
 approved contributors or an explicit maintainer-controlled gate. Never add a

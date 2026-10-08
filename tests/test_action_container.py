@@ -192,7 +192,7 @@ def test_actual_action_container(tmp_path, candidate_image, case, initial, exit_
         "GITHUB_OUTPUT": str(output),
         "GITHUB_ACTION_PATH": str(ROOT),
         "SCRUTARE_ACTION_CONFIG": "scrutare.yaml",
-        "SCRUTARE_ACTION_IMAGE": steps[0]["env"]["SCRUTARE_ACTION_IMAGE"],
+        "SCRUTARE_ACTION_REF": VERSION,
     }
     run(["bash", "--noprofile", "--norc", "-e", "-o", "pipefail", "-c", steps[0]["run"]], env=env)
     prepared = dict(line.split("=", 1) for line in output.read_text().splitlines())
