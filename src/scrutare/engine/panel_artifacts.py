@@ -13,6 +13,7 @@ _PRIOR_EVIDENCE = (
     "sessions", "fanout.json", "debate.json", "panel.json", "findings.json", "verdict.json",
     "posting.json", "review-payload.json", "escalation.json", "reviewer-request.json",
     ".posting.lock", "artifacts.json", "result.json",
+    "iterative.json", "iterative-round",
 )
 
 

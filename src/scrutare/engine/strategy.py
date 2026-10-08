@@ -4,6 +4,7 @@ from pathlib import Path
 
 from scrutare.config import ReviewConfig
 from scrutare.engine.debate import run_debate
+from scrutare.engine.iterative import run_iterative
 from scrutare.engine.panel import PanelResult, run_panel
 from scrutare.engine.session_models import NareRuntime
 
@@ -13,9 +14,11 @@ class StrategyNotImplementedError(NotImplementedError):
 
 
 async def run_review(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime) -> PanelResult:
-    """Run the independent panel strategy without inventing later milestone behavior."""
+    """Dispatch the selected executable review strategy."""
     if config.strategy == "debate":
         return await run_debate(run_dir, config, runtime=runtime)
+    if config.strategy == "iterative":
+        return await run_iterative(run_dir, config, runtime=runtime)
     if config.strategy != "panel":
         raise StrategyNotImplementedError(f"Strategy {config.strategy!r} is not yet implemented.")
     return await run_panel(run_dir, config, runtime=runtime)

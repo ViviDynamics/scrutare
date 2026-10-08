@@ -364,17 +364,6 @@ def test_cli_preparation_failure_has_a_safe_error_and_removes_fresh_run(
     assert list((tmp_path / ".scrutare/runs").iterdir()) == []
 
 
-@pytest.mark.parametrize("strategy", ["iterative"])
-def test_unsupported_strategy_rejected_before_any_github(tmp_path, monkeypatch, capsys, gh,
-                                                        strategy):
-    monkeypatch.chdir(tmp_path)
-    (tmp_path / "scrutare.yaml").write_bytes(VALID_CONFIG + f"strategy: {strategy}\n".encode())
-    assert cli_main(["review", "--pr", "12"]) == 1
-    output = capsys.readouterr()
-    assert output.out == "" and "not yet implemented" in output.err
-    assert gh == [] and not (tmp_path / ".scrutare").exists()
-
-
 def test_unavailable_nare_rejected_before_any_github(tmp_path, monkeypatch, capsys, gh):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "scrutare.yaml").write_bytes(VALID_CONFIG)
