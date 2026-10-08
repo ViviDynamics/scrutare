@@ -177,7 +177,8 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
             _finding(entry).anchor for entry in state["pool"]
             if entry["disposition"] == "upheld" and any(
                 comment.get("path") == _finding(entry).anchor.file
-                and comment.get("line", _finding(entry).anchor.line) == _finding(entry).anchor.line
+                and (comment.get("line") is None
+                     or comment["line"] == _finding(entry).anchor.line)
                 for comment in fresh_comments))
         patches = {name: patch for name, data in sections.items()
                    if (patch := _new_patch(data, state["sections"].get(name),

@@ -319,3 +319,18 @@ def test_missing_generated_review_id_cannot_suppress_unthreaded_contest(capture,
         {"path": "src/app.py", "line": 1, "body": "This is intentional."}]))
     install(monkeypatch, {"security": ()})
     assert run(second, config).verdict.verdict == "approve"
+
+
+def test_null_line_human_reply_contests_active_findings_on_path(capture, monkeypatch):
+    config = setup(capture)
+    install(monkeypatch, {"security": (finding(),)})
+    run(capture, config)
+    second = push(capture, "outdated-thread")
+    (second / "reviews.json").write_text(json.dumps([
+        {"id": 901, "body": "Scrutare review\n\n<!-- scrutare-run:abc -->"}]))
+    (second / "review_comments.json").write_text(json.dumps([
+        {"id": 8, "pull_request_review_id": 901, "in_reply_to_id": 7,
+         "path": "src/app.py", "line": None, "body": "This is intentional."}]))
+    install(monkeypatch, {"security": ()})
+    assert run(second, config).verdict.verdict == "approve"
+    assert json.loads((second / "iterative.json").read_bytes())["rounds_completed"] == 2

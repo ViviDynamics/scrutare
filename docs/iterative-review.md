@@ -11,7 +11,7 @@ hunk coordinates do, because their anchors need verification again.
 Root inline comments from scrutare-generated reviews are excluded, so posted
 findings never contest themselves. Replies on those threads remain eligible.
 Other inline review comments that match an active finding's path and line contest that
-finding. A comment without a line matches active findings on that path. Existing
+finding. A comment with an absent or null line matches active findings on that path. Existing
 discussion is consumed once; editing a comment creates fresh contest evidence.
 Prior findings and matching discussion are supplied as untrusted evidence in the
 persona prompt, outside the prepared file read root.
