@@ -250,4 +250,44 @@ def test_partial_rereview_does_not_clear_prior_blocking_findings(capture, monkey
         b"+new", b"+different"))
     install(monkeypatch, {"security": ()}, initial_status="partial")
     assert run(second, config).verdict.verdict == "changes_requested"
-    assert json.loads((second / "iterative.json").read_bytes())["pool"][0]["disposition"] == "upheld"
+    pool = json.loads((second / "iterative.json").read_bytes())["pool"]
+    assert pool[0]["disposition"] == "upheld"
+
+
+def test_scrutare_posted_inline_findings_do_not_contest_themselves(capture, monkeypatch):
+    config = setup(capture)
+    _, calls, _, _ = install(monkeypatch, {"security": (finding(),)})
+    run(capture, config)
+    second = push(capture, "posted")
+    (second / "reviews.json").write_text(json.dumps([
+        {"id": 901, "body": "Scrutare review\n\n<!-- scrutare-run:abc -->"}]))
+    (second / "review_comments.json").write_text(json.dumps([
+        {"id": 7, "pull_request_review_id": 901, "path": "src/app.py", "line": 1,
+         "body": "Problem: security risk"}]))
+    run(second, config)
+    assert len([call for call in calls if isinstance(call, tuple)]) == 1
+
+
+def test_same_pr_lock_refuses_parallel_review(capture, monkeypatch):
+    config = setup(capture)
+    module = importlib.import_module("scrutare.engine.iterative")
+    from scrutare.engine.review_inputs import ReviewInputError
+    _, calls, _, _ = install(monkeypatch, {"security": ()})
+    with module._history(capture, config):
+        with pytest.raises(ReviewInputError, match="another review"):
+            run(capture, config)
+    assert calls == []
+    assert run(capture, config).verdict.verdict == "approve"
+
+
+def test_config_change_cannot_reset_history_bound(capture, monkeypatch):
+    config = setup(capture, rounds=1)
+    install(monkeypatch, {"security": (finding(),)})
+    run(capture, config)
+    second = push(capture, "configuration-changed")
+    modified = replace(config, rounds=replace(config.rounds, max=3))
+    for name in ("config.yaml", "config.json"):
+        (second / name).write_text(json.dumps(modified.to_dict()))
+    from scrutare.engine.review_inputs import ReviewInputError
+    with pytest.raises(ReviewInputError, match="configuration changed"):
+        run(second, modified)

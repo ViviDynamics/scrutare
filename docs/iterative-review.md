@@ -8,7 +8,8 @@ finding hunks. Other findings stay in the pool without another model call.
 Changing Git's index hashes alone does not make an unchanged hunk new; changed
 hunk coordinates do, because their anchors need verification again.
 
-Inline review comments that match an active finding's path and line contest that
+Inline review comments from scrutare-generated reviews are excluded, so posted
+findings never contest themselves. Other inline review comments that match an active finding's path and line contest that
 finding. A comment without a line matches active findings on that path. Existing
 discussion is consumed once; editing a comment creates fresh contest evidence.
 Prior findings and matching discussion are supplied as untrusted evidence in the

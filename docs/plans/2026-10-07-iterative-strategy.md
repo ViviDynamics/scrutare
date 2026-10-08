@@ -16,4 +16,4 @@ Out: distributed remote history storage; callers retain the runs directory acros
 - [x] 1. Persist validated pool snapshots and serialize concurrent runs: tests prove corrupt/link state refusal and round reservations survive failure.
 - [x] 2. Project only new/contested hunks into real panel execution: tests inspect runtime descriptors across pushes.
 - [x] 3. Reconcile dispositions, retain unchanged findings, and escalate shared bound: multi-push tests prove fixed/upheld/withdrawn and no extra sessions.
-- [ ] 4. Prove installed CLI strategy execution and run full two-version preflight.
+- [x] 4. Prove installed CLI strategy execution and run full two-version preflight.
