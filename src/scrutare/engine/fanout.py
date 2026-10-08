@@ -68,13 +68,15 @@ class _ExecutionContext:
 
 async def _prepare_execution(
     run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime,
+    budget_personas: tuple[str, ...] = (),
 ) -> _ExecutionContext:
     """Prepare and reserve every ordered initial grant before inspecting the runtime."""
     inputs = prepare_review_inputs(run_dir, config)
     descriptors = prepare_persona_inputs(inputs, config.personas)
     run = inputs.root.parent
     _reserve_wave(run)
-    ledger = ReviewBudgetLedger(tuple(d.persona.name for d in descriptors), config.budgets)
+    ledger = ReviewBudgetLedger(
+        tuple(d.persona.name for d in descriptors) + budget_personas, config.budgets)
     attempts = tuple(
         create_attempt_directory(run, d.persona.name, prepared_root=inputs.root)
         for d in descriptors

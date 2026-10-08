@@ -101,7 +101,7 @@ def _destination(path: Path, prepared_root: Path) -> tuple[Path, bool]:
     path, run = _boundary(path, prepared_root)
     parts = path.relative_to(run).parts
     if len(parts) == 1 and parts[0] in (
-        "fanout.json", "panel.json", "findings.json", "verdict.json",
+        "fanout.json", "panel.json", "debate.json", "findings.json", "verdict.json",
         "artifacts.json", "result.json"
     ):
         return path, False

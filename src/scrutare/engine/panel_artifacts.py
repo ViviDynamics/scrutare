@@ -10,7 +10,7 @@ from scrutare.engine.session_artifacts import SessionArtifactError, _directory, 
 from scrutare.findings.verdict import Verdict
 
 _PRIOR_EVIDENCE = (
-    "sessions", "fanout.json", "panel.json", "findings.json", "verdict.json",
+    "sessions", "fanout.json", "debate.json", "panel.json", "findings.json", "verdict.json",
     "posting.json", "review-payload.json", "escalation.json", "reviewer-request.json",
     ".posting.lock", "artifacts.json", "result.json",
 )
