@@ -42,7 +42,7 @@ jobs:
       - name: Lint
         run: uv run --locked --extra dev ruff check .
       - name: Strict typecheck
-        run: uv run --locked --extra dev mypy src scripts/check-release.py
+        run: uv run --locked --extra dev mypy src scripts/check-release.py scripts/auto-release.py
       - name: Build wheel
         run: uv build --wheel
       - name: Installed CLI smoke check

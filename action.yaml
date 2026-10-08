@@ -1,5 +1,5 @@
 name: Scrutare
-description: Review a pull request with the fixed Scrutare panel runtime and retain its evidence.
+description: Review a pull request with the matching immutable Scrutare release runtime and retain its evidence.
 inputs:
   config:
     description: Relative YAML configuration path in the pull request's trusted base commit.
@@ -22,7 +22,7 @@ runs:
       shell: bash
       env:
         SCRUTARE_ACTION_CONFIG: ${{ inputs.config }}
-        SCRUTARE_ACTION_IMAGE: ghcr.io/vividynamics/scrutare:2026.10.2
+        SCRUTARE_ACTION_REF: ${{ github.action_ref }}
       run: python3 "$GITHUB_ACTION_PATH/src/scrutare/interfaces/action.py" prepare
     - id: checkout
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1

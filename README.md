@@ -59,11 +59,14 @@ models:
 
 ## Status
 
-The current published release is [2026.10.2](https://github.com/ViviDynamics/scrutare/releases/tag/2026.10.2),
+The previously verified release is [2026.10.2](https://github.com/ViviDynamics/scrutare/releases/tag/2026.10.2),
 with the panel review CLI, Python API, offline replay, and reusable GitHub Action.
 `main` additionally delivers iterative review across pushes, bounded debate with
 a chair, and the MCP review server. These new source features need a subsequent
-release before they are available in a published wheel or image. The GitHub App
+release before they are available in a published wheel or image. Successful main
+CI now automatically tags and publishes releases; see [GitHub releases](https://github.com/ViviDynamics/scrutare/releases)
+for the newest wheel and matching image, and [release automation](docs/releases.md#release-contract)
+for versioning and recovery. The GitHub App
 service in issue [#18](https://github.com/ViviDynamics/scrutare/issues/18) is
 deferred and is not implemented on `main`.
 
@@ -188,7 +191,7 @@ CI checks Python 3.10 and 3.14. Use the same commands locally:
 uv sync --locked --extra dev
 uv run --locked --extra dev pytest
 uv run --locked --extra dev ruff check .
-uv run --locked --extra dev mypy src scripts/check-release.py
+uv run --locked --extra dev mypy src scripts/check-release.py scripts/auto-release.py
 uv build --wheel
 ```
 

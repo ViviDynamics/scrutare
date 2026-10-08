@@ -1,0 +1,92 @@
+name: Auto-tag
+
+# GITHUB_TOKEN tag pushes do not start workflows, so dispatch Release explicitly.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: auto-tag
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    if: >-
+      github.event_name == 'workflow_dispatch' || (
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_branch == 'main' &&
+        github.event.workflow_run.head_repository.full_name == github.repository
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
+      - name: Validate main history and manual recovery CI
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --tags --force
+          git merge-base --is-ancestor HEAD origin/main
+          if [ "$EVENT_NAME" = workflow_dispatch ]; then
+            test "$GITHUB_REF" = refs/heads/main
+            sha=$(git rev-parse HEAD)
+            green=$(gh run list --workflow ci.yml --branch main --event push --commit "$sha" \
+              --limit 100 --json conclusion --jq 'any(.[]; .conclusion == "success")')
+            test "$green" = true
+          fi
+      - name: Select the release version
+        id: version
+        run: python3 scripts/auto-release.py plan >> "$GITHUB_OUTPUT"
+      - name: Tag the validated commit
+        if: steps.version.outputs.tag_exists != 'true'
+        env:
+          version: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git tag "$version" HEAD --message "scrutare $version"
+          git push origin "refs/tags/$version"
+      - name: Start or recover the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          version: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          started=$(gh run list --workflow release.yml --branch "$version" --limit 100 \
+            --json conclusion --jq 'any(.[]; .conclusion != "superseded" and .conclusion != "cancelled")')
+          if [ "$started" = true ]; then
+            echo "Release $version already has a run; rerun that release to recover a failure." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          gh workflow run release.yml --ref "$version"
+          sha=$(git rev-parse HEAD)
+          for _ in $(seq 1 30); do
+            started=$(gh run list --workflow release.yml --branch "$version" --commit "$sha" \
+              --limit 100 --json conclusion \
+              --jq 'any(.[]; .conclusion != "superseded" and .conclusion != "cancelled")')
+            if [ "$started" = true ]; then
+              echo "Release workflow started for $version at $sha." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "No release run appeared for $version; rerun Auto-tag to recover." >&2
+          exit 1

@@ -16,10 +16,11 @@ def metadata():
     return yaml.safe_load(path.read_text())
 
 
-def test_candidate_package_and_fixed_runtime_agree():
+def test_action_passes_trusted_release_ref_instead_of_a_fixed_image():
     assert __version__ == "2026.10.2"
     steps = metadata()["runs"]["steps"]
-    assert steps[0]["env"]["SCRUTARE_ACTION_IMAGE"] == IMAGE
+    assert steps[0]["env"]["SCRUTARE_ACTION_REF"] == "${{ github.action_ref }}"
+    assert "SCRUTARE_ACTION_IMAGE" not in steps[0]["env"]
 
 
 def test_action_has_only_config_input_and_validated_success_outputs():
