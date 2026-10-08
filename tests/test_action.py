@@ -615,3 +615,67 @@ def test_review_receipt_repository_binding_matches_producer_case_rules(runner, t
     )
     assert invoke(env, "review").returncode == 0
     assert outputs(env)["head-sha"] == HEAD_SHA
+
+
+@pytest.mark.parametrize("version", ["2026.10.3", "2026.11.0", "2027.1.100"])
+def test_release_action_selects_matching_image_and_persists_version(runner, tmp_path, version):
+    env, _ = runner
+    env.pop("SCRUTARE_ACTION_IMAGE")
+    env["SCRUTARE_ACTION_REF"] = version
+    env, prepared, _, docker = review_context(
+        runner, tmp_path, {"record": {"scrutare_version": version}},
+    )
+    state = json.loads(Path(prepared["state-file"]).read_bytes())
+    assert state["version"] == version
+    # Selection is captured by prepare, not re-read from another invocation's environment.
+    env["SCRUTARE_ACTION_REF"] = "main"
+    env["SCRUTARE_ACTION_IMAGE"] = "attacker/image:latest"
+    result = invoke(env, "review")
+    assert result.returncode == 0, result.stderr
+    args = json.loads(docker.with_suffix(".log").read_text().splitlines()[0])
+    assert f"ghcr.io/vividynamics/scrutare:{version}" in args
+    assert "ghcr.io/vividynamics/scrutare:2026.10.2" not in args
+    assert outputs(env)["verdict"] == "approve"
+
+
+@pytest.mark.parametrize("reference", [
+    "", "main", "latest", "a" * 40, "refs/tags/2026.10.3", "v2026.10.3",
+    "2026.10.03", "2026.010.3", "2026.0.3", "2026.13.3", "2026.10.3.1",
+    "2026.10.3-rc1", "2026.10.3\nverdict=approve", "attacker/image:2026.10.3",
+])
+def test_prepare_refuses_nonrelease_action_refs_before_side_effects(runner, reference):
+    env, _ = runner
+    env.pop("SCRUTARE_ACTION_IMAGE")
+    env["SCRUTARE_ACTION_REF"] = reference
+    result = invoke(env, "prepare")
+    assert result.returncode == 1
+    assert b"Action ref must be an unprefixed YYYY.M.PATCH release tag" in result.stderr
+    assert b"Traceback" not in result.stderr
+    assert outputs(env) == {}
+    assert list(Path(env["RUNNER_TEMP"]).iterdir()) == []
+    assert list(Path(env["GITHUB_WORKSPACE"]).iterdir()) == []
+
+
+def test_release_action_refuses_old_runtime_success_without_publishing_outputs(runner, tmp_path):
+    env, _ = runner
+    env.pop("SCRUTARE_ACTION_IMAGE")
+    env["SCRUTARE_ACTION_REF"] = "2026.10.3"
+    env, prepared, _, docker = review_context(runner, tmp_path)
+    result = invoke(env, "review")
+    assert result.returncode == 1
+    assert outputs(env) == {}
+    assert (Path(prepared["evidence-root"]) / "cli-stdout.bin").exists()
+    args = json.loads(docker.with_suffix(".log").read_text().splitlines()[0])
+    assert "ghcr.io/vividynamics/scrutare:2026.10.3" in args
+
+
+@pytest.mark.parametrize("version", [None, "main", "2026.10.03", "attacker/image:latest"])
+def test_review_refuses_invalid_owned_release_version_before_docker(runner, tmp_path, version):
+    env, prepared, _, docker = review_context(runner, tmp_path)
+    state_path = Path(prepared["state-file"])
+    state = json.loads(state_path.read_bytes())
+    state["version"] = version
+    state_path.write_text(json.dumps(state))
+    assert invoke(env, "review").returncode == 1
+    assert outputs(env) == {}
+    assert not docker.with_suffix(".log").exists()

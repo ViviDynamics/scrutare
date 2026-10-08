@@ -3,12 +3,14 @@ name: Release
 on:
   push:
     tags: ['[0-9]*.[0-9]*.[0-9]*']
+  # Auto-tag uses GITHUB_TOKEN, whose tag pushes do not start other workflows.
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release
   cancel-in-progress: false
 
 jobs:
@@ -27,9 +29,11 @@ jobs:
       - name: Validate tag and main history
         env:
           RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_REF: ${{ github.ref }}
         shell: bash
         run: |
           set -euo pipefail
+          test "$RELEASE_REF" = "refs/tags/$RELEASE_TAG"
           [[ "$RELEASE_TAG" =~ ^[0-9]{4}\.([1-9]|1[0-2])\.(0|[1-9][0-9]*)$ ]]
           test "$(git rev-parse HEAD)" = "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")"
           git merge-base --is-ancestor HEAD origin/main
@@ -57,7 +61,7 @@ jobs:
       - name: Lint
         run: uv run --locked --extra dev ruff check .
       - name: Strict typecheck
-        run: uv run --locked --extra dev mypy src scripts/check-release.py
+        run: uv run --locked --extra dev mypy src scripts/check-release.py scripts/auto-release.py
 
   publish:
     needs: checks
@@ -77,6 +81,8 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.14"
+      - name: Stamp the release checkout from the tag
+        run: python3 scripts/auto-release.py stamp "$RELEASE_TAG"
       - name: Install locked development environment
         run: uv sync --locked --extra dev
       - name: Build and validate the release wheel
@@ -91,6 +97,23 @@ jobs:
           wheel=${wheels[0]}
           uv run --locked --extra dev python scripts/check-release.py "$RELEASE_TAG" "$wheel"
           echo "WHEEL=$wheel" >> "$GITHUB_ENV"
+      - name: Reuse an already published wheel during recovery
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            assets=$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')
+            name=$(basename "$WHEEL")
+            if grep -Fx "$name" <<< "$assets"; then
+              recovered=$(mktemp -d "$RUNNER_TEMP/scrutare-release-wheel.XXXXXX")
+              trap 'rm -rf "$recovered"' EXIT
+              gh release download "$RELEASE_TAG" --pattern "$name" --dir "$recovered"
+              cp "$recovered/$name" "$WHEEL"
+              uv run --locked --extra dev python scripts/check-release.py "$RELEASE_TAG" "$WHEEL"
+            fi
+          fi
       - name: Install pinned external nare runtime
         shell: bash
         run: |
@@ -114,7 +137,13 @@ jobs:
         run: |
           set -euo pipefail
           wheel=$WHEEL
-          gh release create "$RELEASE_TAG" "$wheel" --verify-tag --title "$RELEASE_TAG" --generate-notes
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            if ! gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name' | grep -Fx "$(basename "$wheel")"; then
+              gh release upload "$RELEASE_TAG" "$wheel"
+            fi
+          else
+            gh release create "$RELEASE_TAG" "$wheel" --verify-tag --title "$RELEASE_TAG" --generate-notes
+          fi
       - name: Publish versioned image
         env:
           GH_TOKEN: ${{ github.token }}

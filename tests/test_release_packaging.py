@@ -105,13 +105,14 @@ def test_installed_smoke_refuses_missing_or_ambiguous_wheels_before_install(tmp_
     assert "exactly one wheel" in result.stderr
 
 
-def test_release_publication_is_tag_only_and_waits_for_both_test_lanes():
+def test_release_publication_accepts_explicit_tag_dispatch_and_waits_for_both_test_lanes():
     path = ROOT / ".github/workflows/release.yml"
     assert path.is_file(), "tag release workflow is missing"
     workflow = yaml.safe_load(path.read_text())
     triggers = workflow.get("on", workflow.get(True))
-    assert set(triggers) == {"push"}
+    assert set(triggers) == {"push", "workflow_dispatch"}
     assert set(triggers["push"]) == {"tags"}
+    assert workflow["concurrency"] == {"group": "release", "cancel-in-progress": False}
     assert workflow["permissions"] == {"contents": "read"}
     jobs = workflow["jobs"]
     assert set(jobs["checks"]["strategy"]["matrix"]["python"]) == {"3.10", "3.14"}
@@ -125,6 +126,14 @@ def test_release_publication_is_tag_only_and_waits_for_both_test_lanes():
     for gate in ("check-release.py", "smoke-cli.sh", "docker build", "smoke-container.sh"):
         assert any(gate in run for run in runs[:min(release, push)])
     assert sum("uv build --wheel" in run for run in runs) == 1
+    stamp = next(i for i, run in enumerate(runs) if "auto-release.py stamp" in run)
+    build = next(i for i, run in enumerate(runs) if "uv build --wheel" in run)
+    assert stamp < build
+    recover = next(i for i, run in enumerate(runs) if "gh release download" in run)
+    image = next(i for i, run in enumerate(runs) if "docker build" in run)
+    assert build < recover < image
+    assert "check-release.py" in runs[recover]
+    assert "--clobber" not in runs[release]
     assert '"$wheel"' in runs[release]
     assert not any("secrets." in run for run in runs)
     checks = "\n".join(step.get("run", "") for step in jobs["checks"]["steps"])

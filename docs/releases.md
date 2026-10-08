@@ -85,20 +85,54 @@ perform a live PR review.
 
 ## Release contract
 
-The sole authored version is `src/scrutare/__init__.py`. Hatch reads it into wheel
-metadata. Unprefixed CalVer tags use `YYYY.M.N`; source, wheel metadata, wheel
+The development version is `src/scrutare/__init__.py`. Hatch reads it into wheel
+metadata. A release stamps that file from its tag in the build checkout only;
+if `uv.lock` carries a project version, that entry is updated too. The current
+dynamic editable entry requires no lockfile change. Automation never pushes a
+version-bump commit.
+Unprefixed CalVer tags use `YYYY.M.N`; stamped source, wheel metadata, wheel
 filename, CLI and image versions must agree. Producer envelopes identify this
 version without changing raw capture/config bytes, bare findings arrays or
 canonical schema-1 Verdict bytes.
 
-The release workflow requires the tagged commit to be on main, runs tests,
+After successful push CI on this repository's main, Auto-tag tags the exact
+validated commit and explicitly dispatches Release on that tag. This follows
+[qare's auto-tag flow](https://github.com/ViviDynamics/qare/blob/main/.github/workflows/auto-tag.yml)
+and [conductor's tag-derived versions](https://github.com/ViviDynamics/conductor/blob/main/.github/workflows/main-branch-build.yml).
+PR CI, failed CI and other branches cannot start automatic publication. A manual
+Auto-tag dispatch must target main and have successful push CI for that exact
+commit. Publication uses `GITHUB_TOKEN`; no additional release secret is needed.
+
+An existing canonical release tag on the commit is reused. Otherwise an untagged
+development version is used, matching qare; if it is already tagged, the next
+patch is derived from main's release history and the UTC build month. A new
+month starts at zero. Nonrelease tags do not suppress releases, and tags outside
+main cannot reset the counter, though their names are reserved to avoid collisions.
+
+The release workflow accepts tag pushes and explicit dispatches on tags only.
+It requires the tagged commit to be on main, runs the unchanged source's tests,
 lint and strict types on Python 3.10 and 3.14, builds and validates one wheel,
 installs and smokes it outside the checkout, then builds and smokes that exact
 wheel's image. Only then does it create the GitHub release with the wheel and
-push the versioned GHCR image. There is no automatic tag creation or `latest`
-alias. Publication uses narrowly scoped workflow permissions. A failure during
+push the versioned GHCR image. There is no `latest` alias. Publication uses
+narrowly scoped workflow permissions. The composite Action resolves its immutable
+image from its canonical release tag, so `ViviDynamics/scrutare@YYYY.M.N` runs
+the same release's image and validates that version in its result. Branch and
+SHA Action references refuse; existing historical release tags remain unchanged.
+A failure during
 publication can leave the wheel release present before image publication;
 inspect both assets before announcing the release.
+
+Auto-tag and Release each serialize their runs. GitHub keeps one running and one
+pending run per concurrency group; a burst can supersede a pending run. A merge
+can therefore ship as part of a later release, and a superseded release tag can
+be recovered by rerunning its Auto-tag run. Auto-tag skips tags with an existing
+release run and re-dispatches when no run started or all runs were cancelled or
+superseded. For a failed release, rerun Release itself on the same tag; existing
+wheel assets are downloaded, validated and reused for the installed/container
+smokes and image build; missing assets are uploaded. Dispatch is checked
+for an actual run, and a missing run fails visibly rather than silently stranding
+the tag.
 
 The Docker build context allows only its recipe, ignore policy and wheel.
 Source checkouts, virtual environments, run artifacts, repository state and

@@ -16,14 +16,19 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import cast
 
-IMAGE = "ghcr.io/vividynamics/scrutare:2026.10.2"
-VERSION = "2026.10.2"
+IMAGE_REPOSITORY = "ghcr.io/vividynamics/scrutare"
+LOCAL_VERSION = "2026.10.2"
+CALVER = re.compile(r"[0-9]{4}\.(?:[1-9]|1[0-2])\.(?:0|[1-9][0-9]*)")
 REPOSITORY = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 SHA = re.compile(r"[0-9a-f]{40}")
 
 
 class ActionError(ValueError):
     """A host input or successful CLI record cannot be safely consumed."""
+
+
+class ReleaseRefError(ActionError):
+    """The selected Action reference cannot identify an immutable release."""
 
 
 def scalar(value: object) -> str:
@@ -33,6 +38,13 @@ def scalar(value: object) -> str:
         or any(unicodedata.category(char) == "Cc" for char in value)
     ):
         raise ActionError("invalid scalar")
+    return value
+
+
+def release_version(value: object) -> str:
+    """Accept only immutable, unprefixed YYYY.M.PATCH release identities."""
+    if not isinstance(value, str) or CALVER.fullmatch(value) is None:
+        raise ReleaseRefError("Action ref must be an unprefixed YYYY.M.PATCH release tag")
     return value
 
 
@@ -133,8 +145,13 @@ def prepare() -> int:
     if event_name == "pull_request" and head_repo != repo:
         raise ActionError("fork pull_request requires pull_request_target")
     config = relative_path(os.environ["SCRUTARE_ACTION_CONFIG"])
-    if os.environ["SCRUTARE_ACTION_IMAGE"] != IMAGE:
-        raise ActionError("runtime image must match the fixed release")
+    # Composite execution always supplies github.action_ref explicitly. The absent
+    # setting supports direct local candidate proofs, never a branch-ref fallback.
+    version = release_version(os.environ.get("SCRUTARE_ACTION_REF", LOCAL_VERSION))
+    if os.environ.get("SCRUTARE_ACTION_IMAGE", f"{IMAGE_REPOSITORY}:{version}") != (
+        f"{IMAGE_REPOSITORY}:{version}"
+    ):
+        raise ActionError("runtime image must match the selected release")
     run_id = scalar(os.environ["GITHUB_RUN_ID"])
     attempt = scalar(os.environ["GITHUB_RUN_ATTEMPT"])
     if any(re.fullmatch(r"[1-9][0-9]*", value) is None for value in (run_id, attempt)):
@@ -149,6 +166,7 @@ def prepare() -> int:
     checkout_relative = str(checkout.relative_to(workspace))
     state = {
         "repository": repo,
+        "version": version,
         "pr": number,
         "base_sha": base_sha,
         "config": str(config),
@@ -262,6 +280,7 @@ def review() -> int:
     ):
         raise ActionError("state must belong to this Action")
     state = document(state_file.read_bytes())
+    version = release_version(state.get("version"))
     workspace = checked_path(absolute_path(state.get("workspace")))
     if workspace != absolute_path(os.environ["GITHUB_WORKSPACE"]):
         raise ActionError("state belongs to another workspace")
@@ -312,7 +331,7 @@ def review() -> int:
             f"{config}:/scrutare-config.yaml:ro",
             "--workdir",
             str(work),
-            IMAGE,
+            f"{IMAGE_REPOSITORY}:{version}",
             "review",
             "--pr",
             f"https://github.com/{repo}/pull/{number}",
@@ -352,7 +371,7 @@ def review() -> int:
     if (
         type(result.get("schema_version")) is not int
         or result["schema_version"] != 1
-        or result.get("scrutare_version") != VERSION
+        or result.get("scrutare_version") != version
         or result.get("status") != "posted"
     ):
         raise ActionError("invalid successful result contract")
@@ -392,6 +411,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         return review()
     except KeyboardInterrupt:
         return 130
+    except ReleaseRefError as error:
+        print(f"scrutare action: {error}", file=sys.stderr)
+        return 1
     except (ActionError, OSError, KeyError, json.JSONDecodeError, UnicodeError):
         print("scrutare action: invalid input or unavailable owned evidence", file=sys.stderr)
         return 1
