@@ -217,7 +217,7 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
                 if key in current_by_key:
                     entry.update(finding=asdict(current_by_key[key]), disposition="upheld",
                                  head_sha=inputs.head_sha)
-                elif finding.anchor.file in patches and (
+                elif result.status == "complete" and finding.anchor.file in patches and (
                         finding.anchor in parse_diff(patches[finding.anchor.file])
                         or finding.anchor not in parse_diff(sections[finding.anchor.file])):
                     disposition = ("withdrawn" if state["sections"].get(finding.anchor.file)

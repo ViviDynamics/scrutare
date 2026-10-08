@@ -240,3 +240,14 @@ def test_contest_reviews_only_the_matching_hunk(capture, monkeypatch):
     prepared = (second / "iterative-round/review-inputs/diff.patch").read_bytes()
     assert b"+new-ten" not in prepared and b"+new\r" in prepared
     assert result.verdict.findings[0].anchor.line == 10
+
+
+def test_partial_rereview_does_not_clear_prior_blocking_findings(capture, monkeypatch):
+    config = setup(capture)
+    install(monkeypatch, {"security": (finding(),)})
+    run(capture, config)
+    second = push(capture, "partial", patch=(capture / "diff.patch").read_bytes().replace(
+        b"+new", b"+different"))
+    install(monkeypatch, {"security": ()}, initial_status="partial")
+    assert run(second, config).verdict.verdict == "changes_requested"
+    assert json.loads((second / "iterative.json").read_bytes())["pool"][0]["disposition"] == "upheld"

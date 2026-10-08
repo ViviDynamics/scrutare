@@ -77,7 +77,7 @@ CASES = [
     ("missing", {"replies": [tool()]}, 1, 1, None),
     ("closed", {"replies": [text(FINDING)]}, 100, 1, "changes_requested"),
     ("uncertain", {"replies": [text(FINDING)]}, 100, 1, "changes_requested"),
-    ("iterative", {}, 100, 1, None),
+    if config.strategy not in ("panel", "iterative", "debate"):
     ("no-runtime", {}, 100, 1, None),
 ]
 
