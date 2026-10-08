@@ -16,21 +16,22 @@ scrutare sits beside [nare](https://github.com/ViviDynamics/nare),
 [coordinare](https://github.com/ViviDynamics/coordinare) in the Coordinare
 project family: an orchestrator calls nare to develop, scrutare to review, and
 qare to QA. The engine is standalone, with a complete review CLI and Python API. A reusable
-GitHub Action, MCP server, and conductor/coordinare reviewer integration are
-planned interfaces.
+[GitHub Action](docs/action-acceptance.md) and [stdio MCP server](docs/mcp.md)
+expose the same engine to automation. Conductor/coordinare reviewer integration
+remains planned.
 
 ## Three ways to converge
 
-`strategy` is a top-level config setting. Panel is the implemented default;
-iterative and debate are planned and the engine rejects them before execution:
+`strategy` is a top-level config setting. All three strategies are implemented
+on `main`, with panel as the default:
 
 - **panel** (milestone 1): the perspectives review independently, in one
   wave. Code verifies anchors, offers one bounded correction opportunity per
   persona, dedupes findings, and derives the verdict by rule.
-- **iterative** (milestone 2, not yet implemented): the findings pool persists,
+- **[iterative](docs/iterative-review.md)**: the findings pool persists,
   and each new push is reviewed for what is new or contested, until the bound
   is reached.
-- **debate** (milestone 3, not yet implemented): the perspectives see each
+- **[debate](docs/debate.md)**: the perspectives see each
   other's findings and a chair session arbitrates disputes, downgrades nitpicks,
   and accepts the final finding set.
 
@@ -58,6 +59,14 @@ models:
 
 ## Status
 
+The current published release is [2026.10.2](https://github.com/ViviDynamics/scrutare/releases/tag/2026.10.2),
+with the panel review CLI, Python API, offline replay, and reusable GitHub Action.
+`main` additionally delivers iterative review across pushes, bounded debate with
+a chair, and the MCP review server. These new source features need a subsequent
+release before they are available in a published wheel or image. The GitHub App
+service in issue [#18](https://github.com/ViviDynamics/scrutare/issues/18) is
+deferred and is not implemented on `main`.
+
 PR ingestion, YAML configuration validation, the persona registry, and the pure
 findings pipeline, code-derived verdicts, and durable Python poster API are
 implemented. Capture prepares filtered artifacts and the public per-persona
@@ -71,8 +80,8 @@ durable receipts, bounded retries and uncertain-delivery recovery. The
 summaries and durable human review requests through the Python API. The
 [replay guide](docs/replay.md) covers offline verdict recomputation and separate
 saved and locally recorded posted comparisons. The Python
-[panel API](docs/panel.md), `scrutare.engine.strategy.run_review`, runs the
-complete panel pipeline through an external nare executable, verifies and
+[strategy API](docs/panel.md), `scrutare.engine.strategy.run_review`, dispatches
+panel, iterative, or debate review through an external nare executable, verifies and
 corrects anchors against filtered inputs, dedupes, and writes findings, panel
 evidence and a code-derived verdict. A valid partial findings document counts,
 including an explicitly empty array; missing or failed initial output withholds
@@ -80,7 +89,7 @@ the verdict. Corrections share the initial wave's remaining reported token
 allowance. Limits apply after turns and can overshoot. The CLI posts the resulting review and records delivery; Python panel callers
 choose when to post. The lower-level
 [session fan-out API](docs/session-fanout.md) remains available for candidate
-findings. The [review CLI](docs/cli.md) captures, runs the panel and posts one review.
+findings. The [review CLI](docs/cli.md) captures, runs the selected strategy and posts one review.
 [Release packaging](docs/releases.md) builds a wheel and a non-root image from
 the same package version.
 The design and milestone order are in
@@ -88,13 +97,13 @@ The design and milestone order are in
 
 ## Install and review a pull request
 
-The first Scrutare release has not been published. Once the `2026.10.0`
-[GitHub release](https://github.com/ViviDynamics/scrutare/releases) and its
-assets are available, install its pinned wheel with Python 3.10 or newer:
+Install the published `2026.10.2` wheel with Python 3.10 or newer. This release
+provides panel review; use a checkout of `main` for the new strategies and MCP
+server described above, following [local installation](docs/releases.md):
 
 ```sh
 uv tool install --python 3.10 \
-  https://github.com/ViviDynamics/scrutare/releases/download/2026.10.0/scrutare-2026.10.0-py3-none-any.whl
+  https://github.com/ViviDynamics/scrutare/releases/download/2026.10.2/scrutare-2026.10.2-py3-none-any.whl
 ```
 
 Wheel users also need the [GitHub CLI](https://cli.github.com/) on PATH and a
@@ -119,33 +128,32 @@ scrutare review --pr 12 --config path/to/settings.yaml
 
 `--nare-executable` defaults to `nare` on PATH. A numeric PR resolves the
 repository through `gh repo view` from the current checkout. The command reads
-configuration once before GitHub access, captures a coherent PR, runs the panel,
+configuration once before GitHub access, captures a coherent PR, runs the selected strategy,
 and posts the verdict against the captured head. Success prints the exact JSON
 saved in the run's `result.json`, after recording delivery and `artifacts.json`.
 A delivered changes-requested verdict still exits 0. Failure exits 1 with no
 success document; usage errors exit 2 and interruption exits 130.
 
-After the corresponding image is published, the pinned container includes gh,
-git and the separate nare runtime:
+The published pinned container includes gh, git and the separate nare runtime:
 
 ```sh
 docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp \
   -e GH_TOKEN -e ANTHROPIC_API_KEY -v "$PWD:/work" \
-  ghcr.io/vividynamics/scrutare:2026.10.0 review --pr 12
+  ghcr.io/vividynamics/scrutare:2026.10.2 review --pr 12
 ```
 
 This forwards credentials already supplied for an authorized run. Choose the
 credential variable matching your configured provider. The image defaults to
 UID/GID 10001; the example uses your host identity so mounted run artifacts stay
-writable. See [releases](docs/releases.md) for local installation before the
-first release and container details.
+writable. See [releases](docs/releases.md) for local source installation and container details.
 
 The default panel verifies anchors, allows one correction opportunity and derives
 the verdict in code. Valid partial findings can produce a verdict; missing or
 failed initial output withholds it. Token limits apply after turns and can
 overshoot. Check `panel_status`, coverage and accounting evidence even on a
-successful approval. Iterative and debate strategies are rejected before GitHub
-access. Review does not manufacture escalation from failure or a budget stop.
+successful approval. On `main`, iterative and debate use their own convergence
+bounds and escalate unresolved review work. Review does not manufacture
+escalation from a failed session or a token budget stop.
 
 Every run retains raw capture and configuration bytes, a filtered three-file
 reviewer root, sessions, findings, verdict and delivery evidence when available.
