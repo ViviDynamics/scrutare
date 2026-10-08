@@ -205,3 +205,6 @@ scrutare is source-available under the [Elastic License 2.0](LICENSE), the
 same license as the rest of the Coordinare family. You may run, modify, and
 self-host it, including commercially. You may not offer it to third parties as
 a hosted or managed service.
+
+Agent harnesses can request the same full review through the
+[stdio MCP server](docs/mcp.md), installed as `scrutare-mcp`.
