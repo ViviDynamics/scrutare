@@ -149,7 +149,7 @@ def admit_webhook(settings: AppSettings, store: JobStore, event: str, delivery: 
     """Authenticate exact bytes before parsing an installed-repository PR event."""
     expected = "sha256=" + hmac.new(settings.webhook_secret.encode(), body,
                                     hashlib.sha256).hexdigest()
-    if not hmac.compare_digest(expected, signature):
+    if not hmac.compare_digest(expected.encode(), signature.encode()):
         raise AppError("invalid webhook signature", 401)
     if len(body) > MAX_BODY:
         raise AppError("request body is too large", 413)
