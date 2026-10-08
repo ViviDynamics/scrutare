@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, NoReturn
 
 from scrutare.config import CATEGORIES
+from scrutare.engine.debate_inputs import DebateInput
 from scrutare.engine.persona_inputs import PersonaReanchorInput
 from scrutare.engine.reanchor import parse_reanchor_output
 from scrutare.engine.session_models import TokenUsage
@@ -310,7 +311,7 @@ def _decode_evidence(
 
 def decode_session(
     stdout: bytes, session_document: bytes | None, *, persona: str, exit_code: int,
-    expected_limit: int, expected_root: Path,
+    expected_limit: int, expected_root: Path, descriptor: DebateInput | None = None,
 ) -> DecodedSession:
     """Reconcile fresh findings evidence, attributing candidates only to the caller."""
     try:
@@ -319,10 +320,12 @@ def decode_session(
             _fail()
         evidence = _decode_evidence(stdout, session_document, exit_code=exit_code,
                                     expected_limit=expected_limit, expected_root=expected_root)
-        findings = () if evidence.output is None else _findings(evidence.output, persona)
+        parser = (descriptor.parse_output if descriptor is not None
+                  else lambda value: _findings(value, persona))
+        findings = () if evidence.output is None else parser(evidence.output)
         # Validate saved semantics independently: bool/int equality can conceal corruption.
         if evidence.saved_output is not None:
-            _findings(evidence.saved_output, persona)
+            parser(evidence.saved_output)
         return DecodedSession(
             evidence.session_id, evidence.status, evidence.stop_reason, evidence.exit_code,
             evidence.usage, findings, evidence.output_available, evidence.budget_limit,
