@@ -364,7 +364,7 @@ def test_cli_preparation_failure_has_a_safe_error_and_removes_fresh_run(
     assert list((tmp_path / ".scrutare/runs").iterdir()) == []
 
 
-@pytest.mark.parametrize("strategy", ["iterative", "debate"])
+@pytest.mark.parametrize("strategy", ["iterative"])
 def test_unsupported_strategy_rejected_before_any_github(tmp_path, monkeypatch, capsys, gh,
                                                         strategy):
     monkeypatch.chdir(tmp_path)

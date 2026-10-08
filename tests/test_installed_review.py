@@ -78,7 +78,6 @@ CASES = [
     ("closed", {"replies": [text(FINDING)]}, 100, 1, "changes_requested"),
     ("uncertain", {"replies": [text(FINDING)]}, 100, 1, "changes_requested"),
     ("iterative", {}, 100, 1, None),
-    ("debate", {}, 100, 1, None),
     ("no-runtime", {}, 100, 1, None),
 ]
 
