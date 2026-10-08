@@ -77,7 +77,6 @@ CASES = [
     ("missing", {"replies": [tool()]}, 1, 1, None),
     ("closed", {"replies": [text(FINDING)]}, 100, 1, "changes_requested"),
     ("uncertain", {"replies": [text(FINDING)]}, 100, 1, "changes_requested"),
-    if config.strategy not in ("panel", "iterative", "debate"):
     ("no-runtime", {}, 100, 1, None),
 ]
 
@@ -197,11 +196,10 @@ def test_installed_review_pipeline(
             assert all(call["metadata_response"]["state"] == "open"
                        and call["metadata_response"]["merged"] is False for call in metadata_calls)
             assert calls.index(metadata_calls[-1]) < calls.index(posts[0])
-        if case in ("iterative", "debate", "no-runtime"):
+        if case == "no-runtime":
             assert calls == [] and not (working / ".scrutare").exists()
             assert result.stdout == b""
-            assert (b"not yet implemented" if case != "no-runtime" else
-                    b"cannot locate an executable nare runtime") in result.stderr
+            assert b"cannot locate an executable nare runtime" in result.stderr
             return
         run, = (working / ".scrutare/runs").iterdir()
         if case == "force-push":

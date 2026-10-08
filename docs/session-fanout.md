@@ -202,7 +202,7 @@ the same nare factory substitution and a fake gh executable with actual HTTP
 header/receipt framing and recorded POST input. Capture, service orchestration,
 panel, posting journal and replay remain production code. Scenarios cover
 approval, blocking findings, correction, comment mode, partial coverage, failed
-or missing output, closure, unsupported strategies, missing runtime and uncertain
+or missing output, closure, missing runtime and uncertain
 delivery. It checks installed import paths, version agreement, exact result
 bytes, complete manifest digests and saved/posted canonical replay identity.
 No live GitHub or model delivery is established by these offline fixtures.
@@ -215,3 +215,7 @@ public release outside the checkout and project virtual environment using its
 own locked dependencies, requires the executable setting, and runs the proof
 in both existing Python jobs. Both jobs retain environment, test, lint, strict
 type, wheel and installed CLI gates. A skip is not proof that this boundary works.
+
+The installed [iterative strategy proof](iterative-review.md) and
+[debate strategy proof](debate.md) exercise their actual multi-round execution
+through installed nare and candidate wheel artifacts.
