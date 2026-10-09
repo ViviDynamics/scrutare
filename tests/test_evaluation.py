@@ -4,7 +4,7 @@ from scrutare.evaluation.scoring import finding_id, adjudication_packet, score_e
 
 
 def record(case='bug', status='complete', findings=None):
-    return {'run_id': 'bug/senior/1', 'case_id': case, 'variant': 'senior',
+    return {'run_id': f'{case}/senior/1', 'case_id': case, 'variant': 'senior',
             'repeat': 1, 'status': status, 'accounting_complete': True,
             'usage': {'total': 100}, 'latency_seconds': 2,
             'findings': findings or []}
