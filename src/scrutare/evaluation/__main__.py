@@ -42,7 +42,10 @@ def main() -> None:
     elif args.command == 'adjudicate':
         write_json(args.output, adjudication_packet(read_json(args.experiment)['runs']))
     else:
-        experiment = read_json(args.experiment)
+        experiment = (read_json(args.experiment) if args.experiment.suffix != '.jsonl' else
+                      {'evidence_kind': read_json(args.experiment.parent / 'snapshot.json')
+                       ['evidence_kind'], 'runs': [json.loads(line) for line in
+                                                 args.experiment.read_text().splitlines()]})
         cases = load_corpus(args.corpus, 'all')
         labels = {case.id: read_json(case.labels) for case in cases}
         # Reject changed labels: judgments must refer to the frozen gold snapshot.
@@ -53,7 +56,8 @@ def main() -> None:
             if hashlib.sha256(path.read_bytes()).hexdigest() != case['labels_sha256']:
                 raise ValueError('corpus labels changed since experiment')
         write_json(args.output, {'schema_version': 1, 'evidence_kind': experiment['evidence_kind'],
-            'metrics': score_experiment(experiment['runs'], labels, read_json(args.decisions))})
+            'metrics': score_experiment(experiment['runs'], labels, read_json(args.decisions),
+                                        expected_runs=snapshot['expected_runs'])})
     print(json.dumps({'output': str(args.output)}))
 
 

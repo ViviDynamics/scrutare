@@ -1,0 +1,16 @@
+{
+  "case_id": "consumer-empty-search",
+  "counterexamples": [
+    "Nonempty substring filtering is unchanged; no unsupported regex injection claim is acceptable."
+  ],
+  "defects": [
+    {
+      "evidence": "change.py empty term branch contradicts all-row contract.",
+      "fix_or_counterexample": "Return list(rows) for empty term.",
+      "id": "consumer-empty-search-defect",
+      "impact": "All results disappear despite documented empty-search behavior.",
+      "match_criteria": "Identify empty term should show all but now shows none.",
+      "trigger": "User clears search text while rows exist"
+    }
+  ]
+}

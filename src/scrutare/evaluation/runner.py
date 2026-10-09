@@ -58,7 +58,11 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         'schema_version': 1, 'scrutare_version': __version__, 'evidence_kind': evidence_kind,
         'nare_version': capability.version, 'nare_contract': capability.contract,
         'runtime': {**asdict(runtime), 'executable': str(runtime.executable)},
-        'repeats': 3, 'configs': {name: value.to_dict() for name, value in variants.items()},
+        'repeats': 3,
+        'expected_runs': [{'run_id': f'{case.id}/{variant}/{repeat}', 'case_id': case.id,
+                           'variant': variant, 'repeat': repeat}
+                          for case in cases for variant in variants for repeat in range(1, 4)],
+        'configs': {name: value.to_dict() for name, value in variants.items()},
         'personas': {name: load_persona(name).system_prompt for name in variants['panel'].personas
                      if isinstance(name, str)},
         'cases': [{'id': case.id, 'split': case.split, 'domain': case.domain,

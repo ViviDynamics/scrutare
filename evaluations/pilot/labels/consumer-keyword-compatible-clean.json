@@ -1,0 +1,7 @@
+{
+  "case_id": "consumer-keyword-compatible-clean",
+  "counterexamples": [
+    "Existing timeout keyword and positional calls remain valid; deadline=0 is retained by explicit None check."
+  ],
+  "defects": []
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "tests-truthy-balance",
+  "counterexamples": [
+    "A missing assertion alone is not the allegation; incorrect 13 demonstrably passes the replacement assertion."
+  ],
+  "defects": [
+    {
+      "evidence": "change.py adds spent and drops expected 7 assertion.",
+      "fix_or_counterexample": "Subtract spent and assert exact 7.",
+      "id": "tests-truthy-balance-defect",
+      "impact": "Balance increases to 13 after spending; truthiness assertion accepts the incorrect result.",
+      "match_criteria": "Identify incorrect addition and/or precise test discrimination failure for 13.",
+      "trigger": "remaining(10,3)"
+    }
+  ]
+}

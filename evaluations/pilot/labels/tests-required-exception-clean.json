@@ -1,0 +1,7 @@
+{
+  "case_id": "tests-required-exception-clean",
+  "counterexamples": [
+    "pytest.raises is an assertion even without a literal assert statement; match additionally checks message."
+  ],
+  "defects": []
+}

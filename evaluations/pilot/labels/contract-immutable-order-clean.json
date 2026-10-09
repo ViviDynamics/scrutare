@@ -1,0 +1,7 @@
+{
+  "case_id": "contract-immutable-order-clean",
+  "counterexamples": [
+    "sorted returns a fresh list; wrapping it in list does not reorder or mutate caller data."
+  ],
+  "defects": []
+}

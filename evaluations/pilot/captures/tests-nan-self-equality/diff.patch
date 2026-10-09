@@ -1,0 +1,10 @@
+diff --git a/change.py b/change.py
+--- a/change.py
++++ b/change.py
+@@ -4,4 +4,5 @@
+     return float("nan")
+ 
+ def test_unavailable():
+-    assert math.isnan(unavailable())
++    value = unavailable()
++    assert value == value

@@ -1,0 +1,9 @@
+diff --git a/change.py b/change.py
+--- a/change.py
++++ b/change.py
+@@ -1,3 +1,4 @@
+ def page_offset(page, size):
+     """Public pages start at one."""
+-    return (page - 1) * size
++    index = page - 1
++    return index * size

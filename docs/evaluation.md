@@ -1,0 +1,84 @@
+# Captured review evaluation
+
+This opt-in evaluator calls the same production `run_review` strategy through
+external nare. It uses local captures and never enters GitHub capture or posting.
+The original pilot under `evaluations/pilot` contains 20 defect cases and 10 clean
+controls across five domains; ten cases (seven defects, three clean) are held out.
+It is a pilot, not statistical evidence for a generally superior reviewer roster.
+
+Run an explicit paid model job from a locked installation:
+
+```sh
+python -m scrutare.evaluation run --corpus evaluations/pilot --split development \
+  --config evaluation.yaml --output /absolute/new-experiment \
+  --nare-executable /absolute/installed/bin/nare
+```
+
+Use a dated model identifier and fixed provider settings in the ordinary review
+configuration. Model overrides are refused for comparisons. The evaluator freezes
+configuration, persona prompts, nare version/contract, runtime bounds, corpus hashes,
+and the expected run schedule before execution. Each of three repeats compares
+senior-dev alone, the current four personas in panel, and those personas in debate.
+The total review token ceiling is identical. Senior gets the entire ceiling; panel
+gets one quarter per persona; debate gets one fifth, including its chair. These are
+admission limits; actual reported overshoot is retained in engine artifacts. Output
+includes actual usage (including cache counters), latency, status and accounting
+confidence for every run. Engine evidence and artifact manifests remain replayable.
+
+Only diff, files, and captured metadata are copied to run artifacts. Production input
+preparation restricts nare's read tool to the filtered `review-inputs` directory.
+Gold labels and base/head fixture trees are evaluator-only files outside that root.
+The cross-file pilot intentionally includes dependencies absent from initial diff
+context, exposing the current system's limitations rather than hiding them.
+
+After execution export a blinded packet:
+
+```sh
+python -m scrutare.evaluation adjudicate /absolute/new-experiment/experiment.json \
+  --output /absolute/packet.json
+```
+
+A human compares each packet finding with the case's trigger, impact, evidence,
+match criteria, and fix/counterexample. Packet finding identities bind exact original
+contents and ordinal to the run while withholding variant, model, repeat and persona.
+Reviewers should work from packets before receiving the experiment mapping. For
+ambiguous allegations, independently check the reproduction and record the decision
+and rationale; do not use an LLM as sole ground truth. A decision JSON list contains:
+
+```json
+[{"finding_id":"sha256 from packet","defect_id":"case-specific defect id or null",
+  "reviewer":"human reviewer identity","rationale":"verified trigger or counterexample"}]
+```
+
+`null` means a judged false positive. An absent decision remains pending, never
+silently false or true. Labels are author-defined pilot hypotheses until independent
+human verification; no human adjudication is fabricated by the runner.
+
+```sh
+python -m scrutare.evaluation score /absolute/new-experiment/experiment.json \
+  --corpus evaluations/pilot --decisions /absolute/decisions.json \
+  --output /absolute/metrics.json
+```
+
+Scoring exposes pending judgments and refuses stale finding identities or changed
+label snapshots. Precision counts judged emitted source observations. Defect recall
+counts distinct labelled defects per case/repeat, with failed/missing runs remaining
+in its denominator. Duplicate rate is redundant matched source observations divided
+by judged findings. Unique detections count defects reported by exactly one persona
+per run. Tokens per true positive divides all observed tokens, including failures,
+by distinct detected defects. Unknown accounting makes these observed tokens a lower
+bound, visible through accounting failure counts. Clean-PR false-positive rate uses
+only complete, accounted, fully adjudicated clean runs; partial or missing output is
+never a clean approval. These denominator choices and repeat weighting must accompany
+any reported comparison. No eligible denominator produces a null metric.
+
+Interrupted experiments can be scored from `runs.jsonl` instead of `experiment.json`;
+the frozen schedule supplies explicit missing records. `--split holdout` must be a
+fresh frozen job after development decisions; do not tune prompts from holdout results.
+
+Ordinary CI uses `--evidence-kind offline` and deterministic provider substitutions
+to verify orchestration and scoring. Offline metrics measure software behavior only.
+A real baseline requires explicit model jobs and completed independent human
+adjudication. An available provider alias may change its backend; retain the dated
+provider model/version evidence alongside snapshots before making reproducibility
+claims. This implementation alone makes no model accuracy claim.

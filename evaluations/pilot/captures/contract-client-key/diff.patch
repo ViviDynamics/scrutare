@@ -1,0 +1,7 @@
+diff --git a/service.py b/service.py
+--- a/service.py
++++ b/service.py
+@@ -1,2 +1,2 @@
+ def result():
+-    return {"total": 12}
++    return {"amount": 12}

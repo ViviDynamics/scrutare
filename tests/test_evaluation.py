@@ -50,3 +50,14 @@ def test_packet_is_blinded_and_decisions_are_bound_to_content():
     changed = {**run, 'findings': [{'persona': 'senior-dev', 'body': 'changed'}]}
     with pytest.raises(ValueError, match='unknown'):
         score_experiment([changed], {'bug': {'defects': [{'id': 'd1'}]}}, [decision])
+
+
+def test_expected_missing_cells_lower_recall_and_never_approve():
+    runs = [record(findings=[])]
+    expected = [{'run_id': 'bug/senior/1', 'case_id': 'bug', 'variant': 'senior', 'repeat': 1},
+                {'run_id': 'bug/senior/2', 'case_id': 'bug', 'variant': 'senior', 'repeat': 2}]
+    score = score_experiment(runs, {'bug': {'defects': [{'id': 'd1'}]}}, [],
+                             expected_runs=expected)['senior']
+    assert score['missing_runs'] == 1
+    assert score['accounting_failures'] == 1
+    assert score['possible_defects'] == 2

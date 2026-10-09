@@ -1,0 +1,7 @@
+{
+  "case_id": "security-bound-query-clean",
+  "counterexamples": [
+    "Untrusted name remains a separately bound parameter; assigning constant query to a variable introduces no SQL injection."
+  ],
+  "defects": []
+}

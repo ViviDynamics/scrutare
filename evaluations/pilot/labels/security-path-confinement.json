@@ -1,0 +1,16 @@
+{
+  "case_id": "security-path-confinement",
+  "counterexamples": [
+    "A resolved path inside /srv/uploads is legitimately allowed."
+  ],
+  "defects": [
+    {
+      "evidence": "change.py replaces path ancestry with string prefix.",
+      "fix_or_counterexample": "Use resolved path ancestry check.",
+      "id": "security-path-confinement-defect",
+      "impact": "Sibling path with shared prefix bypasses confinement.",
+      "match_criteria": "Identify sibling-prefix path escape with concrete name.",
+      "trigger": "root /srv/uploads and name ../uploads-private/secret"
+    }
+  ]
+}

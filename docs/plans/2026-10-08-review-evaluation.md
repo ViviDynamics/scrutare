@@ -15,7 +15,7 @@ An actual paid baseline remains pending until a model rail and human adjudicatio
 - Partial, failed, missing, and accounting-incomplete runs are reported separately.
 
 ## Tasks
-- [ ] 1. Scoring and blinded adjudication: deterministic metric/invalid-run tests.
-- [ ] 2. Production runner and CLI: isolated inputs/non-posting and repeat tests.
-- [ ] 3. Original pilot corpus: provenance, split, label completeness, capture tests.
+- [x] 1. Scoring and blinded adjudication: deterministic metric/invalid-run tests.
+- [x] 2. Production runner and CLI: isolated inputs/non-posting and repeat tests.
+- [x] 3. Original pilot corpus: provenance, split, label completeness, capture tests.
 - [ ] 4. Documentation and full Python/native Docker verification lanes.

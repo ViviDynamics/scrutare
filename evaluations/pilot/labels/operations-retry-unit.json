@@ -1,0 +1,16 @@
+{
+  "case_id": "operations-retry-unit",
+  "counterexamples": [
+    "Floating point 0.5 seconds is supported; no requirement for an integer delay is stated."
+  ],
+  "defects": [
+    {
+      "evidence": "change.py multiplication contradicts millisecond-to-second conversion.",
+      "fix_or_counterexample": "Divide by 1000.",
+      "id": "operations-retry-unit-defect",
+      "impact": "Backoff becomes 500000 seconds instead of 0.5 seconds, stalling recovery.",
+      "match_criteria": "Identify unit conversion and excessive retry delay.",
+      "trigger": "Retry-After input 500 milliseconds"
+    }
+  ]
+}

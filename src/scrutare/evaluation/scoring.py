@@ -26,13 +26,24 @@ def _ratio(numerator: int, denominator: int) -> float | None:
 
 
 def score_experiment(runs: list[dict[str, Any]], labels: dict[str, Any],
-                     decisions: list[dict[str, Any]]) -> dict[str, Any]:
+                     decisions: list[dict[str, Any]], *,
+                     expected_runs: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """Score per variant with failed runs in recall denominators and explicit pending counts.
 
     A null defect_id means adjudicated false positive. No decision means pending.
     TP finding precision includes corroborations; recall and cost count distinct defects
     per case/repeat. Clean FP rate uses only complete accounted fully judged runs.
     """
+    runs = list(runs)
+    if expected_runs is not None:
+        actual = {run['run_id'] for run in runs}
+        expected = {run['run_id'] for run in expected_runs}
+        if not actual <= expected or len(expected) != len(expected_runs):
+            raise ValueError('invalid expected run schedule')
+        for cell in expected_runs:
+            if cell['run_id'] not in actual:
+                runs.append({**cell, 'status': 'missing', 'accounting_complete': False,
+                             'usage': {'total': 0}, 'latency_seconds': 0, 'findings': []})
     identities = [run['run_id'] for run in runs]
     if len(set(identities)) != len(identities):
         raise ValueError('duplicate run identity')
