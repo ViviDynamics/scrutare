@@ -20,6 +20,7 @@ from test_review_inputs import SOURCE
 @pytest.mark.parametrize("evidence_mode", ["legacy", "v2", "invalid"])
 def test_installed_context_all_strategies(
     tmp_path, installed, wheel_cli, strategy, evidence_mode, assessment_status=None,
+    discussion=False,
 ):
     _, _, console, _ = wheel_cli
     runtime = offline_runtime(tmp_path, installed)
@@ -73,7 +74,15 @@ def test_installed_context_all_strategies(
                     "purpose": "review", "attempt": "attempt-0001",
                     "prompt_prefix": "Independently assess",
                     "scenario": {"replies": [{"assess_candidates": assessment_status}]},
-                }] if assessment_status is not None else []) + [
+                }] if assessment_status is not None else []) + ([scenario for number in (1, 2)
+                      for scenario in [
+                    {"purpose": "review", "attempt": f"attempt-{number + 2:04d}",
+                     "prompt_prefix": "Focused evidence discussion",
+                     "scenario": {"replies": [{"propose_candidates": "retain"}]}},
+                    {"purpose": "review", "attempt": f"attempt-{number + 1:04d}",
+                     "prompt_prefix": "Independently assess",
+                     "scenario": {"replies": [{"assess_candidates": assessment_status}]}},
+                ]] if discussion else []) + [
                     {"purpose": "review", "attempt": "attempt-0003",
                      "prompt_prefix": "Reconsider your position",
                      "scenario": {"replies": [{"select_pool": True}]
@@ -103,7 +112,7 @@ def test_installed_context_all_strategies(
         with (working / "scrutare.yaml").open("a") as stream:
             stream.write("findings: {evidence: v2" + (
                 ", assessment: {enabled: true, tokens: 400}" if assessment_status else ""
-            ) + "}\n")
+            ) + (", discussion: {enabled: true}" if discussion else "") + "}\n")
     binary = tmp_path / "bin"
     binary.mkdir()
     gh = binary / "gh"
@@ -168,8 +177,14 @@ def test_installed_context_all_strategies(
         payload = json.loads((run / "review-payload.json").read_bytes())
         assert payload["event"] == "COMMENT"
         assert len(verdict["findings"][0]["sources"]) == 2
-        assert "unresolved_semantic_assessment" in payload["body"]
-        assert "Unresolved candidate IDs" in payload["body"]
+        assert ("rounds_exhausted_without_convergence" if discussion
+                else "unresolved_semantic_assessment") in payload["body"]
+        if not discussion:
+            assert "Unresolved candidate IDs" in payload["body"]
+        else:
+            assert verdict["assessment_uncertainty"]["candidate_ids"]
+            trace = json.loads((run / "debate.json").read_bytes())
+            assert len(trace["rounds"]) == 2
     if evidence_mode == "v2" and assessment_status not in ("refuted", "unresolved"):
         verdict = json.loads((run / "verdict.json").read_bytes())
         assert verdict["schema_version"] == 2
@@ -245,3 +260,9 @@ def test_installed_context_all_strategies(
 def test_installed_independent_assessment_all_strategies(tmp_path, installed, wheel_cli,
                                                         strategy, status):
     test_installed_context_all_strategies(tmp_path, installed, wheel_cli, strategy, "v2", status)
+
+
+@pytest.mark.parametrize("status", ["supported", "refuted", "unresolved"])
+def test_installed_focused_evidence_discussion(tmp_path, installed, wheel_cli, status):
+    test_installed_context_all_strategies(tmp_path, installed, wheel_cli, "debate", "v2",
+                                          status, discussion=True)

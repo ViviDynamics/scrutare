@@ -192,6 +192,12 @@ findings:
 then fairly divides remaining tokens among discovery/debate participants, subject
 to `per_persona_tokens`. The assessor uses the default model rail in a separate,
 fresh read-only nare session; its quota does not inherit a discovery persona's
-model override. A review has one assessor batch with the same runtime turn and
+model override. Assessment alone uses one assessor batch with the same runtime turn and
 timeout limits. After-turn token overshoot remains observable, and can prevent
 assessment admission; it never creates a second ledger or extra token ceiling.
+
+Focused evidence discussion is a further opt-in for assessed v2 debate reviews:
+`findings.discussion.enabled: true` requires `strategy: debate` and enabled
+independent assessment. It uses `rounds.max` and the existing shared quotas;
+reassessments spend the remaining original assessor reservation. See
+[focused debate](debate.md#focused-evidence-discussion-opt-in).
