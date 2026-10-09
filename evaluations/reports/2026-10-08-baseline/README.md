@@ -10,7 +10,11 @@ pending. No defaults were promoted. All 270 scheduled runs are retained.
 Reproduce scoring from the repository root:
 
 ```sh
-python -m scrutare.evaluation score --help
+python -m scrutare.evaluation score \
+  evaluations/reports/2026-10-08-baseline/experiment.json \
+  --corpus evaluations/pilot \
+  --decisions evaluations/reports/2026-10-08-baseline/automated-decisions.json \
+  --output /tmp/scrutare-baseline-score.json
 ```
 
 Use this directory's `experiment.json`, `snapshot.json` and
