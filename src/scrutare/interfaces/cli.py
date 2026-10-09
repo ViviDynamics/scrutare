@@ -42,6 +42,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--nare-executable", type=Path, default=Path("nare"), metavar="PATH",
         help="separately installed nare executable (default: nare on PATH)",
     )
+    review.add_argument("--analysis-capture", type=Path, metavar="PATH",
+                        help="explicit captured Ruff evidence; requires analysis.enabled")
     replay = commands.add_parser(
         "replay", help="audit a stored verdict offline; no model or network",
         description="Recompute a stored verdict and compare saved and recorded posted identity.",
@@ -85,6 +87,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = asyncio.run(review_pr(
             ref, review_config, config_bytes=config_bytes,
             runs_root=Path(".scrutare/runs"), runtime=runtime,
+            analysis_capture=args.analysis_capture,
         ))
     except ReviewRunError as exc:
         location = f" Run: {exc.run_dir}" if exc.run_dir is not None else ""

@@ -30,6 +30,7 @@ class Case:
     capture: Path
     labels: Path
     context_sources: tuple[SourceSide, ...] = ()
+    analysis_capture: Path | None = None
 
 
 def read_json(path: Path) -> Any:
@@ -99,8 +100,9 @@ def load_corpus(root: Path, split: str = 'development') -> tuple[Case, ...]:
             raise ValueError('invalid case split')
         if split == 'all' or entry['split'] == split:
             sources = _sources(root, entry.get('context_sources'), capture, label_paths)
+            analysis = _analysis_source(root, entry.get("analysis_capture"), capture, label_paths)
             cases.append(Case(identifier, entry['split'], entry['domain'],
-                              capture, labels, sources))
+                              capture, labels, sources, analysis))
     return tuple(cases)
 
 
@@ -181,3 +183,18 @@ def _sources(root: Path, declaration: Any, capture: Path, labels: tuple[Path, ..
     if 'head' not in declaration and metadata['pull_request']['head'].get('repo') is not None:
         raise ValueError('source declaration missing available head')
     return tuple(result)
+
+
+def _analysis_source(root: Path, name: object, capture: Path, labels: tuple[Path, ...]
+                     ) -> Path | None:
+    if name is None:
+        return None
+    if (not isinstance(name, str) or name.startswith("/") or "\\" in name
+            or "\x00" in name or any(p in ("", ".", "..") for p in name.split("/"))):
+        raise ValueError("analysis capture requires a safe relative path")
+    path = _confined(root, name)
+    if path.is_relative_to(capture) or any(path.is_relative_to(label.parent) for label in labels):
+        raise ValueError("analysis capture overlaps evaluator labels or captures")
+    from scrutare.engine.static_analysis import read_capture
+    read_capture(path)
+    return path
