@@ -12,7 +12,7 @@ import stat
 import tempfile
 from collections.abc import Iterator
 from contextlib import ExitStack, contextmanager
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 from typing import BinaryIO, Literal, TypedDict, TypeVar
