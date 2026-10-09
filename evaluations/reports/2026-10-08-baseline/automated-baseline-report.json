@@ -1,0 +1,918 @@
+{
+  "artifacts_sha256": {
+    "adjudicate-baseline.py": "487270886e5bc5fd94459f30a41e2e461dc0c713339fb7530ac9b20adce3943f",
+    "automated-decisions.json": "5657809a17e8f4e9556a3025667a234f45149ce9ef21cbb40e775b111f361e0b",
+    "blinded-packet.json": "7bfa849294c72fe76ef3082ca03e6e3959c1bb7e8208a5049b123e52c2d7ed91",
+    "experiment.json": "7f453a2ef9964f8aad57539965de816151526248edab5419967097b4a4c74f7d",
+    "pending-human-adjudication.json": "932ef8d25326bc0ae420c660f7c9c2218ada205ada9eb67697089aefa938b71b",
+    "snapshot.json": "835b306e1db63dd9394bb461d73f7512f6d7e61acc0d59ad0cec9b3b75fcb7e0"
+  },
+  "automated_judgments": 531,
+  "candidate_commit": "899748bed1bddbaf41fe919d38d31dafc87e34b0",
+  "engine_failure_reason_counts": {
+    "failed:chair": 19,
+    "failed:initial": 1,
+    "failed:perspectives": 38,
+    "partial:deadlock": 6
+  },
+  "evidence_kind": "model",
+  "experiment_status": "complete",
+  "human_judgments": 0,
+  "limitations": [
+    "Independent Codex judgment is automated, not human ground truth. Thirty-four ambiguous source observations remain unscored pending human adjudication.",
+    "One provider alias gpt-4.1-nano through LiteLLM; no dated underlying model revision is established. This is not cross-model evidence.",
+    "Thirty small original synthetic Python cases, twenty documented defects and ten clean controls; three stochastic repeats are not ninety independent real repositories.",
+    "All development and holdout cases were included in this initial baseline. These results are not a fresh held-out validation after architecture selection. Do not tune prompts against the holdout findings.",
+    "Executable base/head controls verify author-defined triggers and clean invariants; they do not prove universal absence of additional defects.",
+    "Precision counts emitted source observations, including corroborations; recall counts distinct labeled defects per case/repeat with failed runs remaining in the sixty-defect denominator per variant.",
+    "Debate has fifty-eight failed and six partial runs. Fifty-eight runs lack complete accounting, so observed tokens and tokens per detected defect are lower bounds.",
+    "Clean false-positive rate only includes complete accounted fully judged clean runs. A run with an emitted praise or nondefect observation is scored as a false positive rather than silently discarded.",
+    "The latency percentile uses nearest rank over all scheduled actual runs including failures; failed debate runs are not filtered out.",
+    "No default architecture or persona roster promotion is justified by this provisional pilot."
+  ],
+  "metrics": {
+    "debate": {
+      "accounting_failures": 58,
+      "adjudication_methods": {
+        "automated": 104
+      },
+      "clean_pr_false_positive_rate": 1.0,
+      "complete_runs": 26,
+      "defect_recall": 0.21666666666666667,
+      "duplicate_rate": 0.21153846153846154,
+      "duplicates": 22,
+      "eligible_clean_runs": 13,
+      "failed_runs": 58,
+      "false_positive_findings": 69,
+      "finding_precision": 0.33653846153846156,
+      "human_adjudicated": false,
+      "invalid_runs": 0,
+      "missing_runs": 0,
+      "p95_latency_seconds_nearest_rank_all_runs": 31.04461995291058,
+      "partial_runs": 6,
+      "pending_findings": 5,
+      "possible_defects": 60,
+      "quality_final": false,
+      "recall_is_lower_bound": true,
+      "result_provisional": true,
+      "tokens": 1679857,
+      "tokens_are_lower_bound": true,
+      "tokens_per_true_positive": 129219.76923076923,
+      "true_positive_defects": 13,
+      "true_positive_findings": 35,
+      "unique_detections": {
+        "devops": 0,
+        "junior-dev": 0,
+        "security": 0,
+        "senior-dev": 2
+      }
+    },
+    "panel": {
+      "accounting_failures": 0,
+      "adjudication_methods": {
+        "automated": 343
+      },
+      "clean_pr_false_positive_rate": 1.0,
+      "complete_runs": 90,
+      "defect_recall": 0.8333333333333334,
+      "duplicate_rate": 0.3323615160349854,
+      "duplicates": 114,
+      "eligible_clean_runs": 30,
+      "failed_runs": 0,
+      "false_positive_findings": 179,
+      "finding_precision": 0.478134110787172,
+      "human_adjudicated": false,
+      "invalid_runs": 0,
+      "missing_runs": 0,
+      "p95_latency_seconds_nearest_rank_all_runs": 6.706721931928769,
+      "partial_runs": 0,
+      "pending_findings": 24,
+      "possible_defects": 60,
+      "quality_final": false,
+      "recall_is_lower_bound": true,
+      "result_provisional": true,
+      "tokens": 551342,
+      "tokens_are_lower_bound": false,
+      "tokens_per_true_positive": 11026.84,
+      "true_positive_defects": 50,
+      "true_positive_findings": 164,
+      "unique_detections": {
+        "devops": 1,
+        "junior-dev": 2,
+        "security": 1,
+        "senior-dev": 2
+      }
+    },
+    "senior": {
+      "accounting_failures": 0,
+      "adjudication_methods": {
+        "automated": 84
+      },
+      "clean_pr_false_positive_rate": 0.9333333333333333,
+      "complete_runs": 90,
+      "defect_recall": 0.7,
+      "duplicate_rate": 0.03571428571428571,
+      "duplicates": 3,
+      "eligible_clean_runs": 30,
+      "failed_runs": 0,
+      "false_positive_findings": 39,
+      "finding_precision": 0.5357142857142857,
+      "human_adjudicated": false,
+      "invalid_runs": 0,
+      "missing_runs": 0,
+      "p95_latency_seconds_nearest_rank_all_runs": 5.068051723996177,
+      "partial_runs": 0,
+      "pending_findings": 5,
+      "possible_defects": 60,
+      "quality_final": false,
+      "recall_is_lower_bound": true,
+      "result_provisional": true,
+      "tokens": 138199,
+      "tokens_are_lower_bound": false,
+      "tokens_per_true_positive": 3290.4523809523807,
+      "true_positive_defects": 42,
+      "true_positive_findings": 45,
+      "unique_detections": {
+        "senior-dev": 42
+      }
+    }
+  },
+  "noncomplete_runs": [
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 12455,
+      "run_id": "contract-exclusive-boundary/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "deadlock",
+      "observed_tokens": 31252,
+      "run_id": "contract-exclusive-boundary/debate/2",
+      "status": "partial"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "deadlock",
+      "observed_tokens": 30492,
+      "run_id": "contract-exclusive-boundary/debate/3",
+      "status": "partial"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 12024,
+      "run_id": "contract-null-zero/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 10784,
+      "run_id": "contract-null-zero/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 19415,
+      "run_id": "contract-client-key/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 17925,
+      "run_id": "contract-client-key/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 17658,
+      "run_id": "contract-client-key/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 36261,
+      "run_id": "contract-retry-transition/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 23220,
+      "run_id": "contract-retry-transition/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "deadlock",
+      "observed_tokens": 33710,
+      "run_id": "contract-retry-transition/debate/3",
+      "status": "partial"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 12463,
+      "run_id": "contract-explicit-default-clean/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "deadlock",
+      "observed_tokens": 32297,
+      "run_id": "contract-explicit-default-clean/debate/2",
+      "status": "partial"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 16900,
+      "run_id": "contract-explicit-default-clean/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 17986,
+      "run_id": "contract-immutable-order-clean/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 12986,
+      "run_id": "security-tenant-filter/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 17983,
+      "run_id": "security-tenant-filter/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 30811,
+      "run_id": "security-tenant-filter/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 12965,
+      "run_id": "security-sql-interpolation/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 16716,
+      "run_id": "security-sql-interpolation/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "deadlock",
+      "observed_tokens": 32235,
+      "run_id": "security-path-confinement/debate/1",
+      "status": "partial"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 13184,
+      "run_id": "security-path-confinement/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "initial",
+      "observed_tokens": 7212,
+      "run_id": "security-path-confinement/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 11429,
+      "run_id": "security-bound-query-clean/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 10588,
+      "run_id": "security-constant-time-clean/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 11021,
+      "run_id": "security-constant-time-clean/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 23677,
+      "run_id": "tests-vacuous-exception/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 15173,
+      "run_id": "tests-vacuous-exception/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 11492,
+      "run_id": "tests-vacuous-exception/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 11437,
+      "run_id": "tests-truthy-balance/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 12217,
+      "run_id": "tests-truthy-balance/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "deadlock",
+      "observed_tokens": 35764,
+      "run_id": "tests-truthy-balance/debate/3",
+      "status": "partial"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 12299,
+      "run_id": "tests-nan-self-equality/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 12984,
+      "run_id": "tests-nan-self-equality/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 9409,
+      "run_id": "tests-consumer-fixture/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 9780,
+      "run_id": "tests-consumer-fixture/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 12143,
+      "run_id": "tests-consumer-fixture/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 10454,
+      "run_id": "tests-empty-assertion-clean/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 12084,
+      "run_id": "tests-empty-assertion-clean/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 24471,
+      "run_id": "operations-retry-unit/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 11091,
+      "run_id": "operations-retry-unit/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 11196,
+      "run_id": "operations-retry-unit/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 20270,
+      "run_id": "operations-migration-order/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 13197,
+      "run_id": "operations-flush-loss/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 13752,
+      "run_id": "operations-flush-loss/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 9810,
+      "run_id": "operations-health-status/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 9785,
+      "run_id": "operations-idempotent-close-clean/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 11759,
+      "run_id": "operations-seconds-clean/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 9519,
+      "run_id": "operations-seconds-clean/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 27631,
+      "run_id": "consumer-page-index/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 28507,
+      "run_id": "consumer-page-index/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 15738,
+      "run_id": "consumer-empty-search/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 13457,
+      "run_id": "consumer-empty-search/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 10573,
+      "run_id": "consumer-keyword-renamed/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 30131,
+      "run_id": "consumer-keyword-renamed/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 12557,
+      "run_id": "consumer-keyword-renamed/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 17485,
+      "run_id": "consumer-bool-string/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 16735,
+      "run_id": "consumer-bool-string/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 19265,
+      "run_id": "consumer-bool-string/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 17984,
+      "run_id": "consumer-keyword-compatible-clean/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 30654,
+      "run_id": "consumer-keyword-compatible-clean/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 21420,
+      "run_id": "consumer-keyword-compatible-clean/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 11801,
+      "run_id": "consumer-page-format-clean/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 19444,
+      "run_id": "consumer-page-format-clean/debate/2",
+      "status": "failed"
+    }
+  ],
+  "pending_human_judgments": 34,
+  "repeat_metrics": {
+    "1": {
+      "debate": {
+        "accounting_failures": 18,
+        "adjudication_methods": {
+          "automated": 39
+        },
+        "clean_pr_false_positive_rate": 1.0,
+        "complete_runs": 11,
+        "defect_recall": 0.2,
+        "duplicate_rate": 0.1794871794871795,
+        "duplicates": 7,
+        "eligible_clean_runs": 6,
+        "failed_runs": 18,
+        "false_positive_findings": 28,
+        "finding_precision": 0.28205128205128205,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 29.750275816069916,
+        "partial_runs": 1,
+        "pending_findings": 2,
+        "possible_defects": 20,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 575168,
+        "tokens_are_lower_bound": true,
+        "tokens_per_true_positive": 143792.0,
+        "true_positive_defects": 4,
+        "true_positive_findings": 11,
+        "unique_detections": {
+          "devops": 0,
+          "junior-dev": 0,
+          "security": 0,
+          "senior-dev": 0
+        }
+      },
+      "panel": {
+        "accounting_failures": 0,
+        "adjudication_methods": {
+          "automated": 111
+        },
+        "clean_pr_false_positive_rate": 1.0,
+        "complete_runs": 30,
+        "defect_recall": 0.85,
+        "duplicate_rate": 0.3063063063063063,
+        "duplicates": 34,
+        "eligible_clean_runs": 10,
+        "failed_runs": 0,
+        "false_positive_findings": 60,
+        "finding_precision": 0.4594594594594595,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 6.954885941930115,
+        "partial_runs": 0,
+        "pending_findings": 11,
+        "possible_defects": 20,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 181946,
+        "tokens_are_lower_bound": false,
+        "tokens_per_true_positive": 10702.70588235294,
+        "true_positive_defects": 17,
+        "true_positive_findings": 51,
+        "unique_detections": {
+          "devops": 0,
+          "junior-dev": 0,
+          "security": 1,
+          "senior-dev": 1
+        }
+      },
+      "senior": {
+        "accounting_failures": 0,
+        "adjudication_methods": {
+          "automated": 25
+        },
+        "clean_pr_false_positive_rate": 0.9,
+        "complete_runs": 30,
+        "defect_recall": 0.65,
+        "duplicate_rate": 0.0,
+        "duplicates": 0,
+        "eligible_clean_runs": 10,
+        "failed_runs": 0,
+        "false_positive_findings": 12,
+        "finding_precision": 0.52,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 6.299485175986774,
+        "partial_runs": 0,
+        "pending_findings": 3,
+        "possible_defects": 20,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 47598,
+        "tokens_are_lower_bound": false,
+        "tokens_per_true_positive": 3661.3846153846152,
+        "true_positive_defects": 13,
+        "true_positive_findings": 13,
+        "unique_detections": {
+          "senior-dev": 13
+        }
+      }
+    },
+    "2": {
+      "debate": {
+        "accounting_failures": 20,
+        "adjudication_methods": {
+          "automated": 29
+        },
+        "clean_pr_false_positive_rate": 1.0,
+        "complete_runs": 8,
+        "defect_recall": 0.2,
+        "duplicate_rate": 0.27586206896551724,
+        "duplicates": 8,
+        "eligible_clean_runs": 3,
+        "failed_runs": 20,
+        "false_positive_findings": 17,
+        "finding_precision": 0.41379310344827586,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 31.775477606104687,
+        "partial_runs": 2,
+        "pending_findings": 3,
+        "possible_defects": 20,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 574996,
+        "tokens_are_lower_bound": true,
+        "tokens_per_true_positive": 143749.0,
+        "true_positive_defects": 4,
+        "true_positive_findings": 12,
+        "unique_detections": {
+          "devops": 0,
+          "junior-dev": 0,
+          "security": 0,
+          "senior-dev": 0
+        }
+      },
+      "panel": {
+        "accounting_failures": 0,
+        "adjudication_methods": {
+          "automated": 113
+        },
+        "clean_pr_false_positive_rate": 1.0,
+        "complete_runs": 30,
+        "defect_recall": 0.8,
+        "duplicate_rate": 0.3805309734513274,
+        "duplicates": 43,
+        "eligible_clean_runs": 10,
+        "failed_runs": 0,
+        "false_positive_findings": 54,
+        "finding_precision": 0.5221238938053098,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 6.429294480010867,
+        "partial_runs": 0,
+        "pending_findings": 7,
+        "possible_defects": 20,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 184344,
+        "tokens_are_lower_bound": false,
+        "tokens_per_true_positive": 11521.5,
+        "true_positive_defects": 16,
+        "true_positive_findings": 59,
+        "unique_detections": {
+          "devops": 1,
+          "junior-dev": 1,
+          "security": 0,
+          "senior-dev": 0
+        }
+      },
+      "senior": {
+        "accounting_failures": 0,
+        "adjudication_methods": {
+          "automated": 30
+        },
+        "clean_pr_false_positive_rate": 1.0,
+        "complete_runs": 30,
+        "defect_recall": 0.7,
+        "duplicate_rate": 0.03333333333333333,
+        "duplicates": 1,
+        "eligible_clean_runs": 10,
+        "failed_runs": 0,
+        "false_positive_findings": 15,
+        "finding_precision": 0.5,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 5.068051723996177,
+        "partial_runs": 0,
+        "pending_findings": 1,
+        "possible_defects": 20,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 44664,
+        "tokens_are_lower_bound": false,
+        "tokens_per_true_positive": 3190.285714285714,
+        "true_positive_defects": 14,
+        "true_positive_findings": 15,
+        "unique_detections": {
+          "senior-dev": 14
+        }
+      }
+    },
+    "3": {
+      "debate": {
+        "accounting_failures": 20,
+        "adjudication_methods": {
+          "automated": 36
+        },
+        "clean_pr_false_positive_rate": 1.0,
+        "complete_runs": 7,
+        "defect_recall": 0.25,
+        "duplicate_rate": 0.19444444444444445,
+        "duplicates": 7,
+        "eligible_clean_runs": 4,
+        "failed_runs": 20,
+        "false_positive_findings": 24,
+        "finding_precision": 0.3333333333333333,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 29.263997345929965,
+        "partial_runs": 3,
+        "pending_findings": 0,
+        "possible_defects": 20,
+        "quality_final": false,
+        "recall_is_lower_bound": false,
+        "result_provisional": true,
+        "tokens": 529693,
+        "tokens_are_lower_bound": true,
+        "tokens_per_true_positive": 105938.6,
+        "true_positive_defects": 5,
+        "true_positive_findings": 12,
+        "unique_detections": {
+          "devops": 0,
+          "junior-dev": 0,
+          "security": 0,
+          "senior-dev": 2
+        }
+      },
+      "panel": {
+        "accounting_failures": 0,
+        "adjudication_methods": {
+          "automated": 119
+        },
+        "clean_pr_false_positive_rate": 1.0,
+        "complete_runs": 30,
+        "defect_recall": 0.85,
+        "duplicate_rate": 0.31092436974789917,
+        "duplicates": 37,
+        "eligible_clean_runs": 10,
+        "failed_runs": 0,
+        "false_positive_findings": 65,
+        "finding_precision": 0.453781512605042,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 6.706721931928769,
+        "partial_runs": 0,
+        "pending_findings": 6,
+        "possible_defects": 20,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 185052,
+        "tokens_are_lower_bound": false,
+        "tokens_per_true_positive": 10885.411764705883,
+        "true_positive_defects": 17,
+        "true_positive_findings": 54,
+        "unique_detections": {
+          "devops": 0,
+          "junior-dev": 1,
+          "security": 0,
+          "senior-dev": 1
+        }
+      },
+      "senior": {
+        "accounting_failures": 0,
+        "adjudication_methods": {
+          "automated": 29
+        },
+        "clean_pr_false_positive_rate": 0.9,
+        "complete_runs": 30,
+        "defect_recall": 0.75,
+        "duplicate_rate": 0.06896551724137931,
+        "duplicates": 2,
+        "eligible_clean_runs": 10,
+        "failed_runs": 0,
+        "false_positive_findings": 12,
+        "finding_precision": 0.5862068965517241,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 5.041658521979116,
+        "partial_runs": 0,
+        "pending_findings": 1,
+        "possible_defects": 20,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 45937,
+        "tokens_are_lower_bound": false,
+        "tokens_per_true_positive": 3062.4666666666667,
+        "true_positive_defects": 15,
+        "true_positive_findings": 17,
+        "unique_detections": {
+          "senior-dev": 15
+        }
+      }
+    }
+  },
+  "run_count": 270,
+  "schema_version": 1,
+  "source_observations": 565,
+  "status": "provisional_automated_adjudication_human_review_pending"
+}
