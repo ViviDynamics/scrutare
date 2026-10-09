@@ -19,6 +19,7 @@ from scrutare.engine.repository_context import context_contents, supporting_depe
 from scrutare.engine.review_inputs import ReviewInputError, prepare_review_inputs
 from scrutare.engine.session_artifacts import write_owned_json
 from scrutare.engine.session_models import FanOutResult, NareRuntime, TokenUsage
+from scrutare.engine.static_analysis import analysis_dependencies, static_analysis_contents
 from scrutare.findings import (
     Anchor,
     Finding,
@@ -132,6 +133,14 @@ def _project(run: Path, config: ReviewConfig, patches: dict[str, bytes]) -> Path
         for name, data in contents.items():
             (directory / name).write_bytes(data)
         shutil.copyfile(run / "files.json", child / "context-source-files.json")
+    if config.analysis.enabled:
+        static_analysis_contents(run, config)
+        source = run / "static-analysis/source.json"
+        directory = child / "static-analysis"
+        directory.mkdir(mode=0o700)
+        if source.exists():
+            shutil.copyfile(source, directory / "source.json")
+            (directory / "source.json").chmod(0o600)
     return child
 
 
@@ -172,7 +181,7 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
     inputs = prepare_review_inputs(run_dir, config)
     run = inputs.root.parent
     with _history(run, config) as (state, path):
-        dependencies = supporting_dependencies(inputs.root)
+        dependencies = supporting_dependencies(inputs.root) + analysis_dependencies(inputs.root)
         if version == 2:
             # Retained citations name a commit, even when file bytes stay the same.
             # A changed revision therefore needs a fresh quoted citation.

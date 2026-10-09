@@ -103,6 +103,7 @@ async def review_pr(
     ref: PullRequestRef, config: ReviewConfig, *, config_bytes: bytes,
     runs_root: Path, runtime: NareRuntime, capture_client: GitHubClient | None = None,
     review_client: ReviewClient | None = None,
+    analysis_capture: Path | None = None,
 ) -> ReviewRunResult:
     """Run once, never reusing captured evidence or inventing a missing verdict."""
     preflight_review(config, runtime)
@@ -112,7 +113,8 @@ async def review_pr(
     try:
         run_dir = ingest_pr(capture_client if capture_client is not None else GitHubClient(),
                             ref, runs_root, config_bytes=config_bytes,
-                            config_data=config.to_dict(), review_config=config).absolute()
+                            config_data=config.to_dict(), review_config=config,
+                            analysis_capture=analysis_capture).absolute()
         panel = await run_review(run_dir, config, runtime=runtime)
         if (panel.status not in ("complete", "partial") or not panel.accounting_complete
                 or not isinstance(panel.verdict, Verdict)):

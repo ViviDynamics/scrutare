@@ -102,6 +102,11 @@ class ContextSettings:
 
 
 @dataclass(frozen=True)
+class AnalysisSettings:
+    enabled: bool = False
+
+
+@dataclass(frozen=True)
 class InspectionSettings:
     procedures: Literal["baseline", "v1"] = "baseline"
 
@@ -140,6 +145,7 @@ class ReviewConfig:
     inspection: InspectionSettings = InspectionSettings()
     context: ContextSettings = ContextSettings()
     findings: FindingSettings = FindingSettings()
+    analysis: AnalysisSettings = AnalysisSettings()
 
     def __post_init__(self) -> None:
         if self.findings.evidence == "v2" and not self.context.enabled:
@@ -185,6 +191,8 @@ class ReviewConfig:
             result["findings"] = {"evidence": self.findings.evidence}
             if self.findings.assessment != AssessmentSettings():
                 result["findings"]["assessment"] = asdict(self.findings.assessment)
+        if self.analysis.enabled:
+            result["analysis"] = asdict(self.analysis)
         return result
 
 
@@ -195,6 +203,14 @@ def _finding_settings(value: object) -> FindingSettings:
     return FindingSettings(cast(Literal["legacy", "v2"], _choice(
         fields.get("evidence", "legacy"), "findings.evidence", ("legacy", "v2"))),
         AssessmentSettings(**assessment))
+
+
+def _analysis_settings(value: object, context: ContextSettings) -> AnalysisSettings:
+    fields = _mapping(value, "analysis", ("enabled",))
+    enabled = fields.get("enabled", False)
+    if type(enabled) is not bool or (enabled and not context.enabled):
+        raise ConfigError("analysis.enabled: expected boolean; enabled analysis requires context")
+    return AnalysisSettings(enabled)
 
 
 def _context_settings(value: object) -> ContextSettings:
@@ -442,7 +458,7 @@ def parse_config(data: bytes | str) -> ReviewConfig:
         _load_yaml(data),
         "",
         ("strategy", "rounds", "personas", "budgets", "models", "verdict", "github",
-         "inspection", "context", "findings"),
+         "inspection", "context", "findings", "analysis"),
     )
     strategy = cast(
         Strategy,
@@ -454,6 +470,7 @@ def parse_config(data: bytes | str) -> ReviewConfig:
     )
     personas = _personas(raw.get("personas", list(DEFAULT_PERSONA_NAMES)))
     inspection = _mapping(raw.get("inspection", {}), "inspection", ("procedures",))
+    context = _context_settings(raw.get("context", {}))
     return ReviewConfig(
         strategy,
         RoundSettings(_positive(rounds.get("max", 3), "rounds.max")),
@@ -469,8 +486,9 @@ def parse_config(data: bytes | str) -> ReviewConfig:
             inspection.get("procedures", "baseline"), "inspection.procedures",
             ("baseline", "v1"),
         ))),
-        _context_settings(raw.get("context", {})),
+        context,
         _finding_settings(raw.get("findings", {})),
+        _analysis_settings(raw.get("analysis", {}), context),
     )
 
 

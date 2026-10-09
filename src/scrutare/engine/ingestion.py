@@ -13,6 +13,7 @@ from scrutare.config import ReviewConfig
 from scrutare.engine.github import GitHubClient, GitHubError, PullRequestRef, assert_pr_open
 from scrutare.engine.repository_context import capture_repository_context
 from scrutare.engine.review_inputs import prepare_review_inputs
+from scrutare.engine.static_analysis import capture_static_analysis
 
 
 def check_pr_open(client: GitHubClient, ref: PullRequestRef) -> None:
@@ -29,8 +30,12 @@ def ingest_pr(
     config_bytes: bytes | None = None,
     config_data: dict[str, Any] | None = None,
     review_config: ReviewConfig | None = None,
+    analysis_capture: Path | None = None,
 ) -> Path:
     """Persist inputs only when surrounding metadata reads agree on head and base."""
+    if analysis_capture is not None and (
+            review_config is None or not review_config.analysis.enabled):
+        raise ValueError("Explicit analysis capture requires analysis.enabled.")
     if config_path is not None and config_bytes is not None:
         raise ValueError("config_path and config_bytes cannot both be supplied")
     for _ in range(3):
@@ -92,6 +97,7 @@ def ingest_pr(
         )
         if review_config is not None:
             capture_repository_context(client, run_dir, review_config)
+            capture_static_analysis(run_dir, review_config, analysis_capture)
             prepare_review_inputs(run_dir, review_config)
     except Exception:
         shutil.rmtree(run_dir)
