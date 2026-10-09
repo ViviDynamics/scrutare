@@ -1,0 +1,7 @@
+diff --git a/change.py b/change.py
+--- a/change.py
++++ b/change.py
+@@ -1,2 +1,2 @@
+ def records(rows, tenant):
+-    return [row for row in rows if row["tenant"] == tenant]
++    return [row for row in rows if row["tenant"] != tenant]

@@ -1,0 +1,16 @@
+{
+  "case_id": "security-sql-interpolation",
+  "counterexamples": [
+    "db is a trusted SQL connection; do not allege command-shell execution."
+  ],
+  "defects": [
+    {
+      "evidence": "change.py removes bound parameters and concatenates name.",
+      "fix_or_counterexample": "Restore placeholder and parameter tuple.",
+      "id": "security-sql-interpolation-defect",
+      "impact": "Attacker changes the query predicate and reads other users.",
+      "match_criteria": "Identify input-to-SQL injection path and lost parameter binding.",
+      "trigger": "name is an attacker-controlled string such as x' OR 1=1 --"
+    }
+  ]
+}

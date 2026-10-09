@@ -1,0 +1,16 @@
+{
+  "case_id": "tests-consumer-fixture",
+  "counterexamples": [
+    "A terminology change need not be a production defect; the unchanged test demonstrably fails."
+  ],
+  "defects": [
+    {
+      "evidence": "formatting.py now returns waiting; test_formatting.py still expects ready.",
+      "fix_or_counterexample": "Update expected fixture if waiting is intended, or retain ready contract.",
+      "id": "tests-consumer-fixture-defect",
+      "impact": "Unchanged expected ready causes deterministic CI failure.",
+      "match_criteria": "Identify stale ready assertion incompatible with waiting return.",
+      "trigger": "Execute test_label after changed status terminology"
+    }
+  ]
+}

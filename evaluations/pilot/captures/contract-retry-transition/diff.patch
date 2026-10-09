@@ -1,0 +1,9 @@
+diff --git a/change.py b/change.py
+--- a/change.py
++++ b/change.py
+@@ -1,4 +1,4 @@
+ def next_state(state, success):
+     if success:
+         return "done"
+-    return "pending" if state == "running" else state
++    return "done" if state == "running" else state

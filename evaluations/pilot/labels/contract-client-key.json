@@ -1,0 +1,16 @@
+{
+  "case_id": "contract-client-key",
+  "counterexamples": [
+    "Returning amount is not itself a defect if all consumers migrate."
+  ],
+  "defects": [
+    {
+      "evidence": "service.py changes total key; client.py still indexes total.",
+      "fix_or_counterexample": "Preserve total or migrate client atomically.",
+      "id": "contract-client-key-defect",
+      "impact": "The unchanged consumer raises KeyError.",
+      "match_criteria": "Identify renamed response key breaking invoice consumer.",
+      "trigger": "invoice()"
+    }
+  ]
+}

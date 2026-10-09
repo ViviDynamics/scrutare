@@ -1,0 +1,16 @@
+{
+  "case_id": "consumer-page-index",
+  "counterexamples": [
+    "Zero-based callers would use another contract; docstring explicitly sets one-based pages."
+  ],
+  "defects": [
+    {
+      "evidence": "change.py now multiplies one-based page directly.",
+      "fix_or_counterexample": "Subtract one before multiplying.",
+      "id": "consumer-page-index-defect",
+      "impact": "First twenty results are skipped.",
+      "match_criteria": "Identify one-based pagination off-by-one with first page.",
+      "trigger": "Consumer requests first page (page=1,size=20)"
+    }
+  ]
+}

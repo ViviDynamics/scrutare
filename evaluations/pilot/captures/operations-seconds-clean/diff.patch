@@ -1,0 +1,8 @@
+diff --git a/change.py b/change.py
+--- a/change.py
++++ b/change.py
+@@ -1,2 +1,3 @@
+ def delay_seconds(retry_after_ms):
+-    return retry_after_ms / 1000
++    """Convert gateway millisecond backoff into seconds."""
++    return float(retry_after_ms) / 1000.0

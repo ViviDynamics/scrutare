@@ -1,0 +1,7 @@
+{
+  "case_id": "operations-seconds-clean",
+  "counterexamples": [
+    "500 milliseconds still maps to 0.5 seconds; float conversion does not reverse the units."
+  ],
+  "defects": []
+}

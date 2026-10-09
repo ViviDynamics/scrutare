@@ -1,0 +1,425 @@
+{
+  "cases": [
+    {
+      "capture": "captures/contract-exclusive-boundary",
+      "domain": "correctness",
+      "id": "contract-exclusive-boundary",
+      "labels": "labels/contract-exclusive-boundary.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/contract-null-zero",
+      "domain": "correctness",
+      "id": "contract-null-zero",
+      "labels": "labels/contract-null-zero.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/contract-client-key",
+      "domain": "correctness",
+      "id": "contract-client-key",
+      "labels": "labels/contract-client-key.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/contract-retry-transition",
+      "domain": "correctness",
+      "id": "contract-retry-transition",
+      "labels": "labels/contract-retry-transition.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/contract-explicit-default-clean",
+      "domain": "correctness",
+      "id": "contract-explicit-default-clean",
+      "labels": "labels/contract-explicit-default-clean.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/contract-immutable-order-clean",
+      "domain": "correctness",
+      "id": "contract-immutable-order-clean",
+      "labels": "labels/contract-immutable-order-clean.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/security-tenant-filter",
+      "domain": "security",
+      "id": "security-tenant-filter",
+      "labels": "labels/security-tenant-filter.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/security-sql-interpolation",
+      "domain": "security",
+      "id": "security-sql-interpolation",
+      "labels": "labels/security-sql-interpolation.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/security-path-confinement",
+      "domain": "security",
+      "id": "security-path-confinement",
+      "labels": "labels/security-path-confinement.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/security-auth-order",
+      "domain": "security",
+      "id": "security-auth-order",
+      "labels": "labels/security-auth-order.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/security-bound-query-clean",
+      "domain": "security",
+      "id": "security-bound-query-clean",
+      "labels": "labels/security-bound-query-clean.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/security-constant-time-clean",
+      "domain": "security",
+      "id": "security-constant-time-clean",
+      "labels": "labels/security-constant-time-clean.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/tests-vacuous-exception",
+      "domain": "tests",
+      "id": "tests-vacuous-exception",
+      "labels": "labels/tests-vacuous-exception.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/tests-truthy-balance",
+      "domain": "tests",
+      "id": "tests-truthy-balance",
+      "labels": "labels/tests-truthy-balance.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/tests-nan-self-equality",
+      "domain": "tests",
+      "id": "tests-nan-self-equality",
+      "labels": "labels/tests-nan-self-equality.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/tests-consumer-fixture",
+      "domain": "tests",
+      "id": "tests-consumer-fixture",
+      "labels": "labels/tests-consumer-fixture.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/tests-empty-assertion-clean",
+      "domain": "tests",
+      "id": "tests-empty-assertion-clean",
+      "labels": "labels/tests-empty-assertion-clean.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/tests-required-exception-clean",
+      "domain": "tests",
+      "id": "tests-required-exception-clean",
+      "labels": "labels/tests-required-exception-clean.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/operations-retry-unit",
+      "domain": "operations",
+      "id": "operations-retry-unit",
+      "labels": "labels/operations-retry-unit.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/operations-migration-order",
+      "domain": "operations",
+      "id": "operations-migration-order",
+      "labels": "labels/operations-migration-order.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/operations-flush-loss",
+      "domain": "operations",
+      "id": "operations-flush-loss",
+      "labels": "labels/operations-flush-loss.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/operations-health-status",
+      "domain": "operations",
+      "id": "operations-health-status",
+      "labels": "labels/operations-health-status.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/operations-idempotent-close-clean",
+      "domain": "operations",
+      "id": "operations-idempotent-close-clean",
+      "labels": "labels/operations-idempotent-close-clean.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/operations-seconds-clean",
+      "domain": "operations",
+      "id": "operations-seconds-clean",
+      "labels": "labels/operations-seconds-clean.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/consumer-page-index",
+      "domain": "consumer",
+      "id": "consumer-page-index",
+      "labels": "labels/consumer-page-index.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/consumer-empty-search",
+      "domain": "consumer",
+      "id": "consumer-empty-search",
+      "labels": "labels/consumer-empty-search.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/consumer-keyword-renamed",
+      "domain": "consumer",
+      "id": "consumer-keyword-renamed",
+      "labels": "labels/consumer-keyword-renamed.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/consumer-bool-string",
+      "domain": "consumer",
+      "id": "consumer-bool-string",
+      "labels": "labels/consumer-bool-string.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/consumer-keyword-compatible-clean",
+      "domain": "consumer",
+      "id": "consumer-keyword-compatible-clean",
+      "labels": "labels/consumer-keyword-compatible-clean.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/consumer-page-format-clean",
+      "domain": "consumer",
+      "id": "consumer-page-format-clean",
+      "labels": "labels/consumer-page-format-clean.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "holdout"
+    }
+  ],
+  "schema_version": 1
+}

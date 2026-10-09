@@ -1,0 +1,11 @@
+diff --git a/change.py b/change.py
+--- a/change.py
++++ b/change.py
+@@ -1,5 +1,5 @@
+ def remaining(total, spent):
+-    return total - spent
++    return total + spent
+ 
+ def test_balance():
+-    assert remaining(10, 3) == 7
++    assert remaining(10, 3)

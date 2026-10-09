@@ -1,0 +1,7 @@
+diff --git a/change.py b/change.py
+--- a/change.py
++++ b/change.py
+@@ -1,2 +1,2 @@
+ def readiness(database_available):
+-    return 200 if database_available else 503
++    return 200 if database_available else 200

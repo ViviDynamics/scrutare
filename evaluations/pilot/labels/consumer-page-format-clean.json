@@ -1,0 +1,7 @@
+{
+  "case_id": "consumer-page-format-clean",
+  "counterexamples": [
+    "Extracting zero-based index into a variable preserves first-page offset zero and every other offset."
+  ],
+  "defects": []
+}

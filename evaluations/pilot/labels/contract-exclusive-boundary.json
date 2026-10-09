@@ -1,0 +1,16 @@
+{
+  "case_id": "contract-exclusive-boundary",
+  "counterexamples": [
+    "Values below the limit remain accepted; no integer overflow is involved."
+  ],
+  "defects": [
+    {
+      "evidence": "change.py return contradicts exclusive-limit docstring.",
+      "fix_or_counterexample": "Restore <.",
+      "id": "contract-exclusive-boundary-defect",
+      "impact": "A request at the forbidden limit is accepted.",
+      "match_criteria": "Identify equality acceptance and exclusive contract.",
+      "trigger": "size equals limit (10,10)"
+    }
+  ]
+}

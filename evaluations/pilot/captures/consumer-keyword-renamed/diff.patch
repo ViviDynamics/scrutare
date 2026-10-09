@@ -1,0 +1,8 @@
+diff --git a/api.py b/api.py
+--- a/api.py
++++ b/api.py
+@@ -1,2 +1,2 @@
+-def connect(timeout=30):
+-    return timeout
++def connect(deadline=30):
++    return deadline

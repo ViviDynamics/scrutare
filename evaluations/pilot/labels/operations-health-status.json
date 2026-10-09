@@ -1,0 +1,16 @@
+{
+  "case_id": "operations-health-status",
+  "counterexamples": [
+    "Liveness can differ from readiness; this function is explicitly readiness."
+  ],
+  "defects": [
+    {
+      "evidence": "change.py unavailable readiness returns 200.",
+      "fix_or_counterexample": "Return 503 when unavailable.",
+      "id": "operations-health-status-defect",
+      "impact": "Load balancer admits traffic to instance unable to serve database-backed requests.",
+      "match_criteria": "Identify unavailable dependency still yielding successful readiness.",
+      "trigger": "Database unavailable during readiness probe"
+    }
+  ]
+}

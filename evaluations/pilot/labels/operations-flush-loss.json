@@ -1,0 +1,16 @@
+{
+  "case_id": "operations-flush-loss",
+  "counterexamples": [
+    "An empty pending queue does not establish safe shutdown for nonempty queues."
+  ],
+  "defects": [
+    {
+      "evidence": "change.py close moves before draining pending writes.",
+      "fix_or_counterexample": "Drain and flush before closing.",
+      "id": "operations-flush-loss-defect",
+      "impact": "Writing after close raises and pending events are lost.",
+      "match_criteria": "Identify close-before-write/flush failure and pending loss.",
+      "trigger": "Shutdown with pending buffered events and normal closeable writer"
+    }
+  ]
+}

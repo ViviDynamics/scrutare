@@ -1,0 +1,16 @@
+{
+  "case_id": "tests-vacuous-exception",
+  "counterexamples": [
+    "Catching an exception is not automatically wrong; this test lacks a fail path for the documented required exception."
+  ],
+  "defects": [
+    {
+      "evidence": "change.py removes raise and replaces raises context with catch-only test.",
+      "fix_or_counterexample": "Restore ValueError and pytest.raises.",
+      "id": "tests-vacuous-exception-defect",
+      "impact": "Negative values are returned; rewritten test passes whether an exception occurs or not.",
+      "match_criteria": "Identify concrete lost negative validation and/or test accepting missing exception.",
+      "trigger": "parse(-1) after validation refactor"
+    }
+  ]
+}

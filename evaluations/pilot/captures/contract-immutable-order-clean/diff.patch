@@ -1,0 +1,8 @@
+diff --git a/change.py b/change.py
+--- a/change.py
++++ b/change.py
+@@ -1,2 +1,3 @@
+ def ordered(values):
+-    return sorted(values)
++    """Return sorted copy without mutating caller input."""
++    return list(sorted(values))
