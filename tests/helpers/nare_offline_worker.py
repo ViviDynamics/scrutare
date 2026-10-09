@@ -138,6 +138,14 @@ class FakeProvider:
         if not self.replies:
             raise AssertionError("Offline transport exhausted scripted replies")
         reply = self.replies.pop(0)
+        if reply.get("select_pool"):
+            prompt = arguments[1]
+            pool, _ = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])
+            output = {"findings": [{"candidate_id": f["candidate_id"], "category": f["category"]}
+                                   for f in pool["verified_pool"]]}
+            if prompt.startswith("Arbitrate"):
+                output["converged"] = True
+            reply = {"content": [{"type": "text", "text": json.dumps(output)}]}
         if reply.get("error"):
             raise RuntimeError(reply["error"])
         observations["calls"][-1]["end"] = time.monotonic()

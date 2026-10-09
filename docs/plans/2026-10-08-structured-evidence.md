@@ -17,4 +17,13 @@ Out: semantic truth adjudication and empirical quality promotion, pending evalua
 - [x] 1. Frozen evidence and strict parsers: malformed fields, revisions, paths and ranges fail.
 - [x] 2. Opt-in config/schema and production validation: captured bytes bind citation status.
 - [x] 3. Source preservation through reanchor, dedupe, debate, iterative and replay.
-- [ ] 4. Safe evidence rendering, documentation and focused verification.
+- [x] 4. Safe evidence rendering, documentation and focused verification.
+
+## Validation
+- Test-first contract failures observed before each implementation task.
+- 1,075 focused legacy/lifecycle regression checks passed; 23 dedicated contract checks passed.
+- Installed wheel + external nare 2026.10.4: all 9 legacy/v2/invalid cases across
+  panel/debate/iterative passed, including distinct equal sources, ID preservation,
+  iterative reuse, changed-revision recitation, retained history and offline replay.
+- Ruff and strict mypy passed. Parent owns final Python 3.10/3.14/native Docker lanes.
+- These are contract/integration checks; comparative quality remains unmeasured.
