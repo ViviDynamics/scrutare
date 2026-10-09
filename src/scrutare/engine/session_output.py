@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, NoReturn
 
 from scrutare.config import CATEGORIES
+from scrutare.engine.assessment_inputs import AssessmentInput
 from scrutare.engine.debate_inputs import DebateInput
 from scrutare.engine.persona_inputs import PersonaReanchorInput
 from scrutare.engine.reanchor import parse_reanchor_output
@@ -337,7 +338,8 @@ def _decode_evidence(
 
 def decode_session(
     stdout: bytes, session_document: bytes | None, *, persona: str, exit_code: int,
-    expected_limit: int, expected_root: Path, descriptor: DebateInput | None = None,
+    expected_limit: int, expected_root: Path,
+    descriptor: DebateInput | AssessmentInput | None = None,
     evidence_version: int = 1, candidate_namespace: str = "",
 
 ) -> DecodedSession:

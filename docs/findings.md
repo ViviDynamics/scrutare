@@ -286,3 +286,47 @@ and rejects mixed legacy/v2 sources and incompatible verdict versions. Posting
 renders quoted assertions and citations in the existing escaped comment body;
 it adds no GitHub API fields. These checks establish integration and mechanical
 validity, not measured improvements in review quality.
+
+## Independent semantic assessment
+
+`findings.assessment.enabled: true` adds an independent bounded session after
+initial diff-anchor verification. It receives original v2 candidates as quoted,
+untrusted claims and reads the same immutable captured code. It must cover each
+caller-owned candidate ID exactly once with `supported`, `refuted`, or `unresolved`,
+a nonempty reason, and supporting/counter citations. Code validates both citation
+sets. Supported claims require supporting citations, refutation requires counter
+citations, and unresolved claims must cite captured evidence identifying the gap.
+The assessor cannot rewrite an allegation, report confidence, count votes, or
+supply a PR verdict. **Model-based support is not formal proof.**
+
+`assessment.json` retains original candidates, every assessment and disposition,
+reasons, counterevidence, allocation and the native execution outcome. Raw session
+records remain private. Refuted candidates are excluded; unresolved claims remain visible as quoted
+findings for human review. Supported candidates, including a single minority source, survive regardless of subsequent chair votes
+or category downgrades. Current assessment policy takes precedence over a vote.
+The focused debate protocol is a separate feature; this stage does not claim that
+an additional discussion improves review quality.
+
+Complete unresolved potentially blocking claims produce `status: partial` and an
+`escalated` verdict with `rule: unresolved_semantic_assessment` and the explicit
+one-attempt assessment bound. Posting uses a COMMENT and the existing human
+reviewer request mechanism. Unresolved advisory claims remain in retained
+assessment evidence without blocking. Technical failure, incomplete accounting,
+partial discovery/correction, missing coverage or partial assessor output withhold
+a verdict rather than assert semantic uncertainty or approval.
+
+Opt-in iterative review conservatively reassesses all selected hunks on a new
+revision. Same-head reuse preserves original assessments without spending new
+model tokens; it cannot erase semantic uncertainty. Historical evidence on an
+unassessed revision remains stale, with no current verdict while rounds remain,
+and strategy exhaustion escalates at the bound. Stale citations remain historical
+records and do not certify the current revision. Replay of such a stale record
+refuses a clean current assessment comparison.
+
+Replay reads the recorded policy, revalidates captured citation identities,
+checks complete assessment accounting and original supported sources, and derives
+semantic uncertainty from recorded dispositions. It executes no models or code
+and establishes local artifact consistency, not semantic truth or authenticity.
+Default legacy/v2 reviews have no assessment allocation or assessment artifacts.
+Comparative precision, recall loss, minority retention and false-claim behavior
+remain to be measured by the evaluation/promotion backlog before defaults change.

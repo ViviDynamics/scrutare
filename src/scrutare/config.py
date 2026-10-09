@@ -107,8 +107,21 @@ class InspectionSettings:
 
 
 @dataclass(frozen=True)
+class AssessmentSettings:
+    enabled: bool = False
+    tokens: int = 2000
+
+    def __post_init__(self) -> None:
+        if type(self.enabled) is not bool:
+            raise ConfigError("findings.assessment.enabled: expected boolean")
+        if type(self.tokens) is not int or self.tokens <= 0:
+            raise ConfigError("findings.assessment.tokens: expected positive integer")
+
+
+@dataclass(frozen=True)
 class FindingSettings:
     evidence: Literal["legacy", "v2"] = "legacy"
+    assessment: AssessmentSettings = AssessmentSettings()
 
     def __post_init__(self) -> None:
         if self.evidence not in ("legacy", "v2"):
@@ -131,6 +144,11 @@ class ReviewConfig:
     def __post_init__(self) -> None:
         if self.findings.evidence == "v2" and not self.context.enabled:
             raise ConfigError("findings.evidence: v2 requires context.enabled")
+        if self.findings.assessment.enabled:
+            if self.findings.evidence != "v2":
+                raise ConfigError("findings.assessment: requires evidence v2")
+            if self.findings.assessment.tokens >= self.budgets.review_max_tokens:
+                raise ConfigError("findings.assessment.tokens: must leave discovery capacity")
 
     def to_dict(self) -> dict[str, Any]:
         result: dict[str, Any] = {
@@ -164,14 +182,19 @@ class ReviewConfig:
         if self.inspection.procedures != "baseline":
             result["inspection"] = asdict(self.inspection)
         if self.findings != FindingSettings():
-            result["findings"] = asdict(self.findings)
+            result["findings"] = {"evidence": self.findings.evidence}
+            if self.findings.assessment != AssessmentSettings():
+                result["findings"]["assessment"] = asdict(self.findings.assessment)
         return result
 
 
 def _finding_settings(value: object) -> FindingSettings:
-    fields = _mapping(value, "findings", ("evidence",))
+    fields = _mapping(value, "findings", ("evidence", "assessment"))
+    assessment = _mapping(fields.get("assessment", {}), "findings.assessment",
+                          ("enabled", "tokens"))
     return FindingSettings(cast(Literal["legacy", "v2"], _choice(
-        fields.get("evidence", "legacy"), "findings.evidence", ("legacy", "v2"))))
+        fields.get("evidence", "legacy"), "findings.evidence", ("legacy", "v2"))),
+        AssessmentSettings(**assessment))
 
 
 def _context_settings(value: object) -> ContextSettings:

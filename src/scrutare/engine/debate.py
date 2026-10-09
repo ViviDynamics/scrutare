@@ -67,7 +67,8 @@ async def run_debate(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntim
     pool: tuple[Finding, ...] = ()
     try:
         _validate_binding(context, hashes)
-        if context.ledger.accounting_complete and all(_usable(o) for o in initial.outcomes):
+        if (context.ledger.accounting_complete and all(_usable(o) for o in initial.outcomes)
+                and not (config.findings.assessment.enabled and initial.partial)):
             anchors = parse_diff((context.inputs.root / "diff.patch").read_bytes())
             check = check_anchors((f for o in initial.outcomes for f in o.findings), anchors)
             descriptors = _correction_inputs(context, check)
@@ -81,7 +82,29 @@ async def run_debate(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntim
                 )
                 pool = verification.accepted
                 partial = initial.partial or any(o.status != "complete" for o in corrections)
-                for number in range(1, config.rounds.max + 1):
+                protected: tuple[Finding, ...] = ()
+                unresolved: tuple[str, ...] = ()
+                assessment_ready = not (config.findings.assessment.enabled and partial)
+                if not assessment_ready:
+                    status, reason = "partial", "discovery_incomplete"
+                if config.findings.assessment.enabled and assessment_ready:
+                    from scrutare.engine.assessment import assess_candidates
+                    assessment = await assess_candidates(context, pool)
+                    assessment_ready = assessment.status == "complete"
+                    if not assessment_ready:
+                        status, reason = assessment.status, "assessment_incomplete"
+                    else:
+                        pool = protected = assessment.retained
+                        unresolved = assessment.unresolved_blocking(
+                            config.verdict.blocking_categories)
+                        partial = partial or bool(unresolved)
+                        if not pool or unresolved:
+                            verdict = derive_verdict(dedupe_findings(pool), config.verdict,
+                                                     evidence_version=2,
+                                                     unresolved_candidates=unresolved)
+                            status, reason = ("partial" if partial else "complete"), "assessed"
+                limit = config.rounds.max if assessment_ready and verdict is None else 0
+                for number in range(1, limit + 1):
                     _validate_binding(context, hashes)
                     positions = tuple(
                         DebateInput(
@@ -186,13 +209,18 @@ async def run_debate(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntim
                         raise ReviewInputError("Cannot publish debate: missing chair decision.")
                     output = saved["output"]
                     accepted = chair_input.select(output)
+                    if config.findings.assessment.enabled:
+                        # A vote or category downgrade is not independent refutation.
+                        # Keep every supported source, with its original allegation/category.
+                        accepted = protected
                     converged = output["converged"]
                     record["converged"] = converged
                     partial = partial or decision.status != "complete"
                     if converged:
                         verdict = derive_verdict(
                             dedupe_findings(accepted), config.verdict,
-                            evidence_version=2 if config.findings.evidence == "v2" else 1)
+                            evidence_version=2 if config.findings.evidence == "v2" else 1,
+                            unresolved_candidates=unresolved)
                         status, reason = "partial" if partial else "complete", "converged"
                         break
                     if number == config.rounds.max:
@@ -200,6 +228,7 @@ async def run_debate(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntim
                             dedupe_findings(pool),
                             config.verdict,
                             evidence_version=2 if config.findings.evidence == "v2" else 1,
+                            unresolved_candidates=unresolved,
                             exhaustion=Exhaustion("debate", number, config.rounds.max),
                         )
                         status, reason = "partial" if partial else "complete", "deadlock"

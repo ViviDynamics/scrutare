@@ -55,7 +55,8 @@ def _delta(current: TokenUsage, previous: TokenUsage) -> TokenUsage:
 class ReviewBudgetLedger:
     """Fixed fair quotas, with reservations and actual usage across attempts."""
 
-    def __init__(self, persona_names: tuple[str, ...], settings: BudgetSettings) -> None:
+    def __init__(self, persona_names: tuple[str, ...], settings: BudgetSettings, *,
+                 reserved_allocations: Mapping[str, int] | None = None) -> None:
         if not isinstance(persona_names, tuple) or not persona_names:
             raise ValueError("persona_names: expected a nonempty tuple")
         for persona in persona_names:
@@ -68,11 +69,20 @@ class ReviewBudgetLedger:
         _integer(settings.review_max_tokens, "review_max_tokens", positive=True)
         self._names = persona_names
         self._settings = settings
-        total = min(settings.review_max_tokens, len(persona_names) * settings.per_persona_tokens)
-        quotient, remainder = divmod(total, len(persona_names))
+        reserved = dict(reserved_allocations or {})
+        for name, allocation in reserved.items():
+            if name not in persona_names:
+                raise ValueError("reservation: expected configured persona")
+            _integer(allocation, "reservation", positive=True)
+        ordinary = tuple(name for name in persona_names if name not in reserved)
+        remaining = settings.review_max_tokens - sum(reserved.values())
+        if not ordinary or remaining <= 0:
+            raise ValueError("reservation: must leave discovery capacity")
+        total = min(remaining, len(ordinary) * settings.per_persona_tokens)
+        quotient, remainder = divmod(total, len(ordinary))
         self._allocations = {
-            name: quotient + (index < remainder) for index, name in enumerate(persona_names)
-        }
+            name: quotient + (index < remainder) for index, name in enumerate(ordinary)
+        } | reserved
         self._persona_usage = dict.fromkeys(persona_names, TokenUsage())
         self._sessions: dict[str, tuple[str, TokenUsage]] = {}
         self._active: dict[str, BudgetLease] = {}

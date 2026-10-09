@@ -234,6 +234,8 @@ def parse_saved_verdict(data: bytes, *, evidence_version: int = 1) -> SavedVerdi
     fields: tuple[str, ...] = ("schema_version", "verdict", "rule", "config", "findings")
     if "exhaustion" in document:
         fields += ("exhaustion",)
+    if "assessment_uncertainty" in document:
+        fields += ("assessment_uncertainty",)
     _mapping(document, "verdict", fields)
     if type(document["schema_version"]) is not int or document["schema_version"] not in (1, 2):
         raise ReplayError("verdict.schema_version: expected supported integer version 1")
@@ -242,7 +244,8 @@ def parse_saved_verdict(data: bytes, *, evidence_version: int = 1) -> SavedVerdi
     ):
         raise ReplayError("verdict.verdict: expected a known verdict")
     if not isinstance(document["rule"], str) or document["rule"] not in (
-        "any_blocking_finding", "no_blocking_findings", "rounds_exhausted_without_convergence"
+        "any_blocking_finding", "no_blocking_findings", "rounds_exhausted_without_convergence",
+        "unresolved_semantic_assessment"
     ):
         raise ReplayError("verdict.rule: expected a known rule")
     config = _mapping(document["config"], "verdict.config",
@@ -263,8 +266,19 @@ def parse_saved_verdict(data: bytes, *, evidence_version: int = 1) -> SavedVerdi
     except ReplayError as error:
         raise ReplayError(f"verdict.{error}") from None
     exhaustion = _exhaustion(document["exhaustion"]) if "exhaustion" in document else None
+    uncertainty = document.get("assessment_uncertainty")
+    if uncertainty is not None:
+        assertion = _mapping(uncertainty, "verdict.assessment_uncertainty",
+                             ("candidate_ids", "attempts_completed", "attempt_limit"))
+        identifiers = _strings(assertion["candidate_ids"], "assessment.candidate_ids")
+        if (evidence_version != 2 or not identifiers or len(set(identifiers)) != len(identifiers)
+                or type(assertion["attempts_completed"]) is not int
+                or assertion["attempts_completed"] != 1
+                or type(assertion["attempt_limit"]) is not int
+                or assertion["attempt_limit"] != 1):
+            raise ReplayError("assessment: invalid uncertainty bound")
     if exhaustion is None and (
-        document["verdict"] == "escalated"
+        (document["verdict"] == "escalated" and uncertainty is None)
         or document["rule"] == "rounds_exhausted_without_convergence"
     ):
         raise ReplayError("verdict.exhaustion: explicit recorded exhaustion is required")

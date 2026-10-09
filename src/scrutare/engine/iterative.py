@@ -212,9 +212,14 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
                 name: data.decode("utf-8") for name, data in sections.items()}):
             raise ReviewInputError("Iterative history: same head has changed captured evidence.")
         repeated = same_head and not contested and not invalidated
+        if config.findings.assessment.enabled and not repeated:
+            # Independent semantic reassessment needs every selected hunk on a new
+            # revision; partial discovery cannot certify historical allegations.
+            patches = dict(sections)
         initial = FanOutResult((), False, False, TokenUsage(), False, 0)
         result = PanelResult("complete", None, initial, (), None, TokenUsage(), True, run)
-        reviewed = not repeated and bool(patches) and state["rounds_completed"] < config.rounds.max
+        reviewed = (not repeated and (bool(patches) or config.findings.assessment.enabled)
+                    and state["rounds_completed"] < config.rounds.max)
         if reviewed:
             # Commit reservation before any child starts; cancellation never restores a round.
             state["rounds_completed"] += 1
@@ -247,6 +252,15 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
                 return replace(result, run_dir=run)
             current = tuple(finding for group in result.verdict.findings
                             for finding in group.sources)
+            coverage_complete = result.status == "complete"
+            if config.findings.assessment.enabled:
+                assessment_document = _read(child / "assessment.json")
+                state["assessment"] = assessment_document
+                state["assessment_head"] = inputs.head_sha
+                coverage_complete = (assessment_document["status"] == "complete"
+                                     and not result.initial.partial
+                                     and all(outcome.status == "complete"
+                                             for outcome in result.corrections))
             current_by_key = {_key(finding): finding for finding in current}
             prior_keys = set[str]()
             for entry in state["pool"]:
@@ -256,7 +270,7 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
                 if key in current_by_key:
                     entry.update(finding=asdict(current_by_key[key]), disposition="upheld",
                                  head_sha=inputs.head_sha, dependencies=dependencies)
-                elif result.status == "complete" and finding.anchor.file in patches and (
+                elif coverage_complete and finding.anchor.file in patches and (
                         finding.anchor in parse_diff(patches[finding.anchor.file])
                         or finding.anchor not in parse_diff(sections[finding.anchor.file])):
                     disposition = ("withdrawn" if state["sections"].get(finding.anchor.file)
@@ -293,17 +307,46 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
         if version == 2:
             from scrutare.findings.evidence import validate_evidence
             active = tuple(validate_evidence(finding, inputs.root) for finding in active)
+        unresolved: tuple[str, ...] = ()
+        assessment_stale = False
+        if config.findings.assessment.enabled:
+            from scrutare.engine.assessment import AssessmentResult, parse_assessments
+            from scrutare.findings.models import finding_from_artifact
+            assessment_document = state.get("assessment")
+            if assessment_document is None:
+                assessment_document = {
+                    "schema_version": 1, "kind": "model_based_not_formal_proof",
+                    "status": "complete", "attempt_limit": 1,
+                    "allocation_tokens": config.findings.assessment.tokens,
+                    "candidates": [], "assessments": [], "outcome": None,
+                }
+            elif state.get("assessment_head") != inputs.head_sha:
+                assessment_stale = True
+                assessment_document = assessment_document | {"status": "stale"}
+                result = replace(result, status="partial")
+            else:
+                candidates = tuple(finding_from_artifact(item, evidence_version=2)
+                                   for item in assessment_document["candidates"])
+                rows = parse_assessments({"assessments": assessment_document["assessments"]},
+                                         candidates, inputs.root, artifact=True)
+                unresolved = AssessmentResult("complete", rows).unresolved_blocking(
+                    config.verdict.blocking_categories)
+                if unresolved:
+                    result = replace(result, status="partial")
+            write_owned_json(run / "assessment.json", assessment_document,
+                             prepared_root=inputs.root)
         verdict = derive_verdict(dedupe_findings(active), config.verdict,
-                                 evidence_version=version)
+                                 evidence_version=version, unresolved_candidates=unresolved)
         if state["rounds_completed"] == config.rounds.max and (
                 verdict.verdict == "changes_requested"
                 or (patches and not reviewed and not repeated)
                 or inputs.head_sha in state["escalated_heads"]
-                or (version == 2 and stale_dependencies)):
+                or (version == 2 and stale_dependencies) or assessment_stale):
             if inputs.head_sha not in state["escalated_heads"]:
                 state["escalated_heads"].append(inputs.head_sha)
             verdict = derive_verdict(verdict.findings, config.verdict,
                                      evidence_version=version,
+                                     unresolved_candidates=unresolved,
                                      exhaustion=Exhaustion("iterative", config.rounds.max,
                                                            config.rounds.max))
         _save(path, state)
@@ -314,7 +357,9 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
                             if reviewed else [], "initial": result.initial.to_dict(),
                             "usage": result.usage.to_dict()}
         write_owned_json(run / "iterative.json", document, prepared_root=inputs.root)
-        if version == 2 and stale_dependencies and verdict.exhaustion is None:
+        if (version == 2 and (stale_dependencies or assessment_stale)
+                and verdict.exhaustion is None
+                and not unresolved):
             # Historical citations remain in the retained pool, but cannot certify
             # the current revision. A bounded retry must refresh or withdraw them.
             return replace(result, verdict=None, run_dir=run)

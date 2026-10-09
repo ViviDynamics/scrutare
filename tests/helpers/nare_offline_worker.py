@@ -138,6 +138,20 @@ class FakeProvider:
         if not self.replies:
             raise AssertionError("Offline transport exhausted scripted replies")
         reply = self.replies.pop(0)
+        if reply.get("assess_candidates"):
+            prompt = arguments[1]
+            pool, _ = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])
+            status = reply["assess_candidates"]
+            rows = []
+            for candidate in pool["candidates"]:
+                citations = [{key: value for key, value in citation.items()
+                              if key not in ("validation", "validation_reason")}
+                             for citation in candidate["evidence"]["citations"]]
+                rows.append({"candidate_id": candidate["candidate_id"], "status": status,
+                             "reason": "Independent captured code assessment.",
+                             "supporting_citations": citations if status != "refuted" else [],
+                             "counter_citations": citations if status == "refuted" else []})
+            reply = {"content": [{"type": "text", "text": json.dumps({"assessments": rows})}]}
         if reply.get("select_pool"):
             prompt = arguments[1]
             pool, _ = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])
