@@ -3,7 +3,7 @@
 from hashlib import sha256
 from pathlib import Path
 
-from scrutare.config import CATEGORIES, ConfigError, _load_yaml
+from scrutare.config import CATEGORIES, ConfigError, _load_yaml, parse_config
 from scrutare.findings.verdict import derive_verdict
 from scrutare.replay.artifacts import (
     decode_artifact,
@@ -80,6 +80,31 @@ def _yaml_issues(run_dir: Path, policy: CapturedPolicy) -> tuple[AuditIssue, ...
         return (AuditIssue("config_snapshot_unsupported", "config.yaml", "incomplete"),)
 
 
+def _context_issues(run_dir: Path, policy: CapturedPolicy) -> tuple[AuditIssue, ...]:
+    """Audit optional contextual evidence without fetching, rewriting, or running models."""
+    from scrutare.engine.review_inputs import PreparedReviewInputs
+
+    context = policy.document.get("context")
+    present = (run_dir / "review-inputs/repository-context.json").exists()
+    if not present and (not isinstance(context, dict) or context.get("enabled") is not True):
+        return ()
+    try:
+        config = parse_config(read_artifact(run_dir / "config.json"))
+        if not config.context.enabled:
+            raise ValueError
+        metadata = decode_artifact(read_artifact(run_dir / "metadata.json"),
+                                   artifact="metadata.json")
+        files = decode_artifact(read_artifact(run_dir / "review-inputs/files.json"),
+                                artifact="files.json")
+        if not isinstance(metadata, dict) or not isinstance(files, list):
+            raise ValueError
+        PreparedReviewInputs((run_dir / "review-inputs").absolute(), metadata["head_sha"],
+                             tuple(file["filename"] for file in files))
+        return ()
+    except (OSError, ValueError, TypeError, KeyError, RecursionError):
+        return (AuditIssue("repository_context_invalid", "repository-context.json", "invalid"),)
+
+
 def replay_run(run_dir: Path) -> ReplayResult:
     """Recompute captured findings with captured policy, never executing the review."""
     findings, findings_issues = parse_findings(decode_artifact(
@@ -88,7 +113,7 @@ def replay_run(run_dir: Path) -> ReplayResult:
     policy = parse_policy(decode_artifact(
         read_artifact(run_dir / "config.json"), artifact="config.json",
     ))
-    issues = findings_issues + _yaml_issues(run_dir, policy)
+    issues = findings_issues + _yaml_issues(run_dir, policy) + _context_issues(run_dir, policy)
     posting = inspect_posting(run_dir)
     posted_sha256 = posting.verdict_sha256
     raw = None

@@ -90,6 +90,18 @@ class GitHubSettings:
 
 
 @dataclass(frozen=True)
+class ContextSettings:
+    enabled: bool = False
+    include: tuple[str, ...] = ()
+    exclude: tuple[str, ...] = ()
+    related_paths: tuple[str, ...] = ()
+    max_file_bytes: int = 65536
+    max_total_bytes: int = 1048576
+    max_files: int = 128
+    max_tree_requests: int = 256
+
+
+@dataclass(frozen=True)
 class InspectionSettings:
     procedures: Literal["baseline", "v1"] = "baseline"
 
@@ -104,9 +116,10 @@ class ReviewConfig:
     verdict: VerdictSettings
     github: GitHubSettings
     inspection: InspectionSettings = InspectionSettings()
+    context: ContextSettings = ContextSettings()
 
     def to_dict(self) -> dict[str, Any]:
-        document = {
+        result: dict[str, Any] = {
             "strategy": self.strategy,
             "rounds": asdict(self.rounds),
             "personas": [
@@ -130,10 +143,39 @@ class ReviewConfig:
                 },
             },
         }
-
+        if self.context != ContextSettings():
+            result["context"] = asdict(self.context)
+            for field in ("include", "exclude", "related_paths"):
+                result["context"][field] = list(result["context"][field])
         if self.inspection.procedures != "baseline":
-            document["inspection"] = asdict(self.inspection)
-        return document
+            result["inspection"] = asdict(self.inspection)
+        return result
+
+
+def _context_settings(value: object) -> ContextSettings:
+    fields = _mapping(value, "context", tuple(ContextSettings.__dataclass_fields__))
+    defaults = ContextSettings()
+    enabled = fields.get("enabled", False)
+    if type(enabled) is not bool:
+        raise ConfigError("context.enabled: expected a boolean")
+    paths = {}
+    for name in ("include", "exclude", "related_paths"):
+        entries = _strings(fields.get(name, []), f"context.{name}")
+        for entry in entries:
+            if (entry.startswith("/") or "\\" in entry or "\x00" in entry
+                    or any(part in ("", ".", "..") for part in entry.split("/"))):
+                raise ConfigError(f"context.{name}: expected safe repository-relative paths")
+            if name == "related_paths" and any(char in entry for char in "*?["):
+                raise ConfigError("context.related_paths: expected explicit paths, not patterns")
+        if len(set(entries)) != len(entries):
+            raise ConfigError(f"context.{name}: duplicate path")
+        paths[name] = entries
+    limits = {name: _positive(fields.get(name, getattr(defaults, name)), f"context.{name}")
+              for name in ("max_file_bytes", "max_total_bytes", "max_files", "max_tree_requests")}
+    return ContextSettings(enabled, paths["include"], paths["exclude"], paths["related_paths"],
+                           limits["max_file_bytes"], limits["max_total_bytes"],
+                           limits["max_files"], limits["max_tree_requests"])
+
 
 
 def _mapping(value: object, path: str, fields: tuple[str, ...] | None) -> dict[str, Any]:
@@ -354,7 +396,8 @@ def parse_config(data: bytes | str) -> ReviewConfig:
     raw = _mapping(
         _load_yaml(data),
         "",
-        ("strategy", "rounds", "personas", "budgets", "models", "verdict", "github", "inspection"),
+        ("strategy", "rounds", "personas", "budgets", "models", "verdict", "github",
+         "inspection", "context"),
     )
     strategy = cast(
         Strategy,
@@ -381,6 +424,7 @@ def parse_config(data: bytes | str) -> ReviewConfig:
             inspection.get("procedures", "baseline"), "inspection.procedures",
             ("baseline", "v1"),
         ))),
+        _context_settings(raw.get("context", {})),
     )
 
 

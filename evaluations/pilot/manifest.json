@@ -2,6 +2,18 @@
   "cases": [
     {
       "capture": "captures/contract-exclusive-boundary",
+      "context_sources": {
+        "base": {
+          "directory": "sources/contract-exclusive-boundary/base",
+          "repository": "pilot/local",
+          "revision": "70cfd9fa463d517731f2237afaa0be7c39addca8"
+        },
+        "head": {
+          "directory": "sources/contract-exclusive-boundary/head",
+          "repository": "pilot/local",
+          "revision": "a6cf94d2f0143935d918c5154eec47dd2f6b513c"
+        }
+      },
       "domain": "correctness",
       "id": "contract-exclusive-boundary",
       "labels": "labels/contract-exclusive-boundary.json",
@@ -16,6 +28,18 @@
     },
     {
       "capture": "captures/contract-null-zero",
+      "context_sources": {
+        "base": {
+          "directory": "sources/contract-null-zero/base",
+          "repository": "pilot/local",
+          "revision": "af1617e694a5afde0b0bd3fe2c0c3df1d46b458d"
+        },
+        "head": {
+          "directory": "sources/contract-null-zero/head",
+          "repository": "pilot/local",
+          "revision": "b8453cb8bc834d5c7fea13c03c72744088caca68"
+        }
+      },
       "domain": "correctness",
       "id": "contract-null-zero",
       "labels": "labels/contract-null-zero.json",
@@ -30,6 +54,18 @@
     },
     {
       "capture": "captures/contract-client-key",
+      "context_sources": {
+        "base": {
+          "directory": "sources/contract-client-key/base",
+          "repository": "pilot/local",
+          "revision": "7d8263e33bd10fb94083ef4066ac5debfcd44935"
+        },
+        "head": {
+          "directory": "sources/contract-client-key/head",
+          "repository": "pilot/local",
+          "revision": "469800a6c2eaba542464b3560287306bd250fa02"
+        }
+      },
       "domain": "correctness",
       "id": "contract-client-key",
       "labels": "labels/contract-client-key.json",
@@ -44,6 +80,18 @@
     },
     {
       "capture": "captures/contract-retry-transition",
+      "context_sources": {
+        "base": {
+          "directory": "sources/contract-retry-transition/base",
+          "repository": "pilot/local",
+          "revision": "3cc6560b36e4fa123f80531323983a86c9f16ed5"
+        },
+        "head": {
+          "directory": "sources/contract-retry-transition/head",
+          "repository": "pilot/local",
+          "revision": "f1592637923c77f6bfbafe7f57e2ecaee22943b2"
+        }
+      },
       "domain": "correctness",
       "id": "contract-retry-transition",
       "labels": "labels/contract-retry-transition.json",
@@ -58,6 +106,18 @@
     },
     {
       "capture": "captures/contract-explicit-default-clean",
+      "context_sources": {
+        "base": {
+          "directory": "sources/contract-explicit-default-clean/base",
+          "repository": "pilot/local",
+          "revision": "47d93aad498e463bbcf02337f70bda1918cdef86"
+        },
+        "head": {
+          "directory": "sources/contract-explicit-default-clean/head",
+          "repository": "pilot/local",
+          "revision": "cd1909d9ca4782afbc0c893ec46fe78cea9b54b3"
+        }
+      },
       "domain": "correctness",
       "id": "contract-explicit-default-clean",
       "labels": "labels/contract-explicit-default-clean.json",
@@ -72,6 +132,18 @@
     },
     {
       "capture": "captures/contract-immutable-order-clean",
+      "context_sources": {
+        "base": {
+          "directory": "sources/contract-immutable-order-clean/base",
+          "repository": "pilot/local",
+          "revision": "c630db0e92c58df851b002ac5619820efde8750f"
+        },
+        "head": {
+          "directory": "sources/contract-immutable-order-clean/head",
+          "repository": "pilot/local",
+          "revision": "ab028f201f6cffc155afd3e9548680f555fd5279"
+        }
+      },
       "domain": "correctness",
       "id": "contract-immutable-order-clean",
       "labels": "labels/contract-immutable-order-clean.json",
@@ -86,6 +158,18 @@
     },
     {
       "capture": "captures/security-tenant-filter",
+      "context_sources": {
+        "base": {
+          "directory": "sources/security-tenant-filter/base",
+          "repository": "pilot/local",
+          "revision": "903899978343669dd898ffaffdd5d0de9be4d695"
+        },
+        "head": {
+          "directory": "sources/security-tenant-filter/head",
+          "repository": "pilot/local",
+          "revision": "6e1a133c60fcfebbd6a14523ce655d0ba5168f9c"
+        }
+      },
       "domain": "security",
       "id": "security-tenant-filter",
       "labels": "labels/security-tenant-filter.json",
@@ -100,6 +184,18 @@
     },
     {
       "capture": "captures/security-sql-interpolation",
+      "context_sources": {
+        "base": {
+          "directory": "sources/security-sql-interpolation/base",
+          "repository": "pilot/local",
+          "revision": "5731e81e7d3ee4c89ea21afec8ee402baf1e98cb"
+        },
+        "head": {
+          "directory": "sources/security-sql-interpolation/head",
+          "repository": "pilot/local",
+          "revision": "73d5a7c7bb3de3d192c3f3f11638dc19bd8b54d2"
+        }
+      },
       "domain": "security",
       "id": "security-sql-interpolation",
       "labels": "labels/security-sql-interpolation.json",
@@ -114,6 +210,18 @@
     },
     {
       "capture": "captures/security-path-confinement",
+      "context_sources": {
+        "base": {
+          "directory": "sources/security-path-confinement/base",
+          "repository": "pilot/local",
+          "revision": "39b0f9facf369fa2f20ca3ad214a7174910cf0f6"
+        },
+        "head": {
+          "directory": "sources/security-path-confinement/head",
+          "repository": "pilot/local",
+          "revision": "79e2965b95a0a5aaabf6ca78a01bc9be28c7f8db"
+        }
+      },
       "domain": "security",
       "id": "security-path-confinement",
       "labels": "labels/security-path-confinement.json",
@@ -128,6 +236,18 @@
     },
     {
       "capture": "captures/security-auth-order",
+      "context_sources": {
+        "base": {
+          "directory": "sources/security-auth-order/base",
+          "repository": "pilot/local",
+          "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a"
+        },
+        "head": {
+          "directory": "sources/security-auth-order/head",
+          "repository": "pilot/local",
+          "revision": "6147f5510465027638029cdda0f64ba53068c56a"
+        }
+      },
       "domain": "security",
       "id": "security-auth-order",
       "labels": "labels/security-auth-order.json",
@@ -142,6 +262,18 @@
     },
     {
       "capture": "captures/security-bound-query-clean",
+      "context_sources": {
+        "base": {
+          "directory": "sources/security-bound-query-clean/base",
+          "repository": "pilot/local",
+          "revision": "5731e81e7d3ee4c89ea21afec8ee402baf1e98cb"
+        },
+        "head": {
+          "directory": "sources/security-bound-query-clean/head",
+          "repository": "pilot/local",
+          "revision": "d2c56cbdd4f8ed2aceea3d489ce94db2f51a6243"
+        }
+      },
       "domain": "security",
       "id": "security-bound-query-clean",
       "labels": "labels/security-bound-query-clean.json",
@@ -156,6 +288,18 @@
     },
     {
       "capture": "captures/security-constant-time-clean",
+      "context_sources": {
+        "base": {
+          "directory": "sources/security-constant-time-clean/base",
+          "repository": "pilot/local",
+          "revision": "0c16be95e2e24e277a5cc91bc730052f3ec85106"
+        },
+        "head": {
+          "directory": "sources/security-constant-time-clean/head",
+          "repository": "pilot/local",
+          "revision": "a7f67708e3cfeb2985f3f230f87c4d64302c77fa"
+        }
+      },
       "domain": "security",
       "id": "security-constant-time-clean",
       "labels": "labels/security-constant-time-clean.json",
@@ -170,6 +314,18 @@
     },
     {
       "capture": "captures/tests-vacuous-exception",
+      "context_sources": {
+        "base": {
+          "directory": "sources/tests-vacuous-exception/base",
+          "repository": "pilot/local",
+          "revision": "4bed8a2e5bad91ca723a105e8430af3a6d1021dc"
+        },
+        "head": {
+          "directory": "sources/tests-vacuous-exception/head",
+          "repository": "pilot/local",
+          "revision": "38f37aa4bdeb648a95a09df81318ebe465887286"
+        }
+      },
       "domain": "tests",
       "id": "tests-vacuous-exception",
       "labels": "labels/tests-vacuous-exception.json",
@@ -184,6 +340,18 @@
     },
     {
       "capture": "captures/tests-truthy-balance",
+      "context_sources": {
+        "base": {
+          "directory": "sources/tests-truthy-balance/base",
+          "repository": "pilot/local",
+          "revision": "50314bb4ee82795e9c36ef1c5fd4216452ad6d0e"
+        },
+        "head": {
+          "directory": "sources/tests-truthy-balance/head",
+          "repository": "pilot/local",
+          "revision": "0bb33c07088c6252a7c6bedeae618bc35bda453d"
+        }
+      },
       "domain": "tests",
       "id": "tests-truthy-balance",
       "labels": "labels/tests-truthy-balance.json",
@@ -198,6 +366,18 @@
     },
     {
       "capture": "captures/tests-nan-self-equality",
+      "context_sources": {
+        "base": {
+          "directory": "sources/tests-nan-self-equality/base",
+          "repository": "pilot/local",
+          "revision": "a6b5e1257e1214b70424f6adedbf8f30b8f4be93"
+        },
+        "head": {
+          "directory": "sources/tests-nan-self-equality/head",
+          "repository": "pilot/local",
+          "revision": "0c728a383194714c5bc44672add0d7cc739f30d8"
+        }
+      },
       "domain": "tests",
       "id": "tests-nan-self-equality",
       "labels": "labels/tests-nan-self-equality.json",
@@ -212,6 +392,18 @@
     },
     {
       "capture": "captures/tests-consumer-fixture",
+      "context_sources": {
+        "base": {
+          "directory": "sources/tests-consumer-fixture/base",
+          "repository": "pilot/local",
+          "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f"
+        },
+        "head": {
+          "directory": "sources/tests-consumer-fixture/head",
+          "repository": "pilot/local",
+          "revision": "1661991abd288a4346c65099a0a8be1c954c0035"
+        }
+      },
       "domain": "tests",
       "id": "tests-consumer-fixture",
       "labels": "labels/tests-consumer-fixture.json",
@@ -226,6 +418,18 @@
     },
     {
       "capture": "captures/tests-empty-assertion-clean",
+      "context_sources": {
+        "base": {
+          "directory": "sources/tests-empty-assertion-clean/base",
+          "repository": "pilot/local",
+          "revision": "18a24a8f8fae8031cd397f8a5f4381fa98c5f72f"
+        },
+        "head": {
+          "directory": "sources/tests-empty-assertion-clean/head",
+          "repository": "pilot/local",
+          "revision": "2670e666c8807815ff20aef34f160dfa596bc1ad"
+        }
+      },
       "domain": "tests",
       "id": "tests-empty-assertion-clean",
       "labels": "labels/tests-empty-assertion-clean.json",
@@ -240,6 +444,18 @@
     },
     {
       "capture": "captures/tests-required-exception-clean",
+      "context_sources": {
+        "base": {
+          "directory": "sources/tests-required-exception-clean/base",
+          "repository": "pilot/local",
+          "revision": "4bed8a2e5bad91ca723a105e8430af3a6d1021dc"
+        },
+        "head": {
+          "directory": "sources/tests-required-exception-clean/head",
+          "repository": "pilot/local",
+          "revision": "93a77a61d27e723cc08b44b2c1d5e83103a89bad"
+        }
+      },
       "domain": "tests",
       "id": "tests-required-exception-clean",
       "labels": "labels/tests-required-exception-clean.json",
@@ -254,6 +470,18 @@
     },
     {
       "capture": "captures/operations-retry-unit",
+      "context_sources": {
+        "base": {
+          "directory": "sources/operations-retry-unit/base",
+          "repository": "pilot/local",
+          "revision": "55185b4a80ad0f046ffff9790e5e25c4e4a41bf3"
+        },
+        "head": {
+          "directory": "sources/operations-retry-unit/head",
+          "repository": "pilot/local",
+          "revision": "db2db4b745c013b2d2e4e36777af29a7ec916d51"
+        }
+      },
       "domain": "operations",
       "id": "operations-retry-unit",
       "labels": "labels/operations-retry-unit.json",
@@ -268,6 +496,18 @@
     },
     {
       "capture": "captures/operations-migration-order",
+      "context_sources": {
+        "base": {
+          "directory": "sources/operations-migration-order/base",
+          "repository": "pilot/local",
+          "revision": "ab8982319e90b3710ebdb6a42bce19198a4eafe0"
+        },
+        "head": {
+          "directory": "sources/operations-migration-order/head",
+          "repository": "pilot/local",
+          "revision": "5108e2485bea7eba16f76a5e819deb39b378461d"
+        }
+      },
       "domain": "operations",
       "id": "operations-migration-order",
       "labels": "labels/operations-migration-order.json",
@@ -282,6 +522,18 @@
     },
     {
       "capture": "captures/operations-flush-loss",
+      "context_sources": {
+        "base": {
+          "directory": "sources/operations-flush-loss/base",
+          "repository": "pilot/local",
+          "revision": "595e821fa09758cf2dac3a98cbb6c343417bcbe8"
+        },
+        "head": {
+          "directory": "sources/operations-flush-loss/head",
+          "repository": "pilot/local",
+          "revision": "2fac78da11b4115bcbc46477b9f5123b9cefef0b"
+        }
+      },
       "domain": "operations",
       "id": "operations-flush-loss",
       "labels": "labels/operations-flush-loss.json",
@@ -296,6 +548,18 @@
     },
     {
       "capture": "captures/operations-health-status",
+      "context_sources": {
+        "base": {
+          "directory": "sources/operations-health-status/base",
+          "repository": "pilot/local",
+          "revision": "c06f9840c1fa58035af152687e5dfb1c972d2305"
+        },
+        "head": {
+          "directory": "sources/operations-health-status/head",
+          "repository": "pilot/local",
+          "revision": "c97f8e7f7e273669c6b83bfa23f3c8f6ee6ef179"
+        }
+      },
       "domain": "operations",
       "id": "operations-health-status",
       "labels": "labels/operations-health-status.json",
@@ -310,6 +574,18 @@
     },
     {
       "capture": "captures/operations-idempotent-close-clean",
+      "context_sources": {
+        "base": {
+          "directory": "sources/operations-idempotent-close-clean/base",
+          "repository": "pilot/local",
+          "revision": "1303bb50485638b93fe0e2addf197fe3ce742593"
+        },
+        "head": {
+          "directory": "sources/operations-idempotent-close-clean/head",
+          "repository": "pilot/local",
+          "revision": "30e5359db362c8b8f8cc99c5edcf403266301b7a"
+        }
+      },
       "domain": "operations",
       "id": "operations-idempotent-close-clean",
       "labels": "labels/operations-idempotent-close-clean.json",
@@ -324,6 +600,18 @@
     },
     {
       "capture": "captures/operations-seconds-clean",
+      "context_sources": {
+        "base": {
+          "directory": "sources/operations-seconds-clean/base",
+          "repository": "pilot/local",
+          "revision": "55185b4a80ad0f046ffff9790e5e25c4e4a41bf3"
+        },
+        "head": {
+          "directory": "sources/operations-seconds-clean/head",
+          "repository": "pilot/local",
+          "revision": "c0a9920334eba7daccaacc2a326da602b5c54ac0"
+        }
+      },
       "domain": "operations",
       "id": "operations-seconds-clean",
       "labels": "labels/operations-seconds-clean.json",
@@ -338,6 +626,18 @@
     },
     {
       "capture": "captures/consumer-page-index",
+      "context_sources": {
+        "base": {
+          "directory": "sources/consumer-page-index/base",
+          "repository": "pilot/local",
+          "revision": "b6662c6ef88ad65fd0738957a49c23180ec83d04"
+        },
+        "head": {
+          "directory": "sources/consumer-page-index/head",
+          "repository": "pilot/local",
+          "revision": "cc6210d2357db1aa438e997409233747743b6152"
+        }
+      },
       "domain": "consumer",
       "id": "consumer-page-index",
       "labels": "labels/consumer-page-index.json",
@@ -352,6 +652,18 @@
     },
     {
       "capture": "captures/consumer-empty-search",
+      "context_sources": {
+        "base": {
+          "directory": "sources/consumer-empty-search/base",
+          "repository": "pilot/local",
+          "revision": "864d484f3b1645ac118d4bdbeb1fc952a89551f2"
+        },
+        "head": {
+          "directory": "sources/consumer-empty-search/head",
+          "repository": "pilot/local",
+          "revision": "df812f3c00c6bf59168a0d25fed83ff0832dc32c"
+        }
+      },
       "domain": "consumer",
       "id": "consumer-empty-search",
       "labels": "labels/consumer-empty-search.json",
@@ -366,6 +678,18 @@
     },
     {
       "capture": "captures/consumer-keyword-renamed",
+      "context_sources": {
+        "base": {
+          "directory": "sources/consumer-keyword-renamed/base",
+          "repository": "pilot/local",
+          "revision": "35067bd3ecac18a7cf1e36b6b346eb3cc56115d1"
+        },
+        "head": {
+          "directory": "sources/consumer-keyword-renamed/head",
+          "repository": "pilot/local",
+          "revision": "3bbf4193771d6f89febafea7edc9cc41d87a5180"
+        }
+      },
       "domain": "consumer",
       "id": "consumer-keyword-renamed",
       "labels": "labels/consumer-keyword-renamed.json",
@@ -380,6 +704,18 @@
     },
     {
       "capture": "captures/consumer-bool-string",
+      "context_sources": {
+        "base": {
+          "directory": "sources/consumer-bool-string/base",
+          "repository": "pilot/local",
+          "revision": "7a719ecf3779babb96e4478f565f816983db91f4"
+        },
+        "head": {
+          "directory": "sources/consumer-bool-string/head",
+          "repository": "pilot/local",
+          "revision": "20e7211e1c62c92853343742c6364fa271b42e63"
+        }
+      },
       "domain": "consumer",
       "id": "consumer-bool-string",
       "labels": "labels/consumer-bool-string.json",
@@ -394,6 +730,18 @@
     },
     {
       "capture": "captures/consumer-keyword-compatible-clean",
+      "context_sources": {
+        "base": {
+          "directory": "sources/consumer-keyword-compatible-clean/base",
+          "repository": "pilot/local",
+          "revision": "5353b220b21026506d488b249b02332808dd14ea"
+        },
+        "head": {
+          "directory": "sources/consumer-keyword-compatible-clean/head",
+          "repository": "pilot/local",
+          "revision": "1f051e434ca101e13d665d92b8332af92f6cfae9"
+        }
+      },
       "domain": "consumer",
       "id": "consumer-keyword-compatible-clean",
       "labels": "labels/consumer-keyword-compatible-clean.json",
@@ -408,6 +756,18 @@
     },
     {
       "capture": "captures/consumer-page-format-clean",
+      "context_sources": {
+        "base": {
+          "directory": "sources/consumer-page-format-clean/base",
+          "repository": "pilot/local",
+          "revision": "30426f6103677f5fbce67a57af31a076e592d4e3"
+        },
+        "head": {
+          "directory": "sources/consumer-page-format-clean/head",
+          "repository": "pilot/local",
+          "revision": "059f0f57a13419af85674ebf07f4e65a2f68a285"
+        }
+      },
       "domain": "consumer",
       "id": "consumer-page-format-clean",
       "labels": "labels/consumer-page-format-clean.json",

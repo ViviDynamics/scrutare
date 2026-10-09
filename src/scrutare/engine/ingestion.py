@@ -11,6 +11,7 @@ from typing import Any
 from scrutare import __version__
 from scrutare.config import ReviewConfig
 from scrutare.engine.github import GitHubClient, GitHubError, PullRequestRef, assert_pr_open
+from scrutare.engine.repository_context import capture_repository_context
 from scrutare.engine.review_inputs import prepare_review_inputs
 
 
@@ -46,6 +47,7 @@ def ingest_pr(
         assert_pr_open(captured)
         if (
             before["head"]["sha"] == captured["head"]["sha"]
+            and before["head"].get("repo") == captured["head"].get("repo")
             and before["base"]["ref"] == captured["base"]["ref"]
             and before["base"]["sha"] == captured["base"]["sha"]
             and before["base"]["repo"]["full_name"] == captured["base"]["repo"]["full_name"]
@@ -89,6 +91,7 @@ def ingest_pr(
             json.dumps(metadata, indent=2) + "\n", encoding="utf-8"
         )
         if review_config is not None:
+            capture_repository_context(client, run_dir, review_config)
             prepare_review_inputs(run_dir, review_config)
     except Exception:
         shutil.rmtree(run_dir)
