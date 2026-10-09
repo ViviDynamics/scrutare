@@ -7,7 +7,7 @@ from dataclasses import asdict, dataclass, replace
 
 from scrutare.config import Category
 from scrutare.engine.persona_inputs import PersonaReviewInput
-from scrutare.engine.review_inputs import validate_prepared_inputs
+from scrutare.engine.review_inputs import context_read_policy, validate_prepared_inputs
 from scrutare.findings.models import Finding, FindingError, parse_finding
 
 
@@ -45,6 +45,7 @@ class DebateInput(PersonaReviewInput):
                 sort_keys=True,
                 separators=(",", ":"),
             )
+            + context_read_policy(self.inputs)
         )
 
     def output_schema(self) -> dict[str, object]:
