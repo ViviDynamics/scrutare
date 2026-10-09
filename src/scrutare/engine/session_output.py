@@ -11,8 +11,8 @@ from pathlib import Path
 from typing import Any, NoReturn
 
 from scrutare.config import CATEGORIES
-from scrutare.engine.debate_inputs import DebateInput
 from scrutare.engine.assessment_inputs import AssessmentInput
+from scrutare.engine.debate_inputs import DebateInput
 from scrutare.engine.persona_inputs import PersonaReanchorInput
 from scrutare.engine.reanchor import parse_reanchor_output
 from scrutare.engine.session_models import TokenUsage

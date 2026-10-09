@@ -4,10 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from scrutare.findings.evidence import validate_evidence
 from scrutare.findings.models import Citation, Finding, FindingError, _text, parse_evidence
+
+if TYPE_CHECKING:
+    from scrutare.engine.fanout import _ExecutionContext
 
 AssessmentStatus = Literal["supported", "refuted", "unresolved"]
 
@@ -92,12 +95,20 @@ class AssessmentResult:
     def supported(self) -> tuple[Finding, ...]:
         return tuple(row.candidate for row in self.rows if row.status == "supported")
 
+    @property
+    def retained(self) -> tuple[Finding, ...]:
+        """Keep unresolved assertions visible for the human uncertainty escalation."""
+        return tuple(row.candidate for row in self.rows if row.status != "refuted")
+
     def unresolved_blocking(self, blocking_categories: tuple[str, ...]) -> tuple[str, ...]:
         return tuple(cast(str, row.candidate.candidate_id) for row in self.rows
-                     if row.status == "unresolved" and row.candidate.category in blocking_categories)
+                     if row.status == "unresolved"
+                     and row.candidate.category in blocking_categories)
 
 
-async def assess_candidates(context: Any, candidates: tuple[Finding, ...]) -> AssessmentResult:
+async def assess_candidates(
+    context: _ExecutionContext, candidates: tuple[Finding, ...],
+) -> AssessmentResult:
     """Use one independently reserved batch on the caller's live review ledger."""
     from scrutare.engine.assessment_inputs import AssessmentInput
     from scrutare.engine.nare_session import run_persona_session

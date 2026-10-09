@@ -20,6 +20,7 @@ from urllib.parse import urlsplit
 
 from scrutare import __version__
 from scrutare.config import ModelRail
+from scrutare.engine.assessment_inputs import AssessmentInput
 from scrutare.engine.budgets import BudgetLease, ReviewBudgetLedger
 from scrutare.engine.debate_inputs import DebateInput
 from scrutare.engine.persona_inputs import PersonaReanchorInput, PersonaReviewInput
@@ -34,7 +35,6 @@ from scrutare.engine.session_models import (
     SessionStatus,
     TokenUsage,
 )
-from scrutare.engine.assessment_inputs import AssessmentInput
 from scrutare.engine.session_output import (
     DecodedReanchorSession,
     DecodedSession,

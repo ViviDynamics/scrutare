@@ -155,7 +155,7 @@ def build_review_payload(
         f"Rule: {verdict.rule}\nFindings: {len(verdict.findings)}\nHead SHA: {head_sha}\n\n"
         f"<!-- scrutare-run:{run_id} -->"
     )
-    escalated = verdict.exhaustion is not None
+    escalated = verdict.verdict == "escalated"
     event: ReviewEvent = "COMMENT" if escalated or post_mode == "comment" else (
         "APPROVE" if verdict.verdict == "approve" else "REQUEST_CHANGES"
     )
@@ -183,4 +183,19 @@ def build_review_payload(
             f"Head SHA: {head_sha}\n\n{targets}\n\nUnresolved findings:\n\n{summary}\n\n"
             f"<!-- scrutare-run:{run_id} -->"
         )
+    elif verdict.unresolved_candidates:
+        targets = ("Escalation targets for human review: "
+                   + " ".join(f"@{login}" for login in reviewers) if reviewers
+                   else "This repository has no escalation targets configured.")
+        identifiers = ", ".join(verdict.unresolved_candidates)
+        body = (f"Scrutare escalation\n\nStrategy: {strategy}\n"
+                f"Verdict: escalated\nRule: {verdict.rule}\n"
+                f"Assessment attempts completed: 1\nAssessment attempt limit: 1\n"
+                f"Head SHA: {head_sha}\n\n{targets}\n\nUnresolved findings:\n\n"
+                "Independent model assessment left potentially blocking claims unresolved. "
+                "Model-based support is not formal proof. See retained assessment.json for "
+                "original claims, reasons and captured counterevidence.\n\n"
+                + _field("Unresolved candidate IDs", identifiers, neutralize_mentions=True)
+                + "\n\n" + ("\n\n".join(unresolved) or "No current inline claims were supplied.")
+                + f"\n\n<!-- scrutare-run:{run_id} -->")
     return ReviewPayload(head_sha, body, event, tuple(comments))

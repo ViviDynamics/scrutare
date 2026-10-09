@@ -181,6 +181,8 @@ async def run_panel(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime
     eligible = context.ledger.accounting_complete and all(
         outcome.status in ("complete", "partial") and outcome.output_available
         and outcome.accounting_complete for outcome in initial.outcomes)
+    if config.findings.assessment.enabled and initial.partial:
+        eligible, reason, status = False, "discovery_incomplete", "partial"
     try:
         _validate_binding(context, hashes)
         if eligible:
@@ -194,12 +196,29 @@ async def run_panel(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime
                     _fatal_correction(outcome) for outcome in corrections):
                 verification = finish_reanchor(check, (correction for outcome in corrections
                                                        for correction in outcome.corrections))
-                verdict = derive_verdict(
-                    dedupe_findings(verification.accepted), config.verdict,
-                    evidence_version=2 if config.findings.evidence == "v2" else 1)
                 status = ("partial" if initial.partial or any(
                     outcome.status != "complete" for outcome in corrections) else "complete")
                 reason = "converged"
+                accepted = verification.accepted
+                unresolved: tuple[str, ...] = ()
+                if config.findings.assessment.enabled and status != "complete":
+                    reason = "assessment_incomplete"
+                elif config.findings.assessment.enabled:
+                    from scrutare.engine.assessment import assess_candidates
+                    assessment = await assess_candidates(context, accepted)
+                    if assessment.status != "complete":
+                        status, reason = assessment.status, "assessment_incomplete"
+                    else:
+                        accepted = assessment.retained
+                        unresolved = assessment.unresolved_blocking(
+                            config.verdict.blocking_categories)
+                        if unresolved:
+                            status, reason = "partial", "semantic_uncertainty"
+                if reason != "assessment_incomplete":
+                    verdict = derive_verdict(
+                        dedupe_findings(accepted), config.verdict,
+                        evidence_version=2 if config.findings.evidence == "v2" else 1,
+                        unresolved_candidates=unresolved)
         _validate_binding(context, hashes)
     except ReviewInputError:
         status, reason, verdict = "failed", "inputs", None

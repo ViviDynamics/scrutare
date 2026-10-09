@@ -152,8 +152,49 @@ def replay_run(run_dir: Path) -> ReplayResult:
         return ReplayResult(None, None, None, saved_sha256, posted_sha256, posting, (), issues + (
             AuditIssue("exhaustion_config_disagrees", "verdict.exhaustion", "incomplete"),
         ))
+    unresolved: tuple[str, ...] = ()
+    if isinstance(config_data, dict) and "findings" in config_data:
+        config = parse_config(json.dumps(config_data))
+        if config.findings.assessment.enabled:
+            from scrutare.engine.assessment import AssessmentResult, parse_assessments
+            from scrutare.findings.models import finding_from_artifact
+            try:
+                assessment = decode_artifact(read_artifact(run_dir / "assessment.json"),
+                                             artifact="assessment.json")
+                if (not isinstance(assessment, dict)
+                        or assessment.get("schema_version") != 1
+                        or assessment.get("kind") != "model_based_not_formal_proof"
+                        or assessment.get("status") != "complete"
+                        or type(assessment.get("attempt_limit")) is not int
+                        or assessment["attempt_limit"] != 1
+                        or assessment.get("allocation_tokens") != config.findings.assessment.tokens
+                        or not isinstance(assessment.get("candidates"), list)):
+                    raise ValueError
+                originals = tuple(finding_from_artifact(item, evidence_version=2)
+                                  for item in assessment["candidates"])
+                outcome = assessment.get("outcome")
+                if originals and (not isinstance(outcome, dict)
+                                  or outcome.get("status") != "complete"
+                                  or outcome.get("accounting_complete") is not True
+                                  or outcome.get("output_available") is not True
+                                  or outcome.get("allocated_tokens")
+                                  != config.findings.assessment.tokens):
+                    raise ValueError
+                for original in originals:
+                    if validate_evidence(original, run_dir / "review-inputs") != original:
+                        raise ValueError
+                rows = parse_assessments({"assessments": assessment["assessments"]}, originals,
+                                         run_dir / "review-inputs", artifact=True)
+                result = AssessmentResult("complete", rows)
+                sources = tuple(source for group in findings for source in group.sources)
+                if sources != tuple(source for group in dedupe_findings(result.retained)
+                                    for source in group.sources):
+                    raise ValueError
+                unresolved = result.unresolved_blocking(config.verdict.blocking_categories)
+            except (OSError, ValueError, TypeError, KeyError):
+                raise ReplayError("assessment: captured policy or evidence disagrees") from None
     verdict = derive_verdict(findings, policy.settings, exhaustion=exhaustion,
-                             evidence_version=evidence_version)
+                             evidence_version=evidence_version, unresolved_candidates=unresolved)
     candidate_bytes = verdict.to_bytes()
     identical = saved.raw == candidate_bytes
     differences = diff_verdicts(saved.document, verdict.to_dict())

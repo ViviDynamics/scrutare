@@ -174,3 +174,24 @@ findings:
 enabled. Default/explicit legacy is omitted from canonical configuration
 snapshots, preserving the established baseline. See [findings](findings.md) for
 the citation contract and its mechanical-versus-semantic validity boundary.
+
+Independent semantic assessment is separately opt-in and requires v2:
+
+```yaml
+context:
+  enabled: true
+findings:
+  evidence: v2
+  assessment:
+    enabled: true
+    tokens: 2000
+```
+
+`tokens` is a positive explicit assessor allocation (default 2000) below
+`budgets.review_max_tokens`. The same review ledger reserves it before discovery,
+then fairly divides remaining tokens among discovery/debate participants, subject
+to `per_persona_tokens`. The assessor uses the default model rail in a separate,
+fresh read-only nare session; its quota does not inherit a discovery persona's
+model override. A review has one assessor batch with the same runtime turn and
+timeout limits. After-turn token overshoot remains observable, and can prevent
+assessment admission; it never creates a second ledger or extra token ceiling.

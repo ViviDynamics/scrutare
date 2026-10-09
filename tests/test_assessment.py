@@ -1,6 +1,7 @@
 from dataclasses import replace
 
 import pytest
+from test_review_inputs import capture as capture
 
 from scrutare.config import ConfigError, parse_config
 from scrutare.engine.budgets import ReviewBudgetLedger
@@ -125,11 +126,11 @@ def test_semantic_uncertainty_escalates_without_strategy_exhaustion():
     assert parse_saved_verdict(verdict.to_bytes(), evidence_version=2)
 
 
-from test_review_inputs import capture as capture
 
 
 def prepared_candidate(capture):
     from hashlib import sha256
+
     from test_repository_context import contextual
     from test_review_inputs import save_json
 
@@ -186,6 +187,7 @@ def test_native_assessor_reconciles_output_and_accounts_shared_lease(capture, tm
 
 def test_saved_assessment_reason_must_match_terminal_evidence(capture, tmp_path):
     import json
+
     from test_nare_session import run, running_executable
 
     from scrutare.engine.assessment_inputs import AssessmentInput
@@ -216,20 +218,27 @@ def test_saved_assessment_reason_must_match_terminal_evidence(capture, tmp_path)
                        expected_root=inputs.root, descriptor=descriptor, evidence_version=2)
 
 
+@pytest.mark.parametrize("strategy", ["panel", "debate", "iterative"])
 @pytest.mark.parametrize("status,want", [("supported", "changes_requested"),
                                          ("refuted", "approve"), ("unresolved", "escalated")])
-def test_panel_applies_independent_assessment_and_preserves_disposition(capture, tmp_path,
-                                                                       monkeypatch, status, want):
+def test_panel_applies_independent_assessment_and_preserves_disposition(
+        capture, tmp_path, monkeypatch, status, want, strategy):
     import asyncio
     import json
-    from test_nare_session import running_executable
+
     from test_panel import install
 
-    from scrutare.engine.strategy import run_review
     from scrutare.engine.session_models import NareRuntime
+    from scrutare.engine.strategy import run_review
     from scrutare.findings.models import artifact_data
 
     config, inputs, original = prepared_candidate(capture)
+    config = replace(config, strategy=strategy)
+    import shutil
+    shutil.rmtree(capture / "review-inputs")
+    (capture / "effective-files.json").unlink()
+    for name in ("config.json", "config.yaml"):
+        (capture / name).write_text(json.dumps(config.to_dict()))
     install(monkeypatch, {"security": (original,)})
     output = assessment_output(status)
     reference = artifact_data(original.evidence.citations[0])
@@ -238,31 +247,42 @@ def test_panel_applies_independent_assessment_and_preserves_disposition(capture,
     key = "counter_citations" if status == "refuted" else "supporting_citations"
     output["assessments"][0][key] = [reference]
     result = asyncio.run(run_review(capture, config, runtime=NareRuntime(
-        running_executable(tmp_path, output=output))))
+        decision_runtime(tmp_path, output))))
     assert result.verdict.verdict == want
     assert result.status == ("partial" if status == "unresolved" else "complete")
-    assert result.usage.total == 50  # Four discovery turns (10 each) + assessor (10).
+    assert result.usage.total == (100 if strategy == "debate" and status == "supported" else 50)
     saved = json.loads((capture / "assessment.json").read_bytes())
     assert saved["status"] == "complete"
     assert saved["candidates"][0]["candidate_id"] == "one"
     assert saved["assessments"][0]["status"] == status
     assert saved["allocation_tokens"] == 80
-    if status != "supported":
+    if status == "refuted":
         assert not result.verdict.findings
     else:
         assert result.verdict.findings[0].sources == (original,)
     from scrutare.replay.audit import replay_run
     assert replay_run(capture).saved_identical
+    if strategy == "iterative":
+        from test_iterative import push
+        repeat = push(capture, "repeat")
+        (repeat / "metadata.json").write_bytes((capture / "metadata.json").read_bytes())
+        shutil.copytree(capture / "repository-context", repeat / "repository-context")
+        resumed = asyncio.run(run_review(repeat, config, runtime=NareRuntime(
+            decision_runtime(tmp_path, output))))
+        assert resumed.verdict.verdict == want
+        assert resumed.usage.total == 0
+        assert replay_run(repeat).saved_identical
 
 
 def test_incomplete_assessment_withholds_verdict_and_retains_raw_output(capture, tmp_path,
                                                                       monkeypatch):
     import asyncio
+
     from test_nare_session import running_executable
     from test_panel import install
 
-    from scrutare.engine.strategy import run_review
     from scrutare.engine.session_models import NareRuntime
+    from scrutare.engine.strategy import run_review
 
     config, _, original = prepared_candidate(capture)
     install(monkeypatch, {"security": (original,)})
@@ -286,3 +306,94 @@ def test_semantic_escalation_posts_comment_with_explicit_reason():
     assert "semantic" in payload.body.lower()
     assert "@maintainer" in payload.body
     assert "one" in payload.body
+
+
+def decision_runtime(tmp_path, output):
+    from test_nare_session import RUN_BODY, executable
+    prefix = "output = " + repr(output) + "\n"
+    body = (RUN_BODY.replace("INPUT", "4").replace("STATUS", "'done'")
+            .replace("STOP", "'end_turn'").replace("OUTPUT", "output")
+            .replace("EXTRA", "if not a.prompt.startswith('Independently assess'):\n"
+                     "    output = {'findings': []}\n"
+                     "    if a.prompt.startswith('Arbitrate'): output['converged'] = True")
+            .replace("EXIT", "0"))
+    return executable(tmp_path, body=prefix + body)
+
+
+@pytest.mark.parametrize("initial_status", ["partial", "complete"])
+def test_refuted_assessment_cannot_approve_incomplete_discovery(capture, tmp_path, monkeypatch,
+                                                             initial_status):
+    import asyncio
+
+    from test_panel import install
+
+    from scrutare.engine.session_models import NareRuntime
+    from scrutare.engine.strategy import run_review
+    from scrutare.findings.models import artifact_data
+    config, _, original = prepared_candidate(capture)
+    install(monkeypatch, {"security": (original,)}, initial_status=initial_status)
+    reference = artifact_data(original.evidence.citations[0])
+    reference.pop("validation")
+    reference.pop("validation_reason")
+    output = assessment_output("refuted")
+    output["assessments"][0]["counter_citations"] = [reference]
+    result = asyncio.run(run_review(capture, config,
+                                   runtime=NareRuntime(decision_runtime(tmp_path, output))))
+    if initial_status == "partial":
+        assert result.verdict is None
+    else:
+        assert result.verdict.verdict == "approve"
+
+
+def test_replay_refuses_false_complete_accounting_on_assessment(capture, tmp_path, monkeypatch):
+    import json
+
+    from scrutare.replay.audit import replay_run
+    from scrutare.replay.models import ReplayError
+    test_panel_applies_independent_assessment_and_preserves_disposition(
+        capture, tmp_path, monkeypatch, "refuted", "approve", "panel")
+    document = json.loads((capture / "assessment.json").read_bytes())
+    document["outcome"]["accounting_complete"] = False
+    (capture / "assessment.json").write_text(json.dumps(document))
+    with pytest.raises(ReplayError):
+        replay_run(capture)
+
+
+def test_stale_empty_push_requires_fresh_complete_coverage_and_can_retry(
+        capture, tmp_path, monkeypatch):
+    import asyncio
+    import json
+
+    from test_iterative import push
+    from test_panel import install
+    from test_repository_context import Objects
+
+    from scrutare.config import parse_config
+    from scrutare.engine.repository_context import capture_repository_context
+    from scrutare.engine.session_models import NareRuntime
+    from scrutare.engine.strategy import run_review
+    test_panel_applies_independent_assessment_and_preserves_disposition(
+        capture, tmp_path, monkeypatch, "refuted", "approve", "iterative")
+    config = parse_config((capture / "config.yaml").read_bytes())
+    second = push(capture, "empty", patch=b"")
+    (second / "files.json").write_text("[]")
+    metadata = json.loads((second / "metadata.json").read_bytes())
+    metadata["head_sha"] = metadata["pull_request"]["head"]["sha"] = "f" * 40
+    metadata["pull_request"]["changed_files"] = 0
+    (second / "metadata.json").write_text(json.dumps(metadata))
+    capture_repository_context(Objects(), second, config)
+    install(monkeypatch, {}, initial_status="partial")
+    result = asyncio.run(run_review(second, config, runtime=NareRuntime(
+        decision_runtime(tmp_path, {"assessments": []}))))
+    assert result.status == "partial"
+    assert result.verdict is None
+    import shutil
+    repeat = push(second, "retry-empty")
+    (repeat / "metadata.json").write_bytes((second / "metadata.json").read_bytes())
+    shutil.copytree(second / "repository-context", repeat / "repository-context")
+    install(monkeypatch, {})
+    resumed = asyncio.run(run_review(repeat, config, runtime=NareRuntime(
+        decision_runtime(tmp_path, {"assessments": []}))))
+    assert resumed.status == "complete"
+    assert resumed.verdict.verdict == "approve"
+    assert resumed.usage.total == 40

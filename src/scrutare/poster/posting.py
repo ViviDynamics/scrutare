@@ -270,6 +270,7 @@ def _post_review_locked(
         if (verdict.exhaustion.strategy != config.strategy
                 or verdict.exhaustion.round_limit != config.rounds.max):
             raise PostingError("Exhaustion differs from the captured strategy or round bound.")
+    if verdict.verdict == "escalated":
         reviewers = normalize_human_reviewers(config.github.human_reviewers)
     path = run_dir / "posting.json"
     existing = path.exists()
@@ -301,7 +302,7 @@ def _post_review_locked(
     confirmed = _saved_receipt(state["receipt"], ref, payload) if state.get(
         "status") == "posted" else None
     _validate_existing(run_dir, intent, confirmed, reviewers,
-                       escalated=verdict.exhaustion is not None)
+                       escalated=verdict.verdict == "escalated")
     _evidence(run_dir, verdict)
     if not existing:
         if (run_dir / "review-payload.json").exists():

@@ -97,7 +97,9 @@ def _original_targets(payload: ReviewPayload) -> tuple[str, ...]:
     header, separator, _ = payload.body.partition("\n\nUnresolved findings:\n\n")
     if (payload.event != "COMMENT" or not header.startswith("Scrutare escalation\n\n")
             or "\nVerdict: escalated\n" not in header
-            or "\nRule: rounds_exhausted_without_convergence\n" not in header or not separator):
+            or not any(f"\nRule: {rule}\n" in header for rule in (
+                "rounds_exhausted_without_convergence", "unresolved_semantic_assessment"))
+            or not separator):
         raise ReplayError("escalation: expected original escalation payload")
     targets = header.rsplit("\n\n", 1)[-1]
     if targets == "This repository has no escalation targets configured.":
