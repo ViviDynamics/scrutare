@@ -8,7 +8,11 @@ from importlib.resources import files
 import yaml
 
 from scrutare.personas.definition import PersonaDefinition
-from scrutare.personas.names import BUILTIN_PERSONA_NAMES
+from scrutare.personas.names import (
+    BUILTIN_PERSONA_NAMES,
+    SELECTABLE_PERSONA_NAMES,
+    SPECIALIST_PERSONA_NAMES,
+)
 
 
 @cache
@@ -44,11 +48,13 @@ def _profile(procedures: str) -> None:
 def load_persona(name: str, *, procedures: str = "baseline") -> PersonaDefinition:
     """Return one immutable built-in definition, or raise ValueError for an unknown name."""
     _profile(procedures)
-    if name not in BUILTIN_PERSONA_NAMES:
+    if name not in SELECTABLE_PERSONA_NAMES:
         raise ValueError(
-            f"Unknown persona name; expected one of {', '.join(BUILTIN_PERSONA_NAMES)}"
+            f"Unknown persona name; expected one of {', '.join(SELECTABLE_PERSONA_NAMES)}"
         )
-    return next(persona for persona in _builtin_personas(procedures) if persona.name == name)
+    definitions = (_specialist_personas() if name in SPECIALIST_PERSONA_NAMES
+                   else _builtin_personas(procedures))
+    return next(persona for persona in definitions if persona.name == name)
 
 
 def resolve_personas(
@@ -72,8 +78,28 @@ def procedure_record(
 ) -> dict[str, str]:
     """Identify exact effective bytes without replacing caller-provided definitions."""
     _profile(procedures)
-    version = "inline" if inline else procedures
+    version = ("inline" if inline else "routing-v1"
+               if persona.name in SPECIALIST_PERSONA_NAMES else procedures)
     digest = sha256(persona.system_prompt.encode("utf-8")).hexdigest()
     # The versioned procedure is the complete instruction text, including guardrails.
     return {"origin": "inline" if inline else "builtin", "version": version,
             "system_prompt_sha256": digest, "procedure_sha256": digest}
+
+
+@cache
+def _specialist_personas() -> tuple[PersonaDefinition, ...]:
+    data = yaml.safe_load(files("scrutare.personas").joinpath(
+        "specialists-v1.yaml").read_text(encoding="utf-8"))
+    if not isinstance(data, list):
+        raise RuntimeError("Packaged specialists must be a list")
+    result = []
+    for entry in data:
+        if (not isinstance(entry, dict) or set(entry) != {"name", "system_prompt"}
+                or entry["name"] not in SPECIALIST_PERSONA_NAMES
+                or not isinstance(entry["system_prompt"], str)
+                or not entry["system_prompt"].strip()):
+            raise RuntimeError("Invalid packaged specialist procedure")
+        result.append(PersonaDefinition(entry["name"], entry["system_prompt"]))
+    if {p.name for p in result} != set(SPECIALIST_PERSONA_NAMES) or len(result) != 2:
+        raise RuntimeError("Packaged specialists must match allowed specialist names")
+    return tuple(result)

@@ -10,7 +10,7 @@ import yaml
 from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
 
 from scrutare.personas.definition import PersonaDefinition as PersonaDefinition
-from scrutare.personas.names import BUILTIN_PERSONA_NAMES, DEFAULT_PERSONA_NAMES
+from scrutare.personas.names import DEFAULT_PERSONA_NAMES, SELECTABLE_PERSONA_NAMES
 
 Strategy = Literal["panel", "iterative", "debate"]
 Provider = Literal["anthropic", "openai"]
@@ -134,6 +134,30 @@ class FindingSettings:
 
 
 @dataclass(frozen=True)
+class RoutingRule:
+    persona: str | PersonaDefinition
+    paths: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class RoutingGroup:
+    name: str
+    implementation: tuple[str, ...] = ()
+    callers: tuple[str, ...] = ()
+    contracts: tuple[str, ...] = ()
+    tests: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class RoutingSettings:
+    enabled: bool = False
+    mode: Literal["auto", "manual"] = "auto"
+    force: tuple[str, ...] = ()
+    rules: tuple[RoutingRule, ...] = ()
+    groups: tuple[RoutingGroup, ...] = ()
+
+
+@dataclass(frozen=True)
 class ReviewConfig:
     strategy: Strategy
     rounds: RoundSettings
@@ -146,6 +170,7 @@ class ReviewConfig:
     context: ContextSettings = ContextSettings()
     findings: FindingSettings = FindingSettings()
     analysis: AnalysisSettings = AnalysisSettings()
+    routing: RoutingSettings = RoutingSettings()
 
     def __post_init__(self) -> None:
         if self.findings.evidence == "v2" and not self.context.enabled:
@@ -193,6 +218,17 @@ class ReviewConfig:
                 result["findings"]["assessment"] = asdict(self.findings.assessment)
         if self.analysis.enabled:
             result["analysis"] = asdict(self.analysis)
+        if self.routing != RoutingSettings():
+            result["routing"] = {
+                "enabled": self.routing.enabled, "mode": self.routing.mode,
+                "force": list(self.routing.force),
+                "rules": [{"persona": asdict(rule.persona)
+                           if isinstance(rule.persona, PersonaDefinition) else rule.persona,
+                           "paths": list(rule.paths)} for rule in self.routing.rules],
+                "groups": [{"name": group.name, **{role: list(getattr(group, role))
+                            for role in ("implementation", "callers", "contracts", "tests")}}
+                           for group in self.routing.groups],
+            }
         return result
 
 
@@ -292,7 +328,7 @@ def _personas(value: object) -> tuple[str | PersonaDefinition, ...]:
     for i, item in enumerate(items):
         path = f"personas[{i}]"
         if isinstance(item, str):
-            name = _choice(item, path, BUILTIN_PERSONA_NAMES)
+            name = _choice(item, path, SELECTABLE_PERSONA_NAMES)
             persona: str | PersonaDefinition = name
         else:
             definition = _mapping(item, path, ("name", "system_prompt"))
@@ -458,7 +494,7 @@ def parse_config(data: bytes | str) -> ReviewConfig:
         _load_yaml(data),
         "",
         ("strategy", "rounds", "personas", "budgets", "models", "verdict", "github",
-         "inspection", "context", "findings", "analysis"),
+         "inspection", "context", "findings", "analysis", "routing"),
     )
     strategy = cast(
         Strategy,
@@ -489,6 +525,7 @@ def parse_config(data: bytes | str) -> ReviewConfig:
         context,
         _finding_settings(raw.get("findings", {})),
         _analysis_settings(raw.get("analysis", {}), context),
+        _routing(raw.get("routing", {})),
     )
 
 
@@ -499,3 +536,55 @@ def load_config(path: Path) -> ReviewConfig:
     except (OSError, ValueError):
         raise ConfigError("config: cannot read configuration file") from None
     return parse_config(data)
+
+
+def _routing(value: object) -> RoutingSettings:
+    fields = _mapping(value, "routing", ("enabled", "mode", "force", "rules", "groups"))
+    enabled = fields.get("enabled", False)
+    if type(enabled) is not bool:
+        raise ConfigError("routing.enabled: expected boolean")
+    mode = cast(Literal["auto", "manual"], _choice(
+        fields.get("mode", "auto"), "routing.mode", ("auto", "manual")))
+    rules = []
+    names = set[str]()
+    for i, item in enumerate(_list(fields.get("rules", []), "routing.rules")):
+        path = f"routing.rules[{i}]"
+        rule = _mapping(item, path, ("persona", "paths"))
+        try:
+            persona = _personas([rule.get("persona")])[0]
+        except ConfigError:
+            raise ConfigError(f"{path}.persona: expected builtin or inline procedure") from None
+        name = persona if isinstance(persona, str) else persona.name
+        if name in names:
+            raise ConfigError(f"{path}.persona: duplicate routed procedure")
+        names.add(name)
+        patterns = _routing_patterns(rule.get("paths", []), path + ".paths")
+        if not patterns:
+            raise ConfigError(f"{path}.paths: expected at least one pattern")
+        rules.append(RoutingRule(persona, patterns))
+    force = _strings(fields.get("force", []), "routing.force")
+    if (len(set(force)) != len(force)
+            or set(force) - (set(SELECTABLE_PERSONA_NAMES) | names)):
+        raise ConfigError("routing.force: expected unique declared procedure names")
+    groups = []
+    seen = set[str]()
+    roles = ("implementation", "callers", "contracts", "tests")
+    for i, item in enumerate(_list(fields.get("groups", []), "routing.groups")):
+        path = f"routing.groups[{i}]"
+        group = _mapping(item, path, ("name", *roles))
+        name = _string(group.get("name"), path + ".name")
+        if not re.fullmatch(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*", name) or name in seen:
+            raise ConfigError(f"{path}.name: expected unique lowercase slug")
+        seen.add(name)
+        groups.append(RoutingGroup(name, *(_routing_patterns(group.get(role, []), path + "." + role)
+                                         for role in roles)))
+    return RoutingSettings(enabled, mode, force, tuple(rules), tuple(groups))
+
+
+def _routing_patterns(value: object, path: str) -> tuple[str, ...]:
+    patterns = _strings(value, path)
+    for pattern in patterns:
+        if (pattern.startswith("/") or "\\" in pattern or "\x00" in pattern
+                or any(p in ("", ".", "..") for p in pattern.split("/"))):
+            raise ConfigError(f"{path}: expected safe repository-relative patterns")
+    return patterns
