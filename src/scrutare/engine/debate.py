@@ -20,7 +20,7 @@ from scrutare.engine.panel import (
     _validate_binding,
 )
 from scrutare.engine.panel_artifacts import preflight_panel, publish_panel
-from scrutare.engine.review_inputs import ReviewInputError, prepared_hashes
+from scrutare.engine.review_inputs import ReviewInputError, prepared_content_hashes
 from scrutare.engine.session_artifacts import (
     SessionArtifactError,
     create_attempt_directory,
@@ -53,7 +53,7 @@ async def run_debate(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntim
     context = await _prepare_execution(
         run_dir, config, runtime=runtime, budget_personas=(chair_name,)
     )
-    hashes = prepared_hashes(context.inputs)
+    hashes = prepared_content_hashes(context.inputs)
     chair = PersonaDefinition(chair_name, load_persona(
         "senior-dev", procedures=config.inspection.procedures,
     ).system_prompt)

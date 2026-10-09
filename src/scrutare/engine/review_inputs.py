@@ -261,7 +261,7 @@ def validate_prepared_inputs(inputs: PreparedReviewInputs) -> None:
         ) from None
 
 
-def prepared_hashes(inputs: PreparedReviewInputs) -> dict[str, str]:
+def prepared_content_hashes(inputs: PreparedReviewInputs) -> dict[str, str]:
     """Bind execution to every artifact in the validated producer-owned read root."""
     validate_prepared_inputs(inputs)
     return {path.name: sha256(_read_file(path)).hexdigest()

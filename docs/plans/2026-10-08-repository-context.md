@@ -20,8 +20,8 @@ Out: automatic language-specific caller discovery; paid comparative evaluation a
 - [x] 1. Configuration and Git object transport: failing opt-in/unsafe SHA/identity tests.
 - [x] 2. Bounded context capture: cross-file fixture, explicit omissions and fork routing tests.
 - [x] 3. Shared prepared roots: immutable bytes, tampering/symlink and prompt tests.
-- [ ] 4. Iterative/replay integration: unchanged hunk supporting-file changes and audit tests.
-- [ ] 5. Installed runtime integration and documentation: real nare reads outside checkout.
+- [x] 4. Iterative/replay integration: unchanged hunk supporting-file changes and audit tests.
+- [x] 5. Installed runtime integration and documentation: real nare reads outside checkout.
 
 ## Validation
 Run targeted tests after each red/green cycle, then lint and strict types. Parent handles

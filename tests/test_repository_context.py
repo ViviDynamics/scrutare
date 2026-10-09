@@ -250,3 +250,301 @@ def test_all_persona_descriptors_allow_context_but_preserve_anchor_selection(cap
         assert "repository-context.json" in descriptor.prompt
         assert "selected diff hunks" in descriptor.prompt
         assert descriptor.nare_input_args()[1:4] == ("--tools", "read", "--root")
+
+
+def test_iterative_support_changes_reassess_unchanged_finding_hunk(capture, monkeypatch):
+    from test_iterative import push, run, setup
+    from test_panel import finding, install
+
+    config, _ = contextual(capture)
+    configured = setup(capture)
+    config = replace(configured, context=config.context)
+    for name in ("config.yaml", "config.json"):
+        save_json(capture / name, config.to_dict())
+    install(monkeypatch, {"security": (finding(),)})
+    assert run(capture, config).verdict.verdict == "changes_requested"
+    second = push(capture, "second")
+    contextual(second, caller=b"fixed_caller()\n")
+    metadata = read_json(second / "metadata.json")
+    metadata["head_sha"] = metadata["pull_request"]["head"]["sha"] = "f" * 40
+    save_json(second / "metadata.json", metadata)
+    context_manifest = second / "repository-context/repository-context.json"
+    manifest = read_json(context_manifest)
+    manifest["revisions"]["head"]["sha"] = "f" * 40
+    for entry in manifest["entries"]:
+        if entry["side"] == "head":
+            entry["revision"] = "f" * 40
+    save_json(context_manifest, manifest)
+    for name in ("config.yaml", "config.json"):
+        save_json(second / name, config.to_dict())
+    _, calls, _, _ = install(monkeypatch, {"security": ()})
+    assert run(second, config).verdict.verdict == "approve"
+    assert len([call for call in calls if isinstance(call, tuple)]) == 1
+    history = read_json(second / "iterative.json")
+    assert history["pool"][0]["dependencies"]
+    assert history["pool"][0]["disposition"] == "withdrawn"
+    child = second / "iterative-round/review-inputs"
+    assert b"+new" in (child / "diff.patch").read_bytes()
+    assert (child / "repository-context.json").is_file()
+
+
+def test_replay_reports_context_tampering(capture, monkeypatch):
+    import asyncio
+
+    from test_panel import install
+
+    from scrutare.engine.panel import run_panel
+    from scrutare.engine.session_models import NareRuntime
+    from scrutare.replay.audit import replay_run
+
+    config, _ = contextual(capture)
+    install(monkeypatch, {})
+    asyncio.run(run_panel(capture, config, runtime=NareRuntime(capture / "nare")))
+    assert replay_run(capture).exit_code == 0
+    manifest = read_json(capture / "review-inputs/repository-context.json")
+    artifact = next(e["artifact"] for e in manifest["entries"] if e["status"] == "captured")
+    (capture / "review-inputs" / artifact).write_bytes(b"tampered")
+    replay = replay_run(capture)
+    assert replay.exit_code == 2
+    assert any(issue.code == "repository_context_invalid" for issue in replay.issues)
+
+
+@pytest.mark.parametrize("kind", ["commit", "tree"])
+def test_git_object_transport_refuses_wrong_or_incomplete_identity(kind):
+    sha = "a" * 40
+    runner = Mock(
+        return_value=subprocess.CompletedProcess(
+            [],
+            0,
+            json.dumps(
+                {
+                    "sha": "b" * 40,
+                    "tree": {"sha": "c" * 40},
+                    "truncated": False,
+                }
+            ).encode(),
+            b"",
+        )
+    )
+    client = GitHubClient(runner)
+    with pytest.raises(GitHubError):
+        getattr(client, "get_" + kind)("owner/repo", sha)
+    runner.return_value.stdout = json.dumps({"sha": sha, "tree": [], "truncated": True}).encode()
+    if kind == "tree":
+        with pytest.raises(GitHubError):
+            client.get_tree("owner/repo", sha)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "capture-symlink",
+        "manifest-path",
+        "missing-manifest",
+        "extra-file",
+        "revision",
+        "invalid-entries",
+    ],
+)
+def test_context_capture_corruption_fails_before_read_root(capture, tmp_path, mutation):
+    from scrutare.engine.review_inputs import ReviewInputError, prepare_review_inputs
+
+    config, _ = contextual(capture)
+    directory = capture / "repository-context"
+    manifest_path = directory / "repository-context.json"
+    manifest = read_json(manifest_path)
+    entry = next(e for e in manifest["entries"] if e["status"] == "captured")
+    if mutation == "capture-symlink":
+        target = tmp_path / "outside"
+        target.write_bytes((directory / entry["artifact"]).read_bytes())
+        (directory / entry["artifact"]).unlink()
+        (directory / entry["artifact"]).symlink_to(target)
+    elif mutation == "manifest-path":
+        entry["artifact"] = "../escape"
+        save_json(manifest_path, manifest)
+    elif mutation == "missing-manifest":
+        manifest_path.unlink()
+    elif mutation == "extra-file":
+        (directory / "unexpected").write_bytes(b"credentials")
+    elif mutation == "revision":
+        manifest["revisions"]["head"]["sha"] = "f" * 40
+        save_json(manifest_path, manifest)
+    else:
+        manifest.pop("revisions")
+        save_json(manifest_path, manifest)
+    with pytest.raises(ReviewInputError):
+        prepare_review_inputs(capture, config)
+    assert not (capture / "review-inputs").exists()
+
+
+def test_unknown_head_repository_has_explicit_unavailable_context(capture):
+    from scrutare.engine.repository_context import capture_repository_context
+    from scrutare.engine.review_inputs import prepare_review_inputs
+
+    config, _ = contextual(capture)
+    import shutil
+
+    shutil.rmtree(capture / "repository-context")
+    metadata = read_json(capture / "metadata.json")
+    metadata["pull_request"]["head"]["repo"] = None
+    save_json(capture / "metadata.json", metadata)
+    objects = Objects()
+    capture_repository_context(objects, capture, config)
+    manifest = read_json(prepare_review_inputs(capture, config).root / "repository-context.json")
+    assert all(
+        e["status"] in ("unavailable", "excluded", "sensitive")
+        for e in manifest["entries"]
+        if e["side"] == "head"
+    )
+    assert not any(call[:2] == ("commit", "fork/repo") for call in objects.calls)
+
+
+def test_changed_path_excluded_from_findings_can_supply_context(capture):
+    import shutil
+
+    from scrutare.engine.repository_context import capture_repository_context
+    from scrutare.engine.review_inputs import prepare_review_inputs
+
+    config, _ = contextual(capture)
+    config = replace(config, context=replace(config.context, exclude=()))
+    for name in ("config.yaml", "config.json"):
+        save_json(capture / name, config.to_dict())
+    shutil.rmtree(capture / "repository-context")
+    capture_repository_context(Objects(), capture, config)
+    inputs = prepare_review_inputs(capture, config)
+    entries = read_json(inputs.root / "repository-context.json")["entries"]
+    assert all(
+        e["status"] == "captured" and not e["eligible"]
+        for e in entries
+        if e["path"] == "docs/secret.md"
+    )
+    assert b"documentation" in b"".join(path.read_bytes() for path in inputs.root.iterdir())
+    assert b"EXCLUDED_SENTINEL" not in (inputs.root / "diff.patch").read_bytes()
+
+
+@pytest.mark.parametrize(
+    "status,previous,expected",
+    [
+        ("added", None, {"base": "absent", "head": "captured"}),
+        ("removed", None, {"base": "captured", "head": "absent"}),
+        ("renamed", "old.py", {"base": "captured", "head": "captured"}),
+    ],
+)
+def test_content_side_identity_for_add_delete_rename(capture, status, previous, expected):
+    import shutil
+
+    from scrutare.engine.repository_context import capture_repository_context
+
+    config, _ = contextual(capture)
+    record = {"filename": "src/app.py", "status": status}
+    if previous:
+        record["previous_filename"] = previous
+    save_json(capture / "files.json", [record])
+    shutil.rmtree(capture / "repository-context")
+    objects = Objects()
+    objects.content["old.py"] = b"old\n"
+    capture_repository_context(objects, capture, config)
+    entries = read_json(capture / "repository-context/repository-context.json")["entries"][:2]
+    assert {e["side"]: e["status"] for e in entries} == expected
+    if previous:
+        assert entries[0]["path"] == previous and entries[1]["path"] == "src/app.py"
+
+
+def test_tree_request_and_file_limits_are_recorded(capture):
+    config, client = contextual(capture, max_tree_requests=1, max_files=1)
+    entries = read_json(capture / "repository-context/repository-context.json")["entries"]
+    assert any(e["status"] == "tree_limit" for e in entries)
+    assert len([call for call in client.calls if call[0] == "tree"]) == 1
+
+
+def test_local_snapshot_context_records_content_provenance(capture):
+    import shutil
+
+    from scrutare.engine.repository_context import capture_repository_context
+    from scrutare.engine.repository_snapshot import RepositorySnapshot
+    from scrutare.engine.review_inputs import prepare_review_inputs
+
+    config, _ = contextual(capture)
+    shutil.rmtree(capture / "repository-context")
+    source = {
+        "src/app.py": b"new\n",
+        "src/caller.py": b"caller_snapshot()\n",
+        "tests/test_caller.py": b"assert caller_snapshot()\n",
+    }
+    client = RepositorySnapshot({("owner/repo", "b" * 40): source, ("fork/repo", "a" * 40): source})
+    source["src/caller.py"] = b"ambient change\n"
+    capture_repository_context(client, capture, config, source=client.provenance())
+    manifest = read_json(prepare_review_inputs(capture, config).root / "repository-context.json")
+    assert manifest["source"]["kind"] == "corpus_snapshot"
+    assert len(manifest["source"]["snapshots"]) == 2
+    entry = next(
+        e for e in manifest["entries"] if e["path"] == "src/caller.py" and e["side"] == "head"
+    )
+    assert client.get_blob("fork/repo", entry["blob_sha"], max_bytes=100) == b"caller_snapshot()\n"
+    with pytest.raises(GitHubError):
+        client.get_commit("fork/repo", "main")
+
+
+@pytest.mark.parametrize("changed,rounds,expected_calls", [(False, 3, 0), (True, 1, 0)])
+def test_iterative_context_revision_and_exhaustion(
+    capture, monkeypatch, changed, rounds, expected_calls
+):
+    from test_iterative import push, run, setup
+    from test_panel import finding, install
+
+    contextual_config, _ = contextual(capture)
+    config = replace(setup(capture, rounds=rounds), context=contextual_config.context)
+    for name in ("config.yaml", "config.json"):
+        save_json(capture / name, config.to_dict())
+    install(monkeypatch, {"security": (finding(),)})
+    run(capture, config)
+    second = push(capture, "next")
+    contextual(second, caller=b"fixed_caller()\n" if changed else b"call_changed()\n")
+    metadata = read_json(second / "metadata.json")
+    metadata["head_sha"] = metadata["pull_request"]["head"]["sha"] = "f" * 40
+    save_json(second / "metadata.json", metadata)
+    manifest_path = second / "repository-context/repository-context.json"
+    manifest = read_json(manifest_path)
+    manifest["revisions"]["head"]["sha"] = "f" * 40
+    for entry in manifest["entries"]:
+        if entry["side"] == "head":
+            entry["revision"] = "f" * 40
+    save_json(manifest_path, manifest)
+    for name in ("config.yaml", "config.json"):
+        save_json(second / name, config.to_dict())
+    _, calls, _, _ = install(monkeypatch, {"security": ()})
+    result = run(second, config)
+    assert len([call for call in calls if isinstance(call, tuple)]) == expected_calls
+    assert result.verdict.verdict == ("escalated" if changed else "changes_requested")
+    if changed:
+        assert read_json(second / "iterative.json")["invalidated_findings"] == 1
+
+
+def test_empty_anchor_selection_still_produces_no_contextual_findings(capture, monkeypatch):
+    import asyncio
+
+    from test_panel import finding, install
+
+    from scrutare.engine.panel import run_panel
+    from scrutare.engine.session_models import NareRuntime
+
+    config, _ = contextual(capture)
+    config = replace(
+        config,
+        github=replace(config.github, paths=replace(config.github.paths, include=("no-match/**",))),
+        models=replace(
+            config.models, default=replace(config.models.default, model="default-model")
+        ),
+    )
+    # Capture selection eligibility must be regenerated for the new finding policy.
+    import shutil
+
+    from scrutare.engine.repository_context import capture_repository_context
+
+    shutil.rmtree(capture / "repository-context")
+    for name in ("config.yaml", "config.json"):
+        save_json(capture / name, config.to_dict())
+    capture_repository_context(Objects(), capture, config)
+    install(monkeypatch, {"security": (finding(),)})
+    result = asyncio.run(run_panel(capture, config, runtime=NareRuntime(capture / "nare")))
+    assert not result.verdict.findings

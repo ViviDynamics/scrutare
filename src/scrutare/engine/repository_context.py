@@ -6,10 +6,10 @@ import re
 from dataclasses import asdict
 from hashlib import sha1, sha256
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 from scrutare.config import ReviewConfig
-from scrutare.engine.github import GitHubClient, GitHubError, _repository
+from scrutare.engine.github import GitHubError, _repository
 from scrutare.engine.paths import _matches, parse_changed_files, select_changed_files
 from scrutare.findings.models import _path
 
@@ -20,6 +20,12 @@ _SENSITIVE = (".env", ".env.*", "*.pem", "*.key", "*.p12", "*.pfx", "id_rsa*",
 _STATUSES = {"captured", "excluded", "sensitive", "absent", "missing", "binary", "symlink",
              "submodule", "directory", "oversized", "file_limit", "total_limit", "tree_limit",
              "unavailable"}
+
+
+class RepositoryObjectClient(Protocol):
+    def get_commit(self, repository: str, sha: str) -> str: ...
+    def get_tree(self, repository: str, sha: str) -> tuple[dict[str, Any], ...]: ...
+    def get_blob(self, repository: str, sha: str, *, max_bytes: int) -> bytes: ...
 
 
 def encoded(value: object) -> bytes:
@@ -98,7 +104,8 @@ def _artifact(side: str, path: str) -> str:
     return f"repository-{side}-{sha256(path.encode()).hexdigest()}.txt"
 
 
-def capture_repository_context(client: GitHubClient, run: Path, config: ReviewConfig) -> None:
+def _capture_repository_context(client: RepositoryObjectClient, run: Path, config: ReviewConfig,
+                                source: dict[str, Any]) -> None:
     """Capture producer-owned objects only at metadata revisions; never execute source files."""
     if not config.context.enabled:
         return
@@ -174,7 +181,7 @@ def capture_repository_context(client: GitHubClient, run: Path, config: ReviewCo
                         status = "captured"
         entry["status"] = status
         entries.append(entry)
-    manifest = {"schema_version": 1, "settings": asdict(config.context),
+    manifest = {"schema_version": 1, "source": source, "settings": asdict(config.context),
                 "revisions": {side: {"repository": repository, "sha": sha,
                                      "tree_sha": roots[side]}
                               for side, (repository, sha) in revisions.items()},
@@ -192,7 +199,7 @@ def capture_repository_context(client: GitHubClient, run: Path, config: ReviewCo
     context_contents(run, config)
 
 
-def context_contents(run: Path, config: ReviewConfig) -> dict[str, bytes]:
+def _context_contents(run: Path, config: ReviewConfig) -> dict[str, bytes]:
     """Validate immutable context against capture/configuration and return exact copied bytes."""
     if not config.context.enabled:
         return {}
@@ -205,11 +212,18 @@ def context_contents(run: Path, config: ReviewConfig) -> dict[str, bytes]:
     source = run / "context-source-files.json"
     if source.exists() or source.is_symlink():
         candidates = _candidates(_json(source), config)
-    if (not isinstance(manifest, dict) or manifest.get("schema_version") != 1
+    if (not isinstance(manifest, dict) or type(manifest.get("schema_version")) is not int
+            or manifest["schema_version"] != 1
             or encoded(manifest.get("settings")) != encoded(asdict(config.context))
             or not isinstance(manifest.get("entries"), list)
             or len(manifest["entries"]) != len(candidates)):
         raise ValueError("Repository context manifest disagrees with capture configuration.")
+    provenance = manifest.get("source")
+    if (not isinstance(provenance, dict)
+            or provenance.get("kind") not in ("github", "corpus_snapshot")):
+        raise ValueError("Repository context source provenance is invalid.")
+    if provenance["kind"] == "github" and set(provenance) != {"kind"}:
+        raise ValueError("Repository context source provenance is invalid.")
     for side in ("base", "head"):
         repository, sha = _revision(metadata["pull_request"], side)
         revision = manifest["revisions"][side]
@@ -219,6 +233,25 @@ def context_contents(run: Path, config: ReviewConfig) -> dict[str, bytes]:
                     or _SHA.fullmatch(revision["tree_sha"]) is None)
                 or repository is None and revision["tree_sha"] is not None):
             raise ValueError("Repository context revisions disagree with capture.")
+    if provenance["kind"] == "corpus_snapshot":
+        snapshots = provenance.get("snapshots")
+        if set(provenance) != {"kind", "snapshots"} or not isinstance(snapshots, list):
+            raise ValueError("Repository context corpus provenance is invalid.")
+        by_identity = {}
+        for snapshot in snapshots:
+            if (not isinstance(snapshot, dict) or set(snapshot) != {
+                    "repository", "revision", "tree_sha", "content_sha256"}
+                    or not isinstance(snapshot["content_sha256"], str)
+                    or re.fullmatch(r"[0-9a-f]{64}", snapshot["content_sha256"]) is None):
+                raise ValueError("Repository context corpus inventory is invalid.")
+            key = snapshot["repository"], snapshot["revision"]
+            if key in by_identity:
+                raise ValueError("Repository context corpus inventory is duplicated.")
+            by_identity[key] = snapshot["tree_sha"]
+        for revision in manifest["revisions"].values():
+            if revision["repository"] is not None and by_identity.get((
+                    revision["repository"], revision["sha"])) != revision["tree_sha"]:
+                raise ValueError("Repository context corpus identity disagrees with evidence.")
     contents = {MANIFEST: manifest_bytes}
     used = 0
     for candidate, entry in zip(candidates, manifest["entries"]):
@@ -236,6 +269,13 @@ def context_contents(run: Path, config: ReviewConfig) -> dict[str, bytes]:
         policy = _policy_status(candidate, config)
         if policy is not None and entry["status"] != policy:
             raise ValueError("Repository context exposure violates selection policy.")
+        if (entry["blob_sha"] is not None and (
+                not isinstance(entry["blob_sha"], str) or _SHA.fullmatch(entry["blob_sha"]) is None)
+                or entry["size_bytes"] is not None and (
+                    type(entry["size_bytes"]) is not int or entry["size_bytes"] < 0)
+                or type(entry["retained_bytes"]) is not int
+                or entry["mode"] not in (None, "100644", "100755", "040000", "120000", "160000")):
+            raise ValueError("Repository context object metadata is invalid.")
         if entry["status"] == "captured":
             artifact = _artifact(entry["side"], entry["path"])
             data = regular(directory / artifact)
@@ -273,3 +313,21 @@ def supporting_dependencies(root: Path) -> list[dict[str, Any]]:
     manifest = _json(path)
     return [{key: entry[key] for key in ("side", "path", "status", "blob_sha", "sha256", "mode")}
             for entry in manifest["entries"]]
+
+
+def context_contents(run: Path, config: ReviewConfig) -> dict[str, bytes]:
+    """Return the exact verified context, with safe diagnostics for malformed capture data."""
+    try:
+        return _context_contents(run, config)
+    except (OSError, ValueError, TypeError, KeyError, RecursionError):
+        raise ValueError("Repository context evidence is invalid or incomplete.") from None
+
+
+def capture_repository_context(client: RepositoryObjectClient, run: Path, config: ReviewConfig,
+                               *, source: dict[str, Any] | None = None) -> None:
+    """Retain bounded exact-revision evidence or fail with a safe transport diagnostic."""
+    try:
+        _capture_repository_context(client, run, config, source or {"kind": "github"})
+    except (OSError, ValueError, TypeError, KeyError, RecursionError):
+        raise GitHubError(
+            "Cannot capture immutable repository context; inspect revisions and limits.") from None

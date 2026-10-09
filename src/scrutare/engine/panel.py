@@ -23,7 +23,7 @@ from scrutare.engine.reanchor import make_reanchor_requests
 from scrutare.engine.review_inputs import (
     ReviewInputError,
     _config_snapshot,
-    prepared_hashes,
+    prepared_content_hashes,
     validate_prepared_inputs,
 )
 from scrutare.engine.session_artifacts import (
@@ -155,7 +155,7 @@ async def run_panel(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime
     """Produce replay-compatible final evidence, withholding verdicts on incomplete coverage."""
     preflight_panel(run_dir)
     context = await _prepare_execution(run_dir, config, runtime=runtime)
-    hashes = prepared_hashes(context.inputs)
+    hashes = prepared_content_hashes(context.inputs)
     config_hash = sha256(encode_panel(config.to_dict())).hexdigest()
     try:
         initial = await _run_initial_wave(context)
