@@ -182,3 +182,47 @@ def test_queued_cases_use_same_frozen_bytes_as_snapshot(tmp_path, monkeypatch):
     snapshot = json.loads((tmp_path / 'out/snapshot.json').read_text())
     expected_hash = hashlib.sha256(original).hexdigest()
     assert snapshot['cases'][0]['capture_sha256']['diff.patch'] == expected_hash
+
+
+def test_procedure_comparison_has_equal_total_and_three_explicit_rosters():
+    variants = comparison_configs(config(), comparison_set='procedures')
+    assert tuple(variants) == ('current4', 'revised4', 'revised5')
+    assert [v.inspection.procedures for v in variants.values()] == ['baseline', 'v1', 'v1']
+    assert [len(v.personas) for v in variants.values()] == [4, 4, 5]
+    assert variants['revised5'].personas[-1] == 'testing-verification'
+    assert [v.budgets.per_persona_tokens for v in variants.values()] == [100,100,80]
+    assert all(v.budgets.review_max_tokens == 400 and v.strategy == 'panel'
+               and v.models == config().models for v in variants.values())
+    with pytest.raises(ValueError, match='comparison'):
+        comparison_configs(config(), comparison_set='invented')
+
+
+def test_procedure_job_freezes_profiles_before_first_await(tmp_path, monkeypatch):
+    from hashlib import sha256
+
+    from scrutare.personas import load_persona
+    cases = corpus(tmp_path / 'corpus')
+    seen = []
+    async def inspect(runtime):
+        snapshot = json.loads((tmp_path / 'out/snapshot.json').read_text())
+        assert len(snapshot['expected_runs']) == 9
+        for name, profile in [('current4','baseline'),('revised4','v1'),('revised5','v1')]:
+            saved = snapshot['variant_personas'][name]
+            expected = load_persona('senior-dev', procedures=profile).system_prompt
+            assert saved['senior-dev']['system_prompt'] == expected
+            assert saved['senior-dev']['system_prompt_sha256'] == (
+                sha256(expected.encode()).hexdigest())
+        assert 'testing-verification' in snapshot['variant_personas']['revised5']
+        return SimpleNamespace(version='2026.10.4', contract=1)
+    async def execute(run_dir, conf, *, runtime):
+        seen.append(conf.inspection.procedures)
+        return SimpleNamespace(status='complete',accounting_complete=True,
+            usage=TokenUsage(input=1),verdict=SimpleNamespace(findings=()))
+    monkeypatch.setattr('scrutare.evaluation.runner.inspect_nare_runtime',inspect)
+    monkeypatch.setattr('scrutare.evaluation.runner.run_review',execute)
+    result = asyncio.run(run_experiment(cases,config(),tmp_path/'out',
+        runtime=NareRuntime(Path('/unused')),evidence_kind='offline',comparison_set='procedures'))
+    assert seen == ['baseline']*3 + ['v1']*6
+    assert [r['run_id'] for r in result['runs']] == [
+        f'a/{variant}/{repeat}' for variant in ('current4','revised4','revised5')
+        for repeat in [1,2,3]]

@@ -7,10 +7,10 @@ import json
 import time
 from dataclasses import asdict, replace
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from scrutare import __version__
-from scrutare.config import BudgetSettings, ReviewConfig
+from scrutare.config import BudgetSettings, InspectionSettings, ReviewConfig
 from scrutare.engine.nare_session import inspect_nare_runtime
 from scrutare.engine.repository_context import capture_repository_context, encoded
 from scrutare.engine.repository_snapshot import RepositorySnapshot
@@ -28,14 +28,24 @@ def write_json(path: Path, data: Any) -> None:
         stream.write('\n')
 
 
-def comparison_configs(config: ReviewConfig) -> dict[str, ReviewConfig]:
+def comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline'
+                       ) -> dict[str, ReviewConfig]:
     """Freeze current roster, shared rail and total cap; reserve a fifth debate chair quota."""
+    if comparison_set not in ('baseline', 'procedures'):
+        raise ValueError('unknown comparison set')
     if config.models.overrides:
         raise ValueError('comparison requires a single fixed model rail without overrides')
     total = config.budgets.review_max_tokens
     if total < 5:
         raise ValueError('comparison total ceiling must support five participants')
     roster = ('senior-dev', 'junior-dev', 'security', 'devops')
+    if comparison_set == 'procedures':
+        return {name: replace(config, strategy='panel', personas=names,
+                    inspection=InspectionSettings(cast(Literal['baseline', 'v1'], profile)),
+                    budgets=BudgetSettings(total // len(names), total))
+                for name, names, profile in (
+                    ('current4', roster, 'baseline'), ('revised4', roster, 'v1'),
+                    ('revised5', (*roster, 'testing-verification'), 'v1'))}
     return {
         'senior': replace(config, strategy='panel', personas=('senior-dev',),
                           budgets=BudgetSettings(total, total)),
@@ -81,13 +91,14 @@ def _observed_usage(directory: Path) -> TokenUsage:
 
 
 async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: Path, *,
-                         runtime: NareRuntime, evidence_kind: str = 'model', concurrency: int = 1
+                         runtime: NareRuntime, evidence_kind: str = 'model', concurrency: int = 1,
+                         comparison_set: str = 'baseline'
                          ) -> dict[str, Any]:
     """Fresh 3-repeat job; ordinary CI calls this only with explicitly offline evidence."""
     if (evidence_kind not in ('model', 'offline') or not cases
             or type(concurrency) is not int or not 1 <= concurrency <= 32):
         raise ValueError('nonempty cases and model/offline evidence kind required')
-    variants = comparison_configs(config)
+    variants = comparison_configs(config, comparison_set=comparison_set)
     # Freeze before the first await; snapshot hashes and every repeat use these bytes.
     captures = {case.id: {name: (case.capture / name).read_bytes()
                          for name in ('diff.patch', 'files.json', 'metadata.json')}
@@ -132,17 +143,27 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                     for case in cases}
     output = output.absolute()
     output.mkdir(parents=True, exist_ok=False)
-    capability = await inspect_nare_runtime(runtime)
     snapshot: dict[str, Any] = {
         'schema_version': 1, 'scrutare_version': __version__, 'evidence_kind': evidence_kind,
-        'nare_version': capability.version, 'nare_contract': capability.contract,
+        'nare_version': None, 'nare_contract': None,
         'runtime': {**asdict(runtime), 'executable': str(runtime.executable)},
         'repeats': 3, 'concurrency': concurrency,
         'expected_runs': [{'run_id': f'{case.id}/{variant}/{repeat}', 'case_id': case.id,
                            'variant': variant, 'repeat': repeat}
                           for case in cases for variant in variants for repeat in range(1, 4)],
         'configs': {name: value.to_dict() for name, value in variants.items()},
-        'personas': {name: load_persona(name).system_prompt for name in variants['panel'].personas
+        'comparison_set': comparison_set,
+        'variant_personas': {variant: {name: {
+                'profile': value.inspection.procedures,
+                'system_prompt': load_persona(
+                    name, procedures=value.inspection.procedures).system_prompt,
+                'system_prompt_sha256': hashlib.sha256(load_persona(
+                    name, procedures=value.inspection.procedures
+                    ).system_prompt.encode()).hexdigest()}
+                for name in value.personas if isinstance(name, str)}
+                for variant, value in variants.items()},
+        'personas': {name: load_persona(name).system_prompt for name in
+                    variants['current4' if comparison_set == 'procedures' else 'panel'].personas
                      if isinstance(name, str)},
         'cases': [{'id': case.id, 'split': case.split, 'domain': case.domain,
                    'capture_sha256': {name: hashlib.sha256(data).hexdigest()
@@ -153,6 +174,10 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                   for case in cases],
     }
     write_json(output / 'snapshot.json', snapshot)
+    capability = await inspect_nare_runtime(runtime)
+    snapshot.update(nare_version=capability.version, nare_contract=capability.contract)
+    write_json(output / 'snapshot.next.json', snapshot)
+    (output / 'snapshot.next.json').replace(output / 'snapshot.json')
     completed: dict[str, dict[str, Any]] = {}
     def persist() -> dict[str, Any]:
         records = [completed.get(cell['run_id'], {**cell, 'status': 'missing',

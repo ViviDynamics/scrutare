@@ -1,0 +1,936 @@
+{
+  "artifacts_sha256": {
+    "adjudicate-comparison.py": "b136aff073320516c2276e0f4b16ea8391a3826855c14a275cdd1945cd60699e",
+    "automated-decisions.json": "515b7da1e802eb76eac1cf3c1733d214999c589203da7f9a1688d33b3aedd07e",
+    "blinded-packet.json": "0dcaa432823647039afa3d3dd270c015abffc49280e1cafa00ea7116b83a774e",
+    "experiment.json": "209303133bc765eeb124c7d82b422b0a9e3ea0b6311b136bd34514f87d80ae20",
+    "pending-human-adjudication.json": "832057cb667a5952c9d91f80d2ac231f37e1369fce9824922f5c7aee4e7faed1",
+    "snapshot.json": "9d2c9ad92372370a6ebf6be352e0c154d2b2fd538278d592f0a490cf2113011f"
+  },
+  "automated_judgments": 351,
+  "development_cases": 20,
+  "engine_failure_stage_counts": {
+    "failed:chair": 11,
+    "failed:chair_budget": 4,
+    "failed:perspective_budget": 6,
+    "failed:perspectives": 14,
+    "partial:converged": 2,
+    "partial:deadlock": 8
+  },
+  "evidence_kind": "model",
+  "experiment_status": "complete",
+  "human_judgments": 0,
+  "job": "review-quality-context44",
+  "limitations": [
+    "Independent Codex matching is automated; genuinely ambiguous observations remain unscored pending actual human review. Zero human judgments are claimed.",
+    "One aliased gpt-4.1-nano model through LiteLLM; the underlying dated model revision is not established.",
+    "Twenty original development cases with thirteen documented defects and seven clean controls. Three stochastic repeats produce 39 defect opportunities per variant, not 39 independent defects.",
+    "All original held-out cases were seen during the initial baseline. These development comparisons provide no unseen held-out validation and cannot justify default promotion.",
+    "Executable gold controls and frozen source hashes validate recorded triggers and tested clean invariants, not universal absence of further defects.",
+    "Failures remain in recall denominators; incomplete accounting makes observed tokens and tokens per detected defect lower bounds. Partial output is not a clean approval.",
+    "Precision counts emitted source observations including corroborations. Praise, safe refactor descriptions and unsupported allegations are retained as false observations rather than discarded.",
+    "Clean false-positive rate includes only complete accounted fully judged clean runs. Latency uses nearest-rank p95 across all actual scheduled runs including failures.",
+    "The context and procedure jobs overlapped in wall-clock time with uncontrolled provider proxy load. Latency and reliability differences cannot be attributed solely to architecture.",
+    "Published quality measurements remain provisional; no defaults or architecture promotion follows from these reports."
+  ],
+  "metrics": {
+    "debate": {
+      "accounting_failures": 24,
+      "adjudication_methods": {
+        "automated": 65
+      },
+      "clean_false_positive_runs": 6,
+      "clean_pr_false_positive_rate": 1.0,
+      "complete_runs": 15,
+      "defect_recall": 0.28205128205128205,
+      "duplicate_rate": 0.3076923076923077,
+      "duplicates": 20,
+      "eligible_clean_runs": 6,
+      "failed_runs": 35,
+      "false_positive_findings": 34,
+      "finding_precision": 0.47692307692307695,
+      "human_adjudicated": false,
+      "invalid_runs": 0,
+      "missing_runs": 0,
+      "p95_latency_seconds_nearest_rank_all_runs": 31.629947480978444,
+      "partial_runs": 10,
+      "pending_findings": 10,
+      "possible_defects": 39,
+      "quality_final": false,
+      "recall_is_lower_bound": true,
+      "result_provisional": true,
+      "tokens": 1502739,
+      "tokens_are_lower_bound": true,
+      "tokens_per_true_positive": 136612.63636363635,
+      "true_positive_defects": 11,
+      "true_positive_findings": 31,
+      "unique_detections": {
+        "devops": 0,
+        "junior-dev": 0,
+        "security": 1,
+        "senior-dev": 0
+      }
+    },
+    "panel": {
+      "accounting_failures": 0,
+      "adjudication_methods": {
+        "automated": 229
+      },
+      "clean_false_positive_runs": 21,
+      "clean_pr_false_positive_rate": 1.0,
+      "complete_runs": 60,
+      "defect_recall": 0.8205128205128205,
+      "duplicate_rate": 0.34934497816593885,
+      "duplicates": 80,
+      "eligible_clean_runs": 21,
+      "failed_runs": 0,
+      "false_positive_findings": 117,
+      "finding_precision": 0.4890829694323144,
+      "human_adjudicated": false,
+      "invalid_runs": 0,
+      "missing_runs": 0,
+      "p95_latency_seconds_nearest_rank_all_runs": 7.115328675950877,
+      "partial_runs": 0,
+      "pending_findings": 18,
+      "possible_defects": 39,
+      "quality_final": false,
+      "recall_is_lower_bound": true,
+      "result_provisional": true,
+      "tokens": 481360,
+      "tokens_are_lower_bound": false,
+      "tokens_per_true_positive": 15042.5,
+      "true_positive_defects": 32,
+      "true_positive_findings": 112,
+      "unique_detections": {
+        "devops": 0,
+        "junior-dev": 2,
+        "security": 0,
+        "senior-dev": 0
+      }
+    },
+    "senior": {
+      "accounting_failures": 0,
+      "adjudication_methods": {
+        "automated": 57
+      },
+      "clean_false_positive_runs": 17,
+      "clean_pr_false_positive_rate": 0.8095238095238095,
+      "complete_runs": 60,
+      "defect_recall": 0.5897435897435898,
+      "duplicate_rate": 0.017543859649122806,
+      "duplicates": 1,
+      "eligible_clean_runs": 21,
+      "failed_runs": 0,
+      "false_positive_findings": 33,
+      "finding_precision": 0.42105263157894735,
+      "human_adjudicated": false,
+      "invalid_runs": 0,
+      "missing_runs": 0,
+      "p95_latency_seconds_nearest_rank_all_runs": 5.809292624006048,
+      "partial_runs": 0,
+      "pending_findings": 3,
+      "possible_defects": 39,
+      "quality_final": false,
+      "recall_is_lower_bound": true,
+      "result_provisional": true,
+      "tokens": 100692,
+      "tokens_are_lower_bound": false,
+      "tokens_per_true_positive": 4377.913043478261,
+      "true_positive_defects": 23,
+      "true_positive_findings": 24,
+      "unique_detections": {
+        "senior-dev": 23
+      }
+    }
+  },
+  "noncomplete_runs": [
+    {
+      "accounting_complete": true,
+      "engine_reason": "chair_budget",
+      "observed_tokens": 37343,
+      "run_id": "contract-exclusive-boundary/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "perspective_budget",
+      "observed_tokens": 41672,
+      "run_id": "contract-exclusive-boundary/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "deadlock",
+      "observed_tokens": 35596,
+      "run_id": "contract-null-zero/debate/1",
+      "status": "partial"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "deadlock",
+      "observed_tokens": 37253,
+      "run_id": "contract-null-zero/debate/2",
+      "status": "partial"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 28750,
+      "run_id": "contract-null-zero/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 14831,
+      "run_id": "contract-explicit-default-clean/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "deadlock",
+      "observed_tokens": 32384,
+      "run_id": "contract-explicit-default-clean/debate/2",
+      "status": "partial"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 18159,
+      "run_id": "contract-explicit-default-clean/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 15756,
+      "run_id": "security-tenant-filter/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "perspective_budget",
+      "observed_tokens": 22744,
+      "run_id": "security-sql-interpolation/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 20204,
+      "run_id": "security-sql-interpolation/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 14349,
+      "run_id": "security-sql-interpolation/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 14000,
+      "run_id": "security-auth-order/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 12043,
+      "run_id": "security-auth-order/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 30897,
+      "run_id": "security-bound-query-clean/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 20169,
+      "run_id": "security-bound-query-clean/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "deadlock",
+      "observed_tokens": 33989,
+      "run_id": "security-bound-query-clean/debate/3",
+      "status": "partial"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "deadlock",
+      "observed_tokens": 39045,
+      "run_id": "tests-vacuous-exception/debate/1",
+      "status": "partial"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "chair_budget",
+      "observed_tokens": 40286,
+      "run_id": "tests-vacuous-exception/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 15964,
+      "run_id": "tests-vacuous-exception/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "deadlock",
+      "observed_tokens": 37659,
+      "run_id": "tests-truthy-balance/debate/1",
+      "status": "partial"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 17888,
+      "run_id": "tests-truthy-balance/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 15011,
+      "run_id": "tests-truthy-balance/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "deadlock",
+      "observed_tokens": 30769,
+      "run_id": "tests-consumer-fixture/debate/1",
+      "status": "partial"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "perspective_budget",
+      "observed_tokens": 25869,
+      "run_id": "tests-consumer-fixture/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "converged",
+      "observed_tokens": 23138,
+      "run_id": "tests-empty-assertion-clean/debate/3",
+      "status": "partial"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 14827,
+      "run_id": "tests-required-exception-clean/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "perspective_budget",
+      "observed_tokens": 22133,
+      "run_id": "tests-required-exception-clean/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 19692,
+      "run_id": "tests-required-exception-clean/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 23414,
+      "run_id": "operations-retry-unit/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 21055,
+      "run_id": "operations-flush-loss/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "perspective_budget",
+      "observed_tokens": 29596,
+      "run_id": "operations-flush-loss/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 17856,
+      "run_id": "operations-idempotent-close-clean/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "perspectives",
+      "observed_tokens": 24280,
+      "run_id": "operations-idempotent-close-clean/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 26553,
+      "run_id": "operations-idempotent-close-clean/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 22927,
+      "run_id": "consumer-page-index/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 17974,
+      "run_id": "consumer-page-index/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "deadlock",
+      "observed_tokens": 37792,
+      "run_id": "consumer-page-index/debate/3",
+      "status": "partial"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "chair",
+      "observed_tokens": 18213,
+      "run_id": "consumer-empty-search/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "converged",
+      "observed_tokens": 40479,
+      "run_id": "consumer-empty-search/debate/2",
+      "status": "partial"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "chair_budget",
+      "observed_tokens": 39765,
+      "run_id": "consumer-bool-string/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 28918,
+      "run_id": "consumer-bool-string/debate/2",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": false,
+      "engine_reason": "perspectives",
+      "observed_tokens": 13945,
+      "run_id": "consumer-bool-string/debate/3",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "chair_budget",
+      "observed_tokens": 39393,
+      "run_id": "consumer-keyword-compatible-clean/debate/1",
+      "status": "failed"
+    },
+    {
+      "accounting_complete": true,
+      "engine_reason": "perspective_budget",
+      "observed_tokens": 30234,
+      "run_id": "consumer-keyword-compatible-clean/debate/2",
+      "status": "failed"
+    }
+  ],
+  "paired_baseline": {
+    "baseline_decisions_sha256": "5657809a17e8f4e9556a3025667a234f45149ce9ef21cbb40e775b111f361e0b",
+    "baseline_experiment_sha256": "7f453a2ef9964f8aad57539965de816151526248edab5419967097b4a4c74f7d",
+    "case_ids": [
+      "consumer-bool-string",
+      "consumer-empty-search",
+      "consumer-keyword-compatible-clean",
+      "consumer-page-index",
+      "contract-exclusive-boundary",
+      "contract-explicit-default-clean",
+      "contract-null-zero",
+      "operations-flush-loss",
+      "operations-idempotent-close-clean",
+      "operations-retry-unit",
+      "operations-seconds-clean",
+      "security-auth-order",
+      "security-bound-query-clean",
+      "security-sql-interpolation",
+      "security-tenant-filter",
+      "tests-consumer-fixture",
+      "tests-empty-assertion-clean",
+      "tests-required-exception-clean",
+      "tests-truthy-balance",
+      "tests-vacuous-exception"
+    ],
+    "metrics": {
+      "debate": {
+        "accounting_failures": 39,
+        "adjudication_methods": {
+          "automated": 65
+        },
+        "clean_false_positive_runs": 9,
+        "clean_pr_false_positive_rate": 1.0,
+        "complete_runs": 17,
+        "defect_recall": 0.2564102564102564,
+        "duplicate_rate": 0.23076923076923078,
+        "duplicates": 15,
+        "eligible_clean_runs": 9,
+        "failed_runs": 39,
+        "false_positive_findings": 40,
+        "finding_precision": 0.38461538461538464,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 30.813165190047584,
+        "partial_runs": 4,
+        "pending_findings": 3,
+        "possible_defects": 39,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 1088667,
+        "tokens_are_lower_bound": true,
+        "tokens_per_true_positive": 108866.7,
+        "true_positive_defects": 10,
+        "true_positive_findings": 25,
+        "unique_detections": {
+          "devops": 0,
+          "junior-dev": 0,
+          "security": 0,
+          "senior-dev": 2
+        }
+      },
+      "panel": {
+        "accounting_failures": 0,
+        "adjudication_methods": {
+          "automated": 230
+        },
+        "clean_false_positive_runs": 21,
+        "clean_pr_false_positive_rate": 1.0,
+        "complete_runs": 60,
+        "defect_recall": 0.9487179487179487,
+        "duplicate_rate": 0.39565217391304347,
+        "duplicates": 91,
+        "eligible_clean_runs": 21,
+        "failed_runs": 0,
+        "false_positive_findings": 102,
+        "finding_precision": 0.5565217391304348,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 6.6564435720210895,
+        "partial_runs": 0,
+        "pending_findings": 15,
+        "possible_defects": 39,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 364419,
+        "tokens_are_lower_bound": false,
+        "tokens_per_true_positive": 9849.162162162162,
+        "true_positive_defects": 37,
+        "true_positive_findings": 128,
+        "unique_detections": {
+          "devops": 0,
+          "junior-dev": 1,
+          "security": 0,
+          "senior-dev": 1
+        }
+      },
+      "senior": {
+        "accounting_failures": 0,
+        "adjudication_methods": {
+          "automated": 57
+        },
+        "clean_false_positive_runs": 20,
+        "clean_pr_false_positive_rate": 0.9523809523809523,
+        "complete_runs": 60,
+        "defect_recall": 0.7948717948717948,
+        "duplicate_rate": 0.03508771929824561,
+        "duplicates": 2,
+        "eligible_clean_runs": 21,
+        "failed_runs": 0,
+        "false_positive_findings": 24,
+        "finding_precision": 0.5789473684210527,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 4.825044472934678,
+        "partial_runs": 0,
+        "pending_findings": 2,
+        "possible_defects": 39,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 88600,
+        "tokens_are_lower_bound": false,
+        "tokens_per_true_positive": 2858.064516129032,
+        "true_positive_defects": 31,
+        "true_positive_findings": 33,
+        "unique_detections": {
+          "senior-dev": 31
+        }
+      }
+    }
+  },
+  "pending_human_judgments": 31,
+  "repeat_metrics": {
+    "1": {
+      "debate": {
+        "accounting_failures": 7,
+        "adjudication_methods": {
+          "automated": 29
+        },
+        "clean_false_positive_runs": 2,
+        "clean_pr_false_positive_rate": 1.0,
+        "complete_runs": 5,
+        "defect_recall": 0.46153846153846156,
+        "duplicate_rate": 0.3793103448275862,
+        "duplicates": 11,
+        "eligible_clean_runs": 2,
+        "failed_runs": 11,
+        "false_positive_findings": 12,
+        "finding_precision": 0.5862068965517241,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 31.629947480978444,
+        "partial_runs": 4,
+        "pending_findings": 5,
+        "possible_defects": 13,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 548236,
+        "tokens_are_lower_bound": true,
+        "tokens_per_true_positive": 91372.66666666667,
+        "true_positive_defects": 6,
+        "true_positive_findings": 17,
+        "unique_detections": {
+          "devops": 0,
+          "junior-dev": 0,
+          "security": 0,
+          "senior-dev": 0
+        }
+      },
+      "panel": {
+        "accounting_failures": 0,
+        "adjudication_methods": {
+          "automated": 74
+        },
+        "clean_false_positive_runs": 7,
+        "clean_pr_false_positive_rate": 1.0,
+        "complete_runs": 20,
+        "defect_recall": 0.8461538461538461,
+        "duplicate_rate": 0.35135135135135137,
+        "duplicates": 26,
+        "eligible_clean_runs": 7,
+        "failed_runs": 0,
+        "false_positive_findings": 37,
+        "finding_precision": 0.5,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 6.497712281998247,
+        "partial_runs": 0,
+        "pending_findings": 7,
+        "possible_defects": 13,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 157696,
+        "tokens_are_lower_bound": false,
+        "tokens_per_true_positive": 14336.0,
+        "true_positive_defects": 11,
+        "true_positive_findings": 37,
+        "unique_detections": {
+          "devops": 0,
+          "junior-dev": 1,
+          "security": 0,
+          "senior-dev": 0
+        }
+      },
+      "senior": {
+        "accounting_failures": 0,
+        "adjudication_methods": {
+          "automated": 18
+        },
+        "clean_false_positive_runs": 5,
+        "clean_pr_false_positive_rate": 0.7142857142857143,
+        "complete_runs": 20,
+        "defect_recall": 0.46153846153846156,
+        "duplicate_rate": 0.0,
+        "duplicates": 0,
+        "eligible_clean_runs": 7,
+        "failed_runs": 0,
+        "false_positive_findings": 12,
+        "finding_precision": 0.3333333333333333,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 5.429101010900922,
+        "partial_runs": 0,
+        "pending_findings": 1,
+        "possible_defects": 13,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 32871,
+        "tokens_are_lower_bound": false,
+        "tokens_per_true_positive": 5478.5,
+        "true_positive_defects": 6,
+        "true_positive_findings": 6,
+        "unique_detections": {
+          "senior-dev": 6
+        }
+      }
+    },
+    "2": {
+      "debate": {
+        "accounting_failures": 7,
+        "adjudication_methods": {
+          "automated": 15
+        },
+        "clean_false_positive_runs": 2,
+        "clean_pr_false_positive_rate": 1.0,
+        "complete_runs": 4,
+        "defect_recall": 0.15384615384615385,
+        "duplicate_rate": 0.26666666666666666,
+        "duplicates": 4,
+        "eligible_clean_runs": 2,
+        "failed_runs": 13,
+        "false_positive_findings": 9,
+        "finding_precision": 0.4,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 31.537918544956483,
+        "partial_runs": 3,
+        "pending_findings": 2,
+        "possible_defects": 13,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 514492,
+        "tokens_are_lower_bound": true,
+        "tokens_per_true_positive": 257246.0,
+        "true_positive_defects": 2,
+        "true_positive_findings": 6,
+        "unique_detections": {
+          "devops": 0,
+          "junior-dev": 0,
+          "security": 0,
+          "senior-dev": 0
+        }
+      },
+      "panel": {
+        "accounting_failures": 0,
+        "adjudication_methods": {
+          "automated": 78
+        },
+        "clean_false_positive_runs": 7,
+        "clean_pr_false_positive_rate": 1.0,
+        "complete_runs": 20,
+        "defect_recall": 0.7692307692307693,
+        "duplicate_rate": 0.38461538461538464,
+        "duplicates": 30,
+        "eligible_clean_runs": 7,
+        "failed_runs": 0,
+        "false_positive_findings": 38,
+        "finding_precision": 0.5128205128205128,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 7.2408139629988,
+        "partial_runs": 0,
+        "pending_findings": 6,
+        "possible_defects": 13,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 155732,
+        "tokens_are_lower_bound": false,
+        "tokens_per_true_positive": 15573.2,
+        "true_positive_defects": 10,
+        "true_positive_findings": 40,
+        "unique_detections": {
+          "devops": 0,
+          "junior-dev": 0,
+          "security": 0,
+          "senior-dev": 0
+        }
+      },
+      "senior": {
+        "accounting_failures": 0,
+        "adjudication_methods": {
+          "automated": 18
+        },
+        "clean_false_positive_runs": 6,
+        "clean_pr_false_positive_rate": 0.8571428571428571,
+        "complete_runs": 20,
+        "defect_recall": 0.6923076923076923,
+        "duplicate_rate": 0.0,
+        "duplicates": 0,
+        "eligible_clean_runs": 7,
+        "failed_runs": 0,
+        "false_positive_findings": 9,
+        "finding_precision": 0.5,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 5.809292624006048,
+        "partial_runs": 0,
+        "pending_findings": 2,
+        "possible_defects": 13,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 33654,
+        "tokens_are_lower_bound": false,
+        "tokens_per_true_positive": 3739.3333333333335,
+        "true_positive_defects": 9,
+        "true_positive_findings": 9,
+        "unique_detections": {
+          "senior-dev": 9
+        }
+      }
+    },
+    "3": {
+      "debate": {
+        "accounting_failures": 10,
+        "adjudication_methods": {
+          "automated": 21
+        },
+        "clean_false_positive_runs": 2,
+        "clean_pr_false_positive_rate": 1.0,
+        "complete_runs": 6,
+        "defect_recall": 0.23076923076923078,
+        "duplicate_rate": 0.23809523809523808,
+        "duplicates": 5,
+        "eligible_clean_runs": 2,
+        "failed_runs": 11,
+        "false_positive_findings": 13,
+        "finding_precision": 0.38095238095238093,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 25.658986052963883,
+        "partial_runs": 3,
+        "pending_findings": 3,
+        "possible_defects": 13,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 440011,
+        "tokens_are_lower_bound": true,
+        "tokens_per_true_positive": 146670.33333333334,
+        "true_positive_defects": 3,
+        "true_positive_findings": 8,
+        "unique_detections": {
+          "devops": 0,
+          "junior-dev": 0,
+          "security": 1,
+          "senior-dev": 0
+        }
+      },
+      "panel": {
+        "accounting_failures": 0,
+        "adjudication_methods": {
+          "automated": 77
+        },
+        "clean_false_positive_runs": 7,
+        "clean_pr_false_positive_rate": 1.0,
+        "complete_runs": 20,
+        "defect_recall": 0.8461538461538461,
+        "duplicate_rate": 0.3116883116883117,
+        "duplicates": 24,
+        "eligible_clean_runs": 7,
+        "failed_runs": 0,
+        "false_positive_findings": 42,
+        "finding_precision": 0.45454545454545453,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 6.954949571052566,
+        "partial_runs": 0,
+        "pending_findings": 5,
+        "possible_defects": 13,
+        "quality_final": false,
+        "recall_is_lower_bound": true,
+        "result_provisional": true,
+        "tokens": 167932,
+        "tokens_are_lower_bound": false,
+        "tokens_per_true_positive": 15266.545454545454,
+        "true_positive_defects": 11,
+        "true_positive_findings": 35,
+        "unique_detections": {
+          "devops": 0,
+          "junior-dev": 1,
+          "security": 0,
+          "senior-dev": 0
+        }
+      },
+      "senior": {
+        "accounting_failures": 0,
+        "adjudication_methods": {
+          "automated": 21
+        },
+        "clean_false_positive_runs": 6,
+        "clean_pr_false_positive_rate": 0.8571428571428571,
+        "complete_runs": 20,
+        "defect_recall": 0.6153846153846154,
+        "duplicate_rate": 0.047619047619047616,
+        "duplicates": 1,
+        "eligible_clean_runs": 7,
+        "failed_runs": 0,
+        "false_positive_findings": 12,
+        "finding_precision": 0.42857142857142855,
+        "human_adjudicated": false,
+        "invalid_runs": 0,
+        "missing_runs": 0,
+        "p95_latency_seconds_nearest_rank_all_runs": 5.838436604943126,
+        "partial_runs": 0,
+        "pending_findings": 0,
+        "possible_defects": 13,
+        "quality_final": true,
+        "recall_is_lower_bound": false,
+        "result_provisional": true,
+        "tokens": 34167,
+        "tokens_are_lower_bound": false,
+        "tokens_per_true_positive": 4270.875,
+        "true_positive_defects": 8,
+        "true_positive_findings": 9,
+        "unique_detections": {
+          "senior-dev": 8
+        }
+      }
+    }
+  },
+  "run_count": 180,
+  "schema_version": 1,
+  "source_observations": 382,
+  "status": "provisional_automated_adjudication_human_review_pending"
+}

@@ -127,3 +127,51 @@ comparisons, include related paths such as `client.py`, `policy.py`, `schema.py`
 `formatting.py`, and `test_formatting.py`. Missing paths produce recorded omissions
 rather than guessed content. These context mechanics are testable offline; their
 accuracy effect still requires paired model experiments and adjudication.
+
+## Procedure comparisons and promotion gate
+
+Use `run --comparison-set procedures` to compare three panel arms, each repeated
+three times: `current4` uses the original four baseline prompts, `revised4` uses
+those names with inspection procedures v1, and `revised5` adds the v1
+`testing-verification` reviewer. All arms retain the same model rail and total
+review token ceiling. A ceiling of 40,000 allocates 10,000 per reviewer in each
+four-person arm and 8,000 in the five-person arm. Without this flag the existing
+senior/panel/debate comparison remains unchanged.
+
+Before the first runtime await, the evaluator writes the complete schedule,
+configs, effective prompt text and SHA256 hashes per variant, capture and label
+hashes. Runtime inspection fills in nare capability fields before reviews begin.
+A capability failure can therefore leave a frozen snapshot with null capability
+fields and no completed review cells; it cannot be mistaken for a complete job.
+
+The explicit gate accepts scorer metrics and verification declarations:
+
+```sh
+python -m scrutare.evaluation gate --input gate-input.json --output gate-result.json
+```
+
+The input has `baseline`, `candidate` (one variant's production scorer metrics,
+including its latency list) and `evidence`. Evidence must declare
+`evidence_kind: model`, `holdout_unseen`, `independent_human_verification`,
+`uncertainty_sufficient`, `same_model_rail`, `same_case_repeat_schedule`,
+`equal_total_token_ceiling`, `new_critical_security_misses`, and nonempty
+`verification_reference` and `holdout_reference`. Boolean guards must be true;
+references identify actual independently retained evidence. The gate records
+these declarations; it cannot authenticate a human or establish statistical
+adequacy merely from a boolean. The caller must independently verify those facts.
+
+Unresolved findings, unknown accounting, incomplete runs, missing/invalid metrics,
+offline jobs, mismatched run counts, or absent verification make the result
+`inconclusive`. Adequate evidence passes only for recall gain of at least five
+percentage points with precision loss at most two, or precision gain of at least
+five with recall loss at most two. It also requires zero new critical security
+misses and observed total tokens and nearest-rank p95 latency at most 20% above
+baseline. A measured violation returns `fail`. The gate never changes defaults.
+These thresholds are frozen product choices, not results established by a paper.
+
+The original pilot holdout was included in the initial baseline. Any architecture
+selected using those outcomes needs a newly frozen, unseen holdout and adequate
+independent uncertainty evidence before promotion. The published baseline under
+`evaluations/reports/2026-10-08-baseline` is provisional automated evidence, with
+34 observations awaiting real human adjudication. No default promotion follows
+from it.
