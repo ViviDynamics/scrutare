@@ -1,5 +1,6 @@
 """Read-only verdict reconstruction from the run's captured deciding evidence."""
 
+import json
 from hashlib import sha256
 from pathlib import Path
 
@@ -107,19 +108,37 @@ def _context_issues(run_dir: Path, policy: CapturedPolicy) -> tuple[AuditIssue, 
 
 def replay_run(run_dir: Path) -> ReplayResult:
     """Recompute captured findings with captured policy, never executing the review."""
-    findings, findings_issues = parse_findings(decode_artifact(
+    findings_data = decode_artifact(
         read_artifact(run_dir / "findings.json"), artifact="findings.json",
-    ))
-    policy = parse_policy(decode_artifact(
-        read_artifact(run_dir / "config.json"), artifact="config.json",
-    ))
+    )
+    config_data = decode_artifact(read_artifact(run_dir / "config.json"), artifact="config.json")
+    evidence_version = 1
+    if isinstance(config_data, dict) and "findings" in config_data:
+        try:
+            config = parse_config(json.dumps(config_data))
+        except ConfigError:
+            raise ReplayError("config.findings: invalid captured evidence contract") from None
+        evidence_version = 2 if config.findings.evidence == "v2" else 1
+    policy = parse_policy(config_data)
+    findings, findings_issues = parse_findings(findings_data, evidence_version=evidence_version)
+    if evidence_version == 2:
+        from scrutare.findings.dedupe import dedupe_findings
+        from scrutare.findings.evidence import validate_evidence
+        try:
+            checked = tuple(validate_evidence(source, run_dir / "review-inputs")
+                            for group in findings for source in group.sources)
+            if tuple(source for group in findings for source in group.sources) != checked:
+                raise ValueError
+            findings = dedupe_findings(checked)
+        except (OSError, ValueError, TypeError, KeyError):
+            raise ReplayError("findings: captured citation validation disagrees") from None
     issues = findings_issues + _yaml_issues(run_dir, policy) + _context_issues(run_dir, policy)
     posting = inspect_posting(run_dir)
     posted_sha256 = posting.verdict_sha256
     raw = None
     try:
         raw = read_artifact(run_dir / "verdict.json")
-        saved = parse_saved_verdict(raw)
+        saved = parse_saved_verdict(raw, evidence_version=evidence_version)
     except ReplayError:
         return ReplayResult(None, None, None, sha256(raw).hexdigest() if raw is not None else None,
                             posted_sha256, posting, (), issues + (
@@ -133,7 +152,8 @@ def replay_run(run_dir: Path) -> ReplayResult:
         return ReplayResult(None, None, None, saved_sha256, posted_sha256, posting, (), issues + (
             AuditIssue("exhaustion_config_disagrees", "verdict.exhaustion", "incomplete"),
         ))
-    verdict = derive_verdict(findings, policy.settings, exhaustion=exhaustion)
+    verdict = derive_verdict(findings, policy.settings, exhaustion=exhaustion,
+                             evidence_version=evidence_version)
     candidate_bytes = verdict.to_bytes()
     identical = saved.raw == candidate_bytes
     differences = diff_verdicts(saved.document, verdict.to_dict())

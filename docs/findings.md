@@ -245,3 +245,44 @@ Expected output:
 accepted=2 dropped=2 merged=1
 artifact=verdict.json verdict=approve rule=no_blocking_findings
 ```
+
+## Opt-in evidence version 2
+
+Set `context.enabled: true` and `findings.evidence: v2` to require structured
+model assertions (`trigger`, `preconditions`, `expected`, `observed`, `impact`)
+and nonempty context citations in every initial finding. Legacy is the default;
+its historical wire and artifact fields remain unchanged. Legacy observations
+have no evidence assessment or retroactively assigned candidate ID.
+
+Each citation supplies `side: base|head`, the captured 40-digit commit `revision`,
+a logical repository `path`, inclusive positive `start_line`/`end_line`, and the
+SHA256 of the entire captured UTF-8 file. The code checks these against the
+prepared repository manifest and exact retained bytes. A successful check is
+serialized as `validation: valid`, with `validation_reason: null`. This label
+checks citation identity and range, **not the truth of the model's assertion**.
+A missing, omitted, wrong-revision, wrong-hash or out-of-range citation fails the
+session and cannot feed the verdict. Raw nare stdout/session evidence and a
+`citation-validation.json` refusal remain available privately.
+
+`Finding.evidence` contains a frozen `EvidenceV2` with frozen `Citation` values;
+`candidate_id` is assigned by the caller from the capture/session occurrence.
+The model cannot supply either validation labels or initial candidate IDs.
+Reanchoring changes only the diff comment anchor. Dedupe retains every source,
+evidence record and ID. V2 debate output selects immutable IDs and categories;
+it cannot rewrite citations or assertions. Iterative history schema 2 preserves
+IDs and evidence, including distinct equal observations. A revision change
+requires fresh citations and conservative re-review; if usable current citations
+cannot be obtained, their original citations and blocking claims stay in the
+history pool with `dependency_status: stale`. The review remains partial and
+publishes no current verdict while another bounded attempt is available. At the
+round limit, code produces an escalated verdict from current validated sources;
+historical stale sources remain in `iterative.json`, outside current inline
+findings. A complete reassessment can refresh or explicitly withdraw them.
+Neither incomplete reassessment nor exhaustion silently approves the PR.
+
+V2 verdicts use schema 2, including empty verdicts. Replay selects the evidence
+contract from captured configuration, rechecks citations against captured bytes,
+and rejects mixed legacy/v2 sources and incompatible verdict versions. Posting
+renders quoted assertions and citations in the existing escaped comment body;
+it adds no GitHub API fields. These checks establish integration and mechanical
+validity, not measured improvements in review quality.

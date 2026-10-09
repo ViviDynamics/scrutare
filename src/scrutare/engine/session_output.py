@@ -6,6 +6,7 @@ import json
 import math
 import re
 from dataclasses import dataclass
+from hashlib import sha256
 from pathlib import Path
 from typing import Any, NoReturn
 
@@ -14,6 +15,7 @@ from scrutare.engine.debate_inputs import DebateInput
 from scrutare.engine.persona_inputs import PersonaReanchorInput
 from scrutare.engine.reanchor import parse_reanchor_output
 from scrutare.engine.session_models import TokenUsage
+from scrutare.findings.evidence import CitationValidationError
 from scrutare.findings.models import Finding, parse_finding
 from scrutare.findings.verification import ReanchorCorrection
 
@@ -71,9 +73,9 @@ class _DecodedEvidence:
     saved_output: object
 
 
-def findings_schema() -> dict[str, object]:
+def findings_schema(*, evidence_version: int = 1) -> dict[str, object]:
     """Return a fresh schema using only nare-supported JSON Schema keywords."""
-    return {
+    schema: dict[str, Any] = {
         "type": "object",
         "properties": {
             "findings": {
@@ -96,6 +98,15 @@ def findings_schema() -> dict[str, object]:
         "required": ["findings"],
         "additionalProperties": False,
     }
+
+    if evidence_version == 2:
+        from scrutare.findings.evidence import evidence_schema
+        item = schema["properties"]["findings"]["items"]
+        item["properties"]["evidence"] = evidence_schema()
+        item["required"].append("evidence")
+    elif evidence_version != 1:
+        raise ValueError("Unsupported evidence version")
+    return schema
 
 
 def _fail() -> NoReturn:
@@ -210,11 +221,26 @@ def _same_cost(left: float | None, right: float | None) -> bool:
     return math.isclose(left, right, rel_tol=1e-9, abs_tol=1e-12)
 
 
-def _findings(value: object, persona: str) -> tuple[Finding, ...]:
+def _findings(
+    value: object, persona: str, *, evidence_version: int = 1,
+    expected_root: Path | None = None, candidate_namespace: str = "",
+) -> tuple[Finding, ...]:
     document = _object(value)
     if set(document) != {"findings"} or not isinstance(document["findings"], list):
         _fail()
-    return tuple(parse_finding(_object(item), persona=persona) for item in document["findings"])
+    from scrutare.findings.evidence import validate_evidence
+    findings = []
+    for index, item in enumerate(document["findings"]):
+        identifier = sha256(f"{candidate_namespace}:{persona}:{index}".encode()).hexdigest()
+        finding = parse_finding(_object(item), persona=persona, evidence_version=evidence_version,
+                                candidate_id=identifier if evidence_version == 2 else None)
+        if evidence_version == 2:
+            if expected_root is None:
+                _fail()
+            assert expected_root is not None
+            finding = validate_evidence(finding, expected_root)
+        findings.append(finding)
+    return tuple(findings)
 
 
 def _decode_evidence(
@@ -312,6 +338,8 @@ def _decode_evidence(
 def decode_session(
     stdout: bytes, session_document: bytes | None, *, persona: str, exit_code: int,
     expected_limit: int, expected_root: Path, descriptor: DebateInput | None = None,
+    evidence_version: int = 1, candidate_namespace: str = "",
+
 ) -> DecodedSession:
     """Reconcile fresh findings evidence, attributing candidates only to the caller."""
     try:
@@ -321,7 +349,9 @@ def decode_session(
         evidence = _decode_evidence(stdout, session_document, exit_code=exit_code,
                                     expected_limit=expected_limit, expected_root=expected_root)
         parser = (descriptor.parse_output if descriptor is not None
-                  else lambda value: _findings(value, persona))
+                  else lambda value: _findings(value, persona, evidence_version=evidence_version,
+                                             expected_root=expected_root,
+                                             candidate_namespace=candidate_namespace))
         findings = () if evidence.output is None else parser(evidence.output)
         # Validate saved semantics independently: bool/int equality can conceal corruption.
         if evidence.saved_output is not None:
@@ -331,6 +361,8 @@ def decode_session(
             evidence.usage, findings, evidence.output_available, evidence.budget_limit,
             evidence.partial, evidence.nare_version, evidence.contract, evidence.turns,
         )
+    except CitationValidationError:
+        raise
     except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
         raise SessionProtocolError(
             "Session evidence is invalid or inconsistent; inspect private capture."

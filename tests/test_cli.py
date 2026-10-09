@@ -527,9 +527,10 @@ def test_native_sigint_during_escalation_preserves_first_confirmed_review(
         VALID_CONFIG + b"github: {human_reviewers: [alice]}\n")
     derive = panel.derive_verdict
     # The real panel derives/installs a real exhausted Verdict at this controlled engine seam.
-    def exhausted(findings, config):
-        result = derive(findings, config)
-        return derive_verdict(result.findings, config, exhaustion=Exhaustion("panel", 3, 3))
+    def exhausted(findings, config, *, evidence_version=None):
+        result = derive(findings, config, evidence_version=evidence_version)
+        return derive_verdict(result.findings, config, exhaustion=Exhaustion("panel", 3, 3),
+                              evidence_version=result.evidence_version)
     monkeypatch.setattr(panel, "derive_verdict", exhausted)
     class InterruptedEscalator(FakePoster):
         def request_reviewers(self, ref, reviewers):

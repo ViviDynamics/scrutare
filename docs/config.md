@@ -160,3 +160,17 @@ including overrides of built-in names, retain their exact supplied text.
 `testing-verification` is an optional built-in available in either profile;
 omitting `personas` still selects the original four reviewers. Selecting it
 uses the same shared review budget and category/verdict policy as other reviewers.
+
+Structured evidence is opt-in:
+
+```yaml
+context:
+  enabled: true
+findings:
+  evidence: v2
+```
+
+`findings.evidence` accepts `legacy` (default) or `v2`; v2 requires context to be
+enabled. Default/explicit legacy is omitted from canonical configuration
+snapshots, preserving the established baseline. See [findings](findings.md) for
+the citation contract and its mechanical-versus-semantic validity boundary.

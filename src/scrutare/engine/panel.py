@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 from typing import Literal
@@ -33,6 +33,7 @@ from scrutare.engine.session_artifacts import (
 )
 from scrutare.engine.session_models import FanOutResult, NareRuntime, ReanchorOutcome, TokenUsage
 from scrutare.findings import dedupe_findings, derive_verdict, parse_diff
+from scrutare.findings.models import artifact_data as asdict
 from scrutare.findings.verdict import Verdict
 from scrutare.findings.verification import (
     AnchorCheck,
@@ -193,7 +194,9 @@ async def run_panel(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime
                     _fatal_correction(outcome) for outcome in corrections):
                 verification = finish_reanchor(check, (correction for outcome in corrections
                                                        for correction in outcome.corrections))
-                verdict = derive_verdict(dedupe_findings(verification.accepted), config.verdict)
+                verdict = derive_verdict(
+                    dedupe_findings(verification.accepted), config.verdict,
+                    evidence_version=2 if config.findings.evidence == "v2" else 1)
                 status = ("partial" if initial.partial or any(
                     outcome.status != "complete" for outcome in corrections) else "complete")
                 reason = "converged"
