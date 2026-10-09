@@ -107,7 +107,13 @@ def test_installed_static_analysis_data_only_and_replay_tamper(tmp_path, install
     }
     from test_static_analysis import document
     capture = tmp_path / "trusted-ci.json"
-    capture.write_text(json.dumps(document()))
+    ruff = subprocess.run(
+        ["ruff", "check", "--isolated", "--select", "F821", "--output-format", "json",
+         "--stdin-filename", "/captured/repo/src/caller.py", "-"],
+        input=b"call_changed()\n", capture_output=True, timeout=10,
+    )
+    assert ruff.returncode == 1, ruff.stderr.decode()
+    capture.write_text(json.dumps(document(diagnostics=json.loads(ruff.stdout))))
     result = subprocess.run(
         [str(console), "review", "--pr", "12", "--nare-executable", str(runtime.executable),
          "--analysis-capture", str(capture)],

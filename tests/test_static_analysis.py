@@ -11,8 +11,8 @@ from test_review_inputs import read_json, save_json
 from scrutare.config import ConfigError, parse_config
 
 
-def enabled(capture):
-    config, _ = contextual(capture)
+def enabled(capture, **context):
+    config, _ = contextual(capture, **context)
     config = parse_config(json.dumps(config.to_dict() | {"analysis": {"enabled": True}}))
     for name in ("config.yaml", "config.json"):
         save_json(capture / name, config.to_dict())
@@ -372,3 +372,63 @@ def test_known_ruff_optional_fields_remain_private(capture, tmp_path):
     config, _ = produce(capture, tmp_path, value)
     inputs = prepare_review_inputs(capture, config)
     assert b"PRIVATE_FIX_SENTINEL" not in (inputs.root / "static-analysis.json").read_bytes()
+
+
+@pytest.mark.parametrize(
+    "source,start,end",
+    [
+        ("missing_name\n", (1, 1), (1, 13)),
+        ("\fmissing_name\n", (1, 2), (1, 14)),
+        ('x="\u2028"; missing_name\n', (1, 8), (1, 20)),
+        ("x=1\r\nmissing_name\r\n", (2, 1), (2, 13)),
+        ("x=1\rmissing_name\r", (2, 1), (2, 13)),
+        ("x=1\nmissing_name\n", (2, 1), (2, 13)),
+        ('"é😀"; missing_name\n', (1, 7), (1, 19)),
+    ],
+)
+def test_actual_pinned_ruff_output_binds_source(capture, tmp_path, source, start, end):
+    import subprocess
+
+    from scrutare.engine.review_inputs import prepare_review_inputs
+    from scrutare.engine.static_analysis import capture_static_analysis
+
+    version = subprocess.run(["ruff", "--version"], capture_output=True, check=True, timeout=10)
+    assert version.stdout.strip() == b"ruff 0.16.10"
+    result = subprocess.run(
+        ["ruff", "check", "--isolated", "--select", "F821", "--output-format", "json",
+         "--stdin-filename", "/captured/repo/src/caller.py", "-"],
+        input=source.encode(), capture_output=True, timeout=10,
+    )
+    assert result.returncode == 1, result.stderr.decode()
+    diagnostics = json.loads(result.stdout)
+    assert len(diagnostics) == 1
+    assert diagnostics[0]["location"] == dict(row=start[0], column=start[1])
+    assert diagnostics[0]["end_location"] == dict(row=end[0], column=end[1])
+    value = document(diagnostics=diagnostics)
+    config = enabled(capture, caller=source.encode())
+    path = tmp_path / "actual-ruff.json"
+    path.write_text(json.dumps(value))
+    capture_static_analysis(capture, config, path)
+    normalized = read_json(prepare_review_inputs(capture, config).root / "static-analysis.json")
+    diagnostic = normalized["diagnostics"][0]
+    assert diagnostic["rule"] == "F821"
+    assert diagnostic["location"] == dict(row=start[0], column=start[1])
+    assert diagnostic["end_location"] == dict(row=end[0], column=end[1])
+    assert diagnostic["sha256"] == sha256(source.encode()).hexdigest()
+    assert "name" not in diagnostic and "severity" not in diagnostic
+
+
+@pytest.mark.parametrize("field", ["name", "severity"])
+@pytest.mark.parametrize("value", [None, True, [], "", "x" * 4097, "x\x00y"])
+def test_ruff_metadata_must_be_bounded_text(capture, tmp_path, field, value):
+    data = document()
+    data["diagnostics"][0][field] = value
+    with pytest.raises(ValueError):
+        produce(capture, tmp_path, data)
+
+
+def test_unknown_ruff_fields_are_refused(capture, tmp_path):
+    data = document()
+    data["diagnostics"][0]["unknown_tool_field"] = "untrusted"
+    with pytest.raises(ValueError):
+        produce(capture, tmp_path, data)

@@ -35,9 +35,10 @@ The capture envelope is JSON with exactly these fields:
 
 `diagnostics` contains Ruff JSON objects with `code`, `message`, `filename`,
 `location` and `end_location` (each position has positive integer `row` and
-`column`). Known optional `fix`, `url`, `cell`, and `noqa_row` fields are validated
-and remain private. Fixes are never applied. Absolute filenames must lie below the
-explicit source root; relative filenames must be safe repository paths.
+`column`). Known optional `fix`, `url`, `cell`, `noqa_row`, `name`, and `severity`
+fields are validated and remain private. Fixes are never applied. Absolute
+filenames must lie below the explicit source root; relative filenames must be safe
+repository paths.
 
 The revision must equal the immutable captured PR head. Only diagnostics whose
 paths and positions bind retained head context enter `static-analysis.json` in the

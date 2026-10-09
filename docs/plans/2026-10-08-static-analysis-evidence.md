@@ -44,3 +44,10 @@ Scrutare accepts captured results because an execution sandbox is not establishe
   returning zero findings; no tool execution capability existed. Raw-source tamper
   was rejected by offline replay.
 - Full verification and comparative benefit are owned by the shipping coordinator.
+- Independent review round 1 found real Ruff `name`/`severity` fields were rejected
+  and Python `splitlines()` disagreed with Ruff on form feed and U+2028. Real pinned
+  Ruff regressions observed seven failures, then exactly two range failures after
+  the metadata fix; bounded metadata validation and CRLF/CR/LF splitting resolved
+  both. Unknown-field rejection and Unicode scalar columns remain covered.
+- The expanded adapter/context/lifecycle/evaluation/native area passed 623 tests
+  on Python 3.10; the installed-wheel proof now consumes generated Ruff JSON.

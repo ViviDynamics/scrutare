@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import re
 import stat
 from hashlib import sha256
 from pathlib import Path
@@ -83,11 +84,14 @@ def _position(value: object) -> tuple[int, int]:
 
 def _diagnostic(value: object, root: str) -> tuple[dict[str, Any], str]:
     required = {"code", "message", "filename", "location", "end_location"}
-    optional = {"fix", "url", "cell", "noqa_row"}
+    optional = {"fix", "url", "cell", "noqa_row", "name", "severity"}
     if not isinstance(value, dict) or not required <= set(value) <= required | optional:
         raise ValueError("Invalid Ruff diagnostic fields.")
     _text(value["code"], 64)
     _text(value["message"])
+    for field in ("name", "severity"):
+        if field in value:
+            _text(value[field])
     filename = _text(value["filename"])
     if filename.startswith("/"):
         _path(filename, absolute=True)
@@ -186,10 +190,10 @@ def _normalize(run: Path, config: ReviewConfig, data: bytes | None) -> dict[str,
             result["omitted"]["not_captured"] += 1
             continue
         text = contents[entry["artifact"]].decode("utf-8")
-        lines = text.splitlines()
-        # Ruff permits a final empty line and end-of-line columns.
-        if text.endswith("\n"):
-            lines.append("")
+        # Ruff uses CRLF/CR/LF lines and Unicode scalar columns. Other separators,
+        # such as form feed or U+2028 inside a string, stay within the source line.
+        # Splitting also retains the final empty line permitted by Ruff.
+        lines = re.split(r"\r\n|\r|\n", text)
         for row, column in (
             _position(diagnostic["location"]),
             _position(diagnostic["end_location"]),
