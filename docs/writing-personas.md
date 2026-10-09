@@ -1,14 +1,13 @@
 # Writing review personas
 
 A persona is a name and a system prompt that defines a review perspective.
-The registry loads the four packaged built-ins and resolves configured names
+The registry loads five packaged built-ins and resolves configured names
 and inline definitions into frozen `PersonaDefinition` objects. Adding a
 custom perspective requires only a configuration change.
 
 Persona resolution and [confined input descriptors](path-filters.md) are
-implemented, alongside the pure findings and verdict APIs. Session orchestration
-and live model calls remain future work. The prompts express the review
-contract; the registry does not execute sessions. Every configured persona
+implemented, alongside the pure findings and verdict APIs. The production engine executes nare sessions. The prompts express the review
+contract; the registry itself does not execute sessions. Every configured persona
 receives the same filtered artifact root and read-only tools through the input
 descriptor. See the [configuration reference](config.md) for all settings and
 [specification](SPEC.md) for the planned review pipeline.
@@ -21,6 +20,7 @@ descriptor. See the [configuration reference](config.md) for all settings and
 | `junior-dev` | Walk through common usage, boundary inputs, and errors as a new contributor. Find misleading names, hidden preconditions, confusing interfaces, and examples that teach incorrect behavior. |
 | `security` | Trace attacker-controlled inputs across trust boundaries. Inspect authentication, authorization, tenant isolation, injection, dependencies, and sensitive data handling; explain plausible exploit conditions. |
 | `devops` | Follow build, packaging, configuration, deployment, operation, and rollback. Inspect CI, resources, observability, migrations, reproducibility, and failure recovery. |
+| `testing-verification` | Optional reviewer: construct boundary cases, seek counterexamples, and check assertion discrimination against concrete failures. |
 
 Custom prompts should add a useful perspective while keeping the same evidence
 and authority boundaries as the built-ins.
@@ -158,3 +158,44 @@ assert load_persona("senior-dev").name == "senior-dev"
 
 These calls return persona data only. They do not start nare sessions, apply
 model overrides, review a pull request, or produce a verdict.
+
+## Versioned inspection procedures
+
+Set `inspection.procedures: v1` to experiment with explicit inspection procedures.
+The baseline prompts and four-reviewer roster remain the defaults. Existing names
+and inline replacements retain their configuration compatibility; `junior-dev`
+means a consumer walking through usage and hidden preconditions.
+
+| Perspective | Evidence and failure hypothesis |
+| --- | --- |
+| `senior-dev` | Trace contracts, callers, and state transitions to an invariant violation. |
+| `security` | Trace attacker-controlled input through trust boundaries to a sensitive sink. |
+| `devops` | Trace delivery, failure, and recovery to a deployment or operational consequence. |
+| `junior-dev` | Trace documented usage to a consumer mistake caused by hidden preconditions. |
+| `testing-verification` | Construct boundary/failure cases and check whether assertions distinguish bad behavior. |
+
+Each v1 procedure requests a counterexample before emitting a finding and refuses
+unsupported triggers or consequences. A test without a literal `assert` can verify
+behavior, for example through an exception context. Absent assertions or coverage
+alone do not establish a blocking consequence. Models still emit only the existing
+categories, and code determines blocking status and verdict. First passes remain
+independent. The debate chair uses the selected senior-dev procedure.
+
+`load_persona(name, procedures="v1")` and
+`resolve_personas(entries, procedures="v1")` select the profile directly. The
+optional keyword defaults to `baseline`; inline definitions remain identical
+objects with unchanged whitespace. `fanout.json` records each effective prompt,
+procedure origin/version, and SHA-256 of its exact UTF-8 text. The complete
+versioned prompt, including common guardrails, defines the procedure hash.
+Each session's `invocation.json` also records separate SHA-256 values for the
+exact system and task prompts, including correction and debate tasks. These
+hashes identify evidence; they do not assert quality or alter replay verdicts.
+
+Compare three independent arms using the captured evaluation corpus: baseline
+four-persona panel, v1 four-persona panel, and v1 panel plus testing-verification.
+Keep model/version, input context, repeats, settings, and total review budget
+fixed; divide the same budget across five reviewers in the final arm. Report
+actual usage and accounting failures as well as unique detections, overlap, and
+false positives with human adjudication. The profile and additional reviewer
+remain opt-in until measured promotion criteria are met. The transfer from human
+perspective-based reading to automated review is an experimental hypothesis.

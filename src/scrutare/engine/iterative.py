@@ -208,7 +208,9 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
                            if comment.get("path") in patches]}).decode("utf-8"))
             round_config = replace(config, personas=tuple(
                 PersonaDefinition(persona.name, persona.system_prompt + context)
-                for persona in resolve_personas(config.personas)))
+                for persona in resolve_personas(
+                    config.personas, procedures=config.inspection.procedures,
+                )))
             child = _project(run, round_config, patches)
             result = await run_panel(child, round_config, runtime=runtime)
             if result.verdict is None or not result.accounting_complete:

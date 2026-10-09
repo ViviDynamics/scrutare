@@ -32,6 +32,8 @@ from scrutare.engine.session_models import (
     SessionOutcome,
     TokenUsage,
 )
+from scrutare.personas import PersonaDefinition
+from scrutare.personas.registry import procedure_record
 
 
 def _reserve_wave(run: Path) -> None:
@@ -72,7 +74,9 @@ async def _prepare_execution(
 ) -> _ExecutionContext:
     """Prepare and reserve every ordered initial grant before inspecting the runtime."""
     inputs = prepare_review_inputs(run_dir, config)
-    descriptors = prepare_persona_inputs(inputs, config.personas)
+    descriptors = prepare_persona_inputs(
+        inputs, config.personas, procedures=config.inspection.procedures,
+    )
     run = inputs.root.parent
     _reserve_wave(run)
     ledger = ReviewBudgetLedger(
@@ -192,6 +196,11 @@ async def _run_initial_wave(context: _ExecutionContext) -> FanOutResult:
                 {
                     "name": d.persona.name,
                     "system_prompt": d.persona.system_prompt,
+                    "procedure": procedure_record(
+                        d.persona, procedures=config.inspection.procedures,
+                        inline=any(isinstance(p, PersonaDefinition)
+                                   and p.name == d.persona.name for p in config.personas),
+                    ),
                     "rail": asdict(config.models.for_persona(d.persona.name)),
                 }
                 for d in descriptors
