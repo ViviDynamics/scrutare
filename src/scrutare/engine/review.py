@@ -119,7 +119,7 @@ async def review_pr(
             raise ReviewRunError("Panel failed to produce a usable verdict; inspect the saved run.")
         verdict = panel.verdict
         request = None
-        if verdict.exhaustion is not None:
+        if verdict.verdict == "escalated":
             delivery = post_escalation(run_dir, verdict, client=review_client)
             receipt, request = delivery.review, delivery.reviewer_request
         else:

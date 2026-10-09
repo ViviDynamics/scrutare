@@ -161,8 +161,7 @@ def post_escalation(
     sleeper: Callable[[float], None] | None = None,
 ) -> PostedEscalation:
     """Confirm one COMMENT review and human reviewer requests under one run lock."""
-    if (not isinstance(verdict, Verdict) or verdict.exhaustion is None
-            or verdict.verdict != "escalated"):
+    if not isinstance(verdict, Verdict) or verdict.verdict != "escalated":
         raise PostingError("post_escalation requires a code-derived escalated Verdict.")
     with run_lock(run_dir):
         transport = client if client is not None else ReviewClient(sleeper=sleeper)

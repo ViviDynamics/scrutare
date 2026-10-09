@@ -66,6 +66,7 @@ class _ExecutionContext:
     run_dir: Path
     initial_attempts: tuple[Path, ...]
     initial_leases: tuple[BudgetLease | None, ...]
+    assessment_persona: str | None = None
 
 
 async def _prepare_execution(
@@ -79,8 +80,16 @@ async def _prepare_execution(
     )
     run = inputs.root.parent
     _reserve_wave(run)
-    ledger = ReviewBudgetLedger(
-        tuple(d.persona.name for d in descriptors) + budget_personas, config.budgets)
+    names = tuple(d.persona.name for d in descriptors) + budget_personas
+    assessor = None
+    reserved = None
+    if config.findings.assessment.enabled:
+        assessor = "evidence-assessor"
+        while assessor in names:
+            assessor += "-assessor"
+        reserved = {assessor: config.findings.assessment.tokens}
+        names += (assessor,)
+    ledger = ReviewBudgetLedger(names, config.budgets, reserved_allocations=reserved)
     attempts = tuple(
         create_attempt_directory(run, d.persona.name, prepared_root=inputs.root)
         for d in descriptors
@@ -91,7 +100,7 @@ async def _prepare_execution(
     )
     capability = await inspect_nare_runtime(runtime)
     return _ExecutionContext(inputs, descriptors, ledger, capability, runtime, config, run,
-                             attempts, leases)
+                             attempts, leases, assessor)
 
 
 _Outcome = TypeVar("_Outcome")
