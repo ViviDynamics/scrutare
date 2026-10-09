@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/brand/scrutare-editor.png" width="240" alt="The Scrutare editor, an older gentleman in a green eyeshade scrutinizing a manuscript with a pencil poised">
+</p>
+
 # scrutare
 
 A code review agent harness: many perspectives, one verdict, decided by code.
