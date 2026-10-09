@@ -11,7 +11,7 @@ Run an explicit paid model job from a locked installation:
 ```sh
 python -m scrutare.evaluation run --corpus evaluations/pilot --split development \
   --config evaluation.yaml --output /absolute/new-experiment \
-  --nare-executable /absolute/installed/bin/nare
+  --nare-executable /absolute/installed/bin/nare --concurrency 3
 ```
 
 Use a dated model identifier and fixed provider settings in the ordinary review
@@ -47,10 +47,13 @@ and rationale; do not use an LLM as sole ground truth. A decision JSON list cont
 
 ```json
 [{"finding_id":"sha256 from packet","defect_id":"case-specific defect id or null",
-  "reviewer":"human reviewer identity","rationale":"verified trigger or counterexample"}]
+  "reviewer":"reviewer identity","method":"human","ambiguous":false,
+  "rationale":"verified trigger or counterexample"}]
 ```
 
-`null` means a judged false positive. An absent decision remains pending, never
+For clear criteria an automated decision may set `method` to `automated`; this
+provenance is retained in metrics and cannot substitute for human adjudication when
+`ambiguous` is true. `null` means a judged false positive. An absent decision remains pending, never
 silently false or true. Labels are author-defined pilot hypotheses until independent
 human verification; no human adjudication is fabricated by the runner.
 
@@ -60,7 +63,7 @@ python -m scrutare.evaluation score /absolute/new-experiment/experiment.json \
   --output /absolute/metrics.json
 ```
 
-Scoring exposes pending judgments and refuses stale finding identities or changed
+Scoring exposes raw TP/FP counts, judgment method counts, pending judgments and refuses stale finding identities or changed
 label snapshots. Precision counts judged emitted source observations. Defect recall
 counts distinct labelled defects per case/repeat, with failed/missing runs remaining
 in its denominator. Duplicate rate is redundant matched source observations divided
@@ -71,6 +74,10 @@ bound, visible through accounting failure counts. Clean-PR false-positive rate u
 only complete, accounted, fully adjudicated clean runs; partial or missing output is
 never a clean approval. These denominator choices and repeat weighting must accompany
 any reported comparison. No eligible denominator produces a null metric.
+
+Concurrency is bounded (default one, at most 32 independent runs). `experiment.json`
+is atomically refreshed per completion with schedule-ordered missing placeholders
+and an explicit incomplete status until every cell finishes.
 
 Interrupted experiments can be scored from `runs.jsonl` instead of `experiment.json`;
 the frozen schedule supplies explicit missing records. `--split holdout` must be a

@@ -61,3 +61,14 @@ def test_expected_missing_cells_lower_recall_and_never_approve():
     assert score['missing_runs'] == 1
     assert score['accounting_failures'] == 1
     assert score['possible_defects'] == 2
+
+
+def test_machine_judgments_are_explicit_and_cannot_decide_ambiguity():
+    run = record(findings=[{'persona': 'senior-dev', 'body': 'claim'}])
+    decision = {'finding_id': finding_id(run, 0), 'defect_id': None, 'reviewer': 'rootAI',
+                'rationale': 'counterexample', 'method': 'automated', 'ambiguous': False}
+    result = score_experiment([run], {'bug': {'defects': []}}, [decision])['senior']
+    assert result['adjudication_methods'] == {'automated': 1}
+    decision['ambiguous'] = True
+    with pytest.raises(ValueError, match='human'):
+        score_experiment([run], {'bug': {'defects': []}}, [decision])

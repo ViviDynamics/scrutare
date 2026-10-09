@@ -90,3 +90,27 @@ def test_cli_help_is_available_without_provider_access():
                             capture_output=True)
     assert result.returncode == 0
     assert b'adjudicate' in result.stdout and b'run' in result.stdout and b'score' in result.stdout
+
+
+def test_concurrency_is_bounded_and_incremental_snapshot_survives(tmp_path, monkeypatch):
+    cases = corpus(tmp_path / 'corpus')
+    active = 0
+    maximum = 0
+    async def execute(run_dir, conf, *, runtime):
+        nonlocal active, maximum
+        active += 1
+        maximum = max(active, maximum)
+        await asyncio.sleep(0.01)
+        active -= 1
+        return SimpleNamespace(status='complete', accounting_complete=True,
+            usage=TokenUsage(input=1), verdict=SimpleNamespace(findings=()))
+    monkeypatch.setattr('scrutare.evaluation.runner.run_review', execute)
+    monkeypatch.setattr('scrutare.evaluation.runner.inspect_nare_runtime',
+        lambda runtime: asyncio.sleep(0, result=SimpleNamespace(version='2026.10.4', contract=1)))
+    result = asyncio.run(run_experiment(cases, config(), tmp_path / 'out',
+        runtime=NareRuntime(Path('/unused')), evidence_kind='offline', concurrency=3))
+    assert maximum == 3
+    assert result['status'] == 'complete'
+    assert [r['run_id'] for r in result['runs']] == [
+        f'a/{variant}/{repeat}' for variant in ('senior', 'panel', 'debate')
+        for repeat in range(1, 4)]

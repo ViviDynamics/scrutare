@@ -14,6 +14,12 @@ from scrutare.evaluation.runner import run_experiment
 def test_actual_nare_evaluation_never_posts_and_all_runs_account(tmp_path, installed, monkeypatch):
     runtime = offline_runtime(tmp_path, installed, default={
         'replies': [tool(), text({'findings': []})]})
+    spec_path = tmp_path / 'offline-spec.json'
+    spec = json.loads(spec_path.read_text())
+    spec['scenarios'] = [{'purpose': 'review', 'attempt': 'attempt-0001',
+                         'prompt_prefix': 'Arbitrate',
+                         'scenario': {'replies': [text({'findings': [], 'converged': True})]}}]
+    spec_path.write_text(json.dumps(spec))
     # Any ambient GitHub use must fail, including read-only calls.
     bin_dir = tmp_path / 'bin'
     bin_dir.mkdir()

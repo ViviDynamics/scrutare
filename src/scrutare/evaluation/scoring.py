@@ -1,4 +1,4 @@
-"""Explicit human match adjudication; no model judge or inferred clean successes."""
+"""Explicit judgment provenance; ambiguous matches require human adjudication."""
 from __future__ import annotations
 
 import hashlib
@@ -50,6 +50,7 @@ def score_experiment(runs: list[dict[str, Any]], labels: dict[str, Any],
     known = {finding_id(run, i): (run, finding) for run in runs
              for i, finding in enumerate(run['findings'])}
     matches: dict[str, str | None] = {}
+    methods: dict[str, str] = {}
     for decision in decisions:
         key = decision['finding_id']
         if key not in known:
@@ -58,6 +59,12 @@ def score_experiment(runs: list[dict[str, Any]], labels: dict[str, Any],
             raise ValueError('duplicate decision')
         if not decision.get('reviewer') or not decision.get('rationale'):
             raise ValueError('human reviewer and rationale required')
+        method = decision.get('method', 'human')
+        if method not in ('human', 'automated'):
+            raise ValueError('judgment method must be human or automated')
+        if decision.get('ambiguous', False) and method != 'human':
+            raise ValueError('ambiguous matches require human adjudication')
+        methods[key] = method
         run, _ = known[key]
         defect = decision['defect_id']
         valid_defects = {d['id'] for d in labels[run['case_id']]['defects']}
@@ -70,6 +77,7 @@ def score_experiment(runs: list[dict[str, Any]], labels: dict[str, Any],
         counts: Counter[str] = Counter()
         unique: Counter[str] = Counter()
         latency = []
+        method_counts: Counter[str] = Counter()
         for run in selected:
             defects = labels[run['case_id']]['defects']
             counts['possible_defects'] += len(defects)
@@ -84,6 +92,8 @@ def score_experiment(runs: list[dict[str, Any]], labels: dict[str, Any],
             for i, finding in enumerate(run['findings']):
                 unique[finding['persona']] += 0
                 key = finding_id(run, i)
+                if key in matches:
+                    method_counts[methods[key]] += 1
                 if key not in matches:
                     pending += 1
                 elif matches[key] is None:
@@ -105,6 +115,9 @@ def score_experiment(runs: list[dict[str, Any]], labels: dict[str, Any],
                 counts['clean_false_positive_runs'] += false > 0
         judged = counts['true_positive_findings'] + counts['false_positive_findings']
         results[variant] = {
+            'adjudication_methods': dict(method_counts),
+            'recall_is_lower_bound': bool(counts['pending_findings']),
+            'quality_final': not counts['pending_findings'] and not counts['accounting_failures'],
             'finding_precision': _ratio(counts['true_positive_findings'], judged),
             'defect_recall': _ratio(counts['true_positive_defects'], counts['possible_defects']),
             'clean_pr_false_positive_rate': _ratio(counts['clean_false_positive_runs'],
@@ -115,7 +128,8 @@ def score_experiment(runs: list[dict[str, Any]], labels: dict[str, Any],
             'latency_seconds': latency,
             **{key: counts[key] for key in ('complete_runs', 'partial_runs', 'failed_runs',
                 'missing_runs', 'invalid_runs', 'accounting_failures', 'tokens',
-                'pending_findings', 'true_positive_defects', 'possible_defects',
+                'pending_findings', 'true_positive_findings', 'false_positive_findings',
+                'duplicates', 'true_positive_defects', 'possible_defects',
                 'eligible_clean_runs')},
         }
     return results

@@ -1,6 +1,7 @@
 """Explicit non-posting experiments through the production nare engine."""
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import shutil
@@ -45,20 +46,21 @@ def comparison_configs(config: ReviewConfig) -> dict[str, ReviewConfig]:
 
 
 async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: Path, *,
-                         runtime: NareRuntime, evidence_kind: str = 'model'
+                         runtime: NareRuntime, evidence_kind: str = 'model', concurrency: int = 1
                          ) -> dict[str, Any]:
     """Fresh 3-repeat job; ordinary CI calls this only with explicitly offline evidence."""
-    if evidence_kind not in ('model', 'offline') or not cases:
+    if (evidence_kind not in ('model', 'offline') or not cases
+            or type(concurrency) is not int or not 1 <= concurrency <= 32):
         raise ValueError('nonempty cases and model/offline evidence kind required')
     variants = comparison_configs(config)
     output = output.absolute()
     output.mkdir(parents=True, exist_ok=False)
     capability = await inspect_nare_runtime(runtime)
-    snapshot = {
+    snapshot: dict[str, Any] = {
         'schema_version': 1, 'scrutare_version': __version__, 'evidence_kind': evidence_kind,
         'nare_version': capability.version, 'nare_contract': capability.contract,
         'runtime': {**asdict(runtime), 'executable': str(runtime.executable)},
-        'repeats': 3,
+        'repeats': 3, 'concurrency': concurrency,
         'expected_runs': [{'run_id': f'{case.id}/{variant}/{repeat}', 'case_id': case.id,
                            'variant': variant, 'repeat': repeat}
                           for case in cases for variant in variants for repeat in range(1, 4)],
@@ -72,49 +74,75 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                   for case in cases],
     }
     write_json(output / 'snapshot.json', snapshot)
-    runs = []
-    for case in cases:
-        for variant, conf in variants.items():
-            for repeat in range(1, 4):
-                run_id = f'{case.id}/{variant}/{repeat}'
-                directory = output / run_id
-                directory.mkdir(parents=True)
-                for name in ('diff.patch', 'files.json', 'metadata.json'):
-                    shutil.copyfile(case.capture / name, directory / name)
-                write_json(directory / 'config.json', conf.to_dict())
-                write_json(directory / 'config.yaml', conf.to_dict())
-                prepare_review_inputs(directory, conf)
-                started = time.monotonic()
-                record: dict[str, Any] = {
-                    'run_id': run_id, 'case_id': case.id, 'variant': variant, 'repeat': repeat,
-                    'run_dir': str(directory), 'status': 'failed', 'accounting_complete': False,
-                    'usage': TokenUsage().to_dict(), 'findings': [], 'error': None,
-                }
-                try:
-                    panel = await run_review(directory, conf, runtime=runtime)
-                    record.update(status=panel.status,
-                                  accounting_complete=panel.accounting_complete,
-                                  usage=panel.usage.to_dict())
-                    if panel.verdict is not None:
-                        record['findings'] = [source for group in panel.verdict.findings
-                                              for source in cast(list[dict[str, Any]],
-                                                                 group.to_dict()['sources'])]
-                    elif panel.status != 'failed':
-                        record['status'] = 'invalid'
-                except Exception as error:
-                    # Provider details remain in private engine captures.
-                    record['error'] = type(error).__name__
-                    panel_path = directory / 'panel.json'
-                    if panel_path.is_file():
-                        saved = read_json(panel_path)
-                        record['usage'] = saved['ledger']['usage']
-                        record['accounting_complete'] = saved['ledger']['accounting_complete']
-                record['latency_seconds'] = time.monotonic() - started
-                write_json(directory / 'evaluation.json', record)
-                write_artifact_manifest(directory)
-                runs.append(record)
-                with (output / 'runs.jsonl').open('a', encoding='utf-8') as stream:
-                    stream.write(json.dumps(record, sort_keys=True) + '\n')
-    result = {'schema_version': 1, 'evidence_kind': evidence_kind, 'runs': runs}
-    write_json(output / 'experiment.json', result)
-    return result
+    completed: dict[str, dict[str, Any]] = {}
+    def persist() -> dict[str, Any]:
+        records = [completed.get(cell['run_id'], {**cell, 'status': 'missing',
+                   'accounting_complete': False, 'usage': TokenUsage().to_dict(),
+                   'findings': [], 'latency_seconds': 0}) for cell in snapshot['expected_runs']]
+        result = {'schema_version': 1, 'evidence_kind': evidence_kind,
+                  'status': 'complete' if len(completed) == len(records) else 'incomplete',
+                  'runs': records}
+        temporary = output / 'experiment.next.json'
+        with temporary.open('w', encoding='utf-8') as stream:
+            json.dump(result, stream, indent=2, sort_keys=True, allow_nan=False)
+            stream.write('\n')
+        temporary.replace(output / 'experiment.json')
+        return result
+    persist()
+    async def execute(case: Case, variant: str, conf: ReviewConfig, repeat: int) -> None:
+        run_id = f'{case.id}/{variant}/{repeat}'
+        directory = output / run_id
+        directory.mkdir(parents=True)
+        for name in ('diff.patch', 'files.json', 'metadata.json'):
+            shutil.copyfile(case.capture / name, directory / name)
+        write_json(directory / 'config.json', conf.to_dict())
+        write_json(directory / 'config.yaml', conf.to_dict())
+        prepare_review_inputs(directory, conf)
+        started = time.monotonic()
+        record: dict[str, Any] = {
+            'run_id': run_id, 'case_id': case.id, 'variant': variant, 'repeat': repeat,
+            'run_dir': str(directory), 'status': 'failed', 'accounting_complete': False,
+            'usage': TokenUsage().to_dict(), 'findings': [], 'error': None,
+        }
+        try:
+            panel = await run_review(directory, conf, runtime=runtime)
+            record.update(status=panel.status,
+                          accounting_complete=panel.accounting_complete,
+                          usage=panel.usage.to_dict())
+            if panel.verdict is not None:
+                record['findings'] = [source for group in panel.verdict.findings
+                                      for source in cast(list[dict[str, Any]],
+                                                         group.to_dict()['sources'])]
+            elif panel.status != 'failed':
+                record['status'] = 'invalid'
+        except Exception as error:
+            # Provider details remain in private engine captures.
+            record['error'] = type(error).__name__
+            panel_path = directory / 'panel.json'
+            if panel_path.is_file():
+                saved = read_json(panel_path)
+                record['usage'] = saved['ledger']['usage']
+                record['accounting_complete'] = saved['ledger']['accounting_complete']
+        record['latency_seconds'] = time.monotonic() - started
+        write_json(directory / 'evaluation.json', record)
+        write_artifact_manifest(directory)
+        completed[run_id] = record
+        with (output / 'runs.jsonl').open('a', encoding='utf-8') as stream:
+            stream.write(json.dumps(record, sort_keys=True) + '\n')
+        persist()
+
+    semaphore = asyncio.Semaphore(concurrency)
+    async def bounded(case: Case, variant: str, conf: ReviewConfig, repeat: int) -> None:
+        async with semaphore:
+            await execute(case, variant, conf, repeat)
+    tasks = [asyncio.create_task(bounded(case, variant, conf, repeat))
+             for case in cases for variant, conf in variants.items() for repeat in range(1, 4)]
+    try:
+        await asyncio.gather(*tasks)
+    finally:
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        persist()
+    return persist()

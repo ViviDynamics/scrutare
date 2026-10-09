@@ -43,7 +43,7 @@ def test_capture_patches_reproduce_real_head_sources(tmp_path):
         destination = tmp_path / case['id']
         shutil.copytree(source / 'base', destination)
         patch = ROOT / case['capture'] / 'diff.patch'
-        subprocess.run(['git', 'apply', str(patch)], cwd=destination, check=True,
+        subprocess.run(['git', 'apply', '--no-index', str(patch)], cwd=destination, check=True,
                        capture_output=True)
         expected = {p.relative_to(source / 'head'): p.read_bytes()
                     for p in (source / 'head').rglob('*') if p.is_file()}

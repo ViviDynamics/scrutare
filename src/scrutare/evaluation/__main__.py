@@ -23,6 +23,7 @@ def main() -> None:
     run.add_argument('--output', type=Path, required=True)
     run.add_argument('--nare-executable', type=Path, required=True)
     run.add_argument('--timeout-seconds', type=float, default=600)
+    run.add_argument('--concurrency', type=int, default=1)
     run.add_argument('--max-turns', type=int, default=50)
     run.add_argument('--evidence-kind', choices=('model', 'offline'), default='model')
     packet = sub.add_parser('adjudicate', help='export blinded finding packet for human matching')
@@ -38,7 +39,7 @@ def main() -> None:
         asyncio.run(run_experiment(load_corpus(args.corpus, args.split),
             parse_config(args.config.read_bytes()), args.output,
             runtime=NareRuntime(args.nare_executable, args.max_turns, args.timeout_seconds),
-            evidence_kind=args.evidence_kind))
+            evidence_kind=args.evidence_kind, concurrency=args.concurrency))
     elif args.command == 'adjudicate':
         write_json(args.output, adjudication_packet(read_json(args.experiment)['runs']))
     else:
