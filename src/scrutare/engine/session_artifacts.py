@@ -105,6 +105,8 @@ def _destination(path: Path, prepared_root: Path) -> tuple[Path, bool]:
         "artifacts.json", "result.json", "iterative.json", "assessment.json", "routing.json"
     ):
         return path, False
+    if len(parts) == 1 and re.fullmatch(r"assessment-round-[0-9]{4}\.json", parts[0]):
+        return path, False
     if (len(parts) != 4 or parts[0] != "sessions" or not _persona(parts[1])
             or re.fullmatch(r"attempt-[0-9]{4}", parts[2]) is None
             or parts[2] == "attempt-0000"

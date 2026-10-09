@@ -129,7 +129,14 @@ def replay_run(run_dir: Path) -> ReplayResult:
                             for group in findings for source in group.sources)
             if tuple(source for group in findings for source in group.sources) != checked:
                 raise ValueError
-            findings = dedupe_findings(checked)
+            if config.findings.discussion.enabled:
+                from scrutare.engine.discussion import equivalent_groups
+                grouped = equivalent_groups(checked)
+                if findings != grouped:
+                    raise ValueError
+                findings = grouped
+            else:
+                findings = dedupe_findings(checked)
         except (OSError, ValueError, TypeError, KeyError):
             raise ReplayError("findings: captured citation validation disagrees") from None
     issues = findings_issues + _yaml_issues(run_dir, policy) + _context_issues(run_dir, policy)
@@ -185,9 +192,15 @@ def replay_run(run_dir: Path) -> ReplayResult:
                         raise ValueError
                 rows = parse_assessments({"assessments": assessment["assessments"]}, originals,
                                          run_dir / "review-inputs", artifact=True)
+                if config.findings.discussion.enabled:
+                    from scrutare.replay.discussion import replay_discussion
+                    rows = replay_discussion(run_dir, config, rows, exhaustion)
                 result = AssessmentResult("complete", rows)
                 sources = tuple(source for group in findings for source in group.sources)
-                if sources != tuple(source for group in dedupe_findings(result.retained)
+                from scrutare.engine.discussion import equivalent_groups
+                groups = (equivalent_groups(result.retained) if config.findings.discussion.enabled
+                          else dedupe_findings(result.retained))
+                if sources != tuple(source for group in groups
                                     for source in group.sources):
                     raise ValueError
                 unresolved = result.unresolved_blocking(config.verdict.blocking_categories)

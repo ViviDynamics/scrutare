@@ -47,6 +47,9 @@ def _usable(outcome: SessionOutcome) -> bool:
 
 async def run_debate(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime) -> PanelResult:
     """Every chair finding is pool-bound; only explicit completed deadlocks exhaust rounds."""
+    if config.findings.discussion.enabled:
+        from scrutare.engine.focused_debate import run_focused_debate
+        return await run_focused_debate(run_dir, config, runtime=runtime)
     preflight_panel(run_dir)
     names = {p.name for p in resolve_personas(
         config.personas, procedures=config.inspection.procedures,
