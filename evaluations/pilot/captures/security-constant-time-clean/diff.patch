@@ -1,8 +1,8 @@
 diff --git a/change.py b/change.py
 --- a/change.py
 +++ b/change.py
-@@ -1,4 +1,5 @@
- import hmac
+@@ -2,4 +2,5 @@
+ 
  
  def valid(actual, expected):
 -    return hmac.compare_digest(actual, expected)

@@ -1,5 +1,5 @@
 {
-  "head_sha": "9daf2da5fc40df38560fe62cffc1b8786da963ee",
+  "head_sha": "6147f5510465027638029cdda0f64ba53068c56a",
   "pr_number": 10,
   "pull_request": {
     "base": {
@@ -7,11 +7,11 @@
       "repo": {
         "full_name": "pilot/local"
       },
-      "sha": "ed5cf6519a028080ad01ab445ed9ddcaf396a4f9"
+      "sha": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a"
     },
     "changed_files": 1,
     "head": {
-      "sha": "9daf2da5fc40df38560fe62cffc1b8786da963ee"
+      "sha": "6147f5510465027638029cdda0f64ba53068c56a"
     },
     "merged": false,
     "number": 10,

@@ -1,5 +1,6 @@
 """Pilot fixtures are coherent captures with labels outside reviewer evidence."""
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -44,6 +45,7 @@ def test_capture_patches_reproduce_real_head_sources(tmp_path):
         shutil.copytree(source / 'base', destination)
         patch = ROOT / case['capture'] / 'diff.patch'
         subprocess.run(['git', 'apply', '--no-index', str(patch)], cwd=destination, check=True,
+                       env={**os.environ, 'GIT_CEILING_DIRECTORIES': str(tmp_path)},
                        capture_output=True)
         expected = {p.relative_to(source / 'head'): p.read_bytes()
                     for p in (source / 'head').rglob('*') if p.is_file()}

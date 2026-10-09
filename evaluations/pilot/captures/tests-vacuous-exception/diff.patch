@@ -1,7 +1,9 @@
 diff --git a/change.py b/change.py
 --- a/change.py
 +++ b/change.py
-@@ -2,9 +2,11 @@
+@@ -1,11 +1,11 @@
+-import pytest
+-
  
  def parse(value):
      if value < 0:

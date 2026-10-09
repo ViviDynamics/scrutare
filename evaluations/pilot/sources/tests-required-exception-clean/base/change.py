@@ -1,5 +1,6 @@
 import pytest
 
+
 def parse(value):
     if value < 0:
         raise ValueError("negative")

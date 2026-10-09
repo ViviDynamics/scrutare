@@ -114,3 +114,25 @@ def test_concurrency_is_bounded_and_incremental_snapshot_survives(tmp_path, monk
     assert [r['run_id'] for r in result['runs']] == [
         f'a/{variant}/{repeat}' for variant in ('senior', 'panel', 'debate')
         for repeat in range(1, 4)]
+
+
+def test_interruption_keeps_incomplete_schedule_and_accounting_failure(tmp_path, monkeypatch):
+    cases = corpus(tmp_path / 'corpus')
+    async def execute(run_dir, conf, *, runtime):
+        await asyncio.sleep(10)
+    monkeypatch.setattr('scrutare.evaluation.runner.run_review', execute)
+    monkeypatch.setattr('scrutare.evaluation.runner.inspect_nare_runtime',
+        lambda runtime: asyncio.sleep(0, result=SimpleNamespace(version='2026.10.4', contract=1)))
+    async def job():
+        task = asyncio.create_task(run_experiment(cases, config(), tmp_path / 'out',
+             runtime=NareRuntime(Path('/unused')), evidence_kind='offline'))
+        await asyncio.sleep(0.03)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+    asyncio.run(job())
+    saved = json.loads((tmp_path / 'out/experiment.json').read_text())
+    assert saved['status'] == 'incomplete'
+    assert len(saved['runs']) == 9
+    assert saved['runs'][0]['status'] == 'failed'
+    assert saved['runs'][0]['accounting_complete'] is False

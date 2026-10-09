@@ -1,8 +1,8 @@
 diff --git a/deploy.py b/deploy.py
 --- a/deploy.py
 +++ b/deploy.py
-@@ -1,5 +1,5 @@
- from schema import migrate
+@@ -2,5 +2,5 @@
+ 
  
  def rollout(db):
 +    db.execute("UPDATE jobs SET state = 'ready'")

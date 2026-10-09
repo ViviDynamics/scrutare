@@ -1,7 +1,7 @@
 diff --git a/change.py b/change.py
 --- a/change.py
 +++ b/change.py
-@@ -3,6 +3,6 @@
+@@ -4,6 +4,6 @@
  def upload_path(root, name):
      base = Path(root).resolve()
      target = (base / name).resolve()

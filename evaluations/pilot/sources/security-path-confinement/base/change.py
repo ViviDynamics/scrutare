@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 def upload_path(root, name):
     base = Path(root).resolve()
     target = (base / name).resolve()

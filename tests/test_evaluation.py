@@ -17,7 +17,7 @@ def test_metrics_require_human_decisions_and_defect_level_deduplication():
     runs = [record(findings=[a, b, c]), record('clean', 'failed')]
     labels = {'bug': {'defects': [{'id': 'd1'}, {'id': 'd2'}]}, 'clean': {'defects': []}}
     decisions = [{'finding_id': finding_id(runs[0], i), 'defect_id': d,
-                  'reviewer': 'human@example', 'rationale': 'checked trigger'}
+                  'reviewer': 'human@example', 'method': 'human', 'rationale': 'checked trigger'}
                  for i, d in enumerate(['d1', 'd1', None])]
     metrics = score_experiment(runs, labels, decisions)['senior']
     assert metrics['finding_precision'] == pytest.approx(2 / 3)
@@ -44,7 +44,7 @@ def test_packet_is_blinded_and_decisions_are_bound_to_content():
     assert packet['items'][0]['finding'] == {'body': 'problem'}
     assert 'senior' not in str(packet)
     decision = {'finding_id': finding_id(run, 0), 'defect_id': 'wrong',
-                'reviewer': 'human', 'rationale': 'read code'}
+                'reviewer': 'human', 'method': 'human', 'rationale': 'read code'}
     with pytest.raises(ValueError, match='defect'):
         score_experiment([run], {'bug': {'defects': [{'id': 'd1'}]}}, [decision])
     changed = {**run, 'findings': [{'persona': 'senior-dev', 'body': 'changed'}]}

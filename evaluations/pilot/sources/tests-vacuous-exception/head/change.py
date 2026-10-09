@@ -1,4 +1,3 @@
-import pytest
 
 def parse(value):
     if value < 0:

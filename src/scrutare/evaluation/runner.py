@@ -104,6 +104,7 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
             'run_dir': str(directory), 'status': 'failed', 'accounting_complete': False,
             'usage': TokenUsage().to_dict(), 'findings': [], 'error': None,
         }
+        interrupted = False
         try:
             panel = await run_review(directory, conf, runtime=runtime)
             record.update(status=panel.status,
@@ -115,6 +116,14 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                                                          group.to_dict()['sources'])]
             elif panel.status != 'failed':
                 record['status'] = 'invalid'
+        except asyncio.CancelledError:
+            interrupted = True
+            record['error'] = 'Interrupted'
+            for name in ('panel.json', 'debate.json'):
+                path = directory / name
+                if path.is_file():
+                    saved = read_json(path)
+                    record['usage'] = saved['ledger']['usage']
         except Exception as error:
             # Provider details remain in private engine captures.
             record['error'] = type(error).__name__
@@ -130,6 +139,8 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         with (output / 'runs.jsonl').open('a', encoding='utf-8') as stream:
             stream.write(json.dumps(record, sort_keys=True) + '\n')
         persist()
+        if interrupted:
+            raise asyncio.CancelledError
 
     semaphore = asyncio.Semaphore(concurrency)
     async def bounded(case: Case, variant: str, conf: ReviewConfig, repeat: int) -> None:

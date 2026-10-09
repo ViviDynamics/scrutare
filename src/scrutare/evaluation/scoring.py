@@ -59,7 +59,7 @@ def score_experiment(runs: list[dict[str, Any]], labels: dict[str, Any],
             raise ValueError('duplicate decision')
         if not decision.get('reviewer') or not decision.get('rationale'):
             raise ValueError('human reviewer and rationale required')
-        method = decision.get('method', 'human')
+        method = decision.get('method')
         if method not in ('human', 'automated'):
             raise ValueError('judgment method must be human or automated')
         if decision.get('ambiguous', False) and method != 'human':

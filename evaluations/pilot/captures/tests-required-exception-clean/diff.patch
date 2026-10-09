@@ -1,7 +1,7 @@
 diff --git a/change.py b/change.py
 --- a/change.py
 +++ b/change.py
-@@ -6,5 +6,5 @@
+@@ -7,5 +7,5 @@
      return value
  
  def test_negative():
