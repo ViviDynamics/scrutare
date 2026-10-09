@@ -1,6 +1,7 @@
 from hashlib import sha256
 
 import pytest
+from test_review_inputs import capture as capture
 
 from scrutare.findings.models import Anchor, FindingError, parse_finding
 
@@ -306,3 +307,68 @@ def test_v2_evidence_is_a_closed_required_contract(changes):
     legacy = {key: value for key, value in wire().items() if key != "evidence"}
     with pytest.raises(FindingError):
         parse_finding(legacy, persona="tester", evidence_version=2, candidate_id="candidate-1")
+
+
+@pytest.mark.parametrize("mode", ["exhausted", "partial"])
+def test_stale_iterative_citations_retain_claim_without_current_approval(
+    capture, monkeypatch, mode,
+):
+    from dataclasses import replace
+
+    from test_iterative import push, run, setup
+    from test_panel import finding, install
+    from test_repository_context import contextual
+    from test_review_inputs import read_json, save_json
+
+    from scrutare.config import FindingSettings
+    from scrutare.findings.models import Citation, EvidenceV2
+
+    contextual_config, _ = contextual(capture)
+    config = replace(setup(capture, rounds=1 if mode == "exhausted" else 3),
+                     context=contextual_config.context, findings=FindingSettings("v2"))
+    for name in ("config.yaml", "config.json"):
+        save_json(capture / name, config.to_dict())
+    original = replace(finding(), candidate_id="original", evidence=EvidenceV2(
+        "call", (), "result", "failure", "loss", (Citation(
+            "head", "a" * 40, "src/caller.py", 1, 1,
+            sha256(b"call_changed()\n").hexdigest(), validation="valid"),)))
+    install(monkeypatch, {"security": (original,)})
+    run(capture, config)
+    second = push(capture, "next")
+    contextual(second)
+    metadata = read_json(second / "metadata.json")
+    metadata["head_sha"] = metadata["pull_request"]["head"]["sha"] = "f" * 40
+    save_json(second / "metadata.json", metadata)
+    manifest_path = second / "repository-context/repository-context.json"
+    manifest = read_json(manifest_path)
+    manifest["revisions"]["head"]["sha"] = "f" * 40
+    for entry in manifest["entries"]:
+        if entry["side"] == "head":
+            entry["revision"] = "f" * 40
+    save_json(manifest_path, manifest)
+    for name in ("config.yaml", "config.json"):
+        save_json(second / name, config.to_dict())
+    install(monkeypatch, {"security": ()}, initial_status=(
+        "partial" if mode == "partial" else "complete"))
+    result = run(second, config)
+    assert result.status == "partial"
+    assert result.accounting_complete
+    assert result.verdict is None if mode == "partial" else result.verdict.verdict == "escalated"
+    state = read_json(second / "iterative.json")
+    assert state["pool"][0]["disposition"] == "upheld"
+    assert state["pool"][0]["dependency_status"] == "stale"
+    assert state["pool"][0]["finding"]["evidence"]["citations"][0]["revision"] == "a" * 40
+    import shutil
+    repeat = push(second, "retry")
+    save_json(repeat / "metadata.json", metadata)
+    shutil.copytree(second / "repository-context", repeat / "repository-context")
+    if mode == "partial":
+        assert not (second / "verdict.json").exists()
+        # A complete same-head reassessment can explicitly withdraw the old claim.
+        install(monkeypatch, {"security": ()})
+        resumed = run(repeat, config)
+        assert resumed.verdict.verdict == "approve"
+        assert read_json(repeat / "iterative.json")["pool"][0]["disposition"] == "withdrawn"
+    else:
+        assert not result.verdict.findings
+        assert run(repeat, config).verdict.verdict == "escalated"

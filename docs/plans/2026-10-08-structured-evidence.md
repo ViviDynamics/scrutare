@@ -27,3 +27,12 @@ Out: semantic truth adjudication and empirical quality promotion, pending evalua
   iterative reuse, changed-revision recitation, retained history and offline replay.
 - Ruff and strict mypy passed. Parent owns final Python 3.10/3.14/native Docker lanes.
 - These are contract/integration checks; comparative quality remains unmeasured.
+
+## Review fixes
+- Rebased onto pinned #44 core `bc1b7c9` to retain strict manifest, sensitive-path,
+  same-head integrity and stale-dependency safeguards. One completed dependency rebase.
+- Two observed red regressions covered changed revisions with partial refresh and
+  exhausted rounds. Historical citations now remain in the pool, with no current
+  approval; same-head completion can withdraw them and exhaustion escalates.
+- 176 lifecycle/context/panel/debate/replay regression checks passed after this fix;
+  strict mypy passed. Fresh independent review and final full gates remain pending.

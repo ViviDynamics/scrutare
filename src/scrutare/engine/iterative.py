@@ -288,7 +288,8 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
         if stale_dependencies and result.status == "complete":
             result = replace(result, status="partial")
         active = tuple(_finding(entry, evidence_version=version) for entry in state["pool"]
-                       if entry["disposition"] == "upheld")
+                       if entry["disposition"] == "upheld"
+                       and (version == 1 or entry["dependency_status"] == "current"))
         if version == 2:
             from scrutare.findings.evidence import validate_evidence
             active = tuple(validate_evidence(finding, inputs.root) for finding in active)
@@ -297,7 +298,8 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
         if state["rounds_completed"] == config.rounds.max and (
                 verdict.verdict == "changes_requested"
                 or (patches and not reviewed and not repeated)
-                or inputs.head_sha in state["escalated_heads"]):
+                or inputs.head_sha in state["escalated_heads"]
+                or (version == 2 and stale_dependencies)):
             if inputs.head_sha not in state["escalated_heads"]:
                 state["escalated_heads"].append(inputs.head_sha)
             verdict = derive_verdict(verdict.findings, config.verdict,
@@ -312,5 +314,9 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
                             if reviewed else [], "initial": result.initial.to_dict(),
                             "usage": result.usage.to_dict()}
         write_owned_json(run / "iterative.json", document, prepared_root=inputs.root)
+        if version == 2 and stale_dependencies and verdict.exhaustion is None:
+            # Historical citations remain in the retained pool, but cannot certify
+            # the current revision. A bounded retry must refresh or withdraw them.
+            return replace(result, verdict=None, run_dir=run)
         publish_panel(run, inputs.root, document, verdict)
         return replace(result, verdict=verdict, run_dir=run)

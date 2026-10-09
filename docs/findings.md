@@ -272,7 +272,13 @@ evidence record and ID. V2 debate output selects immutable IDs and categories;
 it cannot rewrite citations or assertions. Iterative history schema 2 preserves
 IDs and evidence, including distinct equal observations. A revision change
 requires fresh citations and conservative re-review; if usable current citations
-cannot be obtained, stale sources cannot produce a verdict.
+cannot be obtained, their original citations and blocking claims stay in the
+history pool with `dependency_status: stale`. The review remains partial and
+publishes no current verdict while another bounded attempt is available. At the
+round limit, code produces an escalated verdict from current validated sources;
+historical stale sources remain in `iterative.json`, outside current inline
+findings. A complete reassessment can refresh or explicitly withdraw them.
+Neither incomplete reassessment nor exhaustion silently approves the PR.
 
 V2 verdicts use schema 2, including empty verdicts. Replay selects the evidence
 contract from captured configuration, rechecks citations against captured bytes,
