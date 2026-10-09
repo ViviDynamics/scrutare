@@ -112,6 +112,9 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                 if captured['sha'] != side.revision:
                     raise ValueError('corpus source revision changed after loading')
                 identity = captured.get('repo')
+                if (side.side == 'base' and not isinstance(identity, dict)
+                        or identity is not None and not isinstance(identity, dict)):
+                    raise ValueError('corpus source captured identity is missing or malformed')
                 if identity is not None and identity.get('full_name') != side.repository:
                     raise ValueError('corpus source identity changed after loading')
                 if identity is None:
