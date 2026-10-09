@@ -6,6 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 from test_installed_review import GH_WORKER
 from test_installed_review import wheel_cli as wheel_cli
 from test_nare_cli_integration import installed as installed
@@ -14,7 +15,10 @@ from test_repository_context import Objects, blob_id
 from test_review_inputs import SOURCE
 
 
-def test_installed_static_analysis_data_only_and_replay_tamper(tmp_path, installed, wheel_cli):
+@pytest.mark.parametrize("assessment_enabled", [False, True])
+def test_installed_static_analysis_data_only_and_replay_tamper(
+    tmp_path, installed, wheel_cli, assessment_enabled,
+):
     strategy = "panel"
     _, _, console, _ = wheel_cli
     runtime = offline_runtime(tmp_path, installed)
@@ -72,6 +76,8 @@ def test_installed_static_analysis_data_only_and_replay_tamper(tmp_path, install
         "budgets: {per_persona_tokens: 400, review_max_tokens: 1200}\n"
         "context: {enabled: true, related_paths: [src/caller.py, tests/test_caller.py]}\n"
         "analysis: {enabled: true}\n"
+        + ("findings: {evidence: v2, assessment: {enabled: true, tokens: 200}}\n"
+           if assessment_enabled else "")
     )
     binary = tmp_path / "bin"
     binary.mkdir()
@@ -126,6 +132,11 @@ def test_installed_static_analysis_data_only_and_replay_tamper(tmp_path, install
     run = Path(json.loads(result.stdout)["run_dir"])
     assert json.loads((run / "review-inputs/static-analysis.json").read_text())["diagnostics"]
     assert json.loads((run / "verdict.json").read_text())["findings"] == []
+    if assessment_enabled:
+        assessment = json.loads((run / "assessment.json").read_text())
+        assert assessment["status"] == "complete"
+        assert assessment["allocation_tokens"] == 200
+        assert assessment["candidates"] == assessment["assessments"] == []
     roots = list(run.rglob("review-inputs/repository-context.json"))
     assert roots
     observations = list(run.rglob("offline-observations.json"))

@@ -51,3 +51,9 @@ Scrutare accepts captured results because an execution sandbox is not establishe
   both. Unknown-field rejection and Unicode scalar columns remain covered.
 - The expanded adapter/context/lifecycle/evaluation/native area passed 623 tests
   on Python 3.10; the installed-wheel proof now consumes generated Ruff JSON.
+
+## Final dependency integration
+- Rebased only the two tool-evidence commits onto merged context, procedures, v2 evidence, assessment and comparison foundation. Preserved every existing configuration field and the iterative head revision binding for tool-manifest dependencies.
+- Independent scoped integration review: no findings in config, iterative union, evaluation freeze-before-await/snapshot provenance or the combined installed proof.
+- Integrated adapter/config/assessment/iterative/evaluation/ingestion/read-root checks: 569 passed, including installed nare with real captured Ruff both alone and together with v2 assessment. Existing tamper refusal and zero automatic findings remain asserted. Ruff and strict types passed.
+- Both full canonical Python lanes are required before push. Incremental tool benefit remains pending under #51; the issue stays open.
