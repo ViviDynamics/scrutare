@@ -168,6 +168,9 @@ def _sources(root: Path, declaration: Any, capture: Path, labels: tuple[Path, ..
         repository, revision = value['repository'], value['revision']
         captured = metadata['pull_request'][side]
         identity = captured.get('repo')
+        if (side == 'base' and not isinstance(identity, dict)
+                or identity is not None and not isinstance(identity, dict)):
+            raise ValueError('source declaration requires captured base identity')
         if (not isinstance(repository, str) or not re.fullmatch(r'[^/\s]+/[^/\s]+', repository)
                 or not isinstance(revision, str) or not re.fullmatch(r'[0-9a-f]{40}', revision)
                 or revision != captured['sha']

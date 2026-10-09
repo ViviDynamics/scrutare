@@ -235,3 +235,13 @@ def test_context_metadata_duplicate_identities_are_rejected(tmp_path, monkeypatc
     with pytest.raises(ValueError, match='duplicate'):
         asyncio.run(run_experiment(cases, context_config(), tmp_path / 'out',
             runtime=NareRuntime(Path('/unused')), evidence_kind='offline'))
+
+
+def test_base_declaration_cannot_invent_missing_captured_identity(tmp_path):
+    declared(tmp_path)
+    path = tmp_path / 'captures/a/metadata.json'
+    metadata = json.loads(path.read_bytes())
+    metadata['pull_request']['base']['repo'] = None
+    path.write_text(json.dumps(metadata))
+    with pytest.raises(ValueError, match='identity'):
+        load_corpus(tmp_path)
