@@ -108,6 +108,9 @@ def _context_issues(run_dir: Path, policy: CapturedPolicy) -> tuple[AuditIssue, 
 
 def replay_run(run_dir: Path) -> ReplayResult:
     """Recompute captured findings with captured policy, never executing the review."""
+    findings_data = decode_artifact(
+        read_artifact(run_dir / "findings.json"), artifact="findings.json",
+    )
     config_data = decode_artifact(read_artifact(run_dir / "config.json"), artifact="config.json")
     evidence_version = 1
     if isinstance(config_data, dict) and "findings" in config_data:
@@ -117,9 +120,7 @@ def replay_run(run_dir: Path) -> ReplayResult:
             raise ReplayError("config.findings: invalid captured evidence contract") from None
         evidence_version = 2 if config.findings.evidence == "v2" else 1
     policy = parse_policy(config_data)
-    findings, findings_issues = parse_findings(decode_artifact(
-        read_artifact(run_dir / "findings.json"), artifact="findings.json",
-    ), evidence_version=evidence_version)
+    findings, findings_issues = parse_findings(findings_data, evidence_version=evidence_version)
     if evidence_version == 2:
         from scrutare.findings.dedupe import dedupe_findings
         from scrutare.findings.evidence import validate_evidence
