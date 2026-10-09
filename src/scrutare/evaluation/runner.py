@@ -16,6 +16,7 @@ from scrutare.engine.repository_context import capture_repository_context, encod
 from scrutare.engine.repository_snapshot import RepositorySnapshot
 from scrutare.engine.review_inputs import prepare_review_inputs
 from scrutare.engine.session_models import NareRuntime, TokenUsage
+from scrutare.engine.static_analysis import capture_static_analysis, read_capture
 from scrutare.engine.strategy import run_review
 from scrutare.evaluation.corpus import Case, parse_json, read_json, source_contents
 from scrutare.personas import load_persona
@@ -103,6 +104,9 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
     captures = {case.id: {name: (case.capture / name).read_bytes()
                          for name in ('diff.patch', 'files.json', 'metadata.json')}
                 for case in cases}
+    analysis_captures = {case.id: read_capture(case.analysis_capture)
+                         if case.analysis_capture is not None else None
+                         for case in cases} if config.analysis.enabled else {}
     context_clients: dict[str, RepositorySnapshot] = {}
     context_sources: dict[str, dict[str, Any]] = {}
     derived_metadata: dict[str, bytes] = {}
@@ -169,6 +173,10 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                    'capture_sha256': {name: hashlib.sha256(data).hexdigest()
                                       for name, data in captures[case.id].items()},
                    'labels_sha256': label_hashes[case.id],
+                   **({'analysis_source_sha256': hashlib.sha256(
+                       cast(bytes, analysis_captures[case.id]))
+                       .hexdigest() if analysis_captures[case.id] is not None else None}
+                      if config.analysis.enabled else {}),
                    **({'context_source': context_sources[case.id]} if config.context.enabled
                       else {})}
                   for case in cases],
@@ -208,6 +216,8 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
             (directory / 'metadata.json').write_bytes(derived_metadata[case.id])
             capture_repository_context(context_clients[case.id], directory, conf,
                                        source=context_clients[case.id].provenance())
+        capture_static_analysis(directory, conf,
+                                capture_bytes=analysis_captures.get(case.id))
         prepare_review_inputs(directory, conf)
         started = time.monotonic()
         record: dict[str, Any] = {
