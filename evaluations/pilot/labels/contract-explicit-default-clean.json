@@ -1,0 +1,7 @@
+{
+  "case_id": "contract-explicit-default-clean",
+  "counterexamples": [
+    "Zero remains zero and None remains 30; replacing ternary with an explicit branch preserves the contract."
+  ],
+  "defects": []
+}

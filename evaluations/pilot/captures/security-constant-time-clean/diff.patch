@@ -1,0 +1,10 @@
+diff --git a/change.py b/change.py
+--- a/change.py
++++ b/change.py
+@@ -2,4 +2,5 @@
+ 
+ 
+ def valid(actual, expected):
+-    return hmac.compare_digest(actual, expected)
++    """Both inputs are bytes supplied by the authentication layer."""
++    return bool(hmac.compare_digest(actual, expected))

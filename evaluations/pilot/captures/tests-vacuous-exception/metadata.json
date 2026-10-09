@@ -1,0 +1,23 @@
+{
+  "head_sha": "38f37aa4bdeb648a95a09df81318ebe465887286",
+  "pr_number": 13,
+  "pull_request": {
+    "base": {
+      "ref": "main",
+      "repo": {
+        "full_name": "pilot/local"
+      },
+      "sha": "4bed8a2e5bad91ca723a105e8430af3a6d1021dc"
+    },
+    "changed_files": 1,
+    "head": {
+      "sha": "38f37aa4bdeb648a95a09df81318ebe465887286"
+    },
+    "merged": false,
+    "number": 13,
+    "state": "open"
+  },
+  "repository": "pilot/local",
+  "schema_version": 1,
+  "status": "ingested"
+}

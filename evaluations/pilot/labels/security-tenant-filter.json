@@ -1,0 +1,16 @@
+{
+  "case_id": "security-tenant-filter",
+  "counterexamples": [
+    "The function intentionally excludes unrelated tenants; returning an empty list when no own rows exist is safe."
+  ],
+  "defects": [
+    {
+      "evidence": "change.py inverts tenant equality.",
+      "fix_or_counterexample": "Restore ==.",
+      "id": "security-tenant-filter-defect",
+      "impact": "Caller receives tenant B data instead of own records.",
+      "match_criteria": "Identify cross-tenant disclosure via inverted filter.",
+      "trigger": "Rows contain tenants A and B; caller tenant A"
+    }
+  ]
+}

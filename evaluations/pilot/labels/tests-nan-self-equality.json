@@ -1,0 +1,16 @@
+{
+  "case_id": "tests-nan-self-equality",
+  "counterexamples": [
+    "This is a bad assertion, not missing production validation."
+  ],
+  "defects": [
+    {
+      "evidence": "change.py replaces isnan with equality reflexivity assumption.",
+      "fix_or_counterexample": "Use math.isnan(value).",
+      "id": "tests-nan-self-equality-defect",
+      "impact": "Valid implementation fails CI because NaN is unequal to itself.",
+      "match_criteria": "Identify NaN self-equality causing false test failure.",
+      "trigger": "Run test_unavailable with the intentionally documented NaN sentinel"
+    }
+  ]
+}

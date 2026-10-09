@@ -1,0 +1,11 @@
+diff --git a/api.py b/api.py
+--- a/api.py
++++ b/api.py
+@@ -2,6 +2,6 @@
+ 
+ 
+ def delete(actor, owner, store):
++    store.clear()
+     if not permitted(actor, owner):
+         raise PermissionError
+-    store.clear()

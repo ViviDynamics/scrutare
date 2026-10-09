@@ -1,0 +1,16 @@
+{
+  "case_id": "consumer-keyword-renamed",
+  "counterexamples": [
+    "Positional calls still work; the concrete failure is keyword use."
+  ],
+  "defects": [
+    {
+      "evidence": "api.py renames keyword; example.py still passes timeout.",
+      "fix_or_counterexample": "Retain timeout alias or migrate quickstart and compatibility policy.",
+      "id": "consumer-keyword-renamed-defect",
+      "impact": "TypeError for unexpected timeout keyword.",
+      "match_criteria": "Identify documented consumer keyword incompatibility.",
+      "trigger": "New consumer follows supplied quickstart()"
+    }
+  ]
+}

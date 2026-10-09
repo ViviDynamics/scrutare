@@ -1,0 +1,7 @@
+{
+  "case_id": "tests-empty-assertion-clean",
+  "counterexamples": [
+    "The function contract is an empty list; length-zero assertion still detects a nonempty list. Do not confuse asserting len == 0 with assert len(result)."
+  ],
+  "defects": []
+}

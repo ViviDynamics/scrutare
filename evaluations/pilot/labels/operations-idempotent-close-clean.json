@@ -1,0 +1,7 @@
+{
+  "case_id": "operations-idempotent-close-clean",
+  "counterexamples": [
+    "Normal flush and close order remains intact; finally guarantees close when flush fails without suppressing the flush exception."
+  ],
+  "defects": []
+}

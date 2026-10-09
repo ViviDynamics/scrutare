@@ -1,0 +1,10 @@
+diff --git a/change.py b/change.py
+--- a/change.py
++++ b/change.py
+@@ -2,4 +2,5 @@
+     return []
+ 
+ def test_empty():
+-    assert values() == []
++    result = values()
++    assert len(result) == 0

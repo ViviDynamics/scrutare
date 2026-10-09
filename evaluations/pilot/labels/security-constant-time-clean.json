@@ -1,0 +1,7 @@
+{
+  "case_id": "security-constant-time-clean",
+  "counterexamples": [
+    "compare_digest returns bool already; bool wrapping does not introduce early-exit equality or change token comparison."
+  ],
+  "defects": []
+}

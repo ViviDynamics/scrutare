@@ -1,0 +1,16 @@
+{
+  "case_id": "security-auth-order",
+  "counterexamples": [
+    "PermissionError still occurs but cannot undo the destructive side effect."
+  ],
+  "defects": [
+    {
+      "evidence": "api.py clear now precedes permitted check; policy denies nonowner.",
+      "fix_or_counterexample": "Authorize before store.clear().",
+      "id": "security-auth-order-defect",
+      "impact": "Unauthorized caller erases data before PermissionError.",
+      "match_criteria": "Identify destructive side effect before authorization.",
+      "trigger": "Nonowner calls delete with populated store"
+    }
+  ]
+}

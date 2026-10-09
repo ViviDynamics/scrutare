@@ -1,0 +1,11 @@
+diff --git a/change.py b/change.py
+--- a/change.py
++++ b/change.py
+@@ -4,6 +4,6 @@
+ def upload_path(root, name):
+     base = Path(root).resolve()
+     target = (base / name).resolve()
+-    if not target.is_relative_to(base):
++    if not str(target).startswith(str(base)):
+         raise ValueError("outside root")
+     return target

@@ -1,0 +1,7 @@
+diff --git a/change.py b/change.py
+--- a/change.py
++++ b/change.py
+@@ -1,2 +1,2 @@
+ def user_by_name(db, name):
+-    return db.execute("SELECT id FROM users WHERE name = ?", (name,))
++    return db.execute("SELECT id FROM users WHERE name = '" + name + "'")

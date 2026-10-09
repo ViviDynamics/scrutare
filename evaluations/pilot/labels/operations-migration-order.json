@@ -1,0 +1,16 @@
+{
+  "case_id": "operations-migration-order",
+  "counterexamples": [
+    "On already migrated databases the update may succeed; defect requires old schema."
+  ],
+  "defects": [
+    {
+      "evidence": "deploy.py update precedes schema.py addition.",
+      "fix_or_counterexample": "Migrate before UPDATE.",
+      "id": "operations-migration-order-defect",
+      "impact": "UPDATE fails before migration, preventing deployment.",
+      "match_criteria": "Identify use of state column before migration.",
+      "trigger": "Roll out against existing jobs schema lacking state"
+    }
+  ]
+}

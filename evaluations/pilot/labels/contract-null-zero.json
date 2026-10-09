@@ -1,0 +1,16 @@
+{
+  "case_id": "contract-null-zero",
+  "counterexamples": [
+    "None still selects 30; allegations about that behavior are unsupported."
+  ],
+  "defects": [
+    {
+      "evidence": "change.py uses truthiness despite documented zero sentinel.",
+      "fix_or_counterexample": "Use is None.",
+      "id": "contract-null-zero-defect",
+      "impact": "Explicit disabled timeout becomes 30 seconds.",
+      "match_criteria": "Identify zero/default collision.",
+      "trigger": "timeout(0)"
+    }
+  ]
+}

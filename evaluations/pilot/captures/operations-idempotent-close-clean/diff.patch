@@ -1,0 +1,11 @@
+diff --git a/change.py b/change.py
+--- a/change.py
++++ b/change.py
+@@ -1,3 +1,5 @@
+ def shutdown(writer):
+-    writer.flush()
+-    writer.close()
++    try:
++        writer.flush()
++    finally:
++        writer.close()

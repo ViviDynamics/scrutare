@@ -1,0 +1,16 @@
+{
+  "case_id": "contract-retry-transition",
+  "counterexamples": [
+    "Successful work should still transition to done."
+  ],
+  "defects": [
+    {
+      "evidence": "change.py failed running transition now produces done.",
+      "fix_or_counterexample": "Return pending for failed running work.",
+      "id": "contract-retry-transition-defect",
+      "impact": "Failed work is marked complete and never retried.",
+      "match_criteria": "Identify failed-work completion/retry suppression.",
+      "trigger": "Running work fails (success=False)"
+    }
+  ]
+}

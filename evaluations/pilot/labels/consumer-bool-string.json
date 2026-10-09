@@ -1,0 +1,16 @@
+{
+  "case_id": "consumer-bool-string",
+  "counterexamples": [
+    "Empty strings becoming False do not prove correct handling of documented false."
+  ],
+  "defects": [
+    {
+      "evidence": "change.py replaces textual parsing with string truthiness.",
+      "fix_or_counterexample": "Compare normalized input to true or validate enum.",
+      "id": "consumer-bool-string-defect",
+      "impact": "Nonempty false string becomes True and enables the feature.",
+      "match_criteria": "Identify false string enabling option.",
+      "trigger": "User supplies --enabled false"
+    }
+  ]
+}
