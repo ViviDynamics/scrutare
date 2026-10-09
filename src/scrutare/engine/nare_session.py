@@ -13,6 +13,7 @@ import tempfile
 from collections.abc import Iterator
 from contextlib import ExitStack, contextmanager
 from dataclasses import asdict, dataclass
+from hashlib import sha256
 from pathlib import Path
 from typing import BinaryIO, Literal, TypedDict, TypeVar
 from urllib.parse import urlsplit
@@ -446,6 +447,8 @@ async def _run_session(
                 "schema_version": 1, "scrutare_version": __version__,
                 "nare_version": capability.version, "contract": capability.contract,
                 "persona": lease.persona, "session_key": lease.session_key, **binding,
+                "system_prompt_sha256": sha256(system.encode("utf-8")).hexdigest(),
+                "task_prompt_sha256": sha256(input_args[0].encode("utf-8")).hexdigest(),
                 "argv": argv, "rail": {"provider": rail.provider, "model": rail.model,
                                         "base_url": rail.base_url},
                 "allocated_tokens": lease.allocated_tokens, "invocation_limit": lease.limit_tokens,

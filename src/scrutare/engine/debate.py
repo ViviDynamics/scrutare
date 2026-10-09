@@ -45,7 +45,9 @@ def _usable(outcome: SessionOutcome) -> bool:
 async def run_debate(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime) -> PanelResult:
     """Every chair finding is pool-bound; only explicit completed deadlocks exhaust rounds."""
     preflight_panel(run_dir)
-    names = {p.name for p in resolve_personas(config.personas)}
+    names = {p.name for p in resolve_personas(
+        config.personas, procedures=config.inspection.procedures,
+    )}
     chair_name = "debate-chair"
     while chair_name in names:
         chair_name += "-chair"
@@ -56,7 +58,9 @@ async def run_debate(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntim
         name: sha256((context.inputs.root / name).read_bytes()).hexdigest()
         for name in ("diff.patch", "files.json", "context.json")
     }
-    chair = PersonaDefinition(chair_name, load_persona("senior-dev").system_prompt)
+    chair = PersonaDefinition(chair_name, load_persona(
+        "senior-dev", procedures=config.inspection.procedures,
+    ).system_prompt)
     initial = await _run_initial_wave(context)
     corrections: tuple[ReanchorOutcome, ...] = ()
     verification = None

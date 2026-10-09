@@ -138,3 +138,25 @@ access. Case-insensitive duplicates keep their first spelling and order.
 Team paths, `@` prefixes and literal `[bot]` suffixes are unsupported. Empty
 targets still publish the escalation COMMENT and skip the request stage.
 No additional escalation or retry settings are required.
+
+## Opt-in inspection procedures
+
+The default procedure profile is `baseline`; it retains the existing prompts
+and four-persona roster. The profile is omitted from canonical configuration
+when baseline is selected, preserving older captured configurations.
+
+```yaml
+models:
+  default:
+    model: your-model
+inspection:
+  procedures: v1
+personas: [senior-dev, junior-dev, security, devops, testing-verification]
+```
+
+`inspection.procedures` accepts exactly `baseline` or `v1`. The versioned profile
+resolves named built-ins to explicit inspection procedures. Inline definitions,
+including overrides of built-in names, retain their exact supplied text.
+`testing-verification` is an optional built-in available in either profile;
+omitting `personas` still selects the original four reviewers. Selecting it
+uses the same shared review budget and category/verdict policy as other reviewers.
