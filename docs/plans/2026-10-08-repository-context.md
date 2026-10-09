@@ -26,3 +26,9 @@ Out: automatic language-specific caller discovery; paid comparative evaluation a
 ## Validation
 Run targeted tests after each red/green cycle, then lint and strict types. Parent handles
 independent review, both mandatory full Python/native Docker lanes, and shipping gates.
+
+## Independent review corrections
+- Nested credential directories use the same denial policy in capture and preparation.
+- Same-head context identity is checked regardless of fresh human contests.
+- Partial dependency reassessment persists stale status and retries within the round bound;
+  exhaustion escalates without dropping carried blocking findings or claiming completion.

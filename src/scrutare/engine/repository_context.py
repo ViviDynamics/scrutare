@@ -16,7 +16,7 @@ from scrutare.findings.models import _path
 MANIFEST = "repository-context.json"
 _SHA = re.compile(r"[0-9a-f]{40}")
 _SENSITIVE = (".env", ".env.*", "*.pem", "*.key", "*.p12", "*.pfx", "id_rsa*",
-              "id_ed25519*", ".git/**", ".ssh/**", ".aws/**", ".netrc", ".npmrc")
+              "id_ed25519*", "**/.git/**", "**/.ssh/**", "**/.aws/**", ".netrc", ".npmrc")
 _STATUSES = {"captured", "excluded", "sensitive", "absent", "missing", "binary", "symlink",
              "submodule", "directory", "oversized", "file_limit", "total_limit", "tree_limit",
              "unavailable"}

@@ -34,7 +34,7 @@ eligibility, hashes, sizes and omissions. Added and deleted sides are absent; re
 files use the previous path at base and current path at head. Missing files, non-UTF-8
 or NUL-containing binary files, symlinks, submodules, directories, excluded paths,
 sensitive filenames, and oversized files have explicit omission states. Common secret
-filenames (.env, private key files and credential directories) are excluded before
+filenames (.env, private key files and credential directories at every depth) are excluded before
 object content is read. Authentication and session artifacts never enter read roots.
 
 Limits apply to total retained bytes and per-side retained files. Whole files are
@@ -55,7 +55,12 @@ Iterative findings conservatively record every contextual entry as a dependency.
 Changed content hashes, object identities or omission states force the original
 finding's still-selected hunk to be reassessed, even when its patch is unchanged.
 Revision changes alone do not trigger reassessment. The existing round/token limits
-still apply; exhausted dependency reassessment escalates. Child rounds retain the
+still apply; exhausted dependency reassessment escalates. Partial reassessment keeps
+unsupported prior blocking findings and marks their dependencies `stale`. A same-head
+retry can consume another bounded round; it cannot silently become a complete result.
+The saved run records `stale_dependency_findings` and per-entry `dependency_status`.
+Same-head capture integrity is checked even when fresh human comments request a rerun.
+Child rounds retain the
 same frozen source evidence while narrowing comment anchors to reviewed hunks.
 
 These mechanisms do not establish review accuracy. Compare contextual and diff-only

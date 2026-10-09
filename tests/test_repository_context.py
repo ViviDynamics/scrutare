@@ -562,3 +562,171 @@ def test_manifest_cannot_invent_exclusion_or_extra_read_root_fields(capture):
     save_json(path, manifest)
     with pytest.raises(ReviewInputError):
         prepare_review_inputs(capture, config)
+
+
+@pytest.mark.parametrize(
+    "path", ["vendor/.aws/credentials", "nested/.ssh/config", "nested/.git/config"]
+)
+def test_credential_directories_are_excluded_at_every_depth(capture, path, monkeypatch):
+    import shutil
+
+    from scrutare.engine.repository_context import capture_repository_context
+    from scrutare.engine.review_inputs import prepare_review_inputs
+
+    config, _ = contextual(capture)
+    config = replace(config, context=replace(config.context, related_paths=(path,)))
+    for name in ("config.yaml", "config.json"):
+        save_json(capture / name, config.to_dict())
+    shutil.rmtree(capture / "repository-context")
+    from scrutare.engine.repository_snapshot import RepositorySnapshot
+
+    source = Objects().content | {path: b"CREDENTIAL_SENTINEL"}
+    client = RepositorySnapshot({("owner/repo", "b" * 40): source, ("fork/repo", "a" * 40): source})
+    blob_calls = []
+    original = client.get_blob
+
+    def blob(repository, sha, *, max_bytes):
+        blob_calls.append(sha)
+        return original(repository, sha, max_bytes=max_bytes)
+
+    monkeypatch.setattr(client, "get_blob", blob)
+    capture_repository_context(client, capture, config, source=client.provenance())
+    inputs = prepare_review_inputs(capture, config)
+    entries = read_json(inputs.root / "repository-context.json")["entries"]
+    selected = [e for e in entries if e["path"] == path]
+    assert len(selected) == 2
+    assert all(e["status"] == "sensitive" for e in selected)
+    assert blob_id(b"CREDENTIAL_SENTINEL") not in blob_calls
+    assert all(
+        b"CREDENTIAL_SENTINEL" not in artifact.read_bytes() for artifact in inputs.root.iterdir()
+    )
+
+
+def contextual_push(capture, config, name, *, caller=b"call_changed()\n", revision="f" * 40):
+    from test_iterative import push
+
+    target = push(capture, name)
+    contextual(target, caller=caller)
+    metadata = read_json(target / "metadata.json")
+    metadata["head_sha"] = metadata["pull_request"]["head"]["sha"] = revision
+    save_json(target / "metadata.json", metadata)
+    path = target / "repository-context/repository-context.json"
+    manifest = read_json(path)
+    manifest["revisions"]["head"]["sha"] = revision
+    for entry in manifest["entries"]:
+        if entry["side"] == "head":
+            entry["revision"] = revision
+    save_json(path, manifest)
+    for name in ("config.yaml", "config.json"):
+        save_json(target / name, config.to_dict())
+    return target
+
+
+@pytest.mark.parametrize("changed", [False, True])
+def test_same_head_context_guard_is_independent_of_fresh_contest(capture, monkeypatch, changed):
+    from test_iterative import run, setup
+    from test_panel import finding, install
+
+    from scrutare.engine.review_inputs import ReviewInputError
+
+    contextual_config, _ = contextual(capture)
+    config = replace(setup(capture), context=contextual_config.context)
+    for name in ("config.yaml", "config.json"):
+        save_json(capture / name, config.to_dict())
+    install(monkeypatch, {"security": (finding(),)})
+    run(capture, config)
+    second = contextual_push(
+        capture,
+        config,
+        "contested",
+        revision="a" * 40,
+        caller=b"changed_same_revision()\n" if changed else b"call_changed()\n",
+    )
+    save_json(
+        second / "review_comments.json",
+        [{"id": 10, "path": "src/app.py", "line": 1, "body": "Human contest"}],
+    )
+    _, calls, _, _ = install(monkeypatch, {"security": ()})
+    if changed:
+        with pytest.raises(ReviewInputError, match="same head"):
+            run(second, config)
+        assert calls == []
+    else:
+        assert run(second, config).verdict.verdict == "approve"
+        assert len([call for call in calls if isinstance(call, tuple)]) == 1
+
+
+@pytest.mark.parametrize("rounds", [2, 3])
+def test_partial_dependency_reassessment_remains_stale_until_retry_or_exhaustion(
+    capture,
+    monkeypatch,
+    rounds,
+):
+    from test_iterative import run, setup
+    from test_panel import finding, install
+
+    contextual_config, _ = contextual(capture)
+    config = replace(setup(capture, rounds=rounds), context=contextual_config.context)
+    for name in ("config.yaml", "config.json"):
+        save_json(capture / name, config.to_dict())
+    install(monkeypatch, {"security": (finding(),)})
+    run(capture, config)
+    second = contextual_push(capture, config, "partial", caller=b"fixed_caller()\n")
+    install(monkeypatch, {"security": ()}, initial_status="partial")
+    partial = run(second, config)
+    assert partial.status == "partial"
+    partial_document = read_json(second / "iterative.json")
+    assert partial_document["pool"][0]["dependency_status"] == "stale"
+    assert partial_document["stale_dependency_findings"] == 1
+    assert partial.verdict.verdict in ("changes_requested", "escalated")
+    third = contextual_push(second, config, "same-head-retry", caller=b"fixed_caller()\n")
+    _, calls, _, _ = install(monkeypatch, {"security": ()})
+    retry = run(third, config)
+    document = read_json(third / "iterative.json")
+    if rounds == 3:
+        assert len([call for call in calls if isinstance(call, tuple)]) == 1
+        assert retry.status == "complete" and retry.verdict.verdict == "approve"
+        assert document["stale_dependency_findings"] == 0
+    else:
+        assert calls == []
+        assert retry.status == "partial" and retry.verdict.verdict == "escalated"
+        assert document["pool"][0]["dependency_status"] == "stale"
+        assert document["stale_dependency_findings"] == 1
+
+
+def test_prepared_policy_rejects_forged_nested_credential_content(capture):
+    import shutil
+    from hashlib import sha256
+
+    from scrutare.engine.repository_context import _artifact, capture_repository_context
+    from scrutare.engine.review_inputs import ReviewInputError, prepare_review_inputs
+
+    config, _ = contextual(capture)
+    config = replace(
+        config, context=replace(config.context, related_paths=("vendor/.aws/credentials",))
+    )
+    for name in ("config.yaml", "config.json"):
+        save_json(capture / name, config.to_dict())
+    shutil.rmtree(capture / "repository-context")
+    capture_repository_context(Objects(), capture, config)
+    directory = capture / "repository-context"
+    path = directory / "repository-context.json"
+    manifest = read_json(path)
+    entry = next(e for e in manifest["entries"] if e["path"] == "vendor/.aws/credentials")
+    data = b"CREDENTIAL_SENTINEL"
+    artifact = _artifact(entry["side"], entry["path"])
+    (directory / artifact).write_bytes(data)
+    entry.update(
+        status="captured",
+        artifact=artifact,
+        blob_sha=blob_id(data),
+        mode="100644",
+        size_bytes=len(data),
+        retained_bytes=len(data),
+        sha256=sha256(data).hexdigest(),
+    )
+    manifest["retained_bytes"] += len(data)
+    save_json(path, manifest)
+    with pytest.raises(ReviewInputError):
+        prepare_review_inputs(capture, config)
+    assert not (capture / "review-inputs").exists()

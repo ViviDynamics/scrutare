@@ -197,10 +197,11 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
         patches = {name: patch for name, data in sections.items()
                    if (patch := _new_patch(data, state["sections"].get(name),
                                            contested=contested | invalidated))}
-        repeated = inputs.head_sha == state.get("head_sha") and not contested
-        if repeated and (state.get("dependencies", []) != dependencies or state["sections"] != {
+        same_head = inputs.head_sha == state.get("head_sha")
+        if same_head and (state.get("dependencies", []) != dependencies or state["sections"] != {
                 name: data.decode("utf-8") for name, data in sections.items()}):
             raise ReviewInputError("Iterative history: same head has changed captured evidence.")
+        repeated = same_head and not contested and not invalidated
         initial = FanOutResult((), False, False, TokenUsage(), False, 0)
         result = PanelResult("complete", None, initial, (), None, TokenUsage(), True, run)
         reviewed = not repeated and bool(patches) and state["rounds_completed"] < config.rounds.max
@@ -264,6 +265,14 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
             state["sections"] = {name: data.decode("utf-8") for name, data in sections.items()}
             state["head_sha"] = inputs.head_sha
             state["dependencies"] = dependencies
+        stale_dependencies = 0
+        for entry in state["pool"]:
+            stale = (entry["disposition"] == "upheld"
+                     and entry.get("dependencies", []) != dependencies)
+            entry["dependency_status"] = "stale" if stale else "current"
+            stale_dependencies += int(stale)
+        if stale_dependencies and result.status == "complete":
+            result = replace(result, status="partial")
         active = tuple(_finding(entry) for entry in state["pool"]
                        if entry["disposition"] == "upheld")
         verdict = derive_verdict(dedupe_findings(active), config.verdict)
@@ -279,6 +288,7 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
         _save(path, state)
         document = state | {"strategy": "iterative", "status": result.status,
                             "head_sha": inputs.head_sha, "invalidated_findings": len(invalidated),
+                            "stale_dependency_findings": stale_dependencies,
                             "reviewed_files": list(patches)
                             if reviewed else [], "initial": result.initial.to_dict(),
                             "usage": result.usage.to_dict()}
