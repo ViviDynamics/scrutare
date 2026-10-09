@@ -40,6 +40,7 @@ class Verdict:
     config: VerdictSettings
     exhaustion: Exhaustion | None = None
     evidence_version: int | None = None
+    unresolved_candidates: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not isinstance(self.findings, tuple) or any(
@@ -61,6 +62,12 @@ class Verdict:
             object.__setattr__(self, "evidence_version", version)
         if type(version) is not int or version not in (1, 2) or versions - {version}:
             raise FindingError("findings: evidence contract disagrees with verdict schema")
+        if (not isinstance(self.unresolved_candidates, tuple)
+                or any(not isinstance(identifier, str) or not identifier.strip()
+                       for identifier in self.unresolved_candidates)
+                or len(set(self.unresolved_candidates)) != len(self.unresolved_candidates)
+                or (self.unresolved_candidates and version != 2)):
+            raise FindingError("assessment: expected distinct v2 unresolved identifiers")
         if not isinstance(self.config, VerdictSettings):
             raise FindingError("config: expected VerdictSettings")
         if self.exhaustion is not None and not isinstance(self.exhaustion, Exhaustion):
@@ -76,7 +83,7 @@ class Verdict:
     @property
     def verdict(self) -> Literal["approve", "changes_requested", "escalated"]:
         """Escalate exhaustion, otherwise apply the configured blocking categories."""
-        if self.exhaustion is not None:
+        if self.exhaustion is not None or self.unresolved_candidates:
             return "escalated"
         if any(self._blocking_categories(finding) for finding in self.findings):
             return "changes_requested"
@@ -84,11 +91,14 @@ class Verdict:
 
     @property
     def rule(self) -> Literal[
-        "any_blocking_finding", "no_blocking_findings", "rounds_exhausted_without_convergence"
+        "any_blocking_finding", "no_blocking_findings", "rounds_exhausted_without_convergence",
+        "unresolved_semantic_assessment"
     ]:
         """Name the evidence rule that produced this verdict."""
         if self.exhaustion is not None:
             return "rounds_exhausted_without_convergence"
+        if self.unresolved_candidates:
+            return "unresolved_semantic_assessment"
         if self.verdict == "changes_requested":
             return "any_blocking_finding"
         return "no_blocking_findings"
@@ -121,6 +131,11 @@ class Verdict:
                 "round_limit": self.exhaustion.round_limit,
                 "converged": self.exhaustion.converged,
             }
+        if self.unresolved_candidates:
+            data["assessment_uncertainty"] = {
+                "candidate_ids": list(self.unresolved_candidates),
+                "attempts_completed": 1, "attempt_limit": 1,
+            }
         return data
 
     def to_bytes(self) -> bytes:
@@ -132,8 +147,9 @@ class Verdict:
 def derive_verdict(
     findings: Iterable[MergedFinding], config: VerdictSettings, *,
     exhaustion: Exhaustion | None = None, evidence_version: int | None = None,
+    unresolved_candidates: tuple[str, ...] = (),
 ) -> Verdict:
     """Snapshot already verified, deduplicated findings and apply the category policy."""
     if not isinstance(findings, Iterable) or isinstance(findings, (str, bytes, Mapping)):
         raise FindingError("findings: expected an iterable of MergedFinding values")
-    return Verdict(tuple(findings), config, exhaustion, evidence_version)
+    return Verdict(tuple(findings), config, exhaustion, evidence_version, unresolved_candidates)

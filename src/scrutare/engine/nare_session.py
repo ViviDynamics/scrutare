@@ -34,6 +34,7 @@ from scrutare.engine.session_models import (
     SessionStatus,
     TokenUsage,
 )
+from scrutare.engine.assessment_inputs import AssessmentInput
 from scrutare.engine.session_output import (
     DecodedReanchorSession,
     DecodedSession,
@@ -436,7 +437,8 @@ async def _run_session(
                 argv.extend(("--base-url", rail.base_url))
             schema_name = ("reanchor.schema.json" if purpose == "reanchor"
                            else "findings.schema.json")
-            schema = (descriptor.output_schema() if isinstance(descriptor, DebateInput) else
+            schema = (descriptor.output_schema()
+                      if isinstance(descriptor, (DebateInput, AssessmentInput)) else
                       reanchor_schema() if purpose == "reanchor" else
                       findings_schema(evidence_version=evidence_version(prepared_root)))
             argv.extend(("--jsonl", "--yes", "--contract", "1", "--schema",
@@ -486,7 +488,8 @@ async def _run_session(
                                          exit_code=exit_code, expected_limit=lease.limit_tokens,
                                          expected_root=prepared_root,
                                          descriptor=(descriptor
-                                                     if isinstance(descriptor, DebateInput)
+                                                     if isinstance(descriptor,
+                                                                   (DebateInput, AssessmentInput))
                                                      else None),
                                          evidence_version=evidence_version(prepared_root),
                                          candidate_namespace=str(artifact_directory))
