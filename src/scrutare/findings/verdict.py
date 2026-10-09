@@ -39,12 +39,28 @@ class Verdict:
     findings: tuple[MergedFinding, ...]
     config: VerdictSettings
     exhaustion: Exhaustion | None = None
+    evidence_version: int | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.findings, tuple) or any(
             not isinstance(finding, MergedFinding) for finding in self.findings
         ):
             raise FindingError("findings: expected a tuple of MergedFinding values")
+        if len({source.evidence is None for group in self.findings
+                for source in group.sources}) > 1:
+            raise FindingError("findings: mixed evidence versions")
+        if any(citation.validation != "valid" for group in self.findings
+               for source in group.sources if source.evidence is not None
+               for citation in source.evidence.citations):
+            raise FindingError("findings: unvalidated citations cannot feed a verdict")
+        versions = {1 if source.evidence is None else 2
+                    for group in self.findings for source in group.sources}
+        version = self.evidence_version
+        if version is None:
+            version = next(iter(versions), 1)
+            object.__setattr__(self, "evidence_version", version)
+        if type(version) is not int or version not in (1, 2) or versions - {version}:
+            raise FindingError("findings: evidence contract disagrees with verdict schema")
         if not isinstance(self.config, VerdictSettings):
             raise FindingError("config: expected VerdictSettings")
         if self.exhaustion is not None and not isinstance(self.exhaustion, Exhaustion):
@@ -89,7 +105,7 @@ class Verdict:
                 }
             )
         data: dict[str, Any] = {
-            "schema_version": 1,
+            "schema_version": self.evidence_version,
             "verdict": self.verdict,
             "rule": self.rule,
             "config": {
@@ -115,9 +131,9 @@ class Verdict:
 
 def derive_verdict(
     findings: Iterable[MergedFinding], config: VerdictSettings, *,
-    exhaustion: Exhaustion | None = None,
+    exhaustion: Exhaustion | None = None, evidence_version: int | None = None,
 ) -> Verdict:
     """Snapshot already verified, deduplicated findings and apply the category policy."""
     if not isinstance(findings, Iterable) or isinstance(findings, (str, bytes, Mapping)):
         raise FindingError("findings: expected an iterable of MergedFinding values")
-    return Verdict(tuple(findings), config, exhaustion)
+    return Verdict(tuple(findings), config, exhaustion, evidence_version)

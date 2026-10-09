@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-from scrutare.findings.models import Finding
+from scrutare.findings.models import Finding, finding_wire
 from scrutare.findings.verification import ReanchorCorrection
 
 SessionStatus = Literal["complete", "partial", "failed", "not_started"]
@@ -118,18 +118,7 @@ class SessionOutcome:
     def to_dict(self) -> dict[str, object]:
         return {
             **_execution_dict(self),
-            "findings": [
-                {
-                    "file": finding.anchor.file,
-                    "line": finding.anchor.line,
-                    "side": finding.anchor.side,
-                    "category": finding.category,
-                    "problem": finding.problem,
-                    "reason": finding.reason,
-                    "persona": finding.persona,
-                }
-                for finding in self.findings
-            ],
+            "findings": [finding_wire(finding) for finding in self.findings],
         }
 
 

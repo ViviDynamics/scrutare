@@ -43,6 +43,8 @@ from scrutare.engine.session_output import (
     decode_session,
     findings_schema,
 )
+from scrutare.findings.evidence import CitationValidationError, evidence_version
+from scrutare.findings.models import artifact_data as asdict
 
 
 class SessionRuntimeError(ValueError):
@@ -435,7 +437,8 @@ async def _run_session(
             schema_name = ("reanchor.schema.json" if purpose == "reanchor"
                            else "findings.schema.json")
             schema = (descriptor.output_schema() if isinstance(descriptor, DebateInput) else
-                      reanchor_schema() if purpose == "reanchor" else findings_schema())
+                      reanchor_schema() if purpose == "reanchor" else
+                      findings_schema(evidence_version=evidence_version(prepared_root)))
             argv.extend(("--jsonl", "--yes", "--contract", "1", "--schema",
                          str(artifact_directory / schema_name), "--budget-tokens",
                          str(lease.limit_tokens), "--session",
@@ -484,7 +487,9 @@ async def _run_session(
                                          expected_root=prepared_root,
                                          descriptor=(descriptor
                                                      if isinstance(descriptor, DebateInput)
-                                                     else None))
+                                                     else None),
+                                         evidence_version=evidence_version(prepared_root),
+                                         candidate_namespace=str(artifact_directory))
             if decoded.status is not None and (
                     decoded.nare_version != capability.version
                     or decoded.contract != capability.contract):
@@ -521,6 +526,16 @@ async def _run_session(
         if not evidence.started:
             complete = True
         status = "failed"
+    except CitationValidationError as error:
+        reason, status, complete = "citation_validation", "failed", False
+        if prepared_root is not None:
+            try:
+                write_owned_json(artifact_directory / "citation-validation.json", {
+                    "schema_version": 2, "status": "unsupported", "reason": error.reason,
+                    "claim_truth": "not_assessed",
+                }, prepared_root=prepared_root)
+            except SessionArtifactError:
+                reason = "artifacts"
     except (SessionProtocolError, ValueError, TypeError, OverflowError, RecursionError):
         reason, status, complete = "protocol", "failed", False
     outcome = _outcome(lease, artifact_directory, evidence, status=status, reason=reason,
