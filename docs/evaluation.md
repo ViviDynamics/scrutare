@@ -17,13 +17,18 @@ python -m scrutare.evaluation run --corpus evaluations/pilot --split development
 Use a dated model identifier and fixed provider settings in the ordinary review
 configuration. Model overrides are refused for comparisons. The evaluator freezes
 configuration, persona prompts, nare version/contract, runtime bounds, corpus hashes,
-and the expected run schedule before execution. Each of three repeats compares
+and the expected run schedule before execution. Capture bytes are frozen before
+the first runtime await, and snapshot hashes and every queued repeat use the same
+frozen data. Later edits to the original corpus cannot silently alter a repeat. Each of three repeats compares
 senior-dev alone, the current four personas in panel, and those personas in debate.
 The total review token ceiling is identical. Senior gets the entire ceiling; panel
 gets one quarter per persona; debate gets one fifth, including its chair. These are
 admission limits; actual reported overshoot is retained in engine artifacts. Output
 includes actual usage (including cache counters), latency, status and accounting
-confidence for every run. Engine evidence and artifact manifests remain replayable.
+confidence for every run. Interrupted jobs recover observed counters from individual
+session outcomes even when cancellation prevents a panel aggregate from being written.
+Aggregate and session counters are compared as cumulative evidence, never added
+together; incomplete accounting remains an explicit lower bound. Engine evidence and artifact manifests remain replayable.
 
 Only diff, files, and captured metadata are copied to run artifacts. Production input
 preparation restricts nare's read tool to the filtered `review-inputs` directory.

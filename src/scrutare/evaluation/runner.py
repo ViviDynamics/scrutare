@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
-import shutil
 import time
 from dataclasses import asdict, replace
 from pathlib import Path
@@ -45,6 +44,40 @@ def comparison_configs(config: ReviewConfig) -> dict[str, ReviewConfig]:
     }
 
 
+def _observed_usage(directory: Path) -> TokenUsage:
+    """Recover disjoint session counters or a later aggregate, never sum both.
+
+    Interrupted sessions write their own outcomes before propagating cancellation;
+    a panel aggregate may therefore be absent or lag those durable outcomes.
+    Missing or invalid evidence remains unknown, so this is always a lower bound.
+    """
+    fields = ('input', 'output', 'cache_read', 'cache_write')
+    session_totals = dict.fromkeys(fields, 0)
+    seen = set()
+    for path in sorted(directory.glob('sessions/*/attempt-*/result.json')):
+        try:
+            saved = read_json(path)
+            usage = TokenUsage(**{key: saved['usage'][key] for key in fields})
+            session_key = saved['session_key']
+            if session_key in seen:
+                continue
+            seen.add(session_key)
+            for key in fields:
+                session_totals[key] += getattr(usage, key)
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+    recovered = session_totals.copy()
+    for name in ('panel.json', 'debate.json'):
+        try:
+            saved = read_json(directory / name)
+            usage = TokenUsage(**{key: saved['ledger']['usage'][key] for key in fields})
+            for key in fields:
+                recovered[key] = max(recovered[key], getattr(usage, key))
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+    return TokenUsage(**recovered)
+
+
 async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: Path, *,
                          runtime: NareRuntime, evidence_kind: str = 'model', concurrency: int = 1
                          ) -> dict[str, Any]:
@@ -53,6 +86,12 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
             or type(concurrency) is not int or not 1 <= concurrency <= 32):
         raise ValueError('nonempty cases and model/offline evidence kind required')
     variants = comparison_configs(config)
+    # Freeze before the first await; snapshot hashes and every repeat use these bytes.
+    captures = {case.id: {name: (case.capture / name).read_bytes()
+                         for name in ('diff.patch', 'files.json', 'metadata.json')}
+                for case in cases}
+    label_hashes = {case.id: hashlib.sha256(case.labels.read_bytes()).hexdigest()
+                    for case in cases}
     output = output.absolute()
     output.mkdir(parents=True, exist_ok=False)
     capability = await inspect_nare_runtime(runtime)
@@ -68,9 +107,9 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         'personas': {name: load_persona(name).system_prompt for name in variants['panel'].personas
                      if isinstance(name, str)},
         'cases': [{'id': case.id, 'split': case.split, 'domain': case.domain,
-                   'capture_sha256': {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
-                                      for p in case.capture.iterdir()},
-                   'labels_sha256': hashlib.sha256(case.labels.read_bytes()).hexdigest()}
+                   'capture_sha256': {name: hashlib.sha256(data).hexdigest()
+                                      for name, data in captures[case.id].items()},
+                   'labels_sha256': label_hashes[case.id]}
                   for case in cases],
     }
     write_json(output / 'snapshot.json', snapshot)
@@ -93,8 +132,9 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         run_id = f'{case.id}/{variant}/{repeat}'
         directory = output / run_id
         directory.mkdir(parents=True)
-        for name in ('diff.patch', 'files.json', 'metadata.json'):
-            shutil.copyfile(case.capture / name, directory / name)
+        for name, data in captures[case.id].items():
+            with (directory / name).open('xb') as stream:
+                stream.write(data)
         write_json(directory / 'config.json', conf.to_dict())
         write_json(directory / 'config.yaml', conf.to_dict())
         prepare_review_inputs(directory, conf)
@@ -119,19 +159,11 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         except asyncio.CancelledError:
             interrupted = True
             record['error'] = 'Interrupted'
-            for name in ('panel.json', 'debate.json'):
-                path = directory / name
-                if path.is_file():
-                    saved = read_json(path)
-                    record['usage'] = saved['ledger']['usage']
+            record['usage'] = _observed_usage(directory).to_dict()
         except Exception as error:
             # Provider details remain in private engine captures.
             record['error'] = type(error).__name__
-            panel_path = directory / 'panel.json'
-            if panel_path.is_file():
-                saved = read_json(panel_path)
-                record['usage'] = saved['ledger']['usage']
-                record['accounting_complete'] = saved['ledger']['accounting_complete']
+            record['usage'] = _observed_usage(directory).to_dict()
         record['latency_seconds'] = time.monotonic() - started
         write_json(directory / 'evaluation.json', record)
         write_artifact_manifest(directory)

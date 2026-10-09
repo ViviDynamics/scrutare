@@ -136,3 +136,49 @@ def test_interruption_keeps_incomplete_schedule_and_accounting_failure(tmp_path,
     assert len(saved['runs']) == 9
     assert saved['runs'][0]['status'] == 'failed'
     assert saved['runs'][0]['accounting_complete'] is False
+
+
+@pytest.mark.parametrize('aggregate', [False, True])
+def test_cancel_recovers_session_usage_without_double_counting(tmp_path, monkeypatch, aggregate):
+    cases = corpus(tmp_path / 'corpus')
+    async def execute(run_dir, conf, *, runtime):
+        attempt = run_dir / 'sessions/senior-dev/attempt-0001'
+        attempt.mkdir(parents=True)
+        (attempt / 'result.json').write_text(json.dumps({
+            'session_key': 'senior-dev/attempt-0001',
+            'usage': {'input': 80, 'output': 20, 'cache_read': 3, 'cache_write': 2, 'total': 105}}))
+        if aggregate:
+            (run_dir / 'panel.json').write_text(json.dumps({'ledger': {'usage': {
+                'input': 80, 'output': 20, 'cache_read': 3, 'cache_write': 2, 'total': 105}}}))
+        raise asyncio.CancelledError
+    monkeypatch.setattr('scrutare.evaluation.runner.run_review', execute)
+    monkeypatch.setattr('scrutare.evaluation.runner.inspect_nare_runtime',
+        lambda runtime: asyncio.sleep(0, result=SimpleNamespace(version='2026.10.4', contract=1)))
+    with pytest.raises(asyncio.CancelledError):
+        asyncio.run(run_experiment(cases, config(), tmp_path / 'out',
+                     runtime=NareRuntime(Path('/unused')), evidence_kind='offline'))
+    saved = json.loads((tmp_path / 'out/experiment.json').read_text())
+    assert saved['runs'][0]['usage']['total'] == 105
+    assert saved['runs'][0]['accounting_complete'] is False
+    assert saved['runs'][0]['status'] == 'failed'
+
+
+def test_queued_cases_use_same_frozen_bytes_as_snapshot(tmp_path, monkeypatch):
+    cases = corpus(tmp_path / 'corpus')
+    original = (cases[0].capture / 'diff.patch').read_bytes()
+    seen = []
+    async def execute(run_dir, conf, *, runtime):
+        seen.append((run_dir / 'diff.patch').read_bytes())
+        (cases[0].capture / 'diff.patch').write_bytes(original.replace(b'+x=2', b'+x=3'))
+        return SimpleNamespace(status='complete', accounting_complete=True,
+            usage=TokenUsage(input=1), verdict=SimpleNamespace(findings=()))
+    monkeypatch.setattr('scrutare.evaluation.runner.run_review', execute)
+    monkeypatch.setattr('scrutare.evaluation.runner.inspect_nare_runtime',
+        lambda runtime: asyncio.sleep(0, result=SimpleNamespace(version='2026.10.4', contract=1)))
+    asyncio.run(run_experiment(cases, config(), tmp_path / 'out',
+                runtime=NareRuntime(Path('/unused')), evidence_kind='offline'))
+    assert seen == [original] * 9
+    import hashlib
+    snapshot = json.loads((tmp_path / 'out/snapshot.json').read_text())
+    expected_hash = hashlib.sha256(original).hexdigest()
+    assert snapshot['cases'][0]['capture_sha256']['diff.patch'] == expected_hash
