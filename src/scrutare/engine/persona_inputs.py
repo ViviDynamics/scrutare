@@ -107,6 +107,7 @@ class PersonaReanchorInput:
 
 def prepare_persona_inputs(
     inputs: PreparedReviewInputs, entries: Iterable[str | PersonaDefinition],
+    *, procedures: str = "baseline",
 ) -> tuple[PersonaReviewInput, ...]:
     """Resolve the actual registry and bind every persona to the same validated view."""
     validate_prepared_inputs(inputs)
@@ -115,4 +116,5 @@ def prepare_persona_inputs(
     for entry in entries:
         if not isinstance(entry, str):
             _validate_persona(entry)
-    return tuple(PersonaReviewInput(persona, inputs) for persona in resolve_personas(entries))
+    return tuple(PersonaReviewInput(persona, inputs)
+                 for persona in resolve_personas(entries, procedures=procedures))

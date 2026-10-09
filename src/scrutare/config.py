@@ -10,7 +10,7 @@ import yaml
 from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
 
 from scrutare.personas.definition import PersonaDefinition as PersonaDefinition
-from scrutare.personas.names import BUILTIN_PERSONA_NAMES
+from scrutare.personas.names import BUILTIN_PERSONA_NAMES, DEFAULT_PERSONA_NAMES
 
 Strategy = Literal["panel", "iterative", "debate"]
 Provider = Literal["anthropic", "openai"]
@@ -90,6 +90,11 @@ class GitHubSettings:
 
 
 @dataclass(frozen=True)
+class InspectionSettings:
+    procedures: Literal["baseline", "v1"] = "baseline"
+
+
+@dataclass(frozen=True)
 class ReviewConfig:
     strategy: Strategy
     rounds: RoundSettings
@@ -98,9 +103,10 @@ class ReviewConfig:
     models: ModelSettings
     verdict: VerdictSettings
     github: GitHubSettings
+    inspection: InspectionSettings = InspectionSettings()
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        document = {
             "strategy": self.strategy,
             "rounds": asdict(self.rounds),
             "personas": [
@@ -124,6 +130,10 @@ class ReviewConfig:
                 },
             },
         }
+
+        if self.inspection.procedures != "baseline":
+            document["inspection"] = asdict(self.inspection)
+        return document
 
 
 def _mapping(value: object, path: str, fields: tuple[str, ...] | None) -> dict[str, Any]:
@@ -344,7 +354,7 @@ def parse_config(data: bytes | str) -> ReviewConfig:
     raw = _mapping(
         _load_yaml(data),
         "",
-        ("strategy", "rounds", "personas", "budgets", "models", "verdict", "github"),
+        ("strategy", "rounds", "personas", "budgets", "models", "verdict", "github", "inspection"),
     )
     strategy = cast(
         Strategy,
@@ -354,7 +364,8 @@ def parse_config(data: bytes | str) -> ReviewConfig:
     budgets = _mapping(
         raw.get("budgets", {}), "budgets", ("per_persona_tokens", "review_max_tokens")
     )
-    personas = _personas(raw.get("personas", list(BUILTIN_PERSONA_NAMES)))
+    personas = _personas(raw.get("personas", list(DEFAULT_PERSONA_NAMES)))
+    inspection = _mapping(raw.get("inspection", {}), "inspection", ("procedures",))
     return ReviewConfig(
         strategy,
         RoundSettings(_positive(rounds.get("max", 3), "rounds.max")),
@@ -366,6 +377,10 @@ def parse_config(data: bytes | str) -> ReviewConfig:
         _models(raw.get("models", {}), personas),
         _verdict(raw.get("verdict", {})),
         _github(raw.get("github", {})),
+        InspectionSettings(cast(Literal["baseline", "v1"], _choice(
+            inspection.get("procedures", "baseline"), "inspection.procedures",
+            ("baseline", "v1"),
+        ))),
     )
 
 

@@ -29,8 +29,8 @@ def test_builtins_resolve_to_distinct_immutable_definitions():
 
 def test_packaged_data_has_only_inline_definition_fields_and_allowed_names():
     data = yaml.safe_load(files("scrutare.personas").joinpath("builtins.yaml").read_text())
-    assert {entry["name"] for entry in data} == set(NAMES)
-    assert len(data) == 4
+    assert {entry["name"] for entry in data} == set((*NAMES, "testing-verification"))
+    assert len(data) == 5
     assert all(set(entry) == {"name", "system_prompt"} for entry in data)
 
 
