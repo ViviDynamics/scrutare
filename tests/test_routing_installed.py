@@ -1,6 +1,7 @@
 """Actual nare keeps routed procedures in one guarded immutable evidence root."""
 import asyncio
 import json
+from hashlib import sha256
 from pathlib import Path
 
 import pytest
@@ -18,20 +19,39 @@ from scrutare.replay import replay_run
 
 
 @pytest.mark.parametrize('strategy', ['panel', 'debate', 'iterative'])
+@pytest.mark.parametrize('combined', [False, True])
 def test_installed_routing_preserves_context_and_all_source_observations(
-        tmp_path, installed, strategy):
+        tmp_path, installed, strategy, combined):
     cases = declared(tmp_path / 'corpus')
     finding = {'file': 'app.py', 'line': 1, 'side': 'RIGHT', 'category': 'correctness',
                'problem': 'Concrete problem', 'reason': 'Concrete consequence'}
+    if combined:
+        source = next(s for s in cases[0].context_sources if s.side == 'head')
+        finding['evidence'] = {
+            'version': 2, 'trigger': 'changed call', 'preconditions': [],
+            'expected': 'result', 'observed': 'failure', 'impact': 'lost result',
+            'citations': [{'side': 'head', 'revision': source.revision, 'path': 'caller.py',
+                           'start_line': 1, 'end_line': 1,
+                           'sha256': sha256(source_contents(source.directory)['caller.py'])
+                                     .hexdigest()}]}
     runtime: NareRuntime = offline_runtime(tmp_path, installed, default={'replies': [
         tool(args={'path': 'routing-focus.json'}),
         tool(args={'path': _artifact('head', 'caller.py')}, call_id='caller'),
-        text({'findings': [finding]})]})
+        *([tool(args={'path': 'static-analysis.json'}, call_id='analysis')]
+          if combined else []), text({'findings': [finding]})]})
     path = tmp_path / 'offline-spec.json'
     spec = json.loads(path.read_text())
     spec['scenarios'] = [{'purpose': 'review', 'attempt': 'attempt-0001',
         'prompt_prefix': 'Arbitrate',
-        'scenario': {'replies': [text({'findings': [finding], 'converged': True})]}}]
+        'scenario': {'replies': [{'select_pool': True}] if combined
+                    else [text({'findings': [finding], 'converged': True})]}}]
+    if combined:
+        spec['scenarios'] += [{'purpose': 'review', 'attempt': 'attempt-0001',
+            'prompt_prefix': 'Independently assess',
+            'scenario': {'replies': [{'assess_candidates': 'supported'}]}}]
+        spec['scenarios'] += [{'purpose': 'review', 'attempt': f'attempt-{number:04d}',
+            'prompt_prefix': 'Reconsider your position',
+            'scenario': {'replies': [{'select_pool': True}]}} for number in range(2, 5)]
     path.write_text(json.dumps(spec))
     conf = parse_config(json.dumps({'strategy': strategy, 'personas': ['junior-dev'],
         'models': {'default': {'provider': 'openai', 'model': 'offline-model',
@@ -40,7 +60,10 @@ def test_installed_routing_preserves_context_and_all_source_observations(
         'context': {'enabled': True, 'related_paths': ['caller.py']},
         'routing': {'enabled': True, 'mode': 'manual', 'force': ['performance-concurrency'],
                     'groups': [{'name': 'caller-contract', 'implementation': ['app.py'],
-                                'callers': ['caller.py']}]}}))
+                                'callers': ['caller.py']}]},
+        **({'inspection': {'procedures': 'v1'}, 'analysis': {'enabled': True},
+            'findings': {'evidence': 'v2', 'assessment': {'enabled': True, 'tokens': 200}}}
+           if combined else {})}))
     run = tmp_path / 'outside-checkout'
     run.mkdir()
     for name in ('diff.patch', 'files.json', 'metadata.json'):
@@ -67,6 +90,21 @@ def test_installed_routing_preserves_context_and_all_source_observations(
         assert record['allocated_total'] <= record['review_ceiling'] == 1200
         assert 'routing-focus.json' in record['inputs_sha256']
         assert 'caller.py' in record['global_supporting_paths']
+        if combined:
+            assert 'static-analysis.json' in record['inputs_sha256']
+            assert record['allocations']['evidence-assessor'] == 200
+            assert 'evidence-assessor' in record['reserved_phase_personas']
+    if combined:
+        assessments = list(run.rglob('assessment.json'))
+        assert assessments
+        for path in assessments:
+            assessment = json.loads(path.read_bytes())
+            assert assessment['status'] == 'complete'
+            assert len(assessment['candidates']) == len(assessment['assessments']) == 4
+            assert all(row['status'] == 'supported' for row in assessment['assessments'])
+        manifests = list(run.rglob('review-inputs/static-analysis.json'))
+        assert manifests
+        assert all(json.loads(p.read_bytes())['status'] == 'unavailable' for p in manifests)
     observations = list(run.rglob('offline-observations.json'))
     assert observations
     assert any('caller_original()' in p.read_text() for p in observations)

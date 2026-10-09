@@ -59,9 +59,11 @@ captured changes while retaining the supporting context.
 
 `routing.json` persists the focus record, complete input hashes, actual ledger
 allocations, total allocated tokens, configured per-persona ceiling, fixed review
-ceiling, and any reserved debate chair quota. The existing ledger divides admitted
-capacity fairly across the actual reviewers and chair, without raising the total
-ceiling. More specialists can reduce each reviewer's quota; partial, failed or
+ceiling, and reserved phase names and allocations. When semantic assessment is
+enabled, its pre-reserved quota remains outside discovery allocation. The existing
+ledger divides the remaining admitted capacity fairly across the actual reviewers
+and chair, without raising the total ceiling. More specialists can reduce each
+reviewer's quota; partial, failed or
 unstarted sessions continue to withhold a complete result. There is no automatic
 promotion: measured routed versus fixed-panel comparisons and missed routing cases
 belong to the evaluation promotion gate in #51.

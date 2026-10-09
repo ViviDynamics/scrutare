@@ -25,3 +25,9 @@ No model delegator or default promotion; quality comparisons belong to #51.
 
 Root handles fresh independent review, final main integration, both mandatory full lanes,
 and paired model comparisons before promotion.
+
+## Final dependency integration
+- Rebased only the routing commit onto merged context, procedures, v2 evidence, independent assessment, captured tools and comparison foundation. Preserved every configuration field, both private artifact destinations, immutable prepared hashes and the original assessor reservation.
+- Added actual nare proofs combining routing, v1 procedures, supported v2 assessment and explicitly unavailable tool evidence across panel/debate/iterative review. The first run observed three failures and three baseline passes because routing metadata omitted the already allocated assessor from reserved phase names. The minimal record correction does not change allocations or execution.
+- Integrated routing/config/assessment/tool/iteration/debate/replay/read-root suite: 567 passed, including all six baseline/combined native cases. Ruff and strict types passed.
+- Final scoped independent review found no findings. Both full canonical Python lanes remain required before push. Routed versus fixed-panel recall/cost remains pending under #51; the issue stays open and specialists stay opt-in.

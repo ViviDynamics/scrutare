@@ -115,7 +115,8 @@ async def _prepare_execution(
                           "allocated_total": sum(ledger.allocations.values()),
                           "review_ceiling": config.budgets.review_max_tokens,
                           "configured_per_persona_ceiling": config.budgets.per_persona_tokens,
-                          "reserved_phase_personas": list(budget_personas)}
+                          "reserved_phase_personas": [*budget_personas,
+                              *((assessor,) if assessor is not None else ())]}
         write_owned_json(run / "routing.json", routing_record, prepared_root=inputs.root)
     capability = await inspect_nare_runtime(runtime)
     return _ExecutionContext(inputs, descriptors, ledger, capability, runtime, config, run,
