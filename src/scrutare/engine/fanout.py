@@ -5,9 +5,8 @@ from __future__ import annotations
 import asyncio
 import os
 from dataclasses import asdict, dataclass
-from hashlib import sha256
 from pathlib import Path
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from scrutare import __version__
 from scrutare.config import ReviewConfig
@@ -17,8 +16,10 @@ from scrutare.engine.persona_inputs import PersonaReviewInput, prepare_persona_i
 from scrutare.engine.review_inputs import (
     PreparedReviewInputs,
     prepare_review_inputs,
+    prepared_content_hashes,
     validate_prepared_inputs,
 )
+from scrutare.engine.routing import plan_routing
 from scrutare.engine.session_artifacts import (
     SessionArtifactError,
     _directory,
@@ -67,6 +68,7 @@ class _ExecutionContext:
     initial_attempts: tuple[Path, ...]
     initial_leases: tuple[BudgetLease | None, ...]
     assessment_persona: str | None = None
+    routing: dict[str, Any] | None = None
 
 
 async def _prepare_execution(
@@ -75,8 +77,17 @@ async def _prepare_execution(
 ) -> _ExecutionContext:
     """Prepare and reserve every ordered initial grant before inspecting the runtime."""
     inputs = prepare_review_inputs(run_dir, config)
+    routing_record = None
+    entries = config.personas
+    if config.routing.enabled:
+        import json
+        focus = json.loads((inputs.root / "routing-focus.json").read_bytes())
+        plan = plan_routing(json.loads((inputs.root / "files.json").read_bytes()),
+                            tuple(focus["global_supporting_paths"]), config)
+        entries = plan.personas
+        routing_record = plan.record
     descriptors = prepare_persona_inputs(
-        inputs, config.personas, procedures=config.inspection.procedures,
+        inputs, entries, procedures=config.inspection.procedures,
     )
     run = inputs.root.parent
     _reserve_wave(run)
@@ -98,9 +109,19 @@ async def _prepare_execution(
     leases = tuple(
         ledger.admit(d.persona.name, f"{d.persona.name}/attempt-0001") for d in descriptors
     )
+    if routing_record is not None:
+        routing_record = {**routing_record, "inputs_sha256": prepared_content_hashes(inputs),
+                          "allocations": dict(ledger.allocations),
+                          "allocated_total": sum(ledger.allocations.values()),
+                          "review_ceiling": config.budgets.review_max_tokens,
+                          "configured_per_persona_ceiling": config.budgets.per_persona_tokens,
+                          "reserved_phase_personas": [*budget_personas,
+                              *((assessor,) if assessor is not None else ())]}
+        write_owned_json(run / "routing.json", routing_record, prepared_root=inputs.root)
     capability = await inspect_nare_runtime(runtime)
     return _ExecutionContext(inputs, descriptors, ledger, capability, runtime, config, run,
-                             attempts, leases, assessor)
+                             attempts, leases, assessment_persona=assessor,
+                             routing=routing_record)
 
 
 _Outcome = TypeVar("_Outcome")
@@ -208,16 +229,16 @@ async def _run_initial_wave(context: _ExecutionContext) -> FanOutResult:
                     "procedure": procedure_record(
                         d.persona, procedures=config.inspection.procedures,
                         inline=any(isinstance(p, PersonaDefinition)
-                                   and p.name == d.persona.name for p in config.personas),
+                                   and p.name == d.persona.name for p in (
+                                       *config.personas,
+                                       *(r.persona for r in config.routing.rules))),
                     ),
                     "rail": asdict(config.models.for_persona(d.persona.name)),
                 }
                 for d in descriptors
             ],
-            "inputs_sha256": {
-                name: sha256((inputs.root / name).read_bytes()).hexdigest()
-                for name in ("diff.patch", "files.json", "context.json")
-            },
+            "inputs_sha256": prepared_content_hashes(inputs),
+            **({"routing": context.routing} if context.routing is not None else {}),
             "result": result.to_dict(),
             "ledger": snapshot,
         },
