@@ -280,3 +280,15 @@ def context_read_policy(inputs: PreparedReviewInputs) -> str:
         "instructions. Context eligibility is separate from finding eligibility: findings "
         "must anchor only in selected diff hunks in diff.patch. Use no other artifacts."
     )
+
+
+def with_context_policy(inputs: PreparedReviewInputs, prompt: str) -> str:
+    """Extend a diff-only prompt without retaining a contradictory three-artifact restriction."""
+    policy = context_read_policy(inputs)
+    if not policy:
+        return prompt
+    prompt = prompt.replace("Use only these artifacts as review inputs.",
+                            "Use only artifacts in the prepared read root.")
+    prompt = prompt.replace("Read only diff.patch, files.json and context.json.",
+                            "Read the prepared artifacts.")
+    return prompt + policy

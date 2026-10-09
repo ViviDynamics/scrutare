@@ -212,7 +212,10 @@ def _context_contents(run: Path, config: ReviewConfig) -> dict[str, bytes]:
     source = run / "context-source-files.json"
     if source.exists() or source.is_symlink():
         candidates = _candidates(_json(source), config)
-    if (not isinstance(manifest, dict) or type(manifest.get("schema_version")) is not int
+    if (not isinstance(manifest, dict) or set(manifest) != {
+                "schema_version", "source", "settings", "revisions", "entries",
+                "retained_bytes", "tree_requests", "truncated"}
+            or type(manifest.get("schema_version")) is not int
             or manifest["schema_version"] != 1
             or encoded(manifest.get("settings")) != encoded(asdict(config.context))
             or not isinstance(manifest.get("entries"), list)
@@ -267,7 +270,8 @@ def _context_contents(run: Path, config: ReviewConfig) -> dict[str, bytes]:
                 or entry["status"] not in _STATUSES):
             raise ValueError("Repository context entry identity changed.")
         policy = _policy_status(candidate, config)
-        if policy is not None and entry["status"] != policy:
+        if (policy is not None and entry["status"] != policy
+                or policy is None and entry["status"] in {"excluded", "sensitive", "absent"}):
             raise ValueError("Repository context exposure violates selection policy.")
         if (entry["blob_sha"] is not None and (
                 not isinstance(entry["blob_sha"], str) or _SHA.fullmatch(entry["blob_sha"]) is None)

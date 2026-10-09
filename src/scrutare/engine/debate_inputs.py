@@ -7,7 +7,7 @@ from dataclasses import asdict, dataclass, replace
 
 from scrutare.config import Category
 from scrutare.engine.persona_inputs import PersonaReviewInput
-from scrutare.engine.review_inputs import context_read_policy, validate_prepared_inputs
+from scrutare.engine.review_inputs import validate_prepared_inputs, with_context_policy
 from scrutare.findings.models import Finding, FindingError, parse_finding
 
 
@@ -31,7 +31,7 @@ class DebateInput(PersonaReviewInput):
             else "Reconsider your position after seeing every perspective's verified findings. "
             "Return the findings you defend from this pool; omit observations you retract. "
         )
-        return (
+        return with_context_policy(self.inputs, (
             task + "Copy file, line, side, problem and reason exactly from the pool. "
             "Keep categories unchanged or downgrade to an advisory category. "
             "Never invent findings or declare a verdict. Read only diff.patch, files.json "
@@ -45,8 +45,7 @@ class DebateInput(PersonaReviewInput):
                 sort_keys=True,
                 separators=(",", ":"),
             )
-            + context_read_policy(self.inputs)
-        )
+        ))
 
     def output_schema(self) -> dict[str, object]:
         from scrutare.engine.session_output import findings_schema
