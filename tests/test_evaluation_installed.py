@@ -3,6 +3,7 @@ import asyncio
 import json
 from pathlib import Path
 
+import pytest
 from test_nare_cli_integration import installed as installed
 from test_nare_cli_integration import offline_runtime, text, tool
 
@@ -11,7 +12,10 @@ from scrutare.evaluation.corpus import load_corpus
 from scrutare.evaluation.runner import run_experiment
 
 
-def test_actual_nare_evaluation_never_posts_and_all_runs_account(tmp_path, installed, monkeypatch):
+@pytest.mark.parametrize('comparison_set', ['baseline', 'procedures'])
+def test_actual_nare_evaluation_never_posts_and_all_runs_account(
+    tmp_path, installed, monkeypatch, comparison_set,
+):
     runtime = offline_runtime(tmp_path, installed, default={
         'replies': [tool(), text({'findings': []})]})
     spec_path = tmp_path / 'offline-spec.json'
@@ -33,7 +37,8 @@ def test_actual_nare_evaluation_never_posts_and_all_runs_account(tmp_path, insta
                           b'base_url: "https://offline.invalid/v1"}}\n'
                           b'budgets: {review_max_tokens: 500, per_persona_tokens: 100}\n')
     result = asyncio.run(run_experiment(cases, config, tmp_path / 'experiment',
-                                       runtime=runtime, evidence_kind='offline'))
+                                       runtime=runtime, evidence_kind='offline',
+                                       comparison_set=comparison_set))
     assert len(result['runs']) == 9
     assert all(r['status'] == 'complete' and r['accounting_complete'] for r in result['runs'])
     assert all(r['usage']['total'] > 0 for r in result['runs'])
@@ -41,6 +46,8 @@ def test_actual_nare_evaluation_never_posts_and_all_runs_account(tmp_path, insta
     for run in result['runs']:
         directory = Path(run['run_dir'])
         assert not (directory / 'posting.json').exists()
+        if run['variant'] == 'revised5':
+            assert (directory / 'sessions/testing-verification/attempt-0001/session.json').exists()
         for path in directory.glob('sessions/*/attempt-*/session.json'):
             session = json.loads(path.read_text())
             assert session['policy']['root'] == str(directory / 'review-inputs')

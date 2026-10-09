@@ -24,7 +24,7 @@ Out: fabricated human adjudication, silent default changes and deployment #18.
 ## Tasks
 - [x] 1. Publish actual baseline evidence and independent automated decisions;
   reproduction uses production scorer and frozen capture/label hashes.
-- [ ] 2. Add explicit procedure comparisons: current4, revised4 and revised5
+- [x] 2. Add explicit procedure comparisons: current4, revised4 and revised5
   under equal total ceilings; schedule/profile snapshot regression tests.
 - [ ] 3. Extend opt-in comparisons for context, evidence assessment, tool evidence,
   focused debate and routing after their dependent implementations ship.
@@ -32,3 +32,10 @@ Out: fabricated human adjudication, silent default changes and deployment #18.
   provisional precision/recall without claiming incomplete accuracy.
 - [ ] 5. Freeze and independently verify new held-out cases; enforce promotion
   policy in tests and publish pass/fail/inconclusive evidence.
+
+## Implementation evidence
+- Added opt-in current4/revised4/revised5 comparisons; defaults unchanged.
+- TDD: 16 initial failing feature tests, then 47 focused checks passed; CLI gate and
+  offline/unequal-denominator guards each observed red before implementation.
+- Promotion gate implementation is ready; actual development comparisons, unseen
+  holdout, architecture 44–50 comparisons, and independent human review remain open.
