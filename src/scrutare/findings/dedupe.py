@@ -4,7 +4,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 from scrutare.config import CATEGORIES, Category
-from scrutare.findings.models import Anchor, Finding, FindingError, _text
+from scrutare.findings.models import Anchor, Finding, FindingError, _text, finding_wire
 
 
 def _normalized_problem(problem: str) -> str:
@@ -27,6 +27,8 @@ class MergedFinding:
             not isinstance(source, Finding) for source in self.sources
         ):
             raise FindingError("sources: expected a nonempty tuple of Finding values")
+        if len({source.evidence is None for source in self.sources}) != 1:
+            raise FindingError("sources: mixed evidence versions")
         normalized = _normalized_problem(self.problem)
         if any(
             source.anchor != self.anchor or _normalized_problem(source.problem) != normalized
@@ -60,18 +62,7 @@ class MergedFinding:
             "categories": list(self.categories),
             "personas": list(self.personas),
             "reasons": list(self.reasons),
-            "sources": [
-                {
-                    "file": source.anchor.file,
-                    "line": source.anchor.line,
-                    "side": source.anchor.side,
-                    "category": source.category,
-                    "problem": source.problem,
-                    "reason": source.reason,
-                    "persona": source.persona,
-                }
-                for source in self.sources
-            ],
+            "sources": [finding_wire(source) for source in self.sources],
         }
 
 

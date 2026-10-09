@@ -8,6 +8,8 @@ from scrutare.findings.artifacts import write_verdict as write_verdict
 from scrutare.findings.dedupe import MergedFinding as MergedFinding
 from scrutare.findings.dedupe import dedupe_findings as dedupe_findings
 from scrutare.findings.models import Anchor as Anchor
+from scrutare.findings.models import Citation as Citation
+from scrutare.findings.models import EvidenceV2 as EvidenceV2
 from scrutare.findings.models import Finding as Finding
 from scrutare.findings.models import FindingError as FindingError
 from scrutare.findings.models import parse_finding as parse_finding

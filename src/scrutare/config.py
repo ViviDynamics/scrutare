@@ -107,6 +107,15 @@ class InspectionSettings:
 
 
 @dataclass(frozen=True)
+class FindingSettings:
+    evidence: Literal["legacy", "v2"] = "legacy"
+
+    def __post_init__(self) -> None:
+        if self.evidence not in ("legacy", "v2"):
+            raise ConfigError("findings.evidence: expected legacy or v2")
+
+
+@dataclass(frozen=True)
 class ReviewConfig:
     strategy: Strategy
     rounds: RoundSettings
@@ -117,6 +126,11 @@ class ReviewConfig:
     github: GitHubSettings
     inspection: InspectionSettings = InspectionSettings()
     context: ContextSettings = ContextSettings()
+    findings: FindingSettings = FindingSettings()
+
+    def __post_init__(self) -> None:
+        if self.findings.evidence == "v2" and not self.context.enabled:
+            raise ConfigError("findings.evidence: v2 requires context.enabled")
 
     def to_dict(self) -> dict[str, Any]:
         result: dict[str, Any] = {
@@ -149,7 +163,15 @@ class ReviewConfig:
                 result["context"][field] = list(result["context"][field])
         if self.inspection.procedures != "baseline":
             result["inspection"] = asdict(self.inspection)
+        if self.findings != FindingSettings():
+            result["findings"] = asdict(self.findings)
         return result
+
+
+def _finding_settings(value: object) -> FindingSettings:
+    fields = _mapping(value, "findings", ("evidence",))
+    return FindingSettings(cast(Literal["legacy", "v2"], _choice(
+        fields.get("evidence", "legacy"), "findings.evidence", ("legacy", "v2"))))
 
 
 def _context_settings(value: object) -> ContextSettings:
@@ -397,7 +419,7 @@ def parse_config(data: bytes | str) -> ReviewConfig:
         _load_yaml(data),
         "",
         ("strategy", "rounds", "personas", "budgets", "models", "verdict", "github",
-         "inspection", "context"),
+         "inspection", "context", "findings"),
     )
     strategy = cast(
         Strategy,
@@ -425,6 +447,7 @@ def parse_config(data: bytes | str) -> ReviewConfig:
             ("baseline", "v1"),
         ))),
         _context_settings(raw.get("context", {})),
+        _finding_settings(raw.get("findings", {})),
     )
 
 

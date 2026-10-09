@@ -112,6 +112,18 @@ def _evidence_fields(finding: MergedFinding, *, escalated: bool) -> list[str]:
             _field("Category", source.category, neutralize_mentions=escalated),
             _field("Reason", source.reason, neutralize_mentions=escalated),
         ))
+        if source.evidence is not None:
+            evidence = source.evidence
+            for name in ("trigger", "expected", "observed", "impact"):
+                fields.append(_field(name.capitalize(), getattr(evidence, name),
+                                     neutralize_mentions=escalated))
+            for condition in evidence.preconditions:
+                fields.append(_field("Precondition", condition, neutralize_mentions=escalated))
+            for citation in evidence.citations:
+                fields.append(_field("Captured citation (identity checked; claim unproven)",
+                    f"{citation.side} {citation.revision} {citation.path}:"
+                    f"{citation.start_line}-{citation.end_line} sha256 {citation.sha256}",
+                    neutralize_mentions=escalated))
     return fields
 
 

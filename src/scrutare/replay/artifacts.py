@@ -132,7 +132,9 @@ def _strings(data: object, path: str, *, categories: bool = False) -> list[str]:
     return cast(list[str], items)
 
 
-def parse_findings(data: object) -> tuple[tuple[MergedFinding, ...], tuple[AuditIssue, ...]]:
+def parse_findings(
+    data: object, *, evidence_version: int = 1,
+) -> tuple[tuple[MergedFinding, ...], tuple[AuditIssue, ...]]:
     """Reconstruct ordered groups from sources, checking redundant summaries."""
     groups = []
     issues = []
@@ -142,11 +144,14 @@ def parse_findings(data: object) -> tuple[tuple[MergedFinding, ...], tuple[Audit
         sources = []
         for source_index, source_data in enumerate(_array(group["sources"], f"{path}.sources")):
             source_path = f"{path}.sources[{source_index}]"
-            source = _mapping(source_data, source_path, _SOURCE_FIELDS)
+            source = _mapping(source_data, source_path,
+                              _SOURCE_FIELDS + (("evidence", "candidate_id")
+                              if evidence_version == 2 else ()))
             try:
                 sources.append(parse_finding(
                     {key: value for key, value in source.items() if key != "persona"},
                     persona=cast(str, source["persona"]),
+                    evidence_version=evidence_version, artifact=True,
                 ))
             except FindingError as error:
                 raise ReplayError(f"{source_path}.{error}") from None
@@ -222,7 +227,7 @@ def _exhaustion(data: object) -> Exhaustion:
         raise ReplayError(f"verdict.{error}") from None
 
 
-def parse_saved_verdict(data: bytes) -> SavedVerdict:
+def parse_saved_verdict(data: bytes, *, evidence_version: int = 1) -> SavedVerdict:
     """Validate the established baseline shape, preserving recorded output fields."""
     raw_document = decode_artifact(data, artifact="verdict.json")
     document = _mapping(raw_document, "verdict")
@@ -230,7 +235,7 @@ def parse_saved_verdict(data: bytes) -> SavedVerdict:
     if "exhaustion" in document:
         fields += ("exhaustion",)
     _mapping(document, "verdict", fields)
-    if type(document["schema_version"]) is not int or document["schema_version"] != 1:
+    if type(document["schema_version"]) is not int or document["schema_version"] not in (1, 2):
         raise ReplayError("verdict.schema_version: expected supported integer version 1")
     if not isinstance(document["verdict"], str) or document["verdict"] not in (
         "approve", "changes_requested", "escalated"
@@ -252,7 +257,9 @@ def parse_saved_verdict(data: bytes) -> SavedVerdict:
         _strings(group["blocking_categories"], f"{path}.blocking_categories", categories=True)
         groups.append({key: group[key] for key in _GROUP_FIELDS})
     try:
-        parse_findings(groups)
+        if document["schema_version"] != evidence_version:
+            raise ReplayError("verdict: evidence version disagrees with schema")
+        parse_findings(groups, evidence_version=evidence_version)
     except ReplayError as error:
         raise ReplayError(f"verdict.{error}") from None
     exhaustion = _exhaustion(document["exhaustion"]) if "exhaustion" in document else None

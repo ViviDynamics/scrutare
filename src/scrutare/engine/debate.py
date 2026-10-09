@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import asdict
 from pathlib import Path
 from typing import Literal
 
@@ -28,6 +27,7 @@ from scrutare.engine.session_artifacts import (
 )
 from scrutare.engine.session_models import NareRuntime, ReanchorOutcome, SessionOutcome
 from scrutare.findings import Exhaustion, Finding, dedupe_findings, derive_verdict, parse_diff
+from scrutare.findings.models import artifact_data as asdict
 from scrutare.findings.verification import check_anchors, finish_reanchor
 from scrutare.personas import PersonaDefinition, load_persona, resolve_personas
 from scrutare.replay.artifacts import decode_artifact, read_artifact
@@ -190,13 +190,16 @@ async def run_debate(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntim
                     record["converged"] = converged
                     partial = partial or decision.status != "complete"
                     if converged:
-                        verdict = derive_verdict(dedupe_findings(accepted), config.verdict)
+                        verdict = derive_verdict(
+                            dedupe_findings(accepted), config.verdict,
+                            evidence_version=2 if config.findings.evidence == "v2" else 1)
                         status, reason = "partial" if partial else "complete", "converged"
                         break
                     if number == config.rounds.max:
                         verdict = derive_verdict(
                             dedupe_findings(pool),
                             config.verdict,
+                            evidence_version=2 if config.findings.evidence == "v2" else 1,
                             exhaustion=Exhaustion("debate", number, config.rounds.max),
                         )
                         status, reason = "partial" if partial else "complete", "deadlock"
