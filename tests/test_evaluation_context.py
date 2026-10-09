@@ -245,3 +245,17 @@ def test_base_declaration_cannot_invent_missing_captured_identity(tmp_path):
     path.write_text(json.dumps(metadata))
     with pytest.raises(ValueError, match='identity'):
         load_corpus(tmp_path)
+
+
+@pytest.mark.parametrize('identity', [None, 'pilot/local', {}, {'full_name': 'wrong/repo'}])
+def test_fresh_context_capture_cannot_invent_or_change_base_identity(
+        tmp_path, identity):
+    root = tmp_path / 'corpus'
+    cases = declared(root)
+    path = root / 'captures/a/metadata.json'
+    metadata = json.loads(path.read_bytes())
+    metadata['pull_request']['base']['repo'] = identity
+    path.write_text(json.dumps(metadata))
+    with pytest.raises(ValueError, match='identity'):
+        asyncio.run(run_experiment(cases, context_config(), tmp_path / 'out',
+            runtime=NareRuntime(Path('/unused')), evidence_kind='offline'))
