@@ -52,3 +52,9 @@ replay tampering and captured config disagreement.
   Python/native Docker lanes. No skips, lint suppressions or gate changes added.
 - Evaluation precision/recall/cost comparisons remain in the evaluation/report
   backlog; these checks prove protocol/policy integration, not review quality.
+
+## Final dependency integration
+- Rebased only the three assessment commits onto merged evidence/context/procedures and comparison foundation. Preserved inspection and assessment configuration and findings-first legacy replay error precedence.
+- Early CLI/native run reproduced an inherited SIGINT fixture keyword mismatch (3 failed, 83 passed). The fixture now explicitly forwards the uncertainty tuple through both real derivations; independent scoped review found no issues.
+- Integrated configuration, assessment, iterative, debate, replay CLI, installed context/nare and SIGINT checks: 425 passed. Ruff and strict types passed.
+- Full canonical Python 3.10 and 3.14 lanes are required before push. R1 comparative quality remains pending; issue stays open.
