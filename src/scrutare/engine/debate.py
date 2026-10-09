@@ -19,7 +19,11 @@ from scrutare.engine.panel import (
     _validate_binding,
 )
 from scrutare.engine.panel_artifacts import preflight_panel, publish_panel
-from scrutare.engine.review_inputs import ReviewInputError, prepared_content_hashes
+from scrutare.engine.review_inputs import (
+    ReviewInputError,
+    prepare_review_inputs,
+    prepared_content_hashes,
+)
 from scrutare.engine.session_artifacts import (
     SessionArtifactError,
     create_attempt_directory,
@@ -47,6 +51,11 @@ async def run_debate(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntim
     names = {p.name for p in resolve_personas(
         config.personas, procedures=config.inspection.procedures,
     )}
+    if config.routing.enabled:
+        import json
+        routed_inputs = prepare_review_inputs(run_dir, config)
+        names.update(json.loads((routed_inputs.root / "routing-focus.json").read_bytes())[
+            "effective_personas"])
     chair_name = "debate-chair"
     while chair_name in names:
         chair_name += "-chair"
