@@ -12,10 +12,12 @@ from typing import Any, cast
 from scrutare import __version__
 from scrutare.config import BudgetSettings, ReviewConfig
 from scrutare.engine.nare_session import inspect_nare_runtime
+from scrutare.engine.repository_context import capture_repository_context, encoded
+from scrutare.engine.repository_snapshot import RepositorySnapshot
 from scrutare.engine.review_inputs import prepare_review_inputs
 from scrutare.engine.session_models import NareRuntime, TokenUsage
 from scrutare.engine.strategy import run_review
-from scrutare.evaluation.corpus import Case, read_json
+from scrutare.evaluation.corpus import Case, parse_json, read_json, source_contents
 from scrutare.personas import load_persona
 from scrutare.provenance import write_artifact_manifest
 
@@ -90,6 +92,42 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
     captures = {case.id: {name: (case.capture / name).read_bytes()
                          for name in ('diff.patch', 'files.json', 'metadata.json')}
                 for case in cases}
+    context_clients: dict[str, RepositorySnapshot] = {}
+    context_sources: dict[str, dict[str, Any]] = {}
+    derived_metadata: dict[str, bytes] = {}
+    if config.context.enabled:
+        for case in cases:
+            if not case.context_sources:
+                raise ValueError('context evaluation requires explicit corpus source declarations')
+            metadata = parse_json(captures[case.id]['metadata.json'])
+            snapshots: dict[tuple[str, str], dict[str, bytes]] = {}
+            transformations = []
+            for side in case.context_sources:
+                key = side.repository, side.revision
+                contents = source_contents(side.directory)
+                if key in snapshots and snapshots[key] != contents:
+                    raise ValueError('corpus snapshot identity binds inconsistent source bytes')
+                snapshots[key] = contents
+                captured = metadata['pull_request'][side.side]
+                if captured['sha'] != side.revision:
+                    raise ValueError('corpus source revision changed after loading')
+                identity = captured.get('repo')
+                if (side.side == 'base' and not isinstance(identity, dict)
+                        or identity is not None and not isinstance(identity, dict)):
+                    raise ValueError('corpus source captured identity is missing or malformed')
+                if identity is not None and identity.get('full_name') != side.repository:
+                    raise ValueError('corpus source identity changed after loading')
+                if identity is None:
+                    captured['repo'] = {'full_name': side.repository}
+                    transformations.append({'side': side.side, 'field': 'repo',
+                                            'original': None, 'declared': captured['repo']})
+            client = RepositorySnapshot(snapshots)
+            context_clients[case.id] = client
+            context_sources[case.id] = {**client.provenance(),
+                'metadata_transformations': transformations,
+                'original_metadata_sha256': hashlib.sha256(
+                    captures[case.id]['metadata.json']).hexdigest()}
+            derived_metadata[case.id] = encoded(metadata)
     label_hashes = {case.id: hashlib.sha256(case.labels.read_bytes()).hexdigest()
                     for case in cases}
     output = output.absolute()
@@ -109,7 +147,9 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         'cases': [{'id': case.id, 'split': case.split, 'domain': case.domain,
                    'capture_sha256': {name: hashlib.sha256(data).hexdigest()
                                       for name, data in captures[case.id].items()},
-                   'labels_sha256': label_hashes[case.id]}
+                   'labels_sha256': label_hashes[case.id],
+                   **({'context_source': context_sources[case.id]} if config.context.enabled
+                      else {})}
                   for case in cases],
     }
     write_json(output / 'snapshot.json', snapshot)
@@ -137,6 +177,12 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                 stream.write(data)
         write_json(directory / 'config.json', conf.to_dict())
         write_json(directory / 'config.yaml', conf.to_dict())
+        if conf.context.enabled:
+            with (directory / 'metadata.original.json').open('xb') as stream:
+                stream.write(captures[case.id]['metadata.json'])
+            (directory / 'metadata.json').write_bytes(derived_metadata[case.id])
+            capture_repository_context(context_clients[case.id], directory, conf,
+                                       source=context_clients[case.id].provenance())
         prepare_review_inputs(directory, conf)
         started = time.monotonic()
         record: dict[str, Any] = {

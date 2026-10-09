@@ -94,3 +94,36 @@ A real baseline requires explicit model jobs and completed independent human
 adjudication. An available provider alias may change its backend; retain the dated
 provider model/version evidence alongside snapshots before making reproducibility
 claims. This implementation alone makes no model accuracy claim.
+
+Contextual experiments enable the normal `context` configuration and use the same
+production capture, preparation and review engine as hosted reviews. Each corpus
+case must explicitly declare `context_sources` for its base and optionally head:
+
+```json
+{"context_sources": {"base": {"directory": "sources/example/base",
+ "repository": "pilot/local", "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+ "head": {"directory": "sources/example/head", "repository": "pilot/local",
+ "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}}}
+```
+
+Declarations must match captured revisions and any existing repository identities.
+A declared head identity can fill an absent identity only in derived evaluator
+metadata; `metadata.original.json` retains the original bytes and the experiment
+snapshot records the transformation and original capture hashes. Without a declared
+head, an absent captured head identity remains unavailable. Hosted ingestion never
+infers a missing fork identity. Synthetic corpus revision labels bind local source
+snapshots and do not establish hosted commit authenticity.
+
+Source directories stay outside the guarded root and cannot contain any corpus
+labels or captures. The loader rejects symlinks and special files and caps each
+side at 4,096 inventory entries, depth 32, 1 MiB per file and 64 MiB total. All source
+bytes freeze before runtime inspection or any model call; the snapshot records
+content inventory hashes and real Git blob/tree hashes. Normal context configuration
+bounds further limit text retained for reviewers. Only selected immutable artifacts
+enter the read root. Diff-only experiments retain their original capture bytes.
+
+The pilot explicitly declares all 30 original source pairs. For cross-file
+comparisons, include related paths such as `client.py`, `policy.py`, `schema.py`,
+`formatting.py`, and `test_formatting.py`. Missing paths produce recorded omissions
+rather than guessed content. These context mechanics are testable offline; their
+accuracy effect still requires paired model experiments and adjudication.

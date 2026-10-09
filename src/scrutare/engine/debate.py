@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import asdict
-from hashlib import sha256
 from pathlib import Path
 from typing import Literal
 
@@ -21,7 +20,7 @@ from scrutare.engine.panel import (
     _validate_binding,
 )
 from scrutare.engine.panel_artifacts import preflight_panel, publish_panel
-from scrutare.engine.review_inputs import ReviewInputError
+from scrutare.engine.review_inputs import ReviewInputError, prepared_content_hashes
 from scrutare.engine.session_artifacts import (
     SessionArtifactError,
     create_attempt_directory,
@@ -54,10 +53,7 @@ async def run_debate(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntim
     context = await _prepare_execution(
         run_dir, config, runtime=runtime, budget_personas=(chair_name,)
     )
-    hashes = {
-        name: sha256((context.inputs.root / name).read_bytes()).hexdigest()
-        for name in ("diff.patch", "files.json", "context.json")
-    }
+    hashes = prepared_content_hashes(context.inputs)
     chair = PersonaDefinition(chair_name, load_persona(
         "senior-dev", procedures=config.inspection.procedures,
     ).system_prompt)

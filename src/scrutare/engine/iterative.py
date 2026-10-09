@@ -4,6 +4,7 @@ from __future__ import annotations
 import fcntl
 import json
 import os
+import shutil
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import asdict, replace
@@ -14,6 +15,7 @@ from typing import Any
 from scrutare.config import ReviewConfig
 from scrutare.engine.panel import PanelResult, run_panel
 from scrutare.engine.panel_artifacts import encode_panel, preflight_panel, publish_panel
+from scrutare.engine.repository_context import context_contents, supporting_dependencies
 from scrutare.engine.review_inputs import ReviewInputError, prepare_review_inputs
 from scrutare.engine.session_artifacts import write_owned_json
 from scrutare.engine.session_models import FanOutResult, NareRuntime, TokenUsage
@@ -120,6 +122,13 @@ def _project(run: Path, config: ReviewConfig, patches: dict[str, bytes]) -> Path
     (child / "diff.patch").write_bytes(b"".join(patches.values()))
     for name in ("comments.json", "reviews.json", "review_comments.json"):
         (child / name).write_bytes(b"[]\n")
+    if config.context.enabled:
+        contents = context_contents(run, config)
+        directory = child / "repository-context"
+        directory.mkdir(mode=0o700)
+        for name, data in contents.items():
+            (directory / name).write_bytes(data)
+        shutil.copyfile(run / "files.json", child / "context-source-files.json")
     return child
 
 
@@ -159,6 +168,7 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
     inputs = prepare_review_inputs(run_dir, config)
     run = inputs.root.parent
     with _history(run, config) as (state, path):
+        dependencies = supporting_dependencies(inputs.root)
         sections = {section.file: section.data for section in
                     parse_diff_sections((inputs.root / "diff.patch").read_bytes())}
         comments = _read(run / "review_comments.json")
@@ -180,13 +190,18 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
                 and (comment.get("line") is None
                      or comment["line"] == _finding(entry).anchor.line)
                 for comment in fresh_comments))
+        invalidated = frozenset(
+            _finding(entry).anchor for entry in state["pool"]
+            if entry["disposition"] == "upheld"
+            and entry.get("dependencies", []) != dependencies)
         patches = {name: patch for name, data in sections.items()
                    if (patch := _new_patch(data, state["sections"].get(name),
-                                           contested=contested))}
-        repeated = inputs.head_sha == state.get("head_sha") and not contested
-        if repeated and state["sections"] != {
-                name: data.decode("utf-8") for name, data in sections.items()}:
+                                           contested=contested | invalidated))}
+        same_head = inputs.head_sha == state.get("head_sha")
+        if same_head and (state.get("dependencies", []) != dependencies or state["sections"] != {
+                name: data.decode("utf-8") for name, data in sections.items()}):
             raise ReviewInputError("Iterative history: same head has changed captured evidence.")
+        repeated = same_head and not contested and not invalidated
         initial = FanOutResult((), False, False, TokenUsage(), False, 0)
         result = PanelResult("complete", None, initial, (), None, TokenUsage(), True, run)
         reviewed = not repeated and bool(patches) and state["rounds_completed"] < config.rounds.max
@@ -227,7 +242,7 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
                 prior_keys.add(key)
                 if key in current_by_key:
                     entry.update(finding=asdict(current_by_key[key]), disposition="upheld",
-                                 head_sha=inputs.head_sha)
+                                 head_sha=inputs.head_sha, dependencies=dependencies)
                 elif result.status == "complete" and finding.anchor.file in patches and (
                         finding.anchor in parse_diff(patches[finding.anchor.file])
                         or finding.anchor not in parse_diff(sections[finding.anchor.file])):
@@ -237,7 +252,8 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
             for key, finding in current_by_key.items():
                 if key not in prior_keys:
                     state["pool"].append({"id": key, "finding": asdict(finding),
-                                          "disposition": "upheld", "head_sha": inputs.head_sha})
+                                          "disposition": "upheld", "head_sha": inputs.head_sha,
+                                          "dependencies": dependencies})
         if not repeated:
             for entry in state["pool"]:
                 if _finding(entry).anchor not in parse_diff(b"".join(sections.values())):
@@ -248,6 +264,15 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
                                     for comment in fresh_comments)
             state["sections"] = {name: data.decode("utf-8") for name, data in sections.items()}
             state["head_sha"] = inputs.head_sha
+            state["dependencies"] = dependencies
+        stale_dependencies = 0
+        for entry in state["pool"]:
+            stale = (entry["disposition"] == "upheld"
+                     and entry.get("dependencies", []) != dependencies)
+            entry["dependency_status"] = "stale" if stale else "current"
+            stale_dependencies += int(stale)
+        if stale_dependencies and result.status == "complete":
+            result = replace(result, status="partial")
         active = tuple(_finding(entry) for entry in state["pool"]
                        if entry["disposition"] == "upheld")
         verdict = derive_verdict(dedupe_findings(active), config.verdict)
@@ -262,7 +287,9 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
                                                            config.rounds.max))
         _save(path, state)
         document = state | {"strategy": "iterative", "status": result.status,
-                            "head_sha": inputs.head_sha, "reviewed_files": list(patches)
+                            "head_sha": inputs.head_sha, "invalidated_findings": len(invalidated),
+                            "stale_dependency_findings": stale_dependencies,
+                            "reviewed_files": list(patches)
                             if reviewed else [], "initial": result.initial.to_dict(),
                             "usage": result.usage.to_dict()}
         write_owned_json(run / "iterative.json", document, prepared_root=inputs.root)

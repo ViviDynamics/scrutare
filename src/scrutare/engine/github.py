@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import base64
+import binascii
 import json
 import os
 import re
 import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass
+from hashlib import sha1
 from typing import Any
 
 Runner = Callable[..., subprocess.CompletedProcess[bytes]]
@@ -188,3 +191,63 @@ class GitHubClient:
 
     def get_review_comments(self, ref: PullRequestRef) -> list[dict[str, Any]]:
         return self._list(f"{self._endpoint(ref)}/comments")
+
+    def _object(self, repository: str, kind: str, sha: str) -> dict[str, Any]:
+        owner, repo = _repository(repository)
+        if not isinstance(sha, str) or re.fullmatch(r"[0-9a-f]{40}", sha) is None:
+            raise GitHubError("Repository context requires an exact commit or object SHA.")
+        data = _json(_run(["gh", "api", f"repos/{owner}/{repo}/git/{kind}/{sha}"],
+                          self._runner))
+        if not isinstance(data, dict) or data.get("sha") != sha:
+            raise GitHubError("GitHub object identity disagrees with the requested revision.")
+        return data
+
+    def get_commit(self, repository: str, sha: str) -> str:
+        """Resolve only a pinned commit to its tree object, never a branch."""
+        data = self._object(repository, "commits", sha)
+        tree = data.get("tree")
+        if (not isinstance(tree, dict) or not isinstance(tree.get("sha"), str)
+                or re.fullmatch(r"[0-9a-f]{40}", tree["sha"]) is None):
+            raise GitHubError("GitHub returned malformed commit tree metadata.")
+        return str(tree["sha"])
+
+    def get_tree(self, repository: str, sha: str) -> tuple[dict[str, Any], ...]:
+        """Read one nonrecursive tree and reject incomplete or unsafe entries."""
+        data = self._object(repository, "trees", sha)
+        if data.get("truncated") is not False or not isinstance(data.get("tree"), list):
+            raise GitHubError("GitHub returned an incomplete repository tree.")
+        seen: set[str] = set()
+        entries = []
+        for entry in data["tree"]:
+            if (not isinstance(entry, dict) or not isinstance(entry.get("path"), str)
+                    or entry["path"] in ("", ".", "..")
+                    or any(char in entry["path"] for char in "/\\\x00")
+                    or entry["path"] in seen
+                    or not isinstance(entry.get("sha"), str)
+                    or re.fullmatch(r"[0-9a-f]{40}", entry["sha"]) is None
+                    or (entry.get("mode"), entry.get("type")) not in {
+                        ("100644", "blob"), ("100755", "blob"), ("120000", "blob"),
+                        ("040000", "tree"), ("160000", "commit")}
+                    or entry["type"] == "blob" and (
+                        type(entry.get("size")) is not int or entry["size"] < 0)):
+                raise GitHubError("GitHub returned malformed repository tree entries.")
+            seen.add(entry["path"])
+            entries.append(entry)
+        return tuple(entries)
+
+    def get_blob(self, repository: str, sha: str, *, max_bytes: int) -> bytes:
+        """Decode bounded blob bytes and verify their Git identity before retaining them."""
+        data = self._object(repository, "blobs", sha)
+        try:
+            if (data.get("encoding") != "base64" or type(data.get("size")) is not int
+                    or not 0 <= data["size"] <= max_bytes
+                    or not isinstance(data.get("content"), str)
+                    or len(data["content"]) > (max_bytes * 2 + 256)):
+                raise ValueError
+            content = base64.b64decode("".join(data["content"].split()), validate=True)
+            identity = sha1(b"blob " + str(len(content)).encode() + b"\0" + content).hexdigest()
+            if len(content) != data["size"] or identity != sha:
+                raise ValueError
+            return content
+        except (ValueError, binascii.Error):
+            raise GitHubError("GitHub returned invalid or oversized blob content.") from None

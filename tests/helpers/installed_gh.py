@@ -22,7 +22,7 @@ if args == ["api", "repos/owner/repo/pulls/12"]:
         metadata["head"]["sha"] = "b" * 40
 snapshots = {}
 if payload:
-    run, = Path(".scrutare/runs").iterdir()
+    run = max(Path(".scrutare/runs").glob("run-*"), key=lambda path: path.stat().st_mtime_ns)
     snapshots = {name: hashlib.sha256((run / name).read_bytes()).hexdigest()
                  for name in ("diff.patch", "config.yaml", "config.json", "findings.json",
                               "verdict.json")}
@@ -58,6 +58,8 @@ elif "--paginate" in args:
         print(json.dumps([spec["files"]]))
     else:
         print(json.dumps([[{"body": "DISCUSSION_SENTINEL"}]]))
+elif endpoint in spec.get("objects", {}):
+    print(json.dumps(spec["objects"][endpoint]))
 elif endpoint == "repos/owner/repo/pulls/12":
     print(json.dumps(metadata))
 else:
