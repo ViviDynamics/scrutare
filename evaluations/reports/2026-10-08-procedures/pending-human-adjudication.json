@@ -1,0 +1,550 @@
+{
+  "human_judgments": 0,
+  "items": [
+    {
+      "ambiguous": true,
+      "case_id": "consumer-bool-string",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 2,
+        "problem": "The function 'enabled' was modified from returning a comparison of a lowercased string to 'true', to returning the boolean value of the input directly.",
+        "reason": "This change affects the correctness of the function, which is meant to interpret string inputs as boolean values. The new implementation may produce incorrect results if the input is a string like 'false' or 'TRUE', as it now converts any non-empty string to True, contrary to the original purpose.",
+        "side": "RIGHT"
+      },
+      "finding_id": "19444be8f158c8f2ca5288bf79fa9933fe0dd83067500e5ff694de19120f783b",
+      "method": "automated",
+      "packet_case_index": 3,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"FALSE\": false, \"TRUE\": true, \"false\": false, \"true\": true}, \"head\": {\"FALSE\": true, \"TRUE\": true, \"false\": true, \"true\": true}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "consumer-bool-string",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 1,
+        "problem": "The 'enabled' function now returns 'bool(value)', which converts any input to a boolean, rather than checking if the input string equals 'true'. This changes the behavior and could lead to unexpected results if the function is expected to handle string inputs explicitly.",
+        "reason": "The original function handled string inputs specifically, returning True only if the string was 'true' (case insensitive). The new implementation, however, converts any input to a boolean directly, which means non-string values like numbers or objects will be coerced into boolean values, possibly breaking existing contract.",
+        "side": "RIGHT"
+      },
+      "finding_id": "25ea72cee7a554c4b08859e1332fdec30836e4e5b3cc6d4b6dea9012edb4706f",
+      "method": "automated",
+      "packet_case_index": 5,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"FALSE\": false, \"TRUE\": true, \"false\": false, \"true\": true}, \"head\": {\"FALSE\": true, \"TRUE\": true, \"false\": true, \"true\": true}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "consumer-bool-string",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 1,
+        "problem": "The function enabled() now converts the input value to a boolean directly, replacing a string comparison.",
+        "reason": "This change means that only boolean-like inputs will be correctly processed, and string inputs like 'true' or 'false' no longer result in the expected boolean but instead rely on the truthiness of the value, which may lead to incorrect behavior.",
+        "side": "RIGHT"
+      },
+      "finding_id": "30a4033a69ad5416dba9e9ce8c5c9bd4e0ab171b0bfdafb1959466b181bef9bf",
+      "method": "automated",
+      "packet_case_index": 7,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"FALSE\": false, \"TRUE\": true, \"false\": false, \"true\": true}, \"head\": {\"FALSE\": true, \"TRUE\": true, \"false\": true, \"true\": true}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "consumer-bool-string",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 1,
+        "problem": "The previous implementation of the 'enabled' function used string comparison to determine boolean value, which may not handle all cases reliably.",
+        "reason": "The change replaces explicit string comparison with an unchecked boolean cast, which may not interpret input correctly, especially for non-string inputs.",
+        "side": "RIGHT"
+      },
+      "finding_id": "7ebdaf9ecf1ca7d17867624b09dfd355a5684a85f31b50bbc86ad5cf34555360",
+      "method": "automated",
+      "packet_case_index": 16,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"FALSE\": false, \"TRUE\": true, \"false\": false, \"true\": true}, \"head\": {\"FALSE\": true, \"TRUE\": true, \"false\": true, \"true\": true}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "consumer-empty-search",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 1,
+        "problem": "The search function currently does not handle an empty search term properly.",
+        "reason": "When term is empty, the function should return all rows, but without the added check, it would return an empty list which is inconsistent with the intended behavior.",
+        "side": "RIGHT"
+      },
+      "finding_id": "341d1f0ce4d4012ba7e5517f11d9de5d72caf747cfd88f02c2db671e79243090",
+      "method": "automated",
+      "packet_case_index": 2,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"empty_search\": [\"alpha\", \"beta\"], \"substring\": [\"alpha\"]}, \"head\": {\"empty_search\": [], \"substring\": [\"alpha\"]}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "consumer-empty-search",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 2,
+        "problem": "Method does not handle empty search term properly",
+        "reason": "In the provided code, the search function does not explicitly handle an empty search term, which should return every row but instead may return incorrect data or behave unexpectedly",
+        "side": "RIGHT"
+      },
+      "finding_id": "780ba14eec3ccf6660cbaf95edc838330ceb792cb33750dfcd5944f813b28bfd",
+      "method": "automated",
+      "packet_case_index": 15,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"empty_search\": [\"alpha\", \"beta\"], \"substring\": [\"alpha\"]}, \"head\": {\"empty_search\": [], \"substring\": [\"alpha\"]}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "consumer-page-index",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 1,
+        "problem": "The function page_offset has been modified to change its calculation logic.",
+        "reason": "The original implementation returned (page - 1) * size, which is typical for zero-based indexing. The new implementation returns page * size, likely shifting the calculation to one-based indexing or incorrect logic for page offset calculation.",
+        "side": "RIGHT"
+      },
+      "finding_id": "0ed48166183d4ae40ea5a7cba0c7d22ad3ed543230ebde10aef752d860ed2d04",
+      "method": "automated",
+      "packet_case_index": 2,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"first_page_results\": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19], \"offsets\": [0, 20, 40]}, \"head\": {\"first_page_results\": [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39], \"offsets\": [20, 40, 60]}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "consumer-page-index",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 2,
+        "problem": "Change in page_offset calculation",
+        "reason": "The function was modified from returning (page - 1) * size to returning page * size, which alters the calculation of the offset value based on page number.",
+        "side": "RIGHT"
+      },
+      "finding_id": "c17591ac3e12ac72d7c64d31497d83a8701df758558074edc778947acf547173",
+      "method": "automated",
+      "packet_case_index": 26,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"first_page_results\": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19], \"offsets\": [0, 20, 40]}, \"head\": {\"first_page_results\": [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39], \"offsets\": [20, 40, 60]}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "contract-exclusive-boundary",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 1,
+        "problem": "Changed size comparison from exclusive to inclusive.",
+        "reason": "The function 'allowed' originally checked if size was strictly less than the limit, which may cause errors if sizes equal to the limit should be allowed. The modification changes the comparison to allow sizes equal to the limit, which can alter the logic if the intention was strictly less than.",
+        "side": "RIGHT"
+      },
+      "finding_id": "086ec7f5fa7538ebdd60ab06f05a896fcf73104da85a4948d2486630933241fb",
+      "method": "automated",
+      "packet_case_index": 1,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"above\": false, \"at_limit\": false, \"below\": true}, \"head\": {\"above\": false, \"at_limit\": true, \"below\": true}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "contract-exclusive-boundary",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 1,
+        "problem": "The function was modified to include sizes equal to the limit by changing '<' to '<='.",
+        "reason": "The function originally used a strict inequality (size < limit), which did not permit sizes equal to the limit. This may cause size validation to fail unexpectedly.",
+        "side": "RIGHT"
+      },
+      "finding_id": "17b43526b9da160864b792046ef46afae7018deec6df790788849995c685e1c4",
+      "method": "automated",
+      "packet_case_index": 3,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"above\": false, \"at_limit\": false, \"below\": true}, \"head\": {\"above\": false, \"at_limit\": true, \"below\": true}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "contract-exclusive-boundary",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 2,
+        "problem": "Off-by-one error in the comparison operator for size limit.",
+        "reason": "The original function used 'size < limit', which allowed sizes strictly less than the limit, but the comment states 'Allow sizes strictly below the exclusive limit.' The change reverts to the original code, restoring the intended behavior.",
+        "side": "RIGHT"
+      },
+      "finding_id": "bd685c1fe4cb5fe90e0d6421843ceb55225ab5dd7474a39f81c212df6643a478",
+      "method": "automated",
+      "packet_case_index": 26,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"above\": false, \"at_limit\": false, \"below\": true}, \"head\": {\"above\": false, \"at_limit\": true, \"below\": true}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "contract-null-zero",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 1,
+        "problem": "Potential incorrect behavior in the timeout function.",
+        "reason": "The original code 'return 30 if value is None else value' would return None if value is explicitly passed as None, which may not be intended. The new code 'return value or 30' returns 30 when value is None or any falsey value, including 0 or empty string, which may lead to unexpected defaulting.",
+        "side": "RIGHT"
+      },
+      "finding_id": "9d1b1f13b2d7618ad790a3164f54cf5c4ae099d4ed8a42ffbca691a00826d351",
+      "method": "automated",
+      "packet_case_index": 21,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"five\": 5, \"none\": 30, \"zero\": 0}, \"head\": {\"five\": 5, \"none\": 30, \"zero\": 30}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "contract-null-zero",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 1,
+        "problem": "Potential logical error in the timeout function.",
+        "reason": "The original line 'return 30 if value is None else value' returns 0 if value is falsy, which includes None,  potentially not respecting the intended default timeout of 30 seconds.",
+        "side": "RIGHT"
+      },
+      "finding_id": "b36bee8fd4022f9b346ca510de4c0c75b4ddaa0a947a2c5a6ca48843d1d57458",
+      "method": "automated",
+      "packet_case_index": 24,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"five\": 5, \"none\": 30, \"zero\": 0}, \"head\": {\"five\": 5, \"none\": 30, \"zero\": 30}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "operations-flush-loss",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 1,
+        "problem": "Order of operations in the shutdown function could lead to incomplete data transmission if writer.close() is called before flushing.",
+        "reason": "The original code called writer.close() before flushing, which might prevent buffered data from being sent, causing potential data loss.",
+        "side": "RIGHT"
+      },
+      "finding_id": "23b1b943f5cfa408d2f8a96a4b5f7ed1cf02f9a2432373830e5a6cb8f611c460",
+      "method": "automated",
+      "packet_case_index": 4,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"closed\": true, \"persisted\": \"event-one\\nevent-two\\n\", \"shutdown\": {\"value\": null}}, \"head\": {\"closed\": true, \"persisted\": \"\", \"shutdown\": {\"exception\": \"ValueError\", \"message\": \"I/O operation on closed file.\"}}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "operations-flush-loss",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 1,
+        "problem": "Incorrect order of writer closure in shutdown function",
+        "reason": "The original code called writer.close() at the end, which could close the writer before flushing pending items, potentially losing data. The modification moves writer.close() to the start of the shutdown function, which might close the writer prematurely, or incorrectly.",
+        "side": "RIGHT"
+      },
+      "finding_id": "a6b5790c7d2c0a1e05dac34a099cc44c3c632d4c1fd4d69fd7d37acf0f99ea95",
+      "method": "automated",
+      "packet_case_index": 25,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"closed\": true, \"persisted\": \"event-one\\nevent-two\\n\", \"shutdown\": {\"value\": null}}, \"head\": {\"closed\": true, \"persisted\": \"\", \"shutdown\": {\"exception\": \"ValueError\", \"message\": \"I/O operation on closed file.\"}}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "operations-retry-unit",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 1,
+        "problem": "Incorrect unit conversion in delay_seconds function.",
+        "reason": "The original code divides retry_after_ms by 1000, which is incorrect if the intention is to convert milliseconds to seconds. The modified code multiplies by 1000, which actually converts seconds to milliseconds, leading to a logical error in delay calculation.",
+        "side": "RIGHT"
+      },
+      "finding_id": "13201303209f5dd502fbd76a8c574cfef5ce12e2b25d1489fd295138cc277542",
+      "method": "automated",
+      "packet_case_index": 3,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"500_ms\": 0.5, \"zero_ms\": 0.0}, \"head\": {\"500_ms\": 500000, \"zero_ms\": 0}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "operations-retry-unit",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 1,
+        "problem": "Incorrect conversion factor in delay_seconds function.",
+        "reason": "The function currently multiplies retry_after_ms by 1000, which incorrectly converts milliseconds to milliseconds (no conversion).",
+        "side": "RIGHT"
+      },
+      "finding_id": "3147c7215558a2de2bee45784ffabfa41339856612b2da53b08c22609e5ee354",
+      "method": "automated",
+      "packet_case_index": 7,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"500_ms\": 0.5, \"zero_ms\": 0.0}, \"head\": {\"500_ms\": 500000, \"zero_ms\": 0}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "operations-retry-unit",
+      "finding": {
+        "category": "security",
+        "file": "change.py",
+        "line": 1,
+        "problem": "Incorrect unit conversion for delay calculation",
+        "reason": "The function delay_seconds multiplies milliseconds by 1000 instead of dividing to convert milliseconds to seconds, leading to a potential delay that is 1000 times longer than intended.",
+        "side": "RIGHT"
+      },
+      "finding_id": "6c81c5769def56064e752b44446be63ebe073c8c16c569a25234ae82362946e2",
+      "method": "automated",
+      "packet_case_index": 15,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"500_ms\": 0.5, \"zero_ms\": 0.0}, \"head\": {\"500_ms\": 500000, \"zero_ms\": 0}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "operations-retry-unit",
+      "finding": {
+        "category": "security",
+        "file": "change.py",
+        "line": 1,
+        "problem": "Incorrect unit conversion in delay_seconds function",
+        "reason": "The function is intended to convert milliseconds to seconds but incorrectly multiplies by 1000, leading to a delay value that is 1000 times larger than expected, which could cause timing issues or denial of service if used for rate limiting or retries.",
+        "side": "RIGHT"
+      },
+      "finding_id": "bbbc29523145489d39b3cade1ac6104784ef40d69dc5bbb00c0563468bb25b4d",
+      "method": "automated",
+      "packet_case_index": 26,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"500_ms\": 0.5, \"zero_ms\": 0.0}, \"head\": {\"500_ms\": 500000, \"zero_ms\": 0}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "security-sql-interpolation",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 2,
+        "problem": "SQL injection vulnerability",
+        "reason": "The change replaces a parameterized query with string concatenation, which can lead to SQL injection if 'name' contains malicious SQL code. This could compromise database integrity or leak sensitive information.",
+        "side": "RIGHT"
+      },
+      "finding_id": "0576046b85b2e2ae662230c00d9700b55d9a4741bde73bb3e8b566241c64b87f",
+      "method": "automated",
+      "packet_case_index": 1,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"attack_ids\": [], \"normal_ids\": [1]}, \"head\": {\"attack_ids\": [1, 2], \"normal_ids\": [1]}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "security-sql-interpolation",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 1,
+        "problem": "Potential SQL injection vulnerability.",
+        "reason": "Concatenating user-provided input directly into SQL queries can allow malicious input to execute arbitrary SQL commands.",
+        "side": "RIGHT"
+      },
+      "finding_id": "3b6f4c15ffd50053211ecad2d559345971922fba2bf7c2f7f28296261a7dd595",
+      "method": "automated",
+      "packet_case_index": 8,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"attack_ids\": [], \"normal_ids\": [1]}, \"head\": {\"attack_ids\": [1, 2], \"normal_ids\": [1]}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "security-sql-interpolation",
+      "finding": {
+        "category": "security",
+        "file": "change.py",
+        "line": 2,
+        "problem": "SQL Injection vulnerability",
+        "reason": "The modified line concatenates the 'name' parameter directly into the SQL query string, which allows injection of malicious SQL code if 'name' is not sanitized. This can lead to unauthorized data access or modification.",
+        "side": "RIGHT"
+      },
+      "finding_id": "aeff31c7d456d0ad12db9b8e4e1239d2ea56ae68f5f87b8731a75a1828ceb5b7",
+      "method": "automated",
+      "packet_case_index": 28,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"attack_ids\": [], \"normal_ids\": [1]}, \"head\": {\"attack_ids\": [1, 2], \"normal_ids\": [1]}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "security-tenant-filter",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 2,
+        "problem": "Inverted filter logic in the 'records' function.",
+        "reason": "The original code filtered rows matching the tenant, potentially conflicting with expected behavior. The reversed logic may lead to incorrect filtering results, causing consumers of this function to receive unintended data.",
+        "side": "RIGHT"
+      },
+      "finding_id": "335d6874110b429c5a17cb04a46fea5413be3952ddc1409890f044b0ffee3d17",
+      "method": "automated",
+      "packet_case_index": 7,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"own_only\": [{\"secret\": \"own\", \"tenant\": \"A\"}], \"tenant_A\": [{\"secret\": \"own\", \"tenant\": \"A\"}]}, \"head\": {\"own_only\": [], \"tenant_A\": [{\"secret\": \"other\", \"tenant\": \"B\"}]}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "security-tenant-filter",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 2,
+        "problem": "The logic of the 'records' function was inverted from filtering rows matching the tenant to filtering rows not matching the tenant.",
+        "reason": "The original code returned rows where 'tenant' matched, which conflicts with typical expected behavior of filtering or selecting based on tenant. The new implementation filters rows where 'tenant' does not match, which may be unintended and could cause correctness issues.",
+        "side": "RIGHT"
+      },
+      "finding_id": "8e2ab278cd6c1a968ad599b597c9dd3fb3f6689b6ac87b6395344e6ced5bcbae",
+      "method": "automated",
+      "packet_case_index": 18,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"own_only\": [{\"secret\": \"own\", \"tenant\": \"A\"}], \"tenant_A\": [{\"secret\": \"own\", \"tenant\": \"A\"}]}, \"head\": {\"own_only\": [], \"tenant_A\": [{\"secret\": \"other\", \"tenant\": \"B\"}]}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "security-tenant-filter",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 1,
+        "problem": "The filter condition in the 'records' function is inverted.",
+        "reason": "The original code filters rows where 'tenant' matches the provided tenant, which may not be the intended logic. The patch changes it to filter rows where 'tenant' does not match, altering the behavior.",
+        "side": "RIGHT"
+      },
+      "finding_id": "a140c9b638800348b0128b77c2a55672ee6334aa1ef2fc0bb5d5f74023fda050",
+      "method": "automated",
+      "packet_case_index": 21,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"own_only\": [{\"secret\": \"own\", \"tenant\": \"A\"}], \"tenant_A\": [{\"secret\": \"own\", \"tenant\": \"A\"}]}, \"head\": {\"own_only\": [], \"tenant_A\": [{\"secret\": \"other\", \"tenant\": \"B\"}]}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "tests-truthy-balance",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 4,
+        "problem": "Test assertion mismatch after code change.",
+        "reason": "The test was updated to assert the wrong value (equals 'remaining(10, 3)'), which no longer reflects the intended logic of the function.",
+        "side": "RIGHT"
+      },
+      "finding_id": "be35dfb42007d2a1d9a8fae0b064f08eec59a35e890e183361b4aadc531a3dc9",
+      "method": "automated",
+      "packet_case_index": 40,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"frozen_test\": {\"value\": null}, \"remaining\": 7, \"wrong_13_mutation\": {\"exception\": \"AssertionError\", \"message\": \"\"}}, \"head\": {\"frozen_test\": {\"value\": null}, \"remaining\": 13, \"wrong_13_mutation\": {\"value\": null}}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "tests-truthy-balance",
+      "finding": {
+        "category": "regression",
+        "file": "change.py",
+        "line": 4,
+        "problem": "Test case no longer aligns with the original function intent.",
+        "reason": "The test now asserts an incorrect expected value after the function was changed, indicating a regression in expected behavior.",
+        "side": "RIGHT"
+      },
+      "finding_id": "f5fd0fcc2f7ac2bd3e3d68e07821368b1903ed6bace1dfc758b70e62725e2b47",
+      "method": "automated",
+      "packet_case_index": 52,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"frozen_test\": {\"value\": null}, \"remaining\": 7, \"wrong_13_mutation\": {\"exception\": \"AssertionError\", \"message\": \"\"}}, \"head\": {\"frozen_test\": {\"value\": null}, \"remaining\": 13, \"wrong_13_mutation\": {\"value\": null}}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "tests-vacuous-exception",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 4,
+        "problem": "The test_negative() function's expectation to specifically catch a ValueError is inconsistent with the modified parse() implementation that no longer raises one.",
+        "reason": "After the change, parse(-1) does not raise, making the try-except block in test_negative() ineffective and potentially causing test failures or false positives.",
+        "side": "RIGHT"
+      },
+      "finding_id": "3053d37f4cfe013faffbe7f3c98b4faed6937bb4e82778c961297705798b5686",
+      "method": "automated",
+      "packet_case_index": 5,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"frozen_test\": {\"value\": null}, \"missing_exception_mutation\": {\"exception\": \"AssertionError\", \"message\": \"required exception did not occur\"}, \"negative\": {\"exception\": \"ValueError\", \"message\": \"negative\"}, \"positive\": 2}, \"head\": {\"frozen_test\": {\"value\": null}, \"missing_exception_mutation\": {\"value\": null}, \"negative\": {\"value\": -1}, \"positive\": 2}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "tests-vacuous-exception",
+      "finding": {
+        "category": "style",
+        "file": "change.py",
+        "line": 1,
+        "problem": "Incorrect use of pytest.raises for exception testing.",
+        "reason": "The test_negative function tries to assert that parse(-1) raises a ValueError, but the original code uses pytest.raises which is correct in pytest contexts. The modified code replaces this with a try-except block, which is less idiomatic in pytest tests and could lead to missed failures if exceptions are not raised.",
+        "side": "LEFT"
+      },
+      "finding_id": "73622b00583d68cd190c1b38e79e30bd30d61e2a2677fc6c333d7e82267cc3bc",
+      "method": "automated",
+      "packet_case_index": 15,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"frozen_test\": {\"value\": null}, \"missing_exception_mutation\": {\"exception\": \"AssertionError\", \"message\": \"required exception did not occur\"}, \"negative\": {\"exception\": \"ValueError\", \"message\": \"negative\"}, \"positive\": 2}, \"head\": {\"frozen_test\": {\"value\": null}, \"missing_exception_mutation\": {\"value\": null}, \"negative\": {\"value\": -1}, \"positive\": 2}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "tests-vacuous-exception",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 4,
+        "problem": "Improper exception handling in test_negative()",
+        "reason": "The original code used pytest.raises to check for ValueError, which may not correctly catch the exception if parse(-1) does not raise it. The modified code replaces this with a try-except block, but it does not explicitly fail the test if no exception is raised, which is a regression in correctness.",
+        "side": "RIGHT"
+      },
+      "finding_id": "a8e415e547563914e3785afb2a95208fabd481e8f1c38ea5017e5eb500dcf384",
+      "method": "automated",
+      "packet_case_index": 22,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"frozen_test\": {\"value\": null}, \"missing_exception_mutation\": {\"exception\": \"AssertionError\", \"message\": \"required exception did not occur\"}, \"negative\": {\"exception\": \"ValueError\", \"message\": \"negative\"}, \"positive\": 2}, \"head\": {\"frozen_test\": {\"value\": null}, \"missing_exception_mutation\": {\"value\": null}, \"negative\": {\"value\": -1}, \"positive\": 2}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "tests-vacuous-exception",
+      "finding": {
+        "category": "style",
+        "file": "change.py",
+        "line": 1,
+        "problem": "Incorrect use of pytest for exception testing",
+        "reason": "The original code intends to test that parse(-1) raises a ValueError, but the code currently does not perform this check correctly. The patch modifies the test to use try-except instead of pytest.raises, which is inconsistent with pytest's idiomatic usage.",
+        "side": "RIGHT"
+      },
+      "finding_id": "d86ebc6fa8abfdfbe5fbaea50149ce561bef3c627036c0f75da64fd83b21cb41",
+      "method": "automated",
+      "packet_case_index": 36,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"frozen_test\": {\"value\": null}, \"missing_exception_mutation\": {\"exception\": \"AssertionError\", \"message\": \"required exception did not occur\"}, \"negative\": {\"exception\": \"ValueError\", \"message\": \"negative\"}, \"positive\": 2}, \"head\": {\"frozen_test\": {\"value\": null}, \"missing_exception_mutation\": {\"value\": null}, \"negative\": {\"value\": -1}, \"positive\": 2}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    },
+    {
+      "ambiguous": true,
+      "case_id": "tests-vacuous-exception",
+      "finding": {
+        "category": "correctness",
+        "file": "change.py",
+        "line": 1,
+        "problem": "The test_negative function no longer checks for a ValueError exception as originally intended, but instead captures and passes any exception silently.",
+        "reason": "The modified test_no_exception function replaces pytest.raises with a try-except block that captures all exceptions, which may suppress test failures or unexpected exceptions. This change could hide errors rather than validate intended behavior.",
+        "side": "RIGHT"
+      },
+      "finding_id": "de68faea9fa6e225a72a368dae4200a155fef4b97710a35921ec9ad695bfe097",
+      "method": "automated",
+      "packet_case_index": 38,
+      "rationale": "Potentially correct core mechanism accompanied by a contradictory trigger/impact, wrong source version, or insufficient match specificity. Requires actual independent human judgment; omitted from scorer decisions. Executable controls: {\"base\": {\"frozen_test\": {\"value\": null}, \"missing_exception_mutation\": {\"exception\": \"AssertionError\", \"message\": \"required exception did not occur\"}, \"negative\": {\"exception\": \"ValueError\", \"message\": \"negative\"}, \"positive\": 2}, \"head\": {\"frozen_test\": {\"value\": null}, \"missing_exception_mutation\": {\"value\": null}, \"negative\": {\"value\": -1}, \"positive\": 2}}",
+      "reviewer": "independent-codex-source-and-control-adjudicator"
+    }
+  ],
+  "schema_version": 1
+}
