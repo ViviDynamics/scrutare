@@ -1,14 +1,13 @@
 # Writing review personas
 
 A persona is a name and a system prompt that defines a review perspective.
-The registry loads the four packaged built-ins and resolves configured names
+The registry loads five packaged built-ins and resolves configured names
 and inline definitions into frozen `PersonaDefinition` objects. Adding a
 custom perspective requires only a configuration change.
 
 Persona resolution and [confined input descriptors](path-filters.md) are
-implemented, alongside the pure findings and verdict APIs. Session orchestration
-and live model calls remain future work. The prompts express the review
-contract; the registry does not execute sessions. Every configured persona
+implemented, alongside the pure findings and verdict APIs. The production engine executes nare sessions. The prompts express the review
+contract; the registry itself does not execute sessions. Every configured persona
 receives the same filtered artifact root and read-only tools through the input
 descriptor. See the [configuration reference](config.md) for all settings and
 [specification](SPEC.md) for the planned review pipeline.
@@ -21,6 +20,7 @@ descriptor. See the [configuration reference](config.md) for all settings and
 | `junior-dev` | Walk through common usage, boundary inputs, and errors as a new contributor. Find misleading names, hidden preconditions, confusing interfaces, and examples that teach incorrect behavior. |
 | `security` | Trace attacker-controlled inputs across trust boundaries. Inspect authentication, authorization, tenant isolation, injection, dependencies, and sensitive data handling; explain plausible exploit conditions. |
 | `devops` | Follow build, packaging, configuration, deployment, operation, and rollback. Inspect CI, resources, observability, migrations, reproducibility, and failure recovery. |
+| `testing-verification` | Optional reviewer: construct boundary cases, seek counterexamples, and check assertion discrimination against concrete failures. |
 
 Custom prompts should add a useful perspective while keeping the same evidence
 and authority boundaries as the built-ins.
