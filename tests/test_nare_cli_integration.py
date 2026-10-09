@@ -807,7 +807,9 @@ def assert_panel_evidence(result, inputs, config):
             assert load(outcome.artifact_directory / "reanchor.schema.json") == CORRECTION_SCHEMA
             requests = tuple(ReanchorRequest(item["request_id"], next(
                 finding for initial in result.initial.outcomes for finding in initial.findings
-                if asdict(finding) == item["original"]
+                if {"anchor": asdict(finding.anchor),
+                    "category": finding.category, "problem": finding.problem,
+                    "reason": finding.reason, "persona": finding.persona} == item["original"]
             )) for item in invocation["requests"])
             assert observed["selection"]["prompt"] == PersonaReanchorInput(
                 inputs, descriptor.persona, requests,
