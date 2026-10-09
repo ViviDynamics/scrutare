@@ -49,7 +49,8 @@ def score_experiment(runs: list[dict[str, Any]], labels: dict[str, Any],
             raise ValueError('human reviewer and rationale required')
         run, _ = known[key]
         defect = decision['defect_id']
-        if defect is not None and defect not in {d['id'] for d in labels[run['case_id']]['defects']}:
+        valid_defects = {d['id'] for d in labels[run['case_id']]['defects']}
+        if defect is not None and defect not in valid_defects:
             raise ValueError('unknown defect match')
         matches[key] = defect
     results = {}

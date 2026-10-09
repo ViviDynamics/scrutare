@@ -1,6 +1,6 @@
 import pytest
 
-from scrutare.evaluation.scoring import finding_id, adjudication_packet, score_experiment
+from scrutare.evaluation.scoring import adjudication_packet, finding_id, score_experiment
 
 
 def record(case='bug', status='complete', findings=None):
