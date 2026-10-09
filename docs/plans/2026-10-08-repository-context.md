@@ -33,9 +33,9 @@ independent review, both mandatory full Python/native Docker lanes, and shipping
   exhaustion escalates without dropping carried blocking findings or claiming completion.
 
 ## Corpus evaluator integration
-- [ ] 6. Explicit optional corpus source declaration: red tests reject escape paths, symlinks, missing declarations and oversized snapshot inventories. Each side declares source directory, repository and pinned revision; source hashes are frozen before the first await.
-- [ ] 7. Production preparation adapter: red tests prove all repeated jobs read immutable source bytes through RepositorySnapshot and capture_repository_context; original capture hashes remain intact and metadata transformations are recorded only for explicit declarations.
-- [ ] 8. Installed nare proof: related files are readable from the guarded root without labels or source-directory access; fork identities and unavailable head identity preserve their intended semantics.
+- [x] 6. Explicit optional corpus source declaration: red tests reject escape paths, symlinks, missing declarations and oversized snapshot inventories. Each side declares source directory, repository and pinned revision; source hashes are frozen before the first await.
+- [x] 7. Production preparation adapter: red tests prove all repeated jobs read immutable source bytes through RepositorySnapshot and capture_repository_context; original capture hashes remain intact and metadata transformations are recorded only for explicit declarations.
+- [x] 8. Installed nare proof: related files are readable from the guarded root without labels or source-directory access; fork identities and unavailable head identity preserve their intended semantics.
 
 Corpus declarations describe original local snapshots, not hosted Git commit authenticity.
 Diff-only baseline capture bytes and behavior remain unchanged. Bounds apply to the
