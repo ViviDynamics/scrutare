@@ -14,6 +14,17 @@ from scrutare.interfaces.app import AppError, JobStore
 from scrutare.interfaces.app_worker import GitHubAppClient, run_job
 
 
+def cli_result(root, **changes):
+    """Install and return the current CLI success document for one run directory."""
+    document = {"schema_version": 1, "scrutare_version": "2026.10.2", "status": "posted",
+                "run_dir": str(root), "head_sha": "a" * 40, "verdict": "approve",
+                "rule": "no_blocking_findings", "panel_status": "complete",
+                "usage": {}, "accounting_complete": True, "review": {"id": 1}} | changes
+    raw = (json.dumps(document, sort_keys=True, indent=2) + "\n").encode()
+    (root / "result.json").write_bytes(raw)
+    return raw
+
+
 def test_app_jwt_is_short_lived_rsa_and_token_request_is_repo_scoped(tmp_path):
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     config = settings(tmp_path)
@@ -56,9 +67,7 @@ def test_worker_fetches_trusted_repo_config_runs_same_cli_and_keeps_secrets_out(
         calls.append((argv, kwargs))
         root = kwargs["cwd"] / ".scrutare" / "runs" / "test"
         root.mkdir(parents=True)
-        result = {"status": "posted", "verdict": "approve", "run_dir": str(root)}
-        (root / "result.json").write_text(json.dumps(result))
-        return subprocess.CompletedProcess(argv, 0, json.dumps(result).encode(), b"")
+        return subprocess.CompletedProcess(argv, 0, cli_result(root), b"")
     run_job(config, store, job, client=Client(), runner=runner)
     assert store.get(job["id"])["status"] == "posted"
     argv, kwargs = calls[0]
@@ -113,3 +122,67 @@ def test_app_client_never_leaks_http_errors(tmp_path):
     with pytest.raises(AppError, match="GitHub App request failed") as error:
         github_request("GET", "/app", "secret-token", None, opener=opener)
     assert "secret-token" not in str(error.value)
+
+
+class TrustedClient:
+    def installation_token(self, *args):
+        return "scoped-token"
+    def configuration(self, *args):
+        return (b"models:\n  default:\n    provider: openai\n"
+                b"    base_url: https://models.example/v1\n    model: example\n")
+
+
+def claimed(tmp_path):
+    store = JobStore(tmp_path / "jobs.sqlite")
+    store.enqueue("test", "owner/repo", 12, 456)
+    return store, store.claim()
+
+
+@pytest.mark.parametrize(("code", "status"), [
+    (1, "failed"), (2, "failed"), (130, "interrupted"), (-9, "interrupted")])
+def test_cli_exit_codes_distinguish_refusal_from_uncertain_interruption(tmp_path, code, status):
+    store, job = claimed(tmp_path)
+    def runner(argv, **kwargs):
+        return subprocess.CompletedProcess(argv, code, b"", b"scrutare: stopped\n")
+    run_job(settings(tmp_path), store, job, client=TrustedClient(), runner=runner)
+    saved = store.get(job["id"])
+    assert saved["status"] == status
+    assert saved["result"]["exit_code"] == code
+    work = tmp_path / "work" / job["id"]
+    assert saved["result"]["work_dir"] == str(work)
+    assert (work / "stderr.log").read_bytes() == b"scrutare: stopped\n"
+
+
+@pytest.mark.parametrize("corrupt", [
+    lambda root, raw: json.dumps(json.loads(raw)).encode(),  # not the installed bytes
+    lambda root, raw: cli_result(root, schema_version=2),
+    lambda root, raw: cli_result(root, status="uncertain"),
+    lambda root, raw: cli_result(root, head_sha="main"),
+    lambda root, raw: cli_result(root, verdict="merged"),
+    lambda root, raw: cli_result(root, run_dir=str(root.parent / ".." / ".." / "elsewhere")),
+    lambda root, raw: b"[]",
+])
+def test_success_requires_the_current_installed_cli_result_contract(tmp_path, corrupt):
+    store, job = claimed(tmp_path)
+    def runner(argv, **kwargs):
+        root = kwargs["cwd"] / ".scrutare" / "runs" / "test"
+        root.mkdir(parents=True)
+        return subprocess.CompletedProcess(argv, 0, corrupt(root, cli_result(root)), b"")
+    run_job(settings(tmp_path), store, job, client=TrustedClient(), runner=runner)
+    saved = store.get(job["id"])
+    assert saved["status"] == "failed"
+    assert "delivery may have occurred" in saved["result"]["error"]
+    assert "work_dir" in saved["result"]
+
+
+@pytest.mark.parametrize("verdict", ["approve", "changes_requested", "escalated"])
+def test_every_posted_verdict_is_a_successful_job(tmp_path, verdict):
+    store, job = claimed(tmp_path)
+    def runner(argv, **kwargs):
+        root = kwargs["cwd"] / ".scrutare" / "runs" / "test"
+        root.mkdir(parents=True)
+        return subprocess.CompletedProcess(argv, 0, cli_result(root, verdict=verdict), b"")
+    run_job(settings(tmp_path), store, job, client=TrustedClient(), runner=runner)
+    saved = store.get(job["id"])
+    assert saved["status"] == "posted"
+    assert saved["result"]["verdict"] == verdict

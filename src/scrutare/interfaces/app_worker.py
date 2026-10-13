@@ -6,6 +6,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -147,18 +148,31 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
         (root / "stdout.json").write_bytes(completed.stdout)
         (root / "stderr.log").write_bytes(completed.stderr)
         if completed.returncode != 0:
-            store.finish(job["id"], "failed", {"error": "review CLI failed; inspect job artifacts",
-                                               "exit_code": completed.returncode,
-                                               "work_dir": str(root)})
+            # Exit 130 and signal deaths can follow a delivered review; 1 and 2 are refusals
+            # or failures whose own diagnostic says whether delivery was confirmed.
+            stopped = completed.returncode == 130 or completed.returncode < 0
+            store.finish(job["id"], "interrupted" if stopped else "failed", {
+                "error": ("review CLI was interrupted; delivery may have occurred; "
+                          "inspect job artifacts" if stopped
+                          else "review CLI failed; inspect job artifacts"),
+                "exit_code": completed.returncode, "work_dir": str(root)})
             return
-        result = json.loads(completed.stdout)
-        if not isinstance(result, dict) or result.get("status") != "posted":
-            raise AppError("review CLI returned no confirmed result; inspect job artifacts")
-        run_dir = Path(result["run_dir"])
-        if not run_dir.is_relative_to(repository_root / ".scrutare" / "runs"):
-            raise AppError("review CLI returned an invalid artifact location")
-        if json.loads((run_dir / "result.json").read_bytes()) != result:
-            raise AppError("review CLI result disagrees with saved evidence")
+        # Exit 0 means the CLI confirmed delivery. An unusable document is therefore an
+        # uncertain outcome for callers, never grounds for an automatic second review.
+        try:
+            result = json.loads(completed.stdout)
+            run_dir = Path(result["run_dir"])
+            if (type(result["schema_version"]) is not int or result["schema_version"] != 1
+                    or result["status"] != "posted"
+                    or result["verdict"] not in ("approve", "changes_requested", "escalated")
+                    or re.fullmatch(r"[0-9a-f]{40}", result["head_sha"]) is None
+                    or not run_dir.resolve().is_relative_to(
+                        (repository_root / ".scrutare" / "runs").resolve())
+                    or (run_dir / "result.json").read_bytes() != completed.stdout):
+                raise ValueError
+        except (OSError, ValueError, KeyError, TypeError):
+            raise AppError("review CLI succeeded without its installed result; delivery may "
+                           "have occurred; inspect job artifacts") from None
         store.finish(job["id"], "posted", result)
     except (AppError, ConfigError) as error:
         store.finish(job["id"], "failed", {"error": str(error), "work_dir": str(root)})
