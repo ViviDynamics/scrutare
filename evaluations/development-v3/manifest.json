@@ -292,12 +292,12 @@
         "base": {
           "directory": "sources/dev3-12/base",
           "repository": "development-fixtures/local",
-          "revision": "2902d9cf7ed8d64db936da90f887be7ea95cc077"
+          "revision": "07028f9a026b543cfab4ffd0b302971ed111341a"
         },
         "head": {
           "directory": "sources/dev3-12/head",
           "repository": "development-fixtures/local",
-          "revision": "ebff7b6f2eb3fa94eeacc8b97d062a74215813f7"
+          "revision": "eb86404c5fbf1eb88ca74a63e2e02b55ec88fa3e"
         }
       },
       "domain": "correctness",

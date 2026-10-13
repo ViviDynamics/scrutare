@@ -1,7 +1,7 @@
 {
   "cases": 12,
   "clean_controls_verified": 5,
-  "clean_labels_requiring_context": 0,
+  "clean_labels_requiring_context": 4,
   "commit_pairs_reconstructed": 12,
   "control_executions": 24,
   "defects_verified": 7,

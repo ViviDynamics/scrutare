@@ -2,7 +2,7 @@
   "case_id": "dev3-12",
   "clean_label_requires_context": false,
   "counterexamples": [
-    "The only caller rejects a missing required value itself and supplies every optional one before rendering, so no placeholder is ever missing at this call."
+    "The only caller rejects a missing required value and any template field it does not know, and supplies every optional value before rendering, so no placeholder is ever missing at this call."
   ],
   "defects": [],
   "defensible_observations": [],
@@ -17,7 +17,7 @@
     {
       "allegation": "Callers that relied on KeyError to detect a missing template value will now send mail with a blank in the subject.",
       "evidence": "send.py compose in both revisions.",
-      "why_wrong": "send.py, the only caller, never relied on KeyError: it raises MissingValues for a missing required value and merges defaults for every optional one before calling render_subject. send.py is deliberately not captured, so a reviewer cannot see this."
+      "why_wrong": "send.py, the only caller, never relied on KeyError: it raises MissingValues for a missing required value or an unknown template field, and merges defaults for every optional value before calling render_subject. send.py is deliberately not captured, so a reviewer cannot see this."
     }
   ],
   "tool_expectation": {

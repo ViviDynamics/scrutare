@@ -24,7 +24,10 @@ omission) and the reviewer, assessor and discussion prompts state that `end_line
 may never exceed it. A final newline starts no further line, and only LF separates
 lines. The citation validator is unchanged and still refuses any out-of-range
 citation; preparation refuses a manifest whose `line_count` disagrees with the
-captured bytes or with the setting. With the setting off, manifests, prompts and
+captured bytes or with the setting. The setting does nothing while `context.enabled`
+is false, although it is still saved with the configuration. The prompts mention
+the bound only with `findings.evidence: v2`, the only mode in which reviewers
+cite line ranges; with legacy evidence the manifest alone carries it. With the setting off, manifests, prompts and
 saved configuration are byte-identical to earlier releases.
 
 Changed file identities precede sorted explicit related paths. Each candidate is

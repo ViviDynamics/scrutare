@@ -159,7 +159,8 @@ Ruff reports unused imports that are its public surface, a defect Ruff cannot se
 three clean changes that invite a wrong allegation (two on specialist paths),
 three defects on specialist paths (two of them behind a reassuring comment that an
 unchanged file contradicts), and a defect/clean pair whose deciding caller is
-deliberately not captured. The manifest declares no `analysis_capture`; capture
+deliberately not captured. Four clean labels hold only in context-enabled arms
+(`clean_label_requires_context`; see its README). The manifest declares no `analysis_capture`; capture
 tool evidence privately per job. Four fixture files are exempt from the
 repository lint for exactly the labeled codes. No dispute is forced, and these
 cases can never serve as unseen validation.

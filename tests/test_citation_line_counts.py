@@ -46,6 +46,53 @@ def test_default_manifest_and_prompts_are_unchanged(capture):
                                                ()).prompt
 
 
+def v2_inputs(run, *, line_counts):
+    from scrutare.engine.repository_context import capture_repository_context
+    from scrutare.engine.review_inputs import prepare_review_inputs
+
+    setting = b", line_counts: true" if line_counts else b""
+    config = parse_config(
+        CONFIG + b"context: {enabled: true" + setting + b"}\nfindings: {evidence: v2}\n")
+    metadata = read_json(run / "metadata.json")
+    metadata["head_sha"] = metadata["pull_request"]["head"]["sha"] = "a" * 40
+    metadata["pull_request"]["head"]["repo"] = {"full_name": "fork/repo"}
+    metadata["pull_request"]["base"]["sha"] = "b" * 40
+    save_json(run / "metadata.json", metadata)
+    for name in ("config.yaml", "config.json"):
+        save_json(run / name, config.to_dict())
+    capture_repository_context(Objects(), run, config)
+    return config, prepare_review_inputs(run, config)
+
+
+def prompts(inputs):
+    from scrutare.engine.assessment_inputs import AssessmentInput, assessor_persona
+    from scrutare.engine.discussion_inputs import DiscussionInput
+    from scrutare.engine.persona_inputs import PersonaReviewInput
+    from scrutare.personas import resolve_personas
+
+    persona = resolve_personas(("senior-dev",))[0]
+    return [PersonaReviewInput(persona, inputs).prompt,
+            AssessmentInput(assessor_persona("evidence-assessor"), inputs, ()).prompt,
+            DiscussionInput(persona, inputs, (), (), False, ()).prompt]
+
+
+def test_chosen_prompts_equal_default_prompts_plus_only_the_guidance(capture, tmp_path):
+    import shutil
+
+    from scrutare.findings.evidence import citation_bound_prompt
+
+    other = tmp_path / "run-chosen"
+    shutil.copytree(capture, other)
+    _, plain = v2_inputs(capture, line_counts=False)
+    _, chosen = v2_inputs(other, line_counts=True)
+    guidance = citation_bound_prompt(chosen.root)
+    assert GUIDANCE in guidance and citation_bound_prompt(plain.root) == ""
+    for default, opted in zip(prompts(plain), prompts(chosen)):
+        assert "line_count" not in default
+        assert opted.count(guidance) == 1
+        assert opted.replace(guidance, "") == default
+
+
 def test_chosen_manifest_records_the_bound_the_validator_enforces(capture):
     from scrutare.engine.review_inputs import prepare_review_inputs
     from scrutare.findings.evidence import validate_evidence
@@ -76,15 +123,33 @@ def test_chosen_manifest_records_the_bound_the_validator_enforces(capture):
                                             candidate_id="candidate-1"), inputs.root)
 
 
-def test_empty_captured_file_has_no_citeable_line(capture):
-    from scrutare.engine.repository_context import captured_line_count
-
-    assert captured_line_count(b"") == 0
-    assert captured_line_count(b"\n") == 1
-    assert captured_line_count(b"a\nb\n") == 2
-    assert captured_line_count(b"a\nb") == 2
+@pytest.mark.parametrize("content,expected", [
+    (b"", 0), (b"\n", 1), (b"a\nb\n", 2), (b"a\nb", 2), (b"a\r\nb\r\n", 2),
     # Only LF separates lines for citation purposes, exactly as the validator counts.
-    assert captured_line_count(b"first\x0bsecond\r\n") == 1
+    (b"first\x0bsecond\r\n", 1), (b"one\x0ctwo\xe2\x80\xa8three", 1),
+])
+def test_line_count_is_the_bound_the_unchanged_validator_enforces(tmp_path, content, expected):
+    from scrutare.engine.repository_context import captured_line_count
+    from scrutare.findings.evidence import validate_evidence
+
+    assert captured_line_count(content) == expected
+    (tmp_path / "blob.txt").write_bytes(content)
+    digest = sha256(content).hexdigest()
+    (tmp_path / "repository-context.json").write_text(json.dumps(dict(
+        revisions=dict(head=dict(sha="a" * 40)),
+        entries=[dict(side="head", path="a.py", revision="a" * 40, status="captured",
+                      sha256=digest, artifact="blob.txt")])))
+
+    def cite(end_line):
+        data = wire()
+        data["evidence"]["citations"][0].update(sha256=digest, start_line=1, end_line=end_line)
+        return parse_finding(data, persona="tester", evidence_version=2,
+                             candidate_id="candidate-1")
+
+    if expected:
+        validate_evidence(cite(expected), tmp_path)
+    with pytest.raises(FindingError, match="line_range_outside_capture"):
+        validate_evidence(cite(expected + 1), tmp_path)
 
 
 @pytest.mark.parametrize("mutation", ["wrong", "dropped", "invented", "uncaptured"])
@@ -120,6 +185,17 @@ def test_manifest_from_other_setting_is_refused(capture):
         save_json(capture / name, plain.to_dict())
     with pytest.raises(ReviewInputError):
         prepare_review_inputs(capture, plain)
+
+
+def test_plain_manifest_is_refused_once_the_setting_is_chosen(capture):
+    from scrutare.engine.review_inputs import ReviewInputError, prepare_review_inputs
+
+    config, _ = contextual(capture)
+    chosen = replace(config, context=replace(config.context, line_counts=True))
+    for name in ("config.yaml", "config.json"):
+        save_json(capture / name, chosen.to_dict())
+    with pytest.raises(ReviewInputError):
+        prepare_review_inputs(capture, chosen)
 
 
 def test_chosen_prompts_state_the_bound_for_reviewers_assessor_and_discussion(capture):

@@ -1,6 +1,6 @@
 {
   "case_id": "dev3-07",
-  "clean_label_requires_context": false,
+  "clean_label_requires_context": true,
   "counterexamples": [
     "Interrupting the backfill after any batch and running it again fills the remaining rows; readers treat a row not yet backfilled as unknown throughout."
   ],

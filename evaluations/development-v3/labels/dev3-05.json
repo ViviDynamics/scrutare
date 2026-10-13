@@ -1,6 +1,6 @@
 {
   "case_id": "dev3-05",
-  "clean_label_requires_context": false,
+  "clean_label_requires_context": true,
   "counterexamples": [
     "Both compared digests are public: the expected one is published to every client and the actual one is computed from bytes the caller already holds."
   ],

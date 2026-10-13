@@ -1,6 +1,6 @@
 {
   "case_id": "dev3-03",
-  "clean_label_requires_context": false,
+  "clean_label_requires_context": true,
   "counterexamples": [
     "builtin.py imports Plugin and register from api in both revisions; the facade imports are its public surface, and the added function is correct."
   ],

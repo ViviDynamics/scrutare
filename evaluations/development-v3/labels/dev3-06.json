@@ -1,6 +1,6 @@
 {
   "case_id": "dev3-06",
-  "clean_label_requires_context": false,
+  "clean_label_requires_context": true,
   "counterexamples": [
     "A reader that runs while a writer holds the lock receives the previous complete tuple, exactly as a reader that had taken the lock a moment earlier would."
   ],

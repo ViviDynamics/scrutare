@@ -451,6 +451,7 @@ def describe_all(plugins):
             'evidence': 'builtin.py import line; registry.py module docstring; api.py import '
                         'line in both revisions.',
         }],
+        'clean_label_requires_context': True,
         'unchanged_supporting_paths': ['src/plugins/registry.py', 'src/plugins/builtin.py'],
         'tool_expectation': {'ruff_codes': ['F401', 'F401'],
                              'relation': 'suggests_the_tempting_allegation'},
@@ -570,6 +571,7 @@ def verify(name, payload):
             'evidence': 'manifest.py module docstring and PUBLISHED table; verify.py computes '
                         'a plain SHA-256 of the payload with no key.',
         }],
+        'clean_label_requires_context': True,
         'unchanged_supporting_paths': ['src/downloads/manifest.py'],
         'tool_expectation': {'ruff_codes': [], 'relation': 'not_a_tools_case'},
         'control': '''
@@ -662,6 +664,7 @@ class RouteTable:
             'evidence': 'route_table.py module docstring; add and remove rebind self._routes '
                         'to a new tuple under the lock in both revisions.',
         }],
+        'clean_label_requires_context': True,
         'tool_expectation': {'ruff_codes': [], 'relation': 'not_a_tools_case'},
         'control': '''
 import sys
@@ -737,6 +740,7 @@ def upgrade(connection, batch=BATCH):
             'A reviewer may note that batching trades one transaction for many and ask for a '
             'progress log, or that the statement relies on rowcount. These are reasonable '
             'remarks, not the labeled allegation, and need a human decision.'],
+        'clean_label_requires_context': True,
         'unchanged_supporting_paths': ['src/region_reader.py'],
         'tool_expectation': {'ruff_codes': [], 'relation': 'not_a_tools_case'},
         'control': '''
@@ -858,7 +862,7 @@ class PageCache:
             'fix_or_counterexample': 'Keep currency in the key.',
         }],
         'counterexamples': [
-            'Customers who never choose a billing currency see the correct page.'],
+            'A locale in which no customer has chosen a billing currency is served correctly.'],
         'unchanged_supporting_paths': ['src/render/pricing_page.py'],
         'tool_expectation': {'ruff_codes': [], 'relation': 'not_a_tools_case'},
         'control': '''
@@ -919,7 +923,12 @@ def move(source, target, amount):
             'fix_or_counterexample': 'Keep the sorted acquisition order and check the balance '
                                      'once both locks are held.',
         }],
-        'counterexamples': ['Transfers that never run in opposite directions complete.'],
+        'counterexamples': ['A single transfer, or transfers that all acquire locks in one '
+                            'consistent order, complete.'],
+        'defensible_observations': [
+            'move(account, account) acquires the same lock twice and blocks on a '
+            'non-reentrant lock in both revisions. This is pre-existing, not the labeled '
+            'defect, and needs a human decision rather than a false-positive score.'],
         'tool_expectation': {'ruff_codes': [], 'relation': 'not_a_tools_case'},
         'control': '''
 import sys
@@ -1106,6 +1115,8 @@ def render_subject(template, values):
 ''',
             'src/mailer/send.py': '''\
 """Send a templated message. Every placeholder is resolved before rendering."""
+from string import Formatter
+
 from subject import render_subject
 
 REQUIRED = frozenset({"order_id"})
@@ -1120,7 +1131,9 @@ def compose(template, values):
     missing = REQUIRED - values.keys()
     if missing:
         raise MissingValues(sorted(missing))
-    unknown = values.keys() - REQUIRED - OPTIONAL_DEFAULTS.keys()
+    known = REQUIRED | OPTIONAL_DEFAULTS.keys()
+    fields = {name for _, name, _, _ in Formatter().parse(template) if name is not None}
+    unknown = (values.keys() | fields) - known
     if unknown:
         raise MissingValues(sorted(unknown))
     return render_subject(template, {**OPTIONAL_DEFAULTS, **values})
@@ -1144,14 +1157,16 @@ def render_subject(template, values):
         },
         'defects': [],
         'counterexamples': [
-            'The only caller rejects a missing required value itself and supplies every '
-            'optional one before rendering, so no placeholder is ever missing at this call.'],
+            'The only caller rejects a missing required value and any template field it '
+            'does not know, and supplies every optional value before rendering, so no '
+            'placeholder is ever missing at this call.'],
         'tempting_allegations': [{
             'allegation': 'Callers that relied on KeyError to detect a missing template value '
                           'will now send mail with a blank in the subject.',
             'why_wrong': 'send.py, the only caller, never relied on KeyError: it raises '
-                         'MissingValues for a missing required value and merges defaults for '
-                         'every optional one before calling render_subject. send.py is '
+                         'MissingValues for a missing required value or an unknown template '
+                         'field, and merges defaults for every optional value before '
+                         'calling render_subject. send.py is '
                          'deliberately not captured, so a reviewer cannot see this.',
             'evidence': 'send.py compose in both revisions.',
         }],
@@ -1165,12 +1180,15 @@ from send import MissingValues, compose
 
 assert compose("Order {order_id} from {store}", {"order_id": 7}) == "Order 7 from our store"
 assert compose("Hello {customer}", {"order_id": 7, "customer": "Ada"}) == "Hello Ada"
-for values in ({}, {"order_id": 7, "coupon": "X"}):
+for template, values in (("Order {order_id}", {}),
+                         ("Order {order_id}", {"order_id": 7, "coupon": "X"}),
+                         ("Order {order_id} {tracking}", {"order_id": 7}),
+                         ("Order {order_id} {}", {"order_id": 7})):
     try:
-        compose("Order {order_id}", values)
+        compose(template, values)
     except MissingValues:
         continue
-    raise AssertionError("invalid values must be rejected before rendering")
+    raise AssertionError("invalid values or template fields must be rejected before rendering")
 ''',
     },
 ]

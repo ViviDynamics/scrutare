@@ -2,7 +2,7 @@
   "case_id": "dev3-09",
   "clean_label_requires_context": false,
   "counterexamples": [
-    "Transfers that never run in opposite directions complete."
+    "A single transfer, or transfers that all acquire locks in one consistent order, complete."
   ],
   "defects": [
     {
@@ -14,7 +14,9 @@
       "trigger": "One thread moves from account A to B while another moves from B to A."
     }
   ],
-  "defensible_observations": [],
+  "defensible_observations": [
+    "move(account, account) acquires the same lock twice and blocks on a non-reentrant lock in both revisions. This is pre-existing, not the labeled defect, and needs a human decision rather than a false-positive score."
+  ],
   "evidence_outside_capture": [],
   "routing_expectation": {
     "class": "covered",

@@ -5,9 +5,11 @@ Issue #51 (third measurement increment; also measures #47, #48, #49, #50)
 ## Scope
 In:
 - An opt-in `context.line_counts` setting that shows reviewers the citation bound the
-  validator already enforces. Retained evidence shows both earlier
-  `line_range_outside_capture` refusals cited exactly one line past the end of a file
-  that reviewers read as unnumbered text. The validator is not changed.
+  validator already enforces. In the two `line_range_outside_capture` refusals of
+  the routing job in `evaluations/reports/2026-10-13-qualification-rerun`, the
+  retained sessions cited exactly one line past the end of a file that reviewers
+  read as unnumbered text. Refusals in earlier packages were not re-examined. The
+  validator is not changed.
 - `evaluations/development-v3`: twelve original development cases with real Ruff
   diagnostics, wrong-allegation clean controls on specialist paths, specialist-area
   defects, and a pair whose deciding evidence is outside the capture.

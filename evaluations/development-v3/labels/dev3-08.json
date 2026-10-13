@@ -2,7 +2,7 @@
   "case_id": "dev3-08",
   "clean_label_requires_context": false,
   "counterexamples": [
-    "Customers who never choose a billing currency see the correct page."
+    "A locale in which no customer has chosen a billing currency is served correctly."
   ],
   "defects": [
     {

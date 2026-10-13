@@ -2,7 +2,7 @@
 
 Twelve purpose-written development cases for the comparisons that
 `evaluations/development-v2` could not separate. On that corpus every arm found
-every labeled defect, its clean cases drew no wrong allegation in the runs made
+every labeled defect in every cell it completed, its clean cases drew no wrong allegation in the runs made
 so far, and its fixtures pass the Ruff rules the tool arm captures, so that arm
 had no diagnostic to show. Every case here is in the `development`
 split. None is a holdout case, and nothing here was derived from
@@ -10,7 +10,7 @@ split. None is a holdout case, and nothing here was derived from
 
 | Group | Cases | Purpose |
 | --- | --- | --- |
-| Ruff names the defect | `dev3-01`, `dev3-02` | A redefinition (`F811`) and a stale name (`F821`) far from the changed lines of a longer file. |
+| Ruff names the defect | `dev3-01`, `dev3-02` | A redefinition (`F811`, reported on an added line; the definition it replaces is far above) and a stale name (`F821`, far from the changed lines). |
 | Ruff suggests a wrong allegation | `dev3-03` | Clean. Two `F401` unused-import diagnostics on a facade whose imports are its public surface. |
 | Ruff is silent on a real defect | `dev3-04` | An off-by-one page offset no selected rule can see. |
 | Clean, generic path | `dev3-05` | Plain `==` replaces a constant-time comparison of two public checksums. |
@@ -56,10 +56,16 @@ false-positive comparison: a "wrong" finding on `dev3-12` is not a reviewer erro
 The other four clean cases each contain a change a careful reviewer could
 misread. The fact that refutes each allegation is public: it is in the changed
 file in both revisions, or in an unchanged file listed in `related-paths.json`.
-Labels list the allegations under `tempting_allegations`. Whether a reviewer
+For all four the refuting fact is outside the diff hunk: in an unchanged related
+file for `dev3-03`, `dev3-05` and `dev3-07`, and in the module docstring of the
+changed file for `dev3-06`. Their clean labels therefore hold only in arms that run
+with repository context and the related paths. A diff-only arm cannot see the
+fact, and the allegation is a reasonable finding there; exclude these cases from
+clean false-positive comparisons that include a context-off arm. Their labels carry
+`clean_label_requires_context`. Labels list the allegations under `tempting_allegations`. Whether a reviewer
 raises one, and whether assessment or discussion then disputes it, is left
 entirely to the run. Nothing forces a dispute, and a run with no dispute is a
-valid observation. `dev3-07` also lists `defensible_observations` that need a
+valid observation. `dev3-07` and `dev3-09` also list `defensible_observations` that need a
 person's decision and must not be scored automatically as false positives.
 
 ## What activates a specialist

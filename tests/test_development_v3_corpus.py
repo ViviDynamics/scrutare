@@ -64,6 +64,8 @@ def test_corpus_is_development_only_original_and_isolated():
                        for a in label['tempting_allegations'])
             assert label['tempting_allegations']
     assert (defects, clean) == (7, 5)
+    assert sorted(case.id for case in cases if gold(case)['clean_label_requires_context']) == [
+        'dev3-03', 'dev3-05', 'dev3-06', 'dev3-07']
     supporting = sorted({p for case in cases for p in gold(case)['unchanged_supporting_paths']})
     assert json.loads((ROOT / 'related-paths.json').read_text()) == supporting
     assert len(supporting) >= 4
@@ -80,7 +82,7 @@ def test_trusted_gold_controls_and_sealed_inventory():
     assert report['commit_pairs_reconstructed'] == 12
     assert report['defects_verified'] == 7 and report['clean_controls_verified'] == 5
     assert report['control_executions'] == 24 and report['tempting_allegation_cases'] == 5
-    assert report['clean_labels_requiring_context'] == 0
+    assert report['clean_labels_requiring_context'] == 4
     assert report['evidence_outside_capture_cases'] == 2
     assert report['routing_classes'] == {'covered': 5, 'missed': 0, 'none': 7}
     assert report == json.loads((ROOT / 'mechanical-report.json').read_text())
@@ -202,8 +204,20 @@ def test_lint_exemptions_are_exactly_the_labeled_fixture_diagnostics():
     """The repository lint skips only the fixture lines the labels say Ruff must report."""
     text = (ROOT.parents[1] / 'pyproject.toml').read_text()
     section = text.split('[tool.ruff.lint.per-file-ignores]', 1)[1].split('\n[', 1)[0]
-    declared = {match[0]: json.loads(match[1]) for match in re.findall(
-        r'^"([^"]+)" = (\[[^\]]*\])$', section, flags=re.MULTILINE)}
+    lines = [line for line in section.splitlines()
+             if line.strip() and not line.lstrip().startswith('#')]
+    matches = [re.fullmatch(r'"([^"]+)" = (\[[^\]]*\])', line) for line in lines]
+    assert all(matches), 'every exemption line must be one plain "path" = [codes] entry'
+    declared = {match[1]: json.loads(match[2]) for match in matches}
+    assert len(declared) == len(lines)
+    # No other route may hide a fixture or a rule from the repository lint.
+    assert text.count('per-file-ignores') == 1
+    for key in ('extend-exclude', 'extend-per-file-ignores', 'ignore =', 'extend-ignore',
+                'exclude =', 'force-exclude'):
+        assert key not in text.split('[tool.ruff]', 1)[1].split('[tool.mypy]', 1)[0].replace(
+            'per-file-ignores', ''), key
+    assert not [path for name in ('ruff.toml', '.ruff.toml', 'pyproject.toml')
+                for path in ROOT.parent.rglob(name)]
     expected = {}
     for case in load_corpus(ROOT, 'development'):
         codes = sorted(set(gold(case)['tool_expectation']['ruff_codes']))
