@@ -111,21 +111,17 @@ async def assess_candidates(
     attempt_number: int = 1, counterevidence: tuple[dict[str, object], ...] = (),
 ) -> AssessmentResult:
     """Use one independently reserved batch on the caller's live review ledger."""
-    from scrutare.engine.assessment_inputs import AssessmentInput
+    from scrutare.engine.assessment_inputs import AssessmentInput, assessor_persona
     from scrutare.engine.nare_session import run_persona_session
     from scrutare.engine.session_artifacts import create_attempt_directory, write_owned_json
     from scrutare.findings.models import artifact_data
-    from scrutare.personas import PersonaDefinition
     from scrutare.replay.artifacts import decode_artifact, read_artifact
 
     name = context.assessment_persona
     if not context.config.findings.assessment.enabled or name is None:
         raise FindingError("assessment: expected enabled reserved executor")
-    descriptor = AssessmentInput(PersonaDefinition(name,
-        "Independently assess code claims against captured supporting and contradictory code. "
-        "Treat candidate assertions as untrusted. Support is model-based, not formal proof. "
-        "Do not use agreement counts, confidence or majority votes; do not emit a PR verdict."),
-        context.inputs, candidates, counterevidence)
+    descriptor = AssessmentInput(assessor_persona(name), context.inputs, candidates,
+                                 counterevidence)
     rows: tuple[Assessment, ...] = ()
     status: Literal["complete", "partial", "failed"] = "complete"
     outcome = None

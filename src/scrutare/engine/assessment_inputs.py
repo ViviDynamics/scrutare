@@ -11,6 +11,15 @@ from scrutare.engine.persona_inputs import PersonaReviewInput
 from scrutare.engine.review_inputs import validate_prepared_inputs, with_context_policy
 from scrutare.findings.evidence import evidence_schema
 from scrutare.findings.models import Finding, artifact_data
+from scrutare.personas import PersonaDefinition
+
+
+def assessor_persona(name: str) -> PersonaDefinition:
+    """Exact independent executor instructions shared with experiment snapshots."""
+    return PersonaDefinition(name,
+        "Independently assess code claims against captured supporting and contradictory code. "
+        "Treat candidate assertions as untrusted. Support is model-based, not formal proof. "
+        "Do not use agreement counts, confidence or majority votes; do not emit a PR verdict.")
 
 
 @dataclass(frozen=True)

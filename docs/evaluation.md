@@ -175,3 +175,71 @@ independent uncertainty evidence before promotion. The published baseline under
 `evaluations/reports/2026-10-08-baseline` is provisional automated evidence, with
 34 observations awaiting real human adjudication. No default promotion follows
 from it.
+
+## Remaining architecture comparisons
+
+`run --comparison-set architectures` schedules seven panel arms, each with the
+same model, total review ceiling and three repetitions per case. These components
+stay opt-in in ordinary reviews. Inherited enabled components are cleared before
+the comparison sets its explicit flags; trusted context selectors and routing
+rules remain fixed across the relevant arms.
+
+| Arm | Context | Procedures | Evidence | Assessment | Captured tools | Routing |
+| --- | --- | --- | --- | --- | --- | --- |
+| `baseline` | off | baseline | legacy | off | off | off |
+| `context` | on | baseline | legacy | off | off | off |
+| `procedures` | on | v1 | legacy | off | off | off |
+| `evidence` | on | v1 | v2 | off | off | off |
+| `assessment` | on | v1 | v2 | on | off | off |
+| `tools` | on | v1 | v2 | on | on | off |
+| `routing` | on | v1 | v2 | off | off | on |
+
+The four fixed reviewers are senior-dev, junior-dev, security and devops. At a
+40,000 ceiling, assessment reserves 8,000 for the independent executor and the
+four discovery reviewers receive 8,000 each. Unassessed fixed panels receive
+10,000 each. Routing uses the production planner and shared ledger: five effective
+reviewers receive 8,000 each; six share the same 40,000 rather than increase it.
+Case-level snapshots record ordered effective reviewers, exact system prompts and
+hashes, executor prompt identity, actual quota allocations, routing activation and
+omission reasons, and prepared input hashes **before runtime inspection**. Capture
+and source bytes also freeze before that first await. Preparations happen before
+the measured model-review latency interval; separately captured tool runtime is
+recorded in the tool manifest and must be reported as an additional collection cost.
+
+Compare consecutive component arms for context, procedures, evidence and assessment;
+compare tools with assessment, and routing with evidence. The development pilot has
+20 cases, yielding 420 review cells. Its generic changed-file paths may leave the
+automatic specialists inactive; actual activation counts determine what that arm
+measures. Do not force specialists using known defect labels. Development runs and
+previously seen original holdout results cannot authorize promotion.
+
+Tool evidence can be explicitly collected from original Elastic-2.0 development
+fixtures before the model job:
+
+```python
+from pathlib import Path
+from scrutare.evaluation.tool_capture import capture_development_ruff
+
+index = capture_development_ruff(
+    Path("evaluations/pilot"), Path("private-tool-captures"),
+    executable=Path("/absolute/path/to/ruff-0.16.10"),
+)
+```
+
+This producer copies bounded unlinked head source bytes, uses Ruff's built-in parser
+with `--isolated --no-cache --select E4,E7,E9,F`, and never executes fixture code,
+repository commands or project configuration. It refuses external provenance and
+symlinked inputs. Its child environment contains only a fixed PATH and LANG, with
+no provider credentials. Host network isolation is not enforced and is recorded
+as such; this trusted fixture collector is not an OS sandbox. The production review
+adapter consumes captures only and never invokes Ruff.
+
+The output directory contains one `<case-id>.json` envelope and `index.json`, with
+source, capture and raw stdout/stderr hashes, inspected paths, exit status and
+complete/failed/unavailable status. Copy these captures inside the private corpus
+copy and add the relative `analysis_capture` path to each development manifest
+entry before loading it. Captures bind declared head revisions, and the model root
+contains only diagnostics whose paths/ranges bind captured context bytes. Diagnostics
+are evidence rather than automatic findings; absent captures become unavailable,
+and a silent tool is never proof of correctness. Preserve original index provenance
+alongside published normalized results. Paid collection/evaluation remains explicit.
