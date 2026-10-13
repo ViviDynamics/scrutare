@@ -154,3 +154,17 @@ def test_chosen_prompts_state_the_bound_for_reviewers_assessor_and_discussion(ca
     plain = replace(config, context=replace(config.context, line_counts=False))
     assert sha256(json.dumps(plain.to_dict(), sort_keys=True).encode()).hexdigest() != sha256(
         json.dumps(config.to_dict(), sort_keys=True).encode()).hexdigest()
+
+
+def test_evaluation_arms_inherit_the_setting_unchanged():
+    from scrutare.evaluation.runner import comparison_configs
+
+    config = parse_config(
+        CONFIG + b"budgets: {per_persona_tokens: 100, review_max_tokens: 100}\n"
+        b"context: {enabled: true, line_counts: true}\n")
+    for comparison_set in ("architectures", "focused"):
+        arms = comparison_configs(config, comparison_set=comparison_set)
+        assert all(arm.context.line_counts for arm in arms.values())
+    plain = replace(config, context=replace(config.context, line_counts=False))
+    assert not any(arm.context.line_counts
+                   for arm in comparison_configs(plain, comparison_set="focused").values())

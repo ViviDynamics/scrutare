@@ -67,7 +67,7 @@ class PersonaReviewInput:
 
     @property
     def evidence_prompt(self) -> str:
-        from scrutare.findings.evidence import evidence_version
+        from scrutare.findings.evidence import citation_bound_prompt, evidence_version
         if evidence_version(self.inputs.root) == 1:
             return ""
         return (" Return evidence version 2 for every finding: trigger, preconditions, expected, "
@@ -75,7 +75,8 @@ class PersonaReviewInput:
                 "Cite base/head side, exact commit revision, logical path, inclusive start_line "
                 "and end_line, and full captured file sha256. The comment anchor remains on the "
                 "diff. A mechanically valid citation confirms captured identity, never the "
-                "truth of your assertion. Do not return a candidate_id; the caller assigns it.")
+                "truth of your assertion. Do not return a candidate_id; the caller assigns it."
+                + citation_bound_prompt(self.inputs.root))
 
     def nare_input_args(self) -> tuple[str, ...]:
         """Return the positional prompt and fixed read/root flags, with no caller overrides."""

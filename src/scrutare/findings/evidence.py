@@ -58,6 +58,19 @@ def evidence_version(root: Path) -> int:
     return 2 if load_config(root.parent / "config.yaml").findings.evidence == "v2" else 1
 
 
+def citation_bound_prompt(root: Path) -> str:
+    """Opt-in guidance naming the manifest bound; validation itself is unchanged."""
+    from scrutare.config import load_config
+
+    if not load_config(root.parent / "config.yaml").context.line_counts:
+        return ""
+    return (
+        " Each captured repository-context.json entry records line_count, the number of that "
+        "file's last line. Lines are numbered from 1 and a final newline does not begin "
+        "another line, so end_line may never exceed line_count."
+    )
+
+
 def validate_evidence(finding: Finding, root: Path) -> Finding:
     """Refuse unsupported references; successful identity checks do not prove the claim."""
     from scrutare.engine.repository_context import MANIFEST, regular
