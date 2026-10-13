@@ -40,6 +40,10 @@ spec:
           ports:
             - name: http
               containerPort: 8080
+            # Liveness only. Not exposed by the Service, so intake load cannot
+            # fail the probes and restart a running review.
+            - name: health
+              containerPort: 8081
           env:
             - name: SCRUTARE_APP_ID
               value: "5245551"
@@ -48,7 +52,8 @@ spec:
             # confirmed and listed.
             - name: SCRUTARE_APP_INSTALLATIONS
               value: "{}"
-            # Permitted HTTPS model origins. An empty list fails every review.
+            # Permitted HTTPS model origins, e.g. ["https://api.openai.com"]. The
+            # empty list is refused at startup.
             - name: SCRUTARE_APP_MODEL_ORIGINS
               value: "[]"
             - name: SCRUTARE_APP_PRIVATE_KEY
@@ -102,11 +107,11 @@ spec:
           readinessProbe:
             httpGet:
               path: /healthz
-              port: http
+              port: health
           livenessProbe:
             httpGet:
               path: /healthz
-              port: http
+              port: health
             initialDelaySeconds: 10
             periodSeconds: 20
             timeoutSeconds: 5

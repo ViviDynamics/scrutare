@@ -31,6 +31,10 @@ cannot be inferred from a development GitHub token.
 - [x] Queued pushes covered by a started review are superseded, not re-reviewed.
 - [x] Garden manifests follow the infrastructure repository's plain Argo CD
   directory conventions; the image smoke check starts the deployed console.
+- [x] Independent review round 1: threaded bounded intake with a request deadline
+  and separate health listener; `delivery` evidence from the posting journal;
+  newest-push coalescing and a reviewed-head guard; signed-content admission;
+  GitHub redelivery of missed webhooks; provider-bound, validated model origins.
 - [x] Full two-lane preflight, review, CI and source PR.
 - [ ] Out of this plan's source scope: live acceptance stays open on the issue
   until an installed App actually reviews a PR on open and push.

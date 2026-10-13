@@ -62,6 +62,8 @@ def test_worker_fetches_trusted_repo_config_runs_same_cli_and_keeps_secrets_out(
         def installation_token(self, repo, installation):
             assert (repo, installation) == ("owner/repo", 456)
             return "app-installation-token"
+        def head(self, repo, number, token):
+            return "a" * 40
         def configuration(self, repo, token):
             return (b"models:\n  default:\n    provider: openai\n"
                     b"    base_url: https://models.example/v1\n    model: example\n")
@@ -90,6 +92,8 @@ def test_repo_config_cannot_redirect_provider_credentials(tmp_path):
     class Client:
         def installation_token(self, *args):
             return "scoped-token"
+        def head(self, *args):
+            return "a" * 40
         def configuration(self, *args):
             return (b"models:\n  default:\n    provider: openai\n"
                     b"    base_url: https://attacker.example/v1\n    model: example\n")
@@ -129,6 +133,8 @@ def test_app_client_never_leaks_http_errors(tmp_path):
 class TrustedClient:
     def installation_token(self, *args):
         return "scoped-token"
+    def head(self, *args):
+        return "a" * 40
     def configuration(self, *args):
         return (b"models:\n  default:\n    provider: openai\n"
                 b"    base_url: https://models.example/v1\n    model: example\n")
@@ -140,19 +146,153 @@ def claimed(tmp_path):
     return store, store.claim()
 
 
-@pytest.mark.parametrize(("code", "status"), [
-    (1, "failed"), (2, "failed"), (130, "interrupted"), (-9, "interrupted")])
-def test_cli_exit_codes_distinguish_refusal_from_uncertain_interruption(tmp_path, code, status):
+def journal(kwargs, status):
+    """Leave the run a CLI would have created, with its posting journal in one state."""
+    run = kwargs["cwd"] / ".scrutare" / "runs" / "run-test"
+    run.mkdir(parents=True)
+    if status is not None:
+        (run / "posting.json").write_text(json.dumps({"status": status}))
+    return run
+
+
+@pytest.mark.parametrize(("code", "posting", "status", "delivery"), [
+    (1, "absent-run", "failed", "not_sent"),       # refused before capture
+    (1, None, "failed", "not_sent"),               # captured, never prepared a review
+    (1, "prepared", "failed", "not_sent"),
+    (1, "rejected", "failed", "not_sent"),
+    (1, "posted", "failed", "confirmed"),          # delivered, later persistence failed
+    (1, "sending", "interrupted", "uncertain"),    # the App cannot reconcile its own login
+    (1, "unknown", "interrupted", "uncertain"),
+    (1, "novel", "interrupted", "uncertain"),
+    (2, "absent-run", "failed", "not_sent"),
+    (130, "prepared", "interrupted", "not_sent"),
+    (130, "sending", "interrupted", "uncertain"),
+    (-9, "posted", "interrupted", "confirmed"),
+])
+def test_job_record_says_whether_a_review_was_delivered_whatever_the_exit_code(
+        tmp_path, code, posting, status, delivery):
     store, job = claimed(tmp_path)
     def runner(argv, **kwargs):
+        if posting != "absent-run":
+            journal(kwargs, posting)
         return subprocess.CompletedProcess(argv, code, b"", b"scrutare: stopped\n")
     run_job(settings(tmp_path), store, job, client=TrustedClient(), runner=runner)
     saved = store.get(job["id"])
-    assert saved["status"] == status
+    assert (saved["status"], saved["result"]["delivery"]) == (status, delivery)
     assert saved["result"]["exit_code"] == code
     work = tmp_path / "work" / job["id"]
     assert saved["result"]["work_dir"] == str(work)
     assert (work / "stderr.log").read_bytes() == b"scrutare: stopped\n"
+
+
+def test_earlier_runs_and_iterative_history_never_decide_this_jobs_delivery(tmp_path):
+    store, job = claimed(tmp_path)
+    root = tmp_path / "repositories"
+    def runner(argv, **kwargs):
+        return subprocess.CompletedProcess(argv, 1, b"", b"")
+    def prior(argv, **kwargs):
+        journal(kwargs, "sending")
+        (kwargs["cwd"] / ".scrutare" / "runs" / ".iterative").mkdir()
+        return subprocess.CompletedProcess(argv, 1, b"", b"")
+    run_job(settings(tmp_path), store, job, client=TrustedClient(), runner=prior)
+    assert store.get(job["id"])["result"]["delivery"] == "uncertain"
+    store.enqueue("api:again", "owner/repo", 12, 456)
+    again = store.claim()
+    run_job(settings(tmp_path), store, again, client=TrustedClient(), runner=runner)
+    assert store.get(again["id"])["result"]["delivery"] == "not_sent"
+    assert root.is_dir()
+
+
+def test_failures_before_the_cli_starts_are_not_sent_and_missing_config_is_named(tmp_path):
+    store, job = claimed(tmp_path)
+    requests = []
+    def request(method, path, token, body):
+        requests.append(path)
+        if path.endswith("/access_tokens"):
+            return {"token": "scoped"}
+        if path == "/repos/owner/repo/pulls/12":
+            return {"number": 12, "head": {"sha": "a" * 40}}
+        if path == "/repos/owner/repo":
+            return {"default_branch": "main", "full_name": "owner/repo"}
+        raise AppError("GitHub App resource was not found", 404)
+    config = settings(tmp_path)
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    config.private_key.write_bytes(key.private_bytes(
+        serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
+        serialization.NoEncryption()))
+    run_job(config, store, job, client=GitHubAppClient(config, request=request),
+            runner=lambda *a, **k: pytest.fail("must not start the CLI"))
+    saved = store.get(job["id"])
+    assert saved["status"] == "failed"
+    assert saved["result"]["delivery"] == "not_sent"
+    assert "scrutare.yaml" in saved["result"]["error"]
+
+
+def test_webhook_job_for_a_head_already_reviewed_is_superseded_without_a_second_review(
+        tmp_path):
+    store = JobStore(tmp_path / "jobs.sqlite")
+    def runner(argv, **kwargs):
+        done = len(list(tmp_path.rglob("result.json")))
+        root = kwargs["cwd"] / ".scrutare" / "runs" / f"run-{done}"
+        root.mkdir(parents=True)
+        return subprocess.CompletedProcess(argv, 0, cli_result(root), b"")
+    first = store.enqueue("webhook:first", "owner/repo", 12, 456, "a" * 40)
+    run_job(settings(tmp_path), store, store.claim(), client=TrustedClient(), runner=runner)
+    assert store.get(first["id"])["status"] == "posted"
+    # A redelivered or late event for an older push finds the same current head.
+    late = store.enqueue("webhook:late", "owner/repo", 12, 456, "9" * 40)
+    run_job(settings(tmp_path), store, store.claim(), client=TrustedClient(),
+            runner=lambda *a, **k: pytest.fail("must not review the same head again"))
+    assert store.get(late["id"])["status"] == "superseded"
+    assert store.get(late["id"])["result"] == {"superseded_by": first["id"]}
+    # A performer's explicit request always runs.
+    asked = store.enqueue("api:asked", "owner/repo", 12, 456)
+    run_job(settings(tmp_path), store, store.claim(), client=TrustedClient(), runner=runner)
+    assert store.get(asked["id"])["status"] == "posted"
+
+
+def test_shutdown_before_the_cli_starts_returns_the_job_to_the_queue(tmp_path):
+    from scrutare.interfaces.app_server import WorkerProcess
+    store, job = claimed(tmp_path)
+    process = WorkerProcess()
+    process.stop()
+    run_job(settings(tmp_path), store, job, client=TrustedClient(), runner=process)
+    assert store.get(job["id"])["status"] == "queued"
+    # The released job can run after restart despite its existing work directory.
+    def runner(argv, **kwargs):
+        return subprocess.CompletedProcess(argv, 1, b"", b"")
+    run_job(settings(tmp_path), store, store.claim(), client=TrustedClient(), runner=runner)
+    assert store.get(job["id"])["status"] == "failed"
+
+
+@pytest.mark.parametrize(("provider", "base_url", "allowed"), [
+    ("openai", "https://api.openai.com/v1", True),
+    ("openai", "null", True),
+    ("anthropic", "null", True),
+    ("openai", "https://gateway.example/v1", True),
+    ("anthropic", "https://gateway.example", True),
+    # An approved vendor origin still never receives the other vendor's credential.
+    ("openai", "https://api.anthropic.com/v1", False),
+    ("anthropic", "https://api.openai.com", False),
+    ("openai", "http://gateway.example/v1", False),
+    ("openai", "https://api.openai.com@gateway.example/v1", False),
+])
+def test_model_origin_approval_is_bound_to_the_provider_credential(
+        tmp_path, provider, base_url, allowed):
+    store, job = claimed(tmp_path)
+    class Client(TrustedClient):
+        def configuration(self, *args):
+            return (f"models:\n  default:\n    provider: {provider}\n"
+                    f"    base_url: {base_url}\n    model: example\n").encode()
+    started = []
+    def runner(argv, **kwargs):
+        started.append(argv)
+        return subprocess.CompletedProcess(argv, 1, b"", b"")
+    origins = ("https://api.openai.com", "https://api.anthropic.com", "https://gateway.example")
+    run_job(replace(settings(tmp_path), model_origins=origins), store, job,
+            client=Client(), runner=runner)
+    assert bool(started) is allowed
+    assert ("origin" in store.get(job["id"])["result"]["error"]) is not allowed
 
 
 @pytest.mark.parametrize("corrupt", [
@@ -172,8 +312,9 @@ def test_success_requires_the_current_installed_cli_result_contract(tmp_path, co
         return subprocess.CompletedProcess(argv, 0, corrupt(root, cli_result(root)), b"")
     run_job(settings(tmp_path), store, job, client=TrustedClient(), runner=runner)
     saved = store.get(job["id"])
-    assert saved["status"] == "failed"
-    assert "delivery may have occurred" in saved["result"]["error"]
+    # Exit 0 means the CLI confirmed delivery, so this is never a "not sent" failure.
+    assert (saved["status"], saved["result"]["delivery"]) == ("interrupted", "uncertain")
+    assert saved["result"]["exit_code"] == 0
     assert "work_dir" in saved["result"]
 
 
@@ -202,6 +343,7 @@ def test_job_deadline_stops_the_cli_before_its_installation_token_expires(tmp_pa
     assert seen["timeout"] == 90
     assert saved["status"] == "interrupted"
     assert "deadline" in saved["result"]["error"]
+    assert saved["result"]["delivery"] == "not_sent"
     assert (tmp_path / "work" / job["id"] / "stderr.log").read_bytes() == b"late\n"
 
 
@@ -254,3 +396,110 @@ def test_current_repository_config_reaches_the_cli_only_with_every_rail_approved
         # Exact trusted bytes select the strategy; no caller-controlled evidence path exists.
         assert Path(argv[argv.index("--config") + 1]).read_bytes() == CURRENT_CONFIG
         assert "--analysis-capture" not in argv
+
+
+def test_stdout_evidence_write_failure_after_delivery_is_not_reported_as_unsent(tmp_path):
+    store, job = claimed(tmp_path)
+    def runner(argv, **kwargs):
+        run = journal(kwargs, "posted")
+        (tmp_path / "work" / job["id"] / "stdout.json").mkdir()  # the evidence write fails
+        return subprocess.CompletedProcess(argv, 0, cli_result(run), b"")
+    run_job(settings(tmp_path), store, job, client=TrustedClient(), runner=runner)
+    saved = store.get(job["id"])
+    assert (saved["status"], saved["result"]["delivery"]) == ("failed", "confirmed")
+
+
+DELIVERY = {"id": 1, "guid": "g-1", "delivered_at": "2026-10-13T10:00:00Z", "status_code": 502,
+            "event": "pull_request", "action": "opened", "installation_id": 456}
+NOW = 1791885600.0 + 600  # ten minutes after DELIVERY
+
+
+def deliveries(tmp_path, items):
+    calls = []
+    def request(method, path, token, body):
+        calls.append((method, path))
+        return {"items": items} if method == "GET" else {}
+    config = settings(tmp_path)
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    config.private_key.write_bytes(key.private_bytes(
+        serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
+        serialization.NoEncryption()))
+    return GitHubAppClient(config, request=request), calls
+
+
+def test_only_recent_undelivered_reviewable_events_are_redelivery_candidates(tmp_path):
+    items = [
+        DELIVERY,
+        DELIVERY | {"id": 2, "guid": "g-timeout", "status_code": 0},
+        DELIVERY | {"id": 3, "guid": "g-refused", "status_code": 403},
+        DELIVERY | {"id": 4, "guid": "g-ok", "status_code": 202},
+        DELIVERY | {"id": 5, "guid": "g-recovered", "status_code": 503},
+        DELIVERY | {"id": 6, "guid": "g-recovered", "status_code": 202},
+        DELIVERY | {"id": 7, "guid": "g-closed", "action": "closed"},
+        DELIVERY | {"id": 8, "guid": "g-ping", "event": "ping", "action": None},
+        DELIVERY | {"id": 9, "guid": "g-foreign", "installation_id": 999},
+        DELIVERY | {"id": 10, "guid": "g-old", "delivered_at": "2026-10-11T10:00:00Z"},
+        DELIVERY | {"id": 11, "guid": "g-1", "status_code": 500},
+    ]
+    client, calls = deliveries(tmp_path, items)
+    assert client.failed_deliveries(NOW) == [(2, "g-timeout"), (11, "g-1")]
+    assert calls == [("GET", "/app/hook/deliveries?per_page=100")]
+    bad, _ = deliveries(tmp_path, [DELIVERY | {"guid": 7}])
+    with pytest.raises(AppError, match="delivery records"):
+        bad.failed_deliveries(NOW)
+
+
+def test_reconcile_requests_bounded_redelivery_through_github(tmp_path):
+    from scrutare.interfaces.app_worker import reconcile
+    store = JobStore(tmp_path / "jobs.sqlite")
+    asked = []
+    class Client:
+        def failed_deliveries(self):
+            return [(11, "g-1"), (2, "g-timeout")]
+        def redeliver(self, delivery):
+            asked.append(delivery)
+    assert [reconcile(store, Client()) for _ in range(4)] == [2, 2, 2, 0]
+    assert asked == [11, 2] * 3
+
+
+def test_redelivery_and_head_use_exact_app_endpoints(tmp_path):
+    client, calls = deliveries(tmp_path, [])
+    client.redeliver(11)
+    assert calls == [("POST", "/app/hook/deliveries/11/attempts")]
+    def request(method, path, token, body):
+        assert (method, path, token) == ("GET", "/repos/owner/repo/pulls/12", "scoped")
+        return {"number": 12, "head": {"sha": "b" * 40}}
+    assert GitHubAppClient(settings(tmp_path), request=request).head(
+        "owner/repo", 12, "scoped") == "b" * 40
+    with pytest.raises(AppError):
+        GitHubAppClient(settings(tmp_path), request=lambda *a: {"number": 13}).head(
+            "owner/repo", 12, "scoped")
+
+
+def test_github_transport_maps_missing_resources_lists_and_refuses_redirects(tmp_path):
+    import io
+    from urllib.error import HTTPError
+    from urllib.request import Request
+
+    from scrutare.interfaces.app_worker import NoRedirect, github_request
+    class Response(io.BytesIO):
+        url = "https://api.github.com/x"
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            return False
+    def missing(*args, **kwargs):
+        raise HTTPError("https://api.github.com", 404, "secret-token", {}, None)
+    with pytest.raises(AppError) as error:
+        github_request("GET", "/x", "secret-token", None, opener=missing)
+    assert error.value.status == 404 and "secret-token" not in str(error.value)
+    assert github_request("GET", "/x", "t", None, opener=lambda *a, **k: Response(b"[1]")) == {
+        "items": [1]}
+    assert github_request("POST", "/x", "t", None, opener=lambda *a, **k: Response(b"")) == {}
+    elsewhere = Response(b"{}")
+    elsewhere.url = "https://example.com/x"
+    with pytest.raises(AppError, match="redirected"):
+        github_request("GET", "/x", "t", None, opener=lambda *a, **k: elsewhere)
+    with pytest.raises(AppError, match="redirects are refused"):
+        NoRedirect().redirect_request(Request("https://api.github.com/x"), None, 302, "Found",
+                                      {}, "https://example.com/x")

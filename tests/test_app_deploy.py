@@ -45,6 +45,11 @@ def test_deployment_is_one_restricted_worker_with_out_of_band_secret_references(
         "capabilities": {"drop": ["ALL"]}}
     assert re.fullmatch(r"ghcr\.io/vividynamics/scrutare:[A-Za-z0-9.-]+", container["image"])
     assert "envFrom" not in container
+    # Probes use the health listener, which the Service never publishes.
+    ports = {port["name"]: port["containerPort"] for port in container["ports"]}
+    assert ports == {"http": 8080, "health": 8081}
+    for probe in ("readinessProbe", "livenessProbe"):
+        assert container[probe]["httpGet"] == {"path": "/healthz", "port": "health"}
     secrets = {entry["name"]: entry["valueFrom"]["secretKeyRef"]
                for entry in container["env"] if "valueFrom" in entry}
     # Garden convention: one Secret named for the app, keys named for the variables.

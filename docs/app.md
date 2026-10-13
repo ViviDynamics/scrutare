@@ -34,22 +34,30 @@ no credentials are accepted through review request bodies.
 | `SCRUTARE_APP_DATA_DIR` | Persistent private directory, default `/data` |
 | `SCRUTARE_APP_MAX_PENDING` | Running + queued admission cap, default 100 |
 | `SCRUTARE_APP_JOB_TIMEOUT` | Seconds one review may run, 1 to 3300, default 3300 |
+| `SCRUTARE_APP_RECONCILE_SECONDS` | Interval for requesting redelivery of missed webhooks, default 600; 0 disables |
 | `SCRUTARE_APP_NARE_EXECUTABLE` | Installed nare executable, default `nare` |
 | `SCRUTARE_APP_HOST`, `SCRUTARE_APP_PORT` | Default `127.0.0.1`, 8080 |
+| `SCRUTARE_APP_HEALTH_PORT` | Separate liveness listener on the same host, default 8081 |
 
 Startup fails when the identity, either secret, the allowlist or the model
-origin list is missing or malformed, including an empty allowlist.
+origin list is missing or malformed. An empty allowlist and an empty origin list
+are both refused. Each origin is exactly `https://host` or `https://host:port`
+in lower case.
 
 Provide the model rail's existing `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` in the
 service environment. Model origins must include every origin the repository
 configuration selects, for the default rail and each override:
 `https://api.anthropic.com`, `https://api.openai.com`, or the approved gateway
-origin, with its port if it has one. An HTTP origin is always refused.
+origin, with its port if it has one. An HTTP origin is always refused. A
+vendor's own origin is accepted only for that vendor's provider, so the OpenAI
+credential is never sent to `https://api.anthropic.com` or the reverse. A
+gateway origin receives the credential of whichever provider the configuration
+names for it.
 
 The worker reads `scrutare.yaml` from the base repository's **default branch**,
 ignoring changes to that file on an unmerged PR, and passes those exact bytes to
 the CLI. A repository without that file, or with an invalid one, fails the job
-before any model call. Three current settings behave specifically here:
+before any model call and names the missing file or invalid field. Three current settings behave specifically here:
 
 - `context.enabled` reads commit, tree and blob objects through the same
   installation token. A pull request from a private fork the App cannot read
@@ -82,23 +90,37 @@ describes.
 | --- | --- |
 | `queued`, `running` | Admitted; one job runs at a time. |
 | `posted` | The CLI exited 0 and its stdout is byte-identical to the installed `result.json`. Approval, changes requested and escalation are all posted results. |
-| `failed` | Configuration, model origin, token, capture, execution or posting was refused or failed (CLI exit 1 or 2). A failure after confirmed delivery says so in the job's `error` or `stderr.log`. |
-| `interrupted` | The CLI was interrupted (exit 130 or a signal), reached the job deadline, or was running when the service restarted. Delivery may have occurred. |
-| `superseded` | A queued webhook job for the same pull request was already covered by a job that started later than its push. Its `result` names that job. |
+| `failed` | Configuration, model origin, token, capture, execution or posting was refused or failed, and the posting journal shows the review was either never sent or was confirmed. |
+| `interrupted` | The CLI was interrupted (exit 130 or a signal), reached the job deadline, was running when the service restarted, or ended with a review POST whose outcome is unknown. |
+| `superseded` | A webhook job that needed no review of its own. Its `result` names the job that covers it. |
 
-A job that starts captures the pull request head current at that moment. Every
-webhook job still queued for the same pull request is therefore covered by it
-and becomes `superseded` instead of posting a duplicate review of the same
-head. A push admitted after the job started is reviewed separately. Performer
-API jobs are never merged.
+Every `failed` and `interrupted` result carries `delivery`, read from the run's
+posting journal rather than inferred from the exit code:
 
-Failed and interrupted jobs are never retried automatically, because the review
-may already have been delivered. Each job has a permanent private working
-directory holding the fetched configuration and the CLI's `stdout.json` and
-`stderr.log`. Each repository has a stable working directory, named by the
-repository's SHA-256, whose `.scrutare/runs` holds the runs and iterative
-history. A process restart marks in-flight jobs `interrupted`. Monitor and
-archive completed jobs; the queue bounds pending work, not lifetime disk usage.
+- `not_sent`: no review was sent. Requesting another review is safe.
+- `confirmed`: the review was delivered and a later step failed. Do not resubmit.
+- `uncertain`: a POST may have reached GitHub. Inspect `posting.json` in the
+  retained run before resubmitting.
+
+Performers must decide from `delivery`, never from the status alone. The CLI
+exits 1 both for a refusal and for a failure after delivery.
+
+A review captures the pull request head current when it runs, so two rules keep
+one head from being reviewed twice by webhook jobs. When a pull request's turn
+comes, its newest queued webhook job runs and the older ones become
+`superseded`; they announce heads that no longer exist, so nothing newer is lost
+if that run fails. Before a webhook job runs, the worker also reads the current
+head and supersedes the job when this service already posted a review of exactly
+that head. Performer API jobs are never merged or skipped.
+
+Failed and interrupted jobs are never retried automatically. Each job has a
+permanent private working directory holding the fetched configuration and the
+CLI's `stdout.json` and `stderr.log`. Each repository has a stable working
+directory, named by the repository's SHA-256, whose `.scrutare/runs` holds the
+runs and iterative history. A process restart marks in-flight jobs
+`interrupted`; a shutdown that arrives before a claimed job starts its review
+returns it to the queue. Monitor and archive completed jobs. The queue bounds
+pending work, not the job table or lifetime disk usage.
 
 Jobs run sequentially under one process-wide filesystem lock. State is SQLite on
 local or block-backed storage; NFS is unsupported.
@@ -119,17 +141,42 @@ is the CLI result document. An escalated verdict also includes the human
 reviewer request receipt. This HTTP adapter exposes no repository mutation or
 arbitrary command execution API.
 
-GitHub uses `POST /webhook` with its exact-body HMAC-SHA256 signature and delivery
-ID. Signed but unlisted installations or repositories receive 403. Irrelevant
-events are acknowledged and ignored. The queue returns 503 at its admission cap,
-allowing the caller to retry. GitHub redeliveries reuse the delivery ID and
-return the original job.
+## Webhook
+
+GitHub uses `POST /webhook` with its exact-body HMAC-SHA256 signature. Signed but
+unlisted installations or repositories receive 403. Irrelevant events are
+acknowledged and ignored. The delivery ID header is not covered by the
+signature, so admission is keyed on signed content: the repository, pull request
+number and announced head SHA. A redelivery, a replay under a new delivery ID,
+and a later `reopened` or `ready_for_review` event at the same head all return
+the job already admitted for that head. A head whose job failed is therefore
+reviewed again only by a new push or a performer API request.
+
+GitHub does not redeliver a failed webhook on its own. A delivery that arrives
+while the service is down, restarting, unreachable or at its admission cap (503)
+would otherwise be lost. At startup and every `SCRUTARE_APP_RECONCILE_SECONDS`
+the service lists the App's recent deliveries and asks GitHub to redeliver
+reviewable `pull_request` events from its allowlisted installations that failed
+in transport or with a 5xx status. Redelivered events pass the same signed
+admission. The bounds are the 100 most recent delivery records, the last 24
+hours, and three requests per delivery. A longer outage needs a manual
+redelivery from the App's Advanced settings or a performer API request.
+
+## Listener
+
+The listener serves each connection on its own thread, with at most 32
+connections and a ten-second deadline for a whole request, however slowly it
+arrives. Requests need one `Content-Length` of at most 1 MiB; chunked bodies are
+refused. `/healthz` is also served by a separate listener on
+`SCRUTARE_APP_HEALTH_PORT`, which probes should use so intake load cannot fail
+them. The listener has no TLS or rate limiting of its own.
 
 ## Garden rollout
 
 `deploy/garden` holds plain manifests in the shape garden's Argo CD directory
 applications use: a `scrutare` namespace, one non-root `Recreate` Deployment, a
-ClusterIP Service on port 80 and a retained 10Gi `ceph-rbd` claim. The namespace
+ClusterIP Service on port 80 and a retained 10Gi `ceph-rbd` claim. Probes use
+the health port, which the Service does not expose. The namespace
 and claim carry `Prune=false,Delete=false`. The pod has no Kubernetes token,
 RBAC, host mounts or Docker socket and satisfies the `restricted` pod security
 level. Never scale the worker above one replica.
@@ -140,8 +187,8 @@ Nothing here applies itself. Rolling out is an infrastructure change:
    infrastructure repository. Set the image to the first published release tag
    that contains the App, list the confirmed repositories in
    `SCRUTARE_APP_INSTALLATIONS`, and list the model origins. The placeholders
-   fail closed: the image tag does not exist and an empty allowlist refuses to
-   start.
+   fail closed: the image tag does not exist, and an empty allowlist or origin
+   list refuses to start.
 2. Add an Argo CD `Application` for that directory in the `infrastructure`
    project, with the `scrutare` namespace among that project's destinations.
 3. Create the secrets out of band. No secret values belong in Git.
@@ -164,8 +211,10 @@ Nothing here applies itself. Rolling out is an infrastructure change:
    `/api/reviews` and `/api/jobs/<id>` through the cluster Service and must not
    be given a public route.
 
-The listener has no TLS, rate limiting or slow-client protection of its own.
-Read the [threat model](security/threat-model.md) before exposing it.
+Confirm during live acceptance that the tunnel forwards GitHub's deliveries with
+a `Content-Length`; a route that re-frames them as chunked would be refused with
+400. Read the [threat model](security/threat-model.md) before exposing the
+service.
 
 Acceptance requires opening a fixture PR and pushing a fix through the installed
 App, verifying the review author's App login, the captured head SHAs and saved

@@ -48,6 +48,8 @@ def test_app_posts_through_installed_engine_and_retains_real_evidence(
     class Client:
         def installation_token(self, repository, installation):
             return "offline-installation-token"
+        def head(self, repository, number, token):
+            return "a" * 40
         def configuration(self, repository, token):
             return b"personas: [security]\nmodels: {default: {model: offline-model}}\n"
     def runner(argv, **kwargs):
@@ -70,8 +72,9 @@ def test_app_posts_through_installed_engine_and_retains_real_evidence(
                               "offline-observations.json").read_bytes())
     assert observations["credential_names"] == []
     assert observations["guard_violations"] == []
-    # Push and API jobs share repository history, while each capture is immutable.
-    store.enqueue("push", "owner/repo", 12, 456)
+    # Webhook and API jobs share repository history, while each capture is immutable.
+    # An explicit performer request reviews again even though this head was reviewed.
+    store.enqueue("api:performer", "owner/repo", 12, 456)
     second = store.claim()
     run_job(config, store, second, client=Client(), runner=runner)
     next_run = Path(store.get(second["id"])["result"]["run_dir"])

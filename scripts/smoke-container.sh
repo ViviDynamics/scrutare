@@ -19,7 +19,7 @@ app_status=0
 app_output=$(docker run --rm --network none --read-only \
   --entrypoint /opt/scrutare/bin/scrutare-app "$image" 2>&1) || app_status=$?
 test "$app_status" -eq 1
-test "$app_output" = "scrutare-app: startup failed; check App settings, port and exclusive data lock"
+test "$app_output" = "scrutare-app: startup failed; check App settings, ports and exclusive data lock"
 echo "App console: refuses to start without operator settings"
 docker run --rm --network none -i --entrypoint python "$image" - "$expected" <<'PY'
 import importlib.metadata
