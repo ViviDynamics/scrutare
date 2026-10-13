@@ -25,7 +25,8 @@ def main() -> None:
     run.add_argument('--nare-executable', type=Path, required=True)
     run.add_argument('--timeout-seconds', type=float, default=600)
     run.add_argument('--concurrency', type=int, default=1)
-    run.add_argument('--comparison-set', choices=('baseline', 'procedures', 'architectures'),
+    run.add_argument('--comparison-set',
+                     choices=('baseline', 'procedures', 'architectures', 'focused'),
                      default='baseline')
     run.add_argument('--max-turns', type=int, default=50)
     run.add_argument('--evidence-kind', choices=('model', 'offline'), default='model')

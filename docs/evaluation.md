@@ -243,3 +243,40 @@ contains only diagnostics whose paths/ranges bind captured context bytes. Diagno
 are evidence rather than automatic findings; absent captures become unavailable,
 and a silent tool is never proof of correctness. Preserve original index provenance
 alongside published normalized results. Paid collection/evaluation remains explicit.
+
+## Focused discussion comparisons
+
+`run --comparison-set focused` schedules `aggregate`, `assessed`, `focused1`, and
+`focused3`, each repeated three times with the same context, v1 procedures, v2
+claim evidence, original four reviewer names, model rail and total ceiling.
+`aggregate` is an unassessed panel; `assessed` adds independent assessment;
+`focused1` and `focused3` add evidence discussion capped at one or three rounds.
+Tool evidence and routing are disabled in all four to isolate the protocol.
+At 40,000 tokens, the aggregate reviewers receive 10,000 each; the other arms
+reserve 8,000 for assessment and 8,000 per reviewer. Focused discovery,
+correction and discussion reuse each reviewer's original grant, and all assessor
+invocations share the one assessor reservation. No debate chair or new round quota
+is introduced. Supported undisputed claims may bypass discussion entirely.
+
+Before the first runtime await, focused case snapshots record these actual
+participants/allocations, exact reviewer and assessor system prompts, input hashes,
+and SHA256 hashes of the production assessment/discussion descriptor source.
+The latter identifies the fixed protocol code; its quoted candidate-dependent text
+is retained in native session evidence after candidates exist.
+
+Focused evaluation records additionally retain a compact `discussion_trace` with
+the producing `debate.json` SHA256, outcome reason, bypassed IDs, final independent
+assessment dispositions, and per-round measured token deltas, latency, proposals,
+new citation identities and disposition changes. Native session directories and
+runtime metadata stay private. Citation identity checks and model dispositions
+are not semantic truth or human adjudication. Missing/invalid traces remain
+explicitly unavailable with null rounds; they invalidate otherwise successful
+focused cells rather than imply successful zero-round execution. Failed cells keep
+their failure status and observed usage in the full scheduled denominator.
+
+The 20 development cases yield 240 cells. Compare assessed with aggregate, one
+focused round with assessed, and three with one; do not attribute differences to a
+larger token ceiling. Preserve actual attempted/completed rounds and extra cost,
+including bypassed discussions and exhausted disputes. These development results
+cannot promote a default or substitute for independently adjudicated, unseen
+holdout evidence. Ordinary baseline/procedures/architecture modes remain available.

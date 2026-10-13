@@ -24,5 +24,5 @@ were already observed; development measurements cannot establish unseen quality.
 - [x] 1. Add isolated architecture arms: red tests prove flags and equal ceilings.
 - [x] 2. Freeze exact case inputs, routed prompts and allocations before await:
   red tests mutate the source during runtime inspection and inspect snapshot.
-- [ ] 3. Add focused debate comparison once #49 is available, preserving quotas.
+- [x] 3. Add focused debate comparison once #49 is available, preserving quotas.
 - [x] 4. Verify offline installed runtime, document explicit job/promotion limits.

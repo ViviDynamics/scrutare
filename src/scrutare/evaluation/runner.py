@@ -14,10 +14,12 @@ from scrutare.config import (
     AnalysisSettings,
     AssessmentSettings,
     BudgetSettings,
+    DiscussionSettings,
     FindingSettings,
     InspectionSettings,
     ReviewConfig,
 )
+from scrutare.engine import assessment_inputs, discussion_inputs
 from scrutare.engine.assessment_inputs import assessor_persona
 from scrutare.engine.budgets import ReviewBudgetLedger
 from scrutare.engine.nare_session import inspect_nare_runtime
@@ -29,6 +31,7 @@ from scrutare.engine.session_models import NareRuntime, TokenUsage
 from scrutare.engine.static_analysis import capture_static_analysis, read_capture
 from scrutare.engine.strategy import run_review
 from scrutare.evaluation.corpus import Case, parse_json, read_json, source_contents
+from scrutare.evaluation.focused_trace import discussion_trace
 from scrutare.personas import PersonaDefinition, load_persona, resolve_personas
 from scrutare.personas.registry import procedure_record
 from scrutare.provenance import write_artifact_manifest
@@ -43,7 +46,7 @@ def write_json(path: Path, data: Any) -> None:
 def comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline'
                        ) -> dict[str, ReviewConfig]:
     """Freeze current roster, shared rail and total cap; reserve a fifth debate chair quota."""
-    if comparison_set not in ('baseline', 'procedures', 'architectures'):
+    if comparison_set not in ('baseline', 'procedures', 'architectures', 'focused'):
         raise ValueError('unknown comparison set')
     if config.models.overrides:
         raise ValueError('comparison requires a single fixed model rail without overrides')
@@ -51,7 +54,7 @@ def comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline'
     if total < 5:
         raise ValueError('comparison total ceiling must support five participants')
     roster = ('senior-dev', 'junior-dev', 'security', 'devops')
-    if comparison_set == 'architectures':
+    if comparison_set in ('architectures', 'focused'):
         base = replace(config, strategy='panel', personas=roster,
             budgets=BudgetSettings((total + 3) // 4, total),
             context=replace(config.context, enabled=False),
@@ -62,6 +65,12 @@ def comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline'
         evidence = replace(procedures, findings=FindingSettings('v2'))
         assessed = replace(evidence, findings=FindingSettings('v2',
             AssessmentSettings(True, total // 5)))
+        if comparison_set == 'focused':
+            discussion = replace(assessed, strategy='debate',
+                findings=replace(assessed.findings, discussion=DiscussionSettings(True)))
+            return {'aggregate': evidence, 'assessed': assessed,
+                'focused1': replace(discussion, rounds=replace(config.rounds, max=1)),
+                'focused3': replace(discussion, rounds=replace(config.rounds, max=3))}
         return {'baseline': base, 'context': context, 'procedures': procedures,
             'evidence': evidence,
             'assessment': assessed,
@@ -245,7 +254,7 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                     personas, routing = plan.personas, plan.record
                 names = tuple(p.name for p in personas)
                 phases = {}
-                if conf.strategy == 'debate':
+                if conf.strategy == 'debate' and not conf.findings.discussion.enabled:
                     name = 'debate-chair'
                     while name in names:
                         name += '-chair'
@@ -280,6 +289,13 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                         'review_ceiling': conf.budgets.review_max_tokens,
                         'inputs_sha256': prepared_content_hashes(inputs),
                         'routing': routing}
+                if conf.findings.discussion.enabled:
+                    cell['phase_budget_policy'] = 'reuse_discovery_and_assessor_grants'
+                    cell['protocol_sources'] = {
+                        'assessment_inputs_sha256': hashlib.sha256(Path(
+                            assessment_inputs.__file__).read_bytes()).hexdigest(),
+                        'discussion_inputs_sha256': hashlib.sha256(Path(
+                            discussion_inputs.__file__).read_bytes()).hexdigest()}
                 if conf.analysis.enabled:
                     cell['analysis_status'] = read_json(inputs.root / 'static-analysis.json')[
                         'status']
@@ -334,6 +350,12 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
             # Provider details remain in private engine captures.
             record['error'] = type(error).__name__
             record['usage'] = _observed_usage(directory).to_dict()
+        if conf.findings.discussion.enabled:
+            record['discussion_trace'] = discussion_trace(directory)
+            if record['discussion_trace']['availability'] != 'recorded':
+                if record['status'] != 'failed':
+                    record['status'] = 'invalid'
+                    record['error'] = 'UnavailableFocusedTrace'
         record['latency_seconds'] = time.monotonic() - started
         write_json(directory / 'evaluation.json', record)
         write_artifact_manifest(directory)
