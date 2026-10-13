@@ -73,6 +73,8 @@ def test_complete_missing_or_unreadable_evidence_is_never_transient(tmp_path):
 @pytest.mark.parametrize('name,reason,eligible', [
     ('panel.json', 'discovery_incomplete', True), ('debate.json', 'discovery_incomplete', True),
     ('panel.json', 'initial', True), ('panel.json', 'initial_evidence', False),
+    ('debate.json', 'perspectives_incomplete', True),
+    ('debate.json', 'reassessment_incomplete', True), ('debate.json', 'perspective_budget', False),
     ('debate.json', 'evidence', False), ('panel.json', 'converged', False),
     ('debate.json', None, False),
 ])
@@ -251,6 +253,11 @@ def test_scoring_counts_retry_spend_and_marks_its_accounting_uncertain():
     assert (after['tokens'], after['retried_runs'], after['retry_tokens']) == (17, 1, 7)
     assert after['accounting_failures'] == 1 and after['quality_final'] is False
     assert after['complete_runs'] == 2
+    refused = {**plain, 'run_id': 'a/senior/3', 'repeat': 3, 'status': 'failed',
+               'accounting_complete': False, 'retry_usage': {**usage, 'input': 0, 'total': 0},
+               'attempts': [{'attempt': 1, 'status': 'failed', 'accounting_complete': False},
+                            {'attempt': 2, 'status': 'refused', 'accounting_complete': True}]}
+    assert score_experiment([plain, refused], labels, [])['senior']['retried_runs'] == 0
 
 
 def test_job_retry_budget_bounds_total_reruns_and_records_the_denial(tmp_path, monkeypatch):

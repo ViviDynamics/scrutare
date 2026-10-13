@@ -12,7 +12,7 @@ from scrutare.evaluation.corpus import parse_json
 _HTTP_5XX = re.compile(r'RuntimeError: chat completion failed with HTTP (500|502|503|504|529):')
 # Review-level stops that a session interruption explains. Changed inputs or evidence do not.
 _INTERRUPTIBLE = ('initial', 'correction', 'discovery_incomplete', 'assessment_incomplete',
-                  'perspectives', 'chair')
+                  'perspectives', 'chair', 'perspectives_incomplete', 'reassessment_incomplete')
 
 
 def _provider_status(stdout: Path) -> int | None:

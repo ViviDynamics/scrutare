@@ -84,7 +84,8 @@ def score_experiment(runs: list[dict[str, Any]], labels: dict[str, Any],
             counts[f"{run['status']}_runs"] += 1
             # Earlier attempts were interrupted upstream, so their spend is a lower bound.
             earlier = run.get('attempts', [])[:-1]
-            counts['retried_runs'] += bool(earlier)
+            counts['retried_runs'] += sum(
+                attempt['status'] != 'refused' for attempt in run.get('attempts', [])) > 1
             counts['retry_tokens'] += run.get('retry_usage', {}).get('total', 0)
             counts['accounting_failures'] += (not run['accounting_complete'] or any(
                 not attempt['accounting_complete'] for attempt in earlier))
