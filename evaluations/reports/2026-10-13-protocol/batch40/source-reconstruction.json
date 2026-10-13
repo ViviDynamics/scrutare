@@ -1,0 +1,8 @@
+{
+  "source_commit": "0298f218374b2723cf264e3a561dbe256c6367b1",
+  "remote_known_base": "579fb89d5bb2df57796b42e5b15533424301c0a5",
+  "source_tree": "0464f95b6949b8e14218e63548170ba6e2a336b5",
+  "candidate_source_patch_sha256": "d0da7aa316e26043b8f6b97fbfffafd3bff00d3d021d933ec6ed9f90fa225df6",
+  "reconstruction": "git read-tree <remote_known_base> and git apply --cached candidate-source.patch in a temporary index; git write-tree must equal source_tree",
+  "tracked_tree_matches": true
+}
