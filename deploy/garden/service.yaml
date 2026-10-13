@@ -1,11 +1,14 @@
+# ClusterIP only. The Cloudflare tunnel publishes /webhook; performers inside the
+# cluster call http://scrutare.scrutare.svc.cluster.local/api/... directly.
 apiVersion: v1
 kind: Service
 metadata:
   name: scrutare
+  namespace: scrutare
 spec:
   selector:
     app: scrutare
   ports:
     - name: http
-      port: 8080
+      port: 80
       targetPort: http

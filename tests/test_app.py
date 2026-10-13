@@ -98,3 +98,24 @@ def test_restart_retains_uncertain_delivery_and_never_retries(tmp_path):
     store.recover_interrupted()
     assert store.get(job["id"])["status"] == "interrupted"
     assert store.claim() is None
+
+
+def test_claim_coalesces_queued_pushes_already_covered_by_the_claimed_capture(tmp_path):
+    store = JobStore(tmp_path / "jobs.sqlite")
+    opened = store.enqueue("webhook:opened", "owner/repo", 12, 456)
+    pushed = store.enqueue("webhook:pushed", "owner/repo", 12, 456)
+    performer = store.enqueue("api:task", "owner/repo", 12, 456)
+    other = store.enqueue("webhook:other", "owner/repo", 13, 456)
+    # The claimed job captures the head current after every already admitted push.
+    assert store.claim()["id"] == opened["id"]
+    covered = store.get(pushed["id"])
+    assert covered["status"] == "superseded"
+    assert covered["result"] == {"superseded_by": opened["id"]}
+    # GitHub redelivery stays idempotent and explicit performer requests are never merged.
+    assert store.enqueue("webhook:pushed", "owner/repo", 12, 456) == covered
+    assert store.claim()["id"] == performer["id"]
+    assert store.claim()["id"] == other["id"]
+    assert store.claim() is None
+    # A push admitted after the claim may postdate that capture and is reviewed.
+    later = store.enqueue("webhook:later", "owner/repo", 12, 456)
+    assert store.claim()["id"] == later["id"]

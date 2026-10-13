@@ -4,6 +4,7 @@ import json
 import os
 import subprocess
 from dataclasses import replace
+from pathlib import Path
 
 import jwt
 import pytest
@@ -209,3 +210,47 @@ def test_job_deadline_must_fit_inside_the_token_lifetime(tmp_path, seconds):
     with pytest.raises(AppError):
         replace(settings(tmp_path), job_timeout=seconds)
     assert settings(tmp_path).job_timeout == 3300
+
+
+CURRENT_CONFIG = b"""\
+strategy: debate
+rounds: {max: 2}
+personas: [senior-dev, security]
+budgets: {per_persona_tokens: 50000, review_max_tokens: 200000}
+models:
+  default: {provider: openai, base_url: "https://models.example/v1", model: example}
+  overrides:
+    security: {provider: anthropic, base_url: null, model: other}
+context: {enabled: true, related_paths: [src/caller.py]}
+analysis: {enabled: true}
+inspection: {procedures: v1}
+findings: {evidence: v2, assessment: {enabled: true}}
+github: {post_mode: comment, human_reviewers: [octocat]}
+"""
+
+
+@pytest.mark.parametrize(("origins", "status"), [
+    (("https://models.example", "https://api.anthropic.com"), "posted"),
+    (("https://models.example",), "failed"),
+    (("https://api.anthropic.com",), "failed"),
+])
+def test_current_repository_config_reaches_the_cli_only_with_every_rail_approved(
+        tmp_path, origins, status):
+    store, job = claimed(tmp_path)
+    class Client(TrustedClient):
+        def configuration(self, *args):
+            return CURRENT_CONFIG
+    calls = []
+    def runner(argv, **kwargs):
+        calls.append(argv)
+        root = kwargs["cwd"] / ".scrutare" / "runs" / "test"
+        root.mkdir(parents=True)
+        return subprocess.CompletedProcess(argv, 0, cli_result(root), b"")
+    run_job(replace(settings(tmp_path), model_origins=origins), store, job,
+            client=Client(), runner=runner)
+    assert store.get(job["id"])["status"] == status
+    assert len(calls) == (status == "posted")
+    for argv in calls:
+        # Exact trusted bytes select the strategy; no caller-controlled evidence path exists.
+        assert Path(argv[argv.index("--config") + 1]).read_bytes() == CURRENT_CONFIG
+        assert "--analysis-capture" not in argv

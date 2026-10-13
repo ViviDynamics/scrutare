@@ -62,7 +62,10 @@ class AppSettings:
 
 
 class JobStore:
-    """SQLite admissions and leases; running work is never replayed after restart."""
+    """SQLite admissions and leases; running work is never replayed after restart.
+
+    Statuses: queued, running, then posted, failed, interrupted or superseded.
+    """
 
     def __init__(self, path: Path, max_pending: int = 100):
         self.path = path
@@ -126,6 +129,12 @@ class JobStore:
             if row is None:
                 return None
             db.execute("UPDATE jobs SET status = 'running' WHERE id = ?", (row["id"],))
+            # This run captures the head current now, which already includes every push
+            # admitted earlier. Reviewing those again would post duplicate reviews.
+            db.execute("UPDATE jobs SET status = 'superseded', result = ? WHERE status = 'queued' "
+                       "AND repository = ? AND number = ? AND delivery LIKE 'webhook:%'",
+                       (json.dumps({"superseded_by": row["id"]}), row["repository"],
+                        row["number"]))
             job = self._job(row)
             job["status"] = "running"
             return job

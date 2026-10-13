@@ -1,8 +1,14 @@
+# Secrets are created out of band (docs/app.md) and never committed:
+#   scrutare             SCRUTARE_APP_WEBHOOK_SECRET, SCRUTARE_APP_API_TOKEN and the
+#                        selected OPENAI_API_KEY or ANTHROPIC_API_KEY
+#   scrutare-github-app  private-key.pem
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: scrutare
+  namespace: scrutare
 spec:
+  # One worker owns the queue and the RWO claim. Never scale this above one.
   replicas: 1
   strategy:
     type: Recreate
@@ -21,26 +27,58 @@ spec:
         runAsUser: 10001
         runAsGroup: 10001
         fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: app
-          # Replace with the published, immutable candidate digest before rollout.
-          image: ghcr.io/vividynamics/scrutare:app-build-required
+          # Replace with the first published release tag that contains the App
+          # service. The placeholder tag does not exist, so an unedited rollout
+          # fails to pull instead of running an image without scrutare-app.
+          image: ghcr.io/vividynamics/scrutare:app-release-required
           command: [/opt/scrutare/bin/scrutare-app]
           ports:
             - name: http
               containerPort: 8080
-          envFrom:
-            - secretRef:
-                name: scrutare-app
           env:
+            - name: SCRUTARE_APP_ID
+              value: "5245551"
+            # Operator allowlist, {"owner/repo": installation-id}. The empty
+            # object is refused at startup until the selected repositories are
+            # confirmed and listed.
+            - name: SCRUTARE_APP_INSTALLATIONS
+              value: "{}"
+            # Permitted HTTPS model origins. An empty list fails every review.
+            - name: SCRUTARE_APP_MODEL_ORIGINS
+              value: "[]"
             - name: SCRUTARE_APP_PRIVATE_KEY
               value: /secrets/private-key.pem
             - name: SCRUTARE_APP_DATA_DIR
               value: /data
             - name: SCRUTARE_APP_HOST
               value: 0.0.0.0
+            - name: SCRUTARE_APP_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: scrutare
+                  key: SCRUTARE_APP_WEBHOOK_SECRET
+            - name: SCRUTARE_APP_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: scrutare
+                  key: SCRUTARE_APP_API_TOKEN
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: scrutare
+                  key: OPENAI_API_KEY
+                  optional: true
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: scrutare
+                  key: ANTHROPIC_API_KEY
+                  optional: true
           volumeMounts:
             - name: app-key
               mountPath: /secrets
@@ -79,7 +117,7 @@ spec:
             defaultMode: 0440
         - name: data
           persistentVolumeClaim:
-            claimName: scrutare-data
+            claimName: scrutare-state
         - name: tmp
           emptyDir:
             sizeLimit: 1Gi
