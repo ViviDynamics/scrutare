@@ -13,6 +13,14 @@ docker run --rm --network none "$image" review --help
 docker run --rm --network none --entrypoint python "$image" -m scrutare --help
 docker run --rm --network none --entrypoint gh "$image" --version
 docker run --rm --network none --entrypoint nare "$image" --version
+# The garden Deployment starts this console with a read-only root. Without operator
+# settings it must refuse with its safe diagnostic instead of listening.
+app_status=0
+app_output=$(docker run --rm --network none --read-only \
+  --entrypoint /opt/scrutare/bin/scrutare-app "$image" 2>&1) || app_status=$?
+test "$app_status" -eq 1
+test "$app_output" = "scrutare-app: startup failed; check App settings, ports and exclusive data lock"
+echo "App console: refuses to start without operator settings"
 docker run --rm --network none -i --entrypoint python "$image" - "$expected" <<'PY'
 import importlib.metadata
 import json

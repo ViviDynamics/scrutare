@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    # Argo must never delete the namespace: it holds the out-of-band secrets and
+    # the review history claim.
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+  name: scrutare
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
