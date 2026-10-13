@@ -1,0 +1,127 @@
+{
+ "finding": "All six non-complete Sol100k cells contain exactly one discovery session stopped by upstream HTTP 500 and no other failure. None of the 106 non-complete cells in the other four trials is eligible; those stopped for budget or protocol reasons.",
+ "new_provider_calls": 0,
+ "schema_version": 1,
+ "source": "classifier scrutare.evaluation.transient at 2f1e95c33a959c4fe761bed999d8d149f30c9a36 replayed over retained private attempt directories of the five trials published in evaluations/reports/2026-10-13-protocol",
+ "trials": [
+  {
+   "cells": 36,
+   "configuration": "gpt-6-luna at 40,000",
+   "eligible": [],
+   "eligible_cells": 0,
+   "not_complete_cells": 36,
+   "not_complete_discovery_session_outcomes": {
+    "failed/provider": 6,
+    "partial/budget": 129
+   },
+   "trial": "luna"
+  },
+  {
+   "cells": 36,
+   "configuration": "gpt-6.1-sol at 40,000",
+   "eligible": [],
+   "eligible_cells": 0,
+   "not_complete_cells": 33,
+   "not_complete_discovery_session_outcomes": {
+    "failed/provider": 1,
+    "partial/budget": 117
+   },
+   "trial": "sol"
+  },
+  {
+   "cells": 36,
+   "configuration": "gpt-6-luna batching at 40,000",
+   "eligible": [],
+   "eligible_cells": 0,
+   "not_complete_cells": 30,
+   "not_complete_discovery_session_outcomes": {
+    "partial/budget": 120
+   },
+   "trial": "batch40"
+  },
+  {
+   "cells": 36,
+   "configuration": "gpt-6-luna batching at 80,000",
+   "eligible": [],
+   "eligible_cells": 0,
+   "not_complete_cells": 7,
+   "not_complete_discovery_session_outcomes": {
+    "failed/provider": 1,
+    "partial/budget": 1
+   },
+   "trial": "batch80"
+  },
+  {
+   "cells": 36,
+   "configuration": "gpt-6.1-sol batching at 100,000",
+   "eligible": [
+    {
+     "run_id": "contract-explicit-default-clean/assessed/2",
+     "status": "invalid",
+     "transient_provider_failures": [
+      {
+       "http_status": 500,
+       "session_key": "security/attempt-0001"
+      }
+     ]
+    },
+    {
+     "run_id": "contract-explicit-default-clean/assessed/3",
+     "status": "invalid",
+     "transient_provider_failures": [
+      {
+       "http_status": 500,
+       "session_key": "security/attempt-0001"
+      }
+     ]
+    },
+    {
+     "run_id": "security-auth-order/assessed/1",
+     "status": "invalid",
+     "transient_provider_failures": [
+      {
+       "http_status": 500,
+       "session_key": "junior-dev/attempt-0001"
+      }
+     ]
+    },
+    {
+     "run_id": "security-auth-order/assessed/2",
+     "status": "invalid",
+     "transient_provider_failures": [
+      {
+       "http_status": 500,
+       "session_key": "junior-dev/attempt-0001"
+      }
+     ]
+    },
+    {
+     "run_id": "security-auth-order/assessed/3",
+     "status": "invalid",
+     "transient_provider_failures": [
+      {
+       "http_status": 500,
+       "session_key": "junior-dev/attempt-0001"
+      }
+     ]
+    },
+    {
+     "run_id": "tests-consumer-fixture/aggregate/2",
+     "status": "failed",
+     "transient_provider_failures": [
+      {
+       "http_status": 500,
+       "session_key": "security/attempt-0001"
+      }
+     ]
+    }
+   ],
+   "eligible_cells": 6,
+   "not_complete_cells": 6,
+   "not_complete_discovery_session_outcomes": {
+    "failed/provider": 6
+   },
+   "trial": "sol100"
+  }
+ ]
+}
