@@ -3,7 +3,7 @@
   "clean_controls_verified": 15,
   "defects_verified": 25,
   "failures": [],
-  "inventory_sha256": "0dec1c2cb9369278451ebbdcaca05acc44b245733cd474fb056efc7f9f959055",
+  "inventory_sha256": "d39a024184b9e32244ecca0c4eee9597e939b2c54e4a0c35edf490bdb65d352f",
   "kind": "trusted_mechanical_controls_not_model_accuracy",
   "patches_verified": 40,
   "results": [
@@ -78,7 +78,7 @@
       "head_sha": "c972bb3e5f2ad991305d03c08c0f69eb5370a058"
     },
     {
-      "base_sha": "6bf985c5f97eeb9e96df8e95527784cbe2c5718a",
+      "base_sha": "2c5bec0a2c6d8ac5e3a0e3ca6a0d2cc1ecb42971",
       "case_id": "sealed-h06",
       "control_errors": {
         "base": null,
@@ -89,7 +89,7 @@
         "head": 0
       },
       "expected_defect": false,
-      "head_sha": "b512c75a820e05ef38fec29be57ec22ecf4ccc81"
+      "head_sha": "760cde6538978844ecfc49fe43272e81fb4a53cf"
     },
     {
       "base_sha": "d0bed3450c1c5b5175ebf6ab244508556840cfea",
@@ -302,7 +302,7 @@
       "head_sha": "beef797ae499067c9364ae4f7fbeda08d483d208"
     },
     {
-      "base_sha": "4432b6567bff5a22fe27eaa6dc3311bca158bf65",
+      "base_sha": "bf73ed600783c80194107bd8009b4c777d72ef83",
       "case_id": "sealed-h22",
       "control_errors": {
         "base": null,
@@ -313,7 +313,7 @@
         "head": 0
       },
       "expected_defect": false,
-      "head_sha": "1c1337bfaaca9a8c588f12bbfb97d12dc63d3a4a"
+      "head_sha": "8a53f8b6c77b15fc9233243fec83ebe7f192b6a6"
     },
     {
       "base_sha": "0bfd714d16631e3f991e768c5cdc56275a37c038",
@@ -428,7 +428,7 @@
       "head_sha": "9a2f22cfd1955d67b75cf26715fbd1e4ecd2a4b1"
     },
     {
-      "base_sha": "faf1b4dc7e19545d899c9b84f8dc5f8ab22aa18c",
+      "base_sha": "38ff4ca5fe0b06b9d4442f3488b92ca5eb32bf89",
       "case_id": "sealed-h31",
       "control_errors": {
         "base": null,
@@ -439,10 +439,10 @@
         "head": 0
       },
       "expected_defect": false,
-      "head_sha": "e327408bbc56cebcdeafd25e1000d811bacc3df0"
+      "head_sha": "ec2fc64c09d083eb81d9bf6576b32214718834a4"
     },
     {
-      "base_sha": "e31d8385c695c34c0c3d85209718e59e8c4647e8",
+      "base_sha": "564e856b76c50e9cd636c953ccd060e3ee3d66c9",
       "case_id": "sealed-h32",
       "control_errors": {
         "base": null,
@@ -453,7 +453,7 @@
         "head": 0
       },
       "expected_defect": false,
-      "head_sha": "911c3248b0cb66c815a0c5d5914e0b29caabe1d2"
+      "head_sha": "8360f94785daaf2a4f92d8062effeb668e571898"
     },
     {
       "base_sha": "5e607073b04a4a48b3ee632faa413581284f5934",

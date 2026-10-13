@@ -71,14 +71,26 @@ def test_verifier_refuses_an_untrusted_corpus_path(tmp_path):
         module.verify(tmp_path)
 
 
-def test_production_context_projection_excludes_holdout_labels_and_controls(tmp_path, monkeypatch):
+@pytest.mark.parametrize(
+    "identifier,filename,contract",
+    [
+        ("sealed-h02", "src/app.py", None),
+        ("sealed-h06", "src/app.py", "built-in integer coordinates"),
+        ("sealed-h22", "src/app.py", "built-in list fixture"),
+        ("sealed-h31", "src/concurrency/worker.py", "built-in list queue"),
+        ("sealed-h32", "src/app.py", "finite numeric monotonic times"),
+    ],
+)
+def test_production_context_projection_excludes_holdout_labels_and_controls(
+    tmp_path, monkeypatch, identifier, filename, contract
+):
     import asyncio
 
     from scrutare.config import parse_config
     from scrutare.engine.session_models import NareRuntime, TokenUsage
     from scrutare.evaluation.runner import run_experiment
 
-    cases = tuple(c for c in load_corpus(ROOT, "holdout") if c.id == "sealed-h02")
+    cases = tuple(c for c in load_corpus(ROOT, "holdout") if c.id == identifier)
     config = parse_config(
         "models: {default: {model: offline-proof}}\n"
         "context: {enabled: true, related_paths: [src/contracts.py]}\n"
@@ -93,7 +105,7 @@ def test_production_context_projection_excludes_holdout_labels_and_controls(tmp_
         assert manifest["source"]["kind"] == "corpus_snapshot"
         assert {
             entry["path"] for entry in manifest["entries"] if entry["status"] == "captured"
-        } == {"src/app.py", "src/contracts.py"}
+        } == ({filename, "src/contracts.py"} if identifier == "sealed-h02" else {filename})
         assert all(path.is_file() for path in prepared.iterdir())
         names = {path.name for path in prepared.iterdir()}
         assert not names & {
@@ -109,6 +121,14 @@ def test_production_context_projection_excludes_holdout_labels_and_controls(tmp_
         for entry in manifest["entries"]:
             if entry["path"] == "src/contracts.py" and entry["status"] == "captured":
                 assert (prepared / entry["artifact"]).read_text() == "SIZE = 10\n"
+        if contract:
+            visible = [
+                entry
+                for entry in manifest["entries"]
+                if entry["path"] == filename and entry["status"] == "captured"
+            ]
+            assert {entry["side"] for entry in visible} == {"base", "head"}
+            assert all(contract in (prepared / entry["artifact"]).read_text() for entry in visible)
         return SimpleNamespace(
             status="complete",
             accounting_complete=True,
@@ -129,3 +149,28 @@ def test_production_context_projection_excludes_holdout_labels_and_controls(tmp_
     )
     assert len(result["runs"]) == 9
     assert all(run["status"] == "complete" for run in result["runs"])
+
+
+@pytest.mark.parametrize(
+    "identifier,filename,function,args,error",
+    [
+        ("sealed-h06", "src/app.py", "partition", (1.0, 10), ValueError),
+        ("sealed-h22", "src/app.py", "check_empty", ((),), TypeError),
+        ("sealed-h31", "src/concurrency/worker.py", "drain", ({1: 2},), TypeError),
+        ("sealed-h32", "src/app.py", "expired", (float("nan"), 10), ValueError),
+        ("sealed-h32", "src/app.py", "expired", (10, float("inf")), ValueError),
+    ],
+)
+def test_public_clean_contract_rejects_out_of_scope_inputs_on_both_revisions(
+    identifier, filename, function, args, error
+):
+    for side in ("base", "head"):
+        source = ROOT / "sources" / identifier / side / filename
+        namespace = {}
+        # Only our checked-in original trusted fixtures execute here, never an external corpus.
+        exec(compile(source.read_bytes(), str(source), "exec"), namespace)
+        with pytest.raises(error):
+            namespace[function](*args)
+    # Diff-only reviewers see the same restrictions; no need to expose private gold labels.
+    patch = (ROOT / "captures" / identifier / "diff.patch").read_text()
+    assert "raise " + error.__name__ in patch

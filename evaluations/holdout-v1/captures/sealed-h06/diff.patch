@@ -1,8 +1,10 @@
 diff --git a/src/app.py b/src/app.py
-index 00bca55..b06b215 100644
+index e1ffe1a..08bc703 100644
 --- a/src/app.py
 +++ b/src/app.py
-@@ -1,2 +1,2 @@
- def partition(index, width):
+@@ -2,4 +2,4 @@ def partition(index, width):
+     'Partition built-in integer coordinates with a positive built-in integer width.'
+     if type(index) is not int or type(width) is not int or width <= 0:
+         raise ValueError('integer coordinates and positive integer width required')
 -    return index // width, index % width
 +    return divmod(index, width)

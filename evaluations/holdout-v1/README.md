@@ -3,6 +3,11 @@
 Forty purpose-written cases: eight in each of correctness, security, testing,
 operations and consumer behavior. Each domain has five labeled regressions and
 three guarded clean controls. All cases are holdout-only, disjoint from the pilot.
+Guarded input restrictions are public, identical contracts in both captured source
+versions, enforced by unchanged runtime checks: built-in integer coordinates and
+positive width, built-in list fixtures/queues, and finite monotonic times. They
+remain visible in the unified patch context as well as repository context. Clean
+labels never rely solely on evaluator-private restrictions to dismiss valid changes.
 Public IDs are opaque (`sealed-h01` through `sealed-h40`) so runtime paths do not
 encode defect names or categories.
 Source code and labels are original contributions under Elastic License 2.0.

@@ -1,5 +1,5 @@
 {
-  "head_sha": "e327408bbc56cebcdeafd25e1000d811bacc3df0",
+  "head_sha": "ec2fc64c09d083eb81d9bf6576b32214718834a4",
   "pr_number": 31,
   "pull_request": {
     "base": {
@@ -7,7 +7,7 @@
       "repo": {
         "full_name": "sealed-fixtures/local"
       },
-      "sha": "faf1b4dc7e19545d899c9b84f8dc5f8ab22aa18c"
+      "sha": "38ff4ca5fe0b06b9d4442f3488b92ca5eb32bf89"
     },
     "body": "",
     "changed_files": 1,
@@ -16,7 +16,7 @@
       "repo": {
         "full_name": "sealed-fixtures/local"
       },
-      "sha": "e327408bbc56cebcdeafd25e1000d811bacc3df0"
+      "sha": "ec2fc64c09d083eb81d9bf6576b32214718834a4"
     },
     "merged": false,
     "number": 31,

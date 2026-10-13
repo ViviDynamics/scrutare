@@ -1,8 +1,10 @@
 diff --git a/src/app.py b/src/app.py
-index 9bad20e..b96a589 100644
+index fad4cf0..04fef01 100644
 --- a/src/app.py
 +++ b/src/app.py
-@@ -1,2 +1,2 @@
- def check_empty(values):
+@@ -2,4 +2,4 @@ def check_empty(values):
+     'Check a built-in list fixture.'
+     if type(values) is not list:
+         raise TypeError('built-in list fixture required')
 -    assert values == []
 +    assert len(values) == 0

@@ -134,10 +134,16 @@ CASES = [
         "quotient-remainder-clean",
         """
         def partition(index, width):
+            'Partition built-in integer coordinates with a positive built-in integer width.'
+            if type(index) is not int or type(width) is not int or width <= 0:
+                raise ValueError('integer coordinates and positive integer width required')
             return index // width, index % width
     """,
         """
         def partition(index, width):
+            'Partition built-in integer coordinates with a positive built-in integer width.'
+            if type(index) is not int or type(width) is not int or width <= 0:
+                raise ValueError('integer coordinates and positive integer width required')
             return divmod(index, width)
     """,
         "from src.app import partition\n"
@@ -493,10 +499,16 @@ CASES = [
         "precise-empty-clean",
         """
         def check_empty(values):
+            'Check a built-in list fixture.'
+            if type(values) is not list:
+                raise TypeError('built-in list fixture required')
             assert values == []
     """,
         """
         def check_empty(values):
+            'Check a built-in list fixture.'
+            if type(values) is not list:
+                raise TypeError('built-in list fixture required')
             assert len(values) == 0
     """,
         """
@@ -714,12 +726,18 @@ CASES = [
         "queue-copy-clean",
         """
         def drain(queue):
+            'Drain a built-in list queue, returning an independently owned list.'
+            if type(queue) is not list:
+                raise TypeError('built-in list queue required')
             batch = queue.copy()
             queue.clear()
             return batch
     """,
         """
         def drain(queue):
+            'Drain a built-in list queue, returning an independently owned list.'
+            if type(queue) is not list:
+                raise TypeError('built-in list queue required')
             batch = list(queue)
             queue.clear()
             return batch
@@ -740,11 +758,21 @@ CASES = [
         "operations",
         "deadline-clean",
         """
+        from math import isfinite
+
         def expired(now, deadline):
+            'Compare finite numeric monotonic times.'
+            if not isfinite(now) or not isfinite(deadline):
+                raise ValueError('finite numeric monotonic times required')
             return not now < deadline
     """,
         """
+        from math import isfinite
+
         def expired(now, deadline):
+            'Compare finite numeric monotonic times.'
+            if not isfinite(now) or not isfinite(deadline):
+                raise ValueError('finite numeric monotonic times required')
             return now >= deadline
     """,
         """

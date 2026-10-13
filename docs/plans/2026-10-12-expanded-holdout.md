@@ -33,9 +33,20 @@ Additional red checks rejected descriptive IDs and missing exact-patch applicati
 counts before those behaviors were added. Final data is forty opaque IDs, 25 bugs,
 15 controls, thirteen unchanged supporting-file cases and eighty trusted control
 executions. Each of forty generated patches also applies exactly to its base tree.
-The evaluation/corpus area passes 42 checks on both Python 3.10 and 3.14; full Ruff
+The evaluation/corpus area passes 51 checks on both Python 3.10 and 3.14; full Ruff
 and strict mypy pass. A production repository-context projection exercises the
 real loader/snapshot/preparation path with an explicitly offline intercepted engine,
 retaining unchanged source bytes and excluding all evaluator artifacts. No native
 or paid model job is represented by that unit proof. Root owns final native/full
 shipping gates and independent claim review before provider evaluation.
+
+## Independent review correction
+Root's complete review identified one P2: finite-time/list/integer clean controls
+had input restrictions only in evaluator-private text, allowing valid reports about
+unrestricted behavior to be incorrectly scored as false positives. Identical public
+runtime guards and docstrings now enforce those restrictions in both source versions
+and remain visible in the exact unified patch. Nine failing contract/projection
+regressions preceded the correction; both invalid-input behavior and visibility in
+the production projected root now pass. All eighty controls, forty patches and
+Git identities were rebuilt and reverified before freezing the new inventory.
+This consumes issue43's second and final review fix round (one historical round).

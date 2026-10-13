@@ -1,8 +1,10 @@
 diff --git a/src/app.py b/src/app.py
-index df5edc3..6666fa8 100644
+index 5f8cd82..e2de475 100644
 --- a/src/app.py
 +++ b/src/app.py
-@@ -1,2 +1,2 @@
- def expired(now, deadline):
+@@ -5,4 +5,4 @@ def expired(now, deadline):
+     'Compare finite numeric monotonic times.'
+     if not isfinite(now) or not isfinite(deadline):
+         raise ValueError('finite numeric monotonic times required')
 -    return not now < deadline
 +    return now >= deadline
