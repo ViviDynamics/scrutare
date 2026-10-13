@@ -60,7 +60,24 @@ def replay_discussion(
             raise ValueError("discussion: missing positions")
         from scrutare.personas import resolve_personas
 
-        names = [p.name for p in resolve_personas(config.personas)]
+        if config.routing.enabled:
+            from scrutare.engine.routing import plan_routing
+
+            focus = _document(root / "routing-focus.json")
+            supporting = focus.get("global_supporting_paths")
+            if not isinstance(supporting, list) or any(
+                not isinstance(path, str) for path in supporting
+            ):
+                raise ValueError("discussion: invalid routed supporting paths")
+            files = decode_artifact(read_artifact(root / "files.json"), artifact="files.json")
+            plan = plan_routing(files, tuple(supporting), config)
+            if plan.record != focus:
+                raise ValueError("discussion: captured routing plan disagrees")
+            names = [p.name for p in plan.personas]
+        else:
+            names = [p.name for p in resolve_personas(
+                config.personas, procedures=config.inspection.procedures
+            )]
         if [p.get("persona") for p in positions if isinstance(p, dict)] != names:
             raise ValueError("discussion: perspective coverage disagrees")
         parsed: list[Proposal] = []

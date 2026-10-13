@@ -330,3 +330,36 @@ def test_replay_preserves_distinct_triggers_at_same_anchor(capture, tmp_path, mo
     path.write_text(json.dumps(groups[:1]))
     with pytest.raises(ReplayError):
         replay_run(capture)
+
+
+def test_routed_focused_dispute_replays_actual_ordered_perspectives(capture, tmp_path, monkeypatch):
+    import asyncio
+    import json
+
+    from test_panel import install
+    from test_review_inputs import save_json
+
+    from scrutare.config import RoutingSettings
+    from scrutare.engine.debate import run_debate
+    from scrutare.replay.audit import replay_run
+    from scrutare.replay.models import ReplayError
+
+    config, claim = focused_capture(capture)
+    config = replace(config, personas=("junior-dev",), routing=RoutingSettings(
+        enabled=True, mode="manual", force=("performance-concurrency",)))
+    for name in ("config.json", "config.yaml"):
+        save_json(capture / name, config.to_dict())
+    install(monkeypatch, {"security": (claim,)})
+    result = asyncio.run(run_debate(
+        capture, config, runtime=focused_runtime(tmp_path, "unresolved", "supported")))
+    assert result.status == "complete"
+    path = capture / "debate.json"
+    trace = json.loads(path.read_text())
+    positions = trace["rounds"][0]["positions"]
+    assert [p["persona"] for p in positions] == [
+        "junior-dev", "senior-dev", "security", "performance-concurrency"]
+    assert replay_run(capture).saved_identical
+    positions.reverse()
+    path.write_text(json.dumps(trace))
+    with pytest.raises(ReplayError):
+        replay_run(capture)
