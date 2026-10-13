@@ -141,6 +141,15 @@ context-enabled arms; see its README). Activation comes from
 for checking. Pass `related-paths.json` as `context.related_paths`. No dispute is
 forced, and these cases can never serve as unseen validation.
 
+The [qualification and first routing/dispute measurements](../evaluations/reports/2026-10-13-qualification-rerun/README.md)
+retain one frozen 36-cell schedule that passed its gate without a rerun (the
+second schedule with that configuration; the first failed), 24
+routed-versus-fixed cells in which specialists activated from paths alone, and
+12 cells on a dispute-prone case. Every arm found every labeled defect it had the
+chance to, no discussion round ran, and two cells failed citation validation, so
+the package shows cost and failure differences and no quality difference. Its
+judgments are automated and provisional; no default changed.
+
 Ordinary CI uses `--evidence-kind offline` and deterministic provider substitutions
 to verify orchestration and scoring. Offline metrics measure software behavior only.
 A real baseline requires explicit model jobs and completed independent human
