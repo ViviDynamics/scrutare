@@ -33,3 +33,56 @@ or approval. A valid partial decision can still converge or exhaust the real bou
 and captured policy, including validated recorded exhaustion when present. As with
 other runs, local unsigned evidence proves recorded consistency, not authentic
 model judgment or remote delivery.
+
+## Focused evidence discussion (opt-in)
+
+For structured reviews, enable the independent assessor and focused discussion:
+
+```yaml
+strategy: debate
+rounds: {max: 2}
+context: {enabled: true}
+findings:
+  evidence: v2
+  assessment: {enabled: true, tokens: 2000}
+  discussion: {enabled: true}
+```
+
+This mode discusses only unresolved assertions, supported assertions with
+counterevidence, and conservatively equivalent assertions with conflicting
+assessments. Undisputed supported findings bypass discussion, retaining every
+original source and blocking category. Claim grouping compares the normalized
+assertion, cause, trigger, preconditions, expected/observed behavior and impact;
+different causes or triggers at the same anchor remain separate. The quoted round
+bundle contains only disputed claims and assessments. The read-only root still
+contains the shared captured context so reviewers can inspect relevant code.
+
+Perspectives propose retain/refute/unresolved with immutable candidate IDs,
+reasons and captured citations. Empty-citation opposition is recorded with a
+`missing_counterevidence` refusal. No perspective or chair can rewrite allegations,
+downgrade categories or remove a supported minority claim by voting. Only another
+independent assessment can change a disposition, using the original candidate and
+quoted peer evidence. Checked references prove captured identity and line bounds;
+model-based support or refutation is not formal semantic proof.
+
+The original assessor allocation is reserved before discovery and shared by its
+initial assessment and all reassessments. Perspective rounds spend their existing
+quotas. There is no extra ledger, chair allocation or token ceiling. Each completed
+round records proposals, refused transitions, independently changed dispositions,
+new citation bundles (possibly empty), actual token deltas and elapsed time.
+`assessment.json` preserves initial dispositions; numbered
+`assessment-round-NNNN.json` files preserve each reassessment. `debate.json`
+retains bypassed IDs, all rounds and the final independent dispositions, including
+refuted claims excluded from the verdict.
+
+Persistent disputes reach the configured bound and escalate for human review;
+unresolved blocking claims remain visible and cannot approve. Missing or partial
+sessions, invalid references, denied quotas and incomplete accounting withhold a
+verdict instead of claiming a completed deadlock. Replay validates recorded
+candidate identity, citations, independent transitions, original assessor quota
+and the completed bound; it never reruns the models or certifies semantic truth.
+
+This mode leaves defaults unchanged. Equal-budget precision/recall comparisons
+against independent aggregation, assessment without discussion, and one/multiple
+rounds remain evaluation work tracked by #51; this implementation makes no quality
+promotion claim and references #49 without closing its measured acceptance.

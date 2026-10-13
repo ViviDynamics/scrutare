@@ -152,6 +152,16 @@ class FakeProvider:
                              "supporting_citations": citations if status != "refuted" else [],
                              "counter_citations": citations if status == "refuted" else []})
             reply = {"content": [{"type": "text", "text": json.dumps({"assessments": rows})}]}
+        if reply.get("propose_candidates"):
+            prompt = arguments[1]
+            pool, _ = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])
+            output = {"proposals": [{"candidate_id": candidate["candidate_id"],
+                "action": reply["propose_candidates"], "reason": "Captured evidence position.",
+                "citations": [{key: value for key, value in citation.items()
+                               if key not in ("validation", "validation_reason")}
+                              for citation in candidate["evidence"]["citations"]]}
+                for candidate in pool["candidates"]]}
+            reply = {"content": [{"type": "text", "text": json.dumps(output)}]}
         if reply.get("select_pool"):
             prompt = arguments[1]
             pool, _ = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])
