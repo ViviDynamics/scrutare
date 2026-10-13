@@ -137,33 +137,38 @@ class GitHubAppClient:
     def failed_deliveries(self, now: float | None = None) -> list[tuple[int, str]]:
         """List recent reviewable deliveries GitHub could not hand to this service.
 
-        GitHub never redelivers on its own. Only transport failures and 5xx answers
-        count: a 4xx is this service's own deliberate refusal.
+        GitHub never redelivers on its own, and a redelivery keeps its delivery's GUID.
+        Only transport failures and 5xx answers count: a 4xx is this service's own
+        deliberate refusal. Records this code does not understand are skipped.
         """
         result = self.request("GET", "/app/hook/deliveries?per_page=100", self._jwt(), None)
+        items = result.get("items")
+        if not isinstance(items, list):
+            raise AppError("GitHub App returned invalid delivery records")
         current = time.time() if now is None else now
         latest: dict[str, int] = {}
         delivered: set[str] = set()
         failed: set[str] = set()
-        try:
-            for item in result["items"]:
-                guid, identity, code = item["guid"], item["id"], item["status_code"]
-                if (not isinstance(guid, str) or not guid or type(identity) is not int
-                        or type(code) is not int):
-                    raise ValueError
+        for item in items:
+            try:
+                guid, identity = item["guid"], item["id"]
+                if not isinstance(guid, str) or not guid or type(identity) is not int:
+                    continue
                 age = current - datetime.fromisoformat(
                     item["delivered_at"].replace("Z", "+00:00")).timestamp()
                 if (item["event"] != "pull_request" or item["action"] not in REVIEWED_ACTIONS
                         or item["installation_id"] not in self.settings.installations.values()
                         or age > 86400):
                     continue
-                latest[guid] = max(identity, latest.get(guid, 0))
-                if 200 <= code < 300:
-                    delivered.add(guid)
-                elif not 400 <= code < 500:
-                    failed.add(guid)
-        except (KeyError, TypeError, ValueError, AttributeError):
-            raise AppError("GitHub App returned invalid delivery records") from None
+                code = item.get("status_code")
+                code = code if type(code) is int else 0
+            except (KeyError, TypeError, ValueError, AttributeError):
+                continue
+            latest[guid] = max(identity, latest.get(guid, 0))
+            if item.get("status") == "OK" or 200 <= code < 300:
+                delivered.add(guid)
+            elif not 400 <= code < 500:
+                failed.add(guid)
         return sorted((latest[guid], guid) for guid in failed - delivered)
 
     def redeliver(self, delivery: int) -> None:
@@ -172,11 +177,19 @@ class GitHubAppClient:
 
 def reconcile(store: JobStore, client: Any) -> int:
     """Ask GitHub to resend missed deliveries; they return through signed admission."""
-    requested = 0
+    requested, refused = 0, 0
     for delivery, guid in client.failed_deliveries():
-        if store.redelivery_due(guid):
+        if not store.redelivery_due(guid):
+            continue
+        try:
             client.redeliver(delivery)
-            requested += 1
+        except AppError:
+            refused += 1  # One refusal must not strand the rest of this cycle.
+            continue
+        store.redelivery_requested(guid)
+        requested += 1
+    if refused:
+        raise AppError(f"{refused} webhook redelivery requests failed")
     return requested
 
 
@@ -210,38 +223,81 @@ def _runs(root: Path) -> set[Path]:
     return {path for path in root.iterdir() if path.is_dir() and not path.name.startswith(".")}
 
 
-def _delivery(root: Path, before: set[Path]) -> str:
-    """Read this job's posting journal: confirmed, not_sent, or uncertain."""
+def _journal(runs: set[Path]) -> tuple[str, str | None]:
+    """Read these runs' posting journals: confirmed, not_sent or uncertain, and the head."""
     try:
-        states = set()
-        for run in _runs(root) - before:
+        states, heads = set(), set()
+        for run in runs:
             journal = run / "posting.json"
             if not journal.exists():
                 states.add("not_sent")
                 continue
-            status = json.loads(journal.read_bytes()).get("status")
-            states.add({"posted": "confirmed", "prepared": "not_sent",
-                        "rejected": "not_sent"}.get(status, "uncertain"))
+            document = json.loads(journal.read_bytes())
+            state = {"posted": "confirmed", "prepared": "not_sent",
+                     "rejected": "not_sent"}.get(document.get("status"), "uncertain")
+            states.add(state)
+            if state != "not_sent" and isinstance(document.get("head_sha"), str):
+                heads.add(document["head_sha"])
         if not states:
-            return "not_sent"
-        return states.pop() if len(states) == 1 else "uncertain"
+            return "not_sent", None
+        delivery = states.pop() if len(states) == 1 else "uncertain"
+        return delivery, heads.pop() if len(heads) == 1 else None
     except (OSError, ValueError, AttributeError, TypeError):
-        return "uncertain"
+        return "uncertain", None
+
+
+def _repository_root(settings: AppSettings, job: dict[str, Any]) -> Path:
+    return (settings.data_dir / "repositories" / hashlib.sha256(
+        job["repository"].encode()).hexdigest()).absolute()
+
+
+def recover_jobs(settings: AppSettings, store: JobStore) -> int:
+    """End leases nothing is executing, with delivery read from the runs they left.
+
+    One worker runs one job, so any lease it finds before claiming is an orphan from a
+    restart or an unexpected worker failure.
+    """
+    orphans = store.running()
+    for job in orphans:
+        runs = _repository_root(settings, job) / ".scrutare" / "runs"
+        since = (job["claimed"] or job["created"]) - 1
+        try:
+            delivery, head = _journal({run for run in _runs(runs)
+                                       if run.stat().st_mtime >= since})
+        except OSError:
+            delivery, head = "uncertain", None
+        store.finish(job["id"], "interrupted", {
+            "error": "worker stopped during this job; inspect job artifacts",
+            "delivery": delivery,
+            "work_dir": str((settings.data_dir / "work" / job["id"]).absolute())},
+            reviewed=head)
+    return len(orphans)
+
+
+def work_once(settings: AppSettings, store: JobStore, *, client: Any = None,
+              runner: Any = subprocess.run) -> bool:
+    """Recover orphaned leases, then run at most one queued job."""
+    recover_jobs(settings, store)
+    job = store.claim()
+    if job is None:
+        return False
+    run_job(settings, store, job, client=client, runner=runner)
+    return True
 
 
 def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
             client: Any = None, runner: Any = subprocess.run) -> None:
     """Run the same installed engine; retain every job directory on success or failure."""
     root = (settings.data_dir / "work" / job["id"]).absolute()
-    repository_root = (settings.data_dir / "repositories" / hashlib.sha256(
-        job["repository"].encode()).hexdigest()).absolute()
+    repository_root = _repository_root(settings, job)
     runs = repository_root / ".scrutare" / "runs"
     before: set[Path] | None = None
     code: int | None = None
 
     def stop(error: str, *, interrupted: bool = False) -> None:
         # Callers decide whether to resubmit from `delivery`, never from the status alone.
-        delivery = "not_sent" if before is None else _delivery(runs, before)
+        delivery, head = ("not_sent", None) if before is None else _journal(
+            _runs(runs) - before)
         if code == 0 and delivery != "confirmed":
             delivery = "uncertain"
         result: dict[str, Any] = {"error": error, "delivery": delivery,
@@ -249,7 +305,8 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
         if code is not None:
             result["exit_code"] = code
         status = "interrupted" if interrupted or delivery == "uncertain" else "failed"
-        store.finish(job["id"], status, result)
+        # A later webhook job must not review this head again if a review may exist.
+        store.finish(job["id"], status, result, reviewed=head)
 
     try:
         settings.authorize(job["repository"], job["number"], job["installation"])
@@ -314,7 +371,7 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
         except (OSError, ValueError, KeyError, TypeError):
             raise AppError("review CLI succeeded without its installed result; "
                            "inspect job artifacts") from None
-        store.finish(job["id"], "posted", result)
+        store.finish(job["id"], "posted", result, reviewed=result["head_sha"])
     except (AppError, ConfigError) as error:
         stop(str(error))
     except (OSError, ValueError, KeyError, TypeError):

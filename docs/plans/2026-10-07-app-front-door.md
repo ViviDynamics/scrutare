@@ -35,6 +35,9 @@ cannot be inferred from a development GitHub token.
   and separate health listener; `delivery` evidence from the posting journal;
   newest-push coalescing and a reviewed-head guard; signed-content admission;
   GitHub redelivery of missed webhooks; provider-bound, validated model origins.
+- [x] Independent review round 2: reviewed heads recorded for every job that may
+  have delivered; one queued push per pull request at admission; orphaned leases
+  recovered from their runs; event-driven listener tests.
 - [x] Full two-lane preflight, review, CI and source PR.
 - [ ] Out of this plan's source scope: live acceptance stays open on the issue
   until an installed App actually reviews a PR on open and push.

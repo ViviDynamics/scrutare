@@ -45,8 +45,10 @@ def test_signed_open_and_push_are_durable_idempotent_jobs(tmp_path):
     body, signature = signed(payload("synchronize", "b" * 40))
     pushed = admit_webhook(settings(tmp_path), store, "pull_request", "push", signature, body)
     assert pushed["id"] != first["id"] and pushed["head"] == "b" * 40
+    # The newer push replaces the queued one; both survive a restart.
     reopened = JobStore(tmp_path / "jobs.sqlite", max_pending=2)
-    assert reopened.get(first["id"]) == first
+    assert reopened.get(pushed["id"]) == pushed
+    assert reopened.get(first["id"])["result"] == {"superseded_by": pushed["id"]}
 
 
 @pytest.mark.parametrize("signature", ["", "sha1=bad", "sha256=" + "0" * 64])
@@ -104,33 +106,55 @@ def test_restart_retains_uncertain_delivery_and_never_retries(tmp_path):
     store = JobStore(tmp_path / "jobs.sqlite")
     job = store.enqueue("delivery", "owner/repo", 12, 456)
     assert store.claim()["id"] == job["id"]
-    store.recover_interrupted()
+    running, = store.running()
+    store.finish(running["id"], "interrupted", {"error": "restarted", "delivery": "uncertain"})
     assert store.get(job["id"])["status"] == "interrupted"
     assert store.claim() is None
 
 
-def test_claim_runs_the_newest_queued_push_and_supersedes_only_older_ones(tmp_path):
-    store = JobStore(tmp_path / "jobs.sqlite")
+def test_admission_keeps_one_queued_push_per_pull_request(tmp_path):
+    store = JobStore(tmp_path / "jobs.sqlite", max_pending=3)
     opened = store.enqueue("webhook:opened", "owner/repo", 12, 456, "a" * 40)
     performer = store.enqueue("api:task", "owner/repo", 12, 456)
     other = store.enqueue("webhook:other", "owner/repo", 13, 456, "c" * 40)
+    # At the cap, a newer push replaces its pull request's queued one instead of
+    # being refused, so one author cannot fill the queue for everyone else.
     pushed = store.enqueue("webhook:pushed", "owner/repo", 12, 456, "b" * 40)
-    # The pull request's turn comes from its oldest job, but the newest push runs.
-    running = store.claim()
-    assert running["id"] == pushed["id"]
-    covered = store.get(opened["id"])
-    assert covered["status"] == "superseded"
-    assert covered["result"] == {"superseded_by": pushed["id"]}
-    # A failure of the running review loses no push newer than the one it reviews.
-    store.finish(running["id"], "failed", {"error": "transient", "delivery": "not_sent"})
-    assert [job["status"] for job in (store.get(opened["id"]), store.get(pushed["id"]))] == [
-        "superseded", "failed"]
-    # Explicit performer requests are never merged, and other pull requests keep order.
-    assert store.claim()["id"] == performer["id"]
-    assert store.claim()["id"] == other["id"]
-    assert store.claim() is None
-    later = store.enqueue("webhook:later", "owner/repo", 12, 456, "d" * 40)
+    newest = store.enqueue("webhook:newest", "owner/repo", 12, 456, "d" * 40)
+    assert [store.get(job["id"])["status"] for job in (opened, pushed, newest)] == [
+        "superseded", "superseded", "queued"]
+    assert store.get(pushed["id"])["result"] == {"superseded_by": newest["id"]}
+    with pytest.raises(AppError) as full:
+        store.enqueue("webhook:third", "owner/repo", 14, 456, "e" * 40)
+    assert full.value.status == 503
+    # A refused admission supersedes nothing.
+    assert store.get(newest["id"])["status"] == "queued"
+    # Explicit performer requests are never merged; a running review is not replaced.
+    for expected in (performer, other):
+        assert store.claim()["id"] == expected["id"]
+        store.finish(expected["id"], "failed", {"error": "x", "delivery": "not_sent"})
+    assert store.claim()["id"] == newest["id"]
+    later = store.enqueue("webhook:later", "owner/repo", 12, 456, "f" * 40)
+    assert store.get(newest["id"])["status"] == "running"
+    store.finish(newest["id"], "failed", {"error": "transient", "delivery": "not_sent"})
     assert store.claim()["id"] == later["id"]
+
+
+def test_superseded_head_is_admitted_again_when_it_becomes_the_head_once_more(tmp_path):
+    store = JobStore(tmp_path / "jobs.sqlite")
+    first = store.enqueue("webhook:h1", "owner/repo", 12, 456, "a" * 40)
+    second = store.enqueue("webhook:h2", "owner/repo", 12, 456, "b" * 40)
+    assert store.get(first["id"])["status"] == "superseded"
+    store.claim()
+    store.finish(second["id"], "posted", {"head_sha": "b" * 40}, reviewed="b" * 40)
+    # A force-push back to the never-reviewed head runs its original job.
+    again = store.enqueue("webhook:h1", "owner/repo", 12, 456, "a" * 40)
+    assert (again["id"], again["status"], again["result"]) == (first["id"], "queued", None)
+    assert store.claim()["id"] == first["id"]
+    # A reviewed or failed head stays admitted once: no automatic second review.
+    assert store.enqueue("webhook:h2", "owner/repo", 12, 456, "b" * 40)["status"] == "posted"
+    store.finish(first["id"], "failed", {"error": "x", "delivery": "not_sent"})
+    assert store.enqueue("webhook:h1", "owner/repo", 12, 456, "a" * 40)["status"] == "failed"
 
 
 def test_released_job_returns_to_the_queue_and_only_its_owner_can_release(tmp_path):
@@ -141,31 +165,51 @@ def test_released_job_returns_to_the_queue_and_only_its_owner_can_release(tmp_pa
     assert store.get(job["id"])["status"] == "queued"
     with pytest.raises(AppError):
         store.release(job["id"])
-    store.recover_interrupted()
-    assert store.claim()["id"] == job["id"]
+    assert store.running() == []
+    claimed = store.claim()
+    assert claimed["id"] == job["id"] and claimed["claimed"] >= job["created"]
+    assert [row["id"] for row in store.running()] == [job["id"]]
 
 
-def test_reviewed_names_only_a_posted_review_of_exactly_that_head(tmp_path):
+@pytest.mark.parametrize(("status", "result", "reviewed"), [
+    ("posted", {"head_sha": "b" * 40}, True),
+    # Delivered or possibly delivered reviews count, whatever the job's status.
+    ("failed", {"error": "x", "delivery": "confirmed"}, True),
+    ("interrupted", {"error": "x", "delivery": "uncertain"}, True),
+])
+def test_reviewed_names_every_job_that_may_have_delivered_a_review_of_that_head(
+        tmp_path, status, result, reviewed):
     store = JobStore(tmp_path / "jobs.sqlite")
     job = store.enqueue("webhook:opened", "owner/repo", 12, 456, "a" * 40)
     store.claim()
     assert store.reviewed("owner/repo", 12, "a" * 40) is None
     # The CLI reviews the head current at capture, which can be newer than announced.
-    store.finish(job["id"], "posted", {"head_sha": "b" * 40})
+    store.finish(job["id"], status, result, reviewed="b" * 40)
     assert store.reviewed("owner/repo", 12, "b" * 40) == job["id"]
     assert store.reviewed("owner/repo", 12, "a" * 40) is None
     assert store.reviewed("owner/repo", 13, "b" * 40) is None
-    failed = store.enqueue("webhook:pushed", "owner/repo", 12, 456, "c" * 40)
-    store.claim()
-    store.finish(failed["id"], "failed", {"error": "x"})
-    assert store.reviewed("owner/repo", 12, "c" * 40) is None
+    assert store.get(job["id"])["head"] == "a" * 40
 
 
-def test_redelivery_requests_are_bounded_per_delivery(tmp_path):
+def test_job_that_sent_nothing_does_not_mark_its_head_reviewed(tmp_path):
     store = JobStore(tmp_path / "jobs.sqlite")
-    assert [store.redelivery_due("guid-1") for _ in range(4)] == [True, True, True, False]
-    assert JobStore(tmp_path / "jobs.sqlite").redelivery_due("guid-1") is False
-    assert store.redelivery_due("guid-2") is True
+    job = store.enqueue("webhook:opened", "owner/repo", 12, 456, "a" * 40)
+    store.claim()
+    store.finish(job["id"], "failed", {"error": "x", "delivery": "not_sent"})
+    assert store.reviewed("owner/repo", 12, "a" * 40) is None
+
+
+def test_redelivery_budget_counts_only_recorded_requests_and_is_pruned(tmp_path):
+    store = JobStore(tmp_path / "jobs.sqlite")
+    assert store.redelivery_due("guid-1") and store.redelivery_due("guid-1")
+    for _ in range(3):
+        assert store.redelivery_due("guid-1")
+        store.redelivery_requested("guid-1", now=1000.0)
+    assert not JobStore(tmp_path / "jobs.sqlite").redelivery_due("guid-1")
+    assert store.redelivery_due("guid-2")
+    # Deliveries older than the reconciliation window no longer need a budget row.
+    store.redelivery_requested("guid-2", now=1000.0 + 3 * 86400)
+    assert store.redelivery_due("guid-1")
 
 
 @pytest.mark.parametrize("origins", [

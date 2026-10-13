@@ -3,6 +3,7 @@
 import contextlib
 import json
 import os
+import re
 import socket
 import threading
 import time
@@ -32,6 +33,8 @@ def test_http_webhook_performer_api_and_private_job_status(tmp_path):
             "X-Hub-Signature-256": signature})) as response:
             assert response.status == 202
             job = json.load(response)
+        # The unauthenticated webhook answer names the job and nothing else.
+        assert job == {"status": "queued", "id": job["id"]}
         with pytest.raises(HTTPError) as error:
             urlopen(origin + "/api/jobs/" + job["id"])
         assert error.value.code == 401
@@ -121,20 +124,19 @@ def raw(port, data):
 
 def test_slow_clients_cannot_starve_health_or_outlive_the_request_deadline(tmp_path):
     store = JobStore(tmp_path / "jobs.sqlite")
-    server = make_server(settings(tmp_path), store, "127.0.0.1", 0, deadline=1)
+    server = make_server(settings(tmp_path), store, "127.0.0.1", 0, deadline=3)
     with serving(server) as origin:
-        started = time.monotonic()
         # One trickles a large body, the other never finishes its request line.
         body = raw(server.server_port, b"POST /webhook HTTP/1.1\r\nContent-Length: 900000\r\n\r\nx")
         line = raw(server.server_port, b"POST /web")
         try:
+            # Both are still held open, yet other requests are answered.
             assert status(origin + "/healthz") == 200
-            assert time.monotonic() - started < 1
             for connection in (body, line):
-                # The whole-request deadline closes both without any further bytes.
+                # The whole-request deadline closes both without any further bytes;
+                # the ten-second socket timeout here would fail the test otherwise.
                 received = connection.recv(65536)
                 assert received == b"" or b" 400 " in received
-            assert time.monotonic() - started < 5
         finally:
             body.close()
             line.close()
@@ -143,22 +145,31 @@ def test_slow_clients_cannot_starve_health_or_outlive_the_request_deadline(tmp_p
 
 def test_connection_cap_refuses_excess_clients_then_recovers(tmp_path):
     server = make_server(settings(tmp_path), JobStore(tmp_path / "jobs.sqlite"), "127.0.0.1", 0,
-                         deadline=1, connections=2)
-    with serving(server) as origin:
+                         deadline=30, connections=2)
+    def probe():
+        connection = raw(server.server_port, b"GET /healthz HTTP/1.0\r\n\r\n")
+        try:
+            return connection.recv(65536)
+        except ConnectionError:
+            return b""
+        finally:
+            connection.close()
+    def eventually(expected):
+        for _ in range(200):
+            if expected(probe()):
+                return True
+            time.sleep(0.05)
+        return False
+    with serving(server):
         held = [raw(server.server_port, b"GET /hea") for _ in range(2)]
         try:
-            time.sleep(0.2)
-            refused = raw(server.server_port, b"GET /healthz HTTP/1.0\r\n\r\n")
-            try:
-                assert refused.recv(65536) == b""
-            except ConnectionError:
-                pass
-            refused.close()
-            time.sleep(1.5)  # the held requests expire and return their slots
-            assert status(origin + "/healthz") == 200
+            # Once both held requests own a slot, a further client is closed unanswered.
+            assert eventually(lambda answer: answer == b"")
         finally:
             for connection in held:
                 connection.close()
+        # Their handlers see the close and return the slots long before the deadline.
+        assert eventually(lambda answer: b" 200 " in answer)
 
 
 def test_http_refusals_are_exact_and_never_admit_work(tmp_path):
@@ -198,7 +209,8 @@ def test_http_refusals_are_exact_and_never_admit_work(tmp_path):
         assert b" 400 " in framed(post + b"\r\n")
         assert b" 400 " in framed(post + b"Content-Length: 2\r\nContent-Length: 2\r\n\r\n{}")
         assert b" 400 " in framed(post + b"Transfer-Encoding: chunked\r\n\r\n2\r\n{}\r\n0\r\n\r\n")
-        assert b" 400 " in framed(post + b"Content-Length: -1\r\n\r\n")
+        for length in (b"-1", b"+2", b"2_0", b" 2 2", b"0x2", b"2.0"):
+            assert b" 400 " in framed(post + b"Content-Length: " + length + b"\r\n\r\n{}")
         assert store.claim() is None
         # Admission: idempotent key, conflicting reuse, then the bounded queue.
         assert status(review()) == 202
@@ -218,41 +230,39 @@ def test_health_listener_is_separate_and_reports_only_worker_liveness(tmp_path):
         assert status(origin + "/healthz") == 503
 
 
-def free_port():
-    with socket.socket() as listener:
-        listener.bind(("127.0.0.1", 0))
-        return listener.getsockname()[1]
-
-
 def test_service_process_serves_both_listeners_and_stops_cleanly_on_sigterm(tmp_path):
+    import fcntl
     import signal
     import subprocess
     import sys
-    port, health = free_port(), free_port()
+    # The service binds free ports itself and reports them, so no port is guessed here.
     env = {key: value for key, value in os.environ.items()
            if not key.startswith("SCRUTARE_APP_")} | environment(tmp_path) | {
-        "SCRUTARE_APP_PORT": str(port), "SCRUTARE_APP_HEALTH_PORT": str(health),
+        "SCRUTARE_APP_PORT": "0", "SCRUTARE_APP_HEALTH_PORT": "0",
         "SCRUTARE_APP_RECONCILE_SECONDS": "0"}
     command = [sys.executable, "-m", "scrutare.interfaces.app_server"]
+    # While another worker holds the data directory lock, startup is refused.
+    data = tmp_path / "data"
+    data.mkdir()
+    with (data / "worker.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        second = subprocess.run(command, env=env, capture_output=True, timeout=60)
+    assert second.returncode == 1
+    assert second.stderr == (b"scrutare-app: startup failed; check App settings, ports and "
+                             b"exclusive data lock\n")
     process = subprocess.Popen(command, env=env, stderr=subprocess.PIPE)
     try:
-        for _ in range(100):
-            try:
-                if status(f"http://127.0.0.1:{health}/healthz") == 200:
-                    break
-            except OSError:
-                time.sleep(0.1)
+        started = re.fullmatch(rb"scrutare-app: listening on port ([0-9]+), "
+                               rb"health on port ([0-9]+)\n", process.stderr.readline())
+        assert started is not None
+        port, health = int(started[1]), int(started[2])
+        assert port != health
         assert status(f"http://127.0.0.1:{health}/healthz") == 200
+        assert status(f"http://127.0.0.1:{health}/api/jobs/x") == 404
         assert status(f"http://127.0.0.1:{port}/healthz") == 200
         assert status(f"http://127.0.0.1:{port}/api/jobs/x") == 401
-        # The data directory lock admits exactly one worker.
-        second = subprocess.run(command, env=env | {
-            "SCRUTARE_APP_PORT": str(free_port()), "SCRUTARE_APP_HEALTH_PORT": str(free_port())},
-            capture_output=True, timeout=20)
-        assert second.returncode == 1
-        assert second.stderr.startswith(b"scrutare-app: startup failed")
         process.send_signal(signal.SIGTERM)
-        assert process.wait(timeout=20) == 0
+        assert process.wait(timeout=60) == 0
         assert process.stderr.read() == b""
     finally:
         process.kill()
@@ -278,30 +288,53 @@ def test_worker_process_enforces_deadline_on_the_cli(script):
     assert runner.process is None
 
 
-def test_deadline_kill_reaches_sessions_the_cli_started_in_their_own_groups(tmp_path):
-    import subprocess
+def gone(pid):
+    """Whether a process has exited: absent, or a zombie awaiting its reaper."""
+    try:
+        return Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[0] == "Z"
+    except (FileNotFoundError, ProcessLookupError):
+        return True
+
+
+def test_stop_interrupts_a_running_cli_then_kills_sessions_in_their_own_groups(tmp_path):
     import sys
 
+    from scrutare.interfaces.app import WorkerStopping
     from scrutare.interfaces.app_server import WorkerProcess
     marker = tmp_path / "session.pid"
     ignore = "import signal, time; signal.signal(signal.SIGINT, signal.SIG_IGN); "
-    # Like a nare session: a new session, outside the CLI's process group.
+    # Like a nare session: a new session, outside the CLI's process group. Both ignore
+    # the interrupt, so only the kill after the grace period can end them.
     script = ignore + (
         "import subprocess, sys, pathlib; "
-        f"child = subprocess.Popen([sys.executable, '-c', {ignore + 'time.sleep(60)'!r}], "
+        f"child = subprocess.Popen([sys.executable, '-c', {ignore + 'time.sleep(600)'!r}], "
         "start_new_session=True); "
-        f"pathlib.Path({str(marker)!r}).write_text(str(child.pid)); time.sleep(60)")
-    with pytest.raises(subprocess.TimeoutExpired):
-        WorkerProcess(grace=1)([sys.executable, "-c", script], capture_output=True,
-                               shell=False, timeout=5)
-    session = int(marker.read_text())
-    for _ in range(50):
-        # Gone, or a zombie awaiting its reaper: either way it no longer runs.
-        try:
-            if Path(f"/proc/{session}/stat").read_text().rsplit(")", 1)[1].split()[0] == "Z":
+        f"pathlib.Path({str(marker)!r}).write_text(str(child.pid)); time.sleep(600)")
+    runner = WorkerProcess(grace=1)
+    outcome = []
+    def run():
+        outcome.append(runner([sys.executable, "-c", script], capture_output=True,
+                              shell=False, timeout=600))
+    thread = threading.Thread(target=run)
+    thread.start()
+    try:
+        # Wait for the session itself, not for a guessed startup time.
+        for _ in range(600):
+            if marker.exists() and marker.read_text():
                 break
-        except (FileNotFoundError, ProcessLookupError):
+            time.sleep(0.05)
+        session = int(marker.read_text())
+        assert not gone(session)
+    finally:
+        runner.stop()
+        thread.join(60)
+    assert not thread.is_alive()
+    assert outcome[0].returncode < 0
+    for _ in range(600):
+        if gone(session):
             break
-        time.sleep(0.1)
-    else:
-        pytest.fail("orphaned session survived the deadline")
+        time.sleep(0.05)
+    assert gone(session), "orphaned session survived the kill"
+    # After stop, a claimed job is released rather than started.
+    with pytest.raises(WorkerStopping):
+        runner([sys.executable, "-c", "pass"], capture_output=True, shell=False, timeout=5)

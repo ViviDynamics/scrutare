@@ -106,20 +106,24 @@ Performers must decide from `delivery`, never from the status alone. The CLI
 exits 1 both for a refusal and for a failure after delivery.
 
 A review captures the pull request head current when it runs, so two rules keep
-one head from being reviewed twice by webhook jobs. When a pull request's turn
-comes, its newest queued webhook job runs and the older ones become
-`superseded`; they announce heads that no longer exist, so nothing newer is lost
-if that run fails. Before a webhook job runs, the worker also reads the current
-head and supersedes the job when this service already posted a review of exactly
-that head. Performer API jobs are never merged or skipped.
+one head from being reviewed twice by webhook jobs. At admission, a new push
+supersedes the queued webhook job of the same pull request, so each pull request
+holds at most one queued push and one author cannot fill the queue. Before a
+webhook job runs, the worker reads the current head and supersedes the job when
+an earlier job delivered, or may have delivered, a review of exactly that head;
+that includes `failed` jobs with `delivery: confirmed` and `interrupted` jobs
+with `delivery: uncertain`. A head that was superseded before any review is
+admitted again if it becomes the head once more. Performer API jobs are never
+merged or skipped.
 
 Failed and interrupted jobs are never retried automatically. Each job has a
 permanent private working directory holding the fetched configuration and the
 CLI's `stdout.json` and `stderr.log`. Each repository has a stable working
 directory, named by the repository's SHA-256, whose `.scrutare/runs` holds the
-runs and iterative history. A process restart marks in-flight jobs
-`interrupted`; a shutdown that arrives before a claimed job starts its review
-returns it to the queue. Monitor and archive completed jobs. The queue bounds
+runs and iterative history. A job left running by a restart or an unexpected
+worker error ends `interrupted`, with `delivery` read from the runs it created;
+one that had not started its review reports `not_sent`. A shutdown that arrives
+as a claimed job is about to start its review returns it to the queue. Monitor and archive completed jobs. The queue bounds
 pending work, not the job table or lifetime disk usage.
 
 Jobs run sequentially under one process-wide filesystem lock. State is SQLite on
@@ -145,7 +149,8 @@ arbitrary command execution API.
 
 GitHub uses `POST /webhook` with its exact-body HMAC-SHA256 signature. Signed but
 unlisted installations or repositories receive 403. Irrelevant events are
-acknowledged and ignored. The delivery ID header is not covered by the
+acknowledged and ignored. The response carries only the job's `status` and
+`id`; job records need the performer credential. The delivery ID header is not covered by the
 signature, so admission is keyed on signed content: the repository, pull request
 number and announced head SHA. A redelivery, a replay under a new delivery ID,
 and a later `reopened` or `ready_for_review` event at the same head all return
@@ -159,7 +164,8 @@ the service lists the App's recent deliveries and asks GitHub to redeliver
 reviewable `pull_request` events from its allowlisted installations that failed
 in transport or with a 5xx status. Redelivered events pass the same signed
 admission. The bounds are the 100 most recent delivery records, the last 24
-hours, and three requests per delivery. A longer outage needs a manual
+hours, and three accepted requests per delivery. A failed check is reported on
+stderr and tried again at the next interval. A longer outage needs a manual
 redelivery from the App's Advanced settings or a performer API request.
 
 ## Listener
@@ -169,7 +175,9 @@ connections and a ten-second deadline for a whole request, however slowly it
 arrives. Requests need one `Content-Length` of at most 1 MiB; chunked bodies are
 refused. `/healthz` is also served by a separate listener on
 `SCRUTARE_APP_HEALTH_PORT`, which probes should use so intake load cannot fail
-them. The listener has no TLS or rate limiting of its own.
+them. The listener has no TLS or rate limiting of its own. The service writes
+only a startup line with its ports and credential-free failure notices to
+stderr; it logs no requests.
 
 ## Garden rollout
 

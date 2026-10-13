@@ -90,11 +90,12 @@ class JobStore:
                 id TEXT PRIMARY KEY, delivery TEXT UNIQUE NOT NULL,
                 repository TEXT NOT NULL, number INTEGER NOT NULL,
                 installation INTEGER NOT NULL, status TEXT NOT NULL,
-                created REAL NOT NULL, result TEXT, head TEXT)""")
+                created REAL NOT NULL, result TEXT, head TEXT, reviewed TEXT,
+                claimed REAL)""")
             db.execute("CREATE INDEX IF NOT EXISTS jobs_status ON jobs (status, created)")
             db.execute("CREATE INDEX IF NOT EXISTS jobs_target ON jobs (repository, number)")
             db.execute("""CREATE TABLE IF NOT EXISTS redeliveries (
-                guid TEXT PRIMARY KEY, attempts INTEGER NOT NULL)""")
+                guid TEXT PRIMARY KEY, attempts INTEGER NOT NULL, requested REAL NOT NULL)""")
 
     def _connect(self) -> sqlite3.Connection:
         db = sqlite3.connect(self.path, timeout=30)
@@ -111,21 +112,43 @@ class JobStore:
                 installation: int, head: str | None = None) -> dict[str, Any]:
         if not isinstance(delivery, str) or not re.fullmatch(r"[A-Za-z0-9_.:-]{1,128}", delivery):
             raise AppError("invalid delivery identity")
+        webhook = delivery.startswith("webhook:")
         with closing(self._connect()) as db, db:
             db.execute("BEGIN IMMEDIATE")
             prior = db.execute("SELECT * FROM jobs WHERE delivery = ?", (delivery,)).fetchone()
-            if prior is not None:
-                if (prior["repository"], prior["number"], prior["installation"]) != (
+            if prior is not None and (
+                    prior["repository"], prior["number"], prior["installation"]) != (
                         repository, number, installation):
-                    raise AppError("delivery identity conflicts with prior target", 409)
+                raise AppError("delivery identity conflicts with prior target", 409)
+            # A head that was superseded before any review is admitted again when it
+            # returns, for example after a force-push back to it.
+            revive = (prior is not None and webhook and prior["status"] == "superseded"
+                      and head is not None and db.execute(
+                          "SELECT 1 FROM jobs WHERE repository = ? AND number = ? "
+                          "AND reviewed = ?", (repository, number, head)).fetchone() is None)
+            if prior is not None and not revive:
                 return self._job(prior)
+            identity = prior["id"] if prior is not None else uuid.uuid4().hex
+            if webhook:
+                # One queued push per pull request. The review that runs captures the
+                # head current then, so older queued pushes announce heads that are gone,
+                # and one author cannot fill the queue for every other pull request.
+                db.execute(
+                    "UPDATE jobs SET status = 'superseded', result = ? WHERE status = 'queued' "
+                    "AND repository = ? AND number = ? AND delivery LIKE 'webhook:%'",
+                    (json.dumps({"superseded_by": identity}), repository, number))
             count = db.execute(
                 "SELECT COUNT(*) FROM jobs WHERE status IN ('queued','running')").fetchone()[0]
             if count >= self.max_pending:
+                # Leaving the transaction by exception also undoes the superseding above.
                 raise AppError("review queue is full; retry later", 503)
-            identity = uuid.uuid4().hex
-            db.execute("INSERT INTO jobs VALUES (?, ?, ?, ?, ?, 'queued', ?, NULL, ?)",
-                       (identity, delivery, repository, number, installation, time.time(), head))
+            if prior is not None:
+                db.execute("UPDATE jobs SET status = 'queued', result = NULL, created = ? "
+                           "WHERE id = ?", (time.time(), identity))
+            else:
+                db.execute(
+                    "INSERT INTO jobs VALUES (?, ?, ?, ?, ?, 'queued', ?, NULL, ?, NULL, NULL)",
+                    (identity, delivery, repository, number, installation, time.time(), head))
             row = db.execute("SELECT * FROM jobs WHERE id = ?", (identity,)).fetchone()
             return self._job(row)
 
@@ -144,71 +167,60 @@ class JobStore:
             ).fetchone()
             if row is None:
                 return None
-            if row["delivery"].startswith("webhook:"):
-                # One review captures the head current when it runs. Run the newest queued
-                # push for this pull request; the older ones announce heads that no longer
-                # exist, so nothing is lost with them if this run fails.
-                row = db.execute(
-                    "SELECT * FROM jobs WHERE status = 'queued' AND repository = ? "
-                    "AND number = ? AND delivery LIKE 'webhook:%' "
-                    "ORDER BY created DESC, rowid DESC LIMIT 1",
-                    (row["repository"], row["number"])).fetchone()
-                db.execute(
-                    "UPDATE jobs SET status = 'superseded', result = ? WHERE status = 'queued' "
-                    "AND repository = ? AND number = ? AND delivery LIKE 'webhook:%' "
-                    "AND id != ?", (json.dumps({"superseded_by": row["id"]}),
-                                    row["repository"], row["number"], row["id"]))
-            db.execute("UPDATE jobs SET status = 'running' WHERE id = ?", (row["id"],))
-            job = self._job(row)
-            job["status"] = "running"
-            return job
+            db.execute("UPDATE jobs SET status = 'running', claimed = ? WHERE id = ?",
+                       (time.time(), row["id"]))
+            return self._job(db.execute("SELECT * FROM jobs WHERE id = ?",
+                                        (row["id"],)).fetchone())
 
-    def finish(self, identity: str, status: str, result: dict[str, Any]) -> None:
+    def running(self) -> list[dict[str, Any]]:
+        """Jobs holding the lease. With one worker, any it is not executing are orphans."""
+        with closing(self._connect()) as db, db:
+            return [self._job(row) for row in db.execute(
+                "SELECT * FROM jobs WHERE status = 'running' ORDER BY created, rowid")]
+
+    def finish(self, identity: str, status: str, result: dict[str, Any],
+               reviewed: str | None = None) -> None:
+        """Record a terminal state and the head whose review was or may have been sent."""
         if status not in {"posted", "failed", "interrupted", "superseded"}:
             raise AppError("invalid terminal job status")
-        head = result.get("head_sha") if status == "posted" else None
         with closing(self._connect()) as db, db:
-            cursor = db.execute("UPDATE jobs SET status = ?, result = ?, head = COALESCE(?, head) "
+            cursor = db.execute("UPDATE jobs SET status = ?, result = ?, reviewed = ? "
                                 "WHERE id = ? AND status = 'running'",
-                                (status, json.dumps(result, allow_nan=False), head, identity))
+                                (status, json.dumps(result, allow_nan=False), reviewed, identity))
             if cursor.rowcount != 1:
                 raise AppError("job does not own a running lease", 409)
 
     def release(self, identity: str) -> None:
         """Return a claimed job that never started its review to the queue."""
         with closing(self._connect()) as db, db:
-            cursor = db.execute("UPDATE jobs SET status = 'queued' "
+            cursor = db.execute("UPDATE jobs SET status = 'queued', claimed = NULL "
                                 "WHERE id = ? AND status = 'running'", (identity,))
             if cursor.rowcount != 1:
                 raise AppError("job does not own a running lease", 409)
 
     def reviewed(self, repository: str, number: int, head: str) -> str | None:
-        """Name the job that already posted a review of exactly this head, if any."""
+        """Name a job that delivered, or may have delivered, a review of exactly this head."""
         with closing(self._connect()) as db, db:
-            row = db.execute("SELECT id FROM jobs WHERE status = 'posted' AND repository = ? "
-                             "AND number = ? AND head = ? ORDER BY created LIMIT 1",
+            row = db.execute("SELECT id FROM jobs WHERE repository = ? AND number = ? "
+                             "AND reviewed = ? ORDER BY created LIMIT 1",
                              (repository, number, head)).fetchone()
         return None if row is None else str(row["id"])
 
-    def recover_interrupted(self) -> None:
-        with closing(self._connect()) as db, db:
-            db.execute("UPDATE jobs SET status = 'interrupted', result = ? "
-                       "WHERE status = 'running'", (json.dumps({
-                           "error": "worker restarted; delivery may have occurred; "
-                                    "inspect saved evidence", "delivery": "uncertain"}),))
-
     def redelivery_due(self, guid: str, limit: int = 3) -> bool:
-        """Count one redelivery request for a failed GitHub delivery, up to a small bound."""
+        """Whether a failed GitHub delivery still has redelivery requests left."""
         with closing(self._connect()) as db, db:
-            db.execute("BEGIN IMMEDIATE")
             row = db.execute("SELECT attempts FROM redeliveries WHERE guid = ?",
                              (guid,)).fetchone()
-            attempts = 0 if row is None else int(row["attempts"])
-            if attempts >= limit:
-                return False
-            db.execute("INSERT INTO redeliveries VALUES (?, 1) ON CONFLICT (guid) "
-                       "DO UPDATE SET attempts = attempts + 1", (guid,))
-            return True
+        return row is None or int(row["attempts"]) < limit
+
+    def redelivery_requested(self, guid: str, now: float | None = None) -> None:
+        """Count one accepted redelivery request and drop budgets past the window."""
+        current = time.time() if now is None else now
+        with closing(self._connect()) as db, db:
+            db.execute("DELETE FROM redeliveries WHERE requested < ?", (current - 2 * 86400,))
+            db.execute("INSERT INTO redeliveries VALUES (?, 1, ?) ON CONFLICT (guid) "
+                       "DO UPDATE SET attempts = attempts + 1, requested = excluded.requested",
+                       (guid, current))
 
 
 def admit_webhook(settings: AppSettings, store: JobStore, event: str, delivery: str,

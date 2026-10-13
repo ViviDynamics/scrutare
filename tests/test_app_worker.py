@@ -151,7 +151,7 @@ def journal(kwargs, status):
     run = kwargs["cwd"] / ".scrutare" / "runs" / "run-test"
     run.mkdir(parents=True)
     if status is not None:
-        (run / "posting.json").write_text(json.dumps({"status": status}))
+        (run / "posting.json").write_text(json.dumps({"status": status, "head_sha": "c" * 40}))
     return run
 
 
@@ -180,6 +180,8 @@ def test_job_record_says_whether_a_review_was_delivered_whatever_the_exit_code(
     saved = store.get(job["id"])
     assert (saved["status"], saved["result"]["delivery"]) == (status, delivery)
     assert saved["result"]["exit_code"] == code
+    # The captured head is remembered exactly when a review of it may exist.
+    assert saved["reviewed"] == (None if delivery == "not_sent" else "c" * 40)
     work = tmp_path / "work" / job["id"]
     assert saved["result"]["work_dir"] == str(work)
     assert (work / "stderr.log").read_bytes() == b"scrutare: stopped\n"
@@ -246,6 +248,7 @@ def test_webhook_job_for_a_head_already_reviewed_is_superseded_without_a_second_
     assert store.get(late["id"])["status"] == "superseded"
     assert store.get(late["id"])["result"] == {"superseded_by": first["id"]}
     # A performer's explicit request always runs.
+    assert store.get(first["id"])["reviewed"] == "a" * 40
     asked = store.enqueue("api:asked", "owner/repo", 12, 456)
     run_job(settings(tmp_path), store, store.claim(), client=TrustedClient(), runner=runner)
     assert store.get(asked["id"])["status"] == "posted"
@@ -409,6 +412,72 @@ def test_stdout_evidence_write_failure_after_delivery_is_not_reported_as_unsent(
     assert (saved["status"], saved["result"]["delivery"]) == ("failed", "confirmed")
 
 
+@pytest.mark.parametrize(("code", "posting"), [(1, "posted"), (1, "unknown"), (-9, "sending")])
+def test_head_whose_review_may_exist_is_not_reviewed_again_by_a_late_webhook(
+        tmp_path, code, posting):
+    store = JobStore(tmp_path / "jobs.sqlite")
+    class Client(TrustedClient):
+        def head(self, *args):
+            return "c" * 40
+    store.enqueue("webhook:h2", "owner/repo", 12, 456, "c" * 40)
+    def delivered_then_failed(argv, **kwargs):
+        journal(kwargs, posting)
+        return subprocess.CompletedProcess(argv, code, b"", b"")
+    run_job(settings(tmp_path), store, store.claim(), client=Client(),
+            runner=delivered_then_failed)
+    # GitHub redelivers an older push that was refused while the queue was full.
+    late = store.enqueue("webhook:h1", "owner/repo", 12, 456, "a" * 40)
+    run_job(settings(tmp_path), store, store.claim(), client=Client(),
+            runner=lambda *a, **k: pytest.fail("must not post a second review of this head"))
+    assert store.get(late["id"])["status"] == "superseded"
+
+
+def test_orphaned_leases_are_ended_with_delivery_read_from_their_own_runs(tmp_path):
+    import os
+
+    from scrutare.interfaces.app_worker import recover_jobs
+    config = settings(tmp_path)
+    store = JobStore(tmp_path / "jobs.sqlite")
+    def orphan(delivery, number):
+        store.enqueue(delivery, "owner/repo", number, 456)
+        return store.claim()
+    # Preflight was interrupted: nothing ran, so nothing was sent.
+    idle = orphan("api:idle", 12)
+    assert recover_jobs(config, store) == 1
+    saved = store.get(idle["id"])
+    assert (saved["status"], saved["result"]["delivery"], saved["reviewed"]) == (
+        "interrupted", "not_sent", None)
+    # The worker died after the review was posted.
+    busy = orphan("api:busy", 12)
+    from scrutare.interfaces.app_worker import _repository_root
+    cwd = _repository_root(config, busy)
+    old = journal({"cwd": cwd}, "sending")
+    old.rename(old.with_name("run-old"))
+    os.utime(old.with_name("run-old"), (busy["claimed"] - 60, busy["claimed"] - 60))
+    journal({"cwd": cwd}, "posted")
+    assert recover_jobs(config, store) == 1
+    saved = store.get(busy["id"])
+    assert (saved["status"], saved["result"]["delivery"], saved["reviewed"]) == (
+        "interrupted", "confirmed", "c" * 40)
+    assert recover_jobs(config, store) == 0
+
+
+def test_unexpected_worker_failure_leaves_a_lease_the_next_pass_recovers(tmp_path):
+    from scrutare.interfaces.app_worker import work_once
+    config = settings(tmp_path)
+    store = JobStore(tmp_path / "jobs.sqlite")
+    job = store.enqueue("api:one", "owner/repo", 12, 456)
+    class Broken(TrustedClient):
+        def installation_token(self, *args):
+            raise RuntimeError("not a failure run_job anticipates")
+    with pytest.raises(RuntimeError):
+        work_once(config, store, client=Broken())
+    assert store.get(job["id"])["status"] == "running"
+    assert work_once(config, store, client=Broken()) is False
+    saved = store.get(job["id"])
+    assert (saved["status"], saved["result"]["delivery"]) == ("interrupted", "not_sent")
+
+
 DELIVERY = {"id": 1, "guid": "g-1", "delivered_at": "2026-10-13T10:00:00Z", "status_code": 502,
             "event": "pull_request", "action": "opened", "installation_id": 456}
 NOW = 1791885600.0 + 600  # ten minutes after DELIVERY
@@ -444,22 +513,43 @@ def test_only_recent_undelivered_reviewable_events_are_redelivery_candidates(tmp
     client, calls = deliveries(tmp_path, items)
     assert client.failed_deliveries(NOW) == [(2, "g-timeout"), (11, "g-1")]
     assert calls == [("GET", "/app/hook/deliveries?per_page=100")]
-    bad, _ = deliveries(tmp_path, [DELIVERY | {"guid": 7}])
+    # A record this code does not understand is skipped, not fatal to the others.
+    odd, _ = deliveries(tmp_path, [DELIVERY | {"guid": 7}, "text", {"id": 3},
+                                   DELIVERY | {"delivered_at": None},
+                                   DELIVERY | {"id": 12, "guid": "g-null", "status_code": None},
+                                   DELIVERY | {"id": 13, "guid": "g-ok", "status": "OK",
+                                               "status_code": None}])
+    assert odd.failed_deliveries(NOW) == [(12, "g-null")]
+    def request(method, path, token, body):
+        return {"message": "not a list"}
     with pytest.raises(AppError, match="delivery records"):
-        bad.failed_deliveries(NOW)
+        GitHubAppClient(odd.settings, request=request).failed_deliveries(NOW)
 
 
-def test_reconcile_requests_bounded_redelivery_through_github(tmp_path):
+def test_reconcile_counts_only_accepted_requests_and_survives_one_refusal(tmp_path):
     from scrutare.interfaces.app_worker import reconcile
     store = JobStore(tmp_path / "jobs.sqlite")
     asked = []
     class Client:
         def failed_deliveries(self):
-            return [(11, "g-1"), (2, "g-timeout")]
+            return [(2, "g-refused"), (11, "g-1")]
         def redeliver(self, delivery):
             asked.append(delivery)
-    assert [reconcile(store, Client()) for _ in range(4)] == [2, 2, 2, 0]
-    assert asked == [11, 2] * 3
+            if delivery == 2:
+                raise AppError("GitHub App request failed; check installation permissions")
+    # The refusal is reported after the remaining deliveries were still requested.
+    for _ in range(3):
+        with pytest.raises(AppError, match="1 webhook redelivery requests failed"):
+            reconcile(store, Client())
+    assert asked == [2, 11] * 3
+    # g-1 has used its three accepted requests; the refused one never spent its budget.
+    with pytest.raises(AppError):
+        reconcile(store, Client())
+    assert asked[-1] == 2 and len(asked) == 7
+    class Healthy(Client):
+        def failed_deliveries(self):
+            return [(21, "g-2")]
+    assert reconcile(store, Healthy()) == 1
 
 
 def test_redelivery_and_head_use_exact_app_endpoints(tmp_path):

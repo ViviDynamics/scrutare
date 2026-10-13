@@ -6,6 +6,7 @@ import fcntl
 import hmac
 import json
 import os
+import re
 import signal
 import socket
 import sqlite3
@@ -25,7 +26,7 @@ from scrutare.interfaces.app import (
     WorkerStopping,
     admit_webhook,
 )
-from scrutare.interfaces.app_worker import GitHubAppClient, reconcile, run_job
+from scrutare.interfaces.app_worker import GitHubAppClient, reconcile, work_once
 
 REQUEST_DEADLINE = 10.0
 MAX_CONNECTIONS = 32
@@ -151,11 +152,9 @@ def make_server(settings: AppSettings, store: JobStore, host: str, port: int, *,
                 if self.headers.get("Transfer-Encoding"):
                     raise AppError("chunked requests are unsupported")
                 lengths = self.headers.get_all("Content-Length", [])
-                if len(lengths) != 1:
-                    raise AppError("one Content-Length header is required")
+                if len(lengths) != 1 or re.fullmatch(r"[0-9]{1,12}", lengths[0]) is None:
+                    raise AppError("one decimal Content-Length header is required")
                 size = int(lengths[0])
-                if size < 0:
-                    raise ValueError
                 if size > MAX_BODY:
                     raise AppError("request body is too large", 413)
                 raw = self.rfile.read(size)
@@ -192,6 +191,9 @@ def make_server(settings: AppSettings, store: JobStore, host: str, port: int, *,
                                            self.headers.get("X-GitHub-Event", ""),
                                            self.headers.get("X-GitHub-Delivery", ""),
                                            self.headers.get("X-Hub-Signature-256", ""), self.body())
+                    # Job records are for authenticated performers only. A signed body
+                    # can be replayed, and GitHub keeps this response in its delivery log.
+                    result = {key: result[key] for key in ("status", "id") if key in result}
                 elif self.path == "/api/reviews":
                     self.authenticate()
                     document = json.loads(self.body())
@@ -308,6 +310,11 @@ class WorkerProcess:
                 process.wait()
 
 
+def report(message: str) -> None:
+    """One credential-free operational line; never request, job or remote content."""
+    print(f"scrutare-app: {message}", file=sys.stderr, flush=True)
+
+
 def main() -> int:
     """Run one serialized worker alongside authenticated HTTP intake."""
     try:
@@ -321,25 +328,30 @@ def main() -> int:
         with (settings.data_dir / "worker.lock").open("a") as lock:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             store = JobStore(settings.data_dir / "jobs.sqlite", settings.max_pending)
-            store.recover_interrupted()
             stopping = threading.Event()
             runner = WorkerProcess()
             def worker() -> None:
                 while not stopping.is_set():
-                    job = store.claim()
-                    if job is None:
-                        stopping.wait(1)
-                    else:
-                        run_job(settings, store, job, runner=runner)
+                    try:
+                        if not work_once(settings, store, runner=runner):
+                            stopping.wait(1)
+                    except Exception as error:
+                        # Keep the only worker alive. The lease it held is recovered, with
+                        # delivery read from its run, on the next pass.
+                        report(f"worker step failed ({type(error).__name__}); retrying")
+                        stopping.wait(5)
             def reconciler() -> None:
                 # GitHub never redelivers on its own; ask for what this service missed
                 # while it was down, full or unreachable.
                 client = GitHubAppClient(settings)
                 while not stopping.is_set():
                     try:
-                        reconcile(store, client)
-                    except (AppError, OSError, sqlite3.Error):
-                        pass
+                        requested = reconcile(store, client)
+                        if requested:
+                            report(f"requested redelivery of {requested} missed webhooks")
+                    except (AppError, OSError, sqlite3.Error) as error:
+                        detail = str(error) if isinstance(error, AppError) else "storage error"
+                        report(f"webhook redelivery check failed: {detail}")
                     stopping.wait(interval)
             thread = threading.Thread(target=worker, daemon=True)
             server = make_server(settings, store, host,
@@ -350,6 +362,7 @@ def main() -> int:
             def terminate(signum: int, frame: Any) -> None:
                 raise KeyboardInterrupt
             signal.signal(signal.SIGTERM, terminate)
+            report(f"listening on port {server.server_port}, health on port {health.server_port}")
             thread.start()
             threading.Thread(target=health.serve_forever, daemon=True).start()
             if interval:
@@ -367,8 +380,7 @@ def main() -> int:
                 health.server_close()
         return 0
     except (AppError, OSError, ValueError):
-        print("scrutare-app: startup failed; check App settings, ports and exclusive data lock",
-              file=sys.stderr)
+        report("startup failed; check App settings, ports and exclusive data lock")
         return 1
 
 
