@@ -1,0 +1,41 @@
+{
+  "schema_version": 2,
+  "repeats": 3,
+  "max_tokens_per_run": 100000,
+  "max_turns": 6,
+  "timeout_seconds": 120,
+  "concurrency": 3,
+  "qualified_profile": "gpt-6.1-sol at 100000 ceiling, qualified by frozen schedule r1 (36/36 complete and accounted, zero reruns)",
+  "purpose": "development component comparison; no promotion; automated judgments provisional; zero human judgments",
+  "all_runs_complete_and_accounted": "reported, not a pass/fail criterion for a comparison",
+  "holdout_used": false,
+  "case_selection": "fixed by design before any call from labels' routing class and tempting allegation, never from model output",
+  "post_hoc_exclusions": "none permitted; every cell retained",
+  "profile": "routing-vs-fixed",
+  "cases": [
+    "dev2-01",
+    "dev2-06",
+    "dev2-09",
+    "dev2-10"
+  ],
+  "clean_cases": [],
+  "arms": [
+    "evidence",
+    "routing"
+  ],
+  "expected_runs": 24,
+  "case_roles": {
+    "dev2-01": "covered: performance-concurrency expected",
+    "dev2-06": "covered: data-integrity-migrations expected",
+    "dev2-09": "missed: concurrency defect on unmatched path",
+    "dev2-10": "missed: data-integrity defect on unmatched path"
+  },
+  "comparison": "routing versus evidence (fixed four reviewers) at the same total ceiling; routing activation recorded from artifacts",
+  "transient_retry": {
+    "per_cell": 0,
+    "delay_seconds": 0,
+    "job_budget": 0,
+    "eligibility": "none: no reruns; remaining spend allowance covers first attempts only"
+  },
+  "supersedes": "c1: frozen with a malformed related_paths value; aborted after 13 seconds with three interrupted cells, retained"
+}

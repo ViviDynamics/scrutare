@@ -1,0 +1,1712 @@
+[
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "861b7f04090a8274b20d008435137b43d74df58862bb8831c8eae173e67c9ea3",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "9ab9b0cd89f5686102946579fd6293c6bf9a7b0cacf866a3c766f47b0d3c4eb7",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "674fe5caca596d3d41ba256d60d1c80de44bf509877553c7c5d0223effd9b7d7",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "ac5e4025327c43697825f01b6935360abd4365ad3b61048829d594af8aad8a45",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "eaaa89608875a2539a492a84737b5bf90c2552948d405f92e7a2588d0e70e0a7",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "500297d564c5e5db1de79e20b87e79ecdd25d05852c9280754202f4a6f229867",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "00e815e99a171e88922b3d0f7c1fafaaaed1a313c818ffad44cb34ab5bcfd941",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "a94c3f5c67b245bfca5185244daca43d5cfe0de007a92d3005d62813f1fdc825",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "508b37615eeb1fab438e9dce01a250a8dc68d0ad1ba254b57fae62d99d591353",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "7ecd8942af968eae13cbb8d6f9df83ab0cd5a05967ac3a0b76b332ea58f6807b",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "622aaa0a05a2456384648ddacf410d764e9f27d65e40eee2f0bfac973314cf84",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "00457ea06c2a0ac12e848407cec59d54f3b147f287147d0ae62cba59089348f7",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "5f47593bdd5f5ed9a29f4ec12dc86aaeef5db83c4432ac442d5b8f5cd1afd0b5",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "b478797db8f434910f51ec2c4ab57031c9d5599f46a3d1921c1dc1a470252402",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "9b81c78774df0ce3bee047439e961bf5293e9ff9c340a68620b8e9f2ea4556bf",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "0cef7590d6841308c7763b84f6b87fc34cdb3220bf67e05bba25ab16bad84305",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "76e67231a60e4cb24e6ae321aa79fc3f270b035c5cf31e086703c2ddceb0bc19",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "125b3a5d375afa7ed121aa5cbb50960d658604bfc267983ffc9f1d66b66ecae9",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "fc9017e1c81ae6cf5542a8225ec5df4b97109be520c320a72146e83181ab874c",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "3b56f3ff444978f827abdefec5a7c52901ec2060f47a62f51aa07b00599b562a",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "918c0c657731a89e3ec0d39cd2b847e4fe1edf3f10838270c95e01f5c684fd6d",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "87828424109ffa2d2ee52aa2aa9e4969dbc7e021a9e5323ab1ca8022b5e6f13f",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "9cb7b8310f08573b1d365f8684baf9114fb4a747df80f286afc116a5112787b6",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "d7902cb8cc118a5e1ccea2d2c85c6fb227beb16daf67fa10011c4cf706afa958",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "97ae0ccaa0f847b6746ed7e854e74e381880b1351ad79a0846b8f490d6ed8a45",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "46da7d27edd97676ab8c1d99df9c747522205c7b20e9a66262bc3c6afa7c5668",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "969c1cd59c046ce4a9006d8a7dc7645a5f5062e50494df38e3d0d4f83222f543",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "e1e807073fe8b49bb55fad4aeff1e74993c74948f65fc734d1868d0b5c64532c",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "c98749b09f4200cf363618ff32051b10edff7c2e016efd51ccf73c85499fc948",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "23ca775095439636fd039a210b8fcabbc66b58b8e24d4fc4c60da9d03bf83c08",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "3eeda51fa3b1a5e5c0e605258226569e85b85324fbbb6791f9a8ba213178e097",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "901d13831042d216860aa4b83ad58094739b6251aebed2bba4b067dfd02b5928",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "11bf289ddeb5f9c493288c4e4ba9d8d6157a10cdcd11aa624ed3714e64f59864",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "fb68f6c8ec7b1424efc6c6c76816ae8477e5faf357b870880dd328fa2a78cc92",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "00a54dc0ae06b34587a9bbf87330f8bdfd2f991eb77d0794eddfb6f3863068a1",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "a009dfbd44d47348b8004ee9fa23ddeac7590b7e632cc1d9275bba11b7920b18",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "d465ba3f241386f8b3cdabfe0acbce4570f2ebc4aed4ccd7dda41d673e240ca5",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "66ecd2f60555583bf494ebbdde4273e5c25c9399ffed05bdf7832c5780ade861",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "b0175946084a6d18d45d11d63436858baa53039e857e0a59f67de495fd1fab88",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "62237f0b9b817f58f5307d6cd7c0a2be7b7d9c7c708f89017a356e3662fb062e",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "65f2690b015c80a631b0deaae849ba842f3b3041a9ccf0f3a0f2fb5eb784feb6",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "e7e429bdf413da3c65d7e2ee927ad8d465f56ff770adc45e3a23939bc69253e1",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "4328612cf7fb3b4b4e730959dab17bf761a4f0abcaf4f87e614e1cf34dea6c75",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "cf857cb333343d1d8fa8f832e9f73ce74ebbfb01ec33b9201e64b35f19287b9a",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "4811a6da5fd5cf0da9a19a4af5d31053b01dfa31dd68e2b3694935031e0f068c",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "f1fd8b8980ed83fae47f389e2f5aca8f6be7a97be229dd02b05900fd0784df18",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "4a2a1cbde1aad30f24d75f81019e77ce242097997d6bc92dcf3d2edf43d95361",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "security-auth-order-defect",
+  "finding_id": "bdc0ac7a97161f16bba6ba59ca227aabb3b87860ff15bc0e2edbf5afcfba12a1",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "be8702690e61ec268cd8fc93bc1bc5b9ca650a093ae937f10db2735cfb9dbda8",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "a04e0282346b8798c0e6cab54a4589d6f9d2e50e459345b66b995e93c2e8350e",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "e87767ec9e8bbec33d884f9d25bdecc6bcc13dd47580d25e1fcfb436ddb3bc43",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "680b1fb855b601c9c96f63081eb0c69fcec044f3965c5b98d2c5f7e62d242f0b",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "7896c23a45b8c5dbb0e2acd9b91efe979a2a9d8ac60772f8f89a35e83a4ecedc",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "c4a9ed67935d3358c416627f8bc74a3fdfcf20d226a09df6fd2489d3a70ae7f0",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "b393dbd71aa08b5ee3c4ca3d056552396135f990574872c36490b008d99c2c5b",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "f447ee9dde458940379589d7ef48a3c8620eb7f2e3245aa35f05d7189e55f6d1",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "296525f1b63ff2c4e609e442c2257dcb36ebd89c2999827a34668d73e79e9daa",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "96c7b15d580739cc307988c74c2fdee131649c9d2b6e936d43a8d2334ebae526",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "35828fa78fbfbec47445ebfa7be40754fba9894e95e85b96ea1320cfef1111cf",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "7b91d5a674a8e56a31f5be674c431b9fec12a84735c9db85bcab9b0736aeb0ee",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "eb6f80da1c90f867c8680fc5d321f47decaed62882aad0748e7b64237705aed4",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "e1d98bd17d60f3a31e2b362caeca3ea5fc8a0643e555d6b50f1146e8c5f492b2",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "ab06aaac2d14d1d09e7ee56404c9dfe420af763a899e50091e62ebd7f412d9c7",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "376408b367aeacd289830417e4348a87d0abc4321a2fa7b51fa0d82a4cb77dda",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "b1519fefec79f4724b68b74604f8a7101a8ddfb620a24a3744410d57dac844fc",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "af6acc17594322720305e2690b75060a42003467569dd4d0c9bcfab669d1a61c",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "3f5ad985f484518f191bf25ba474f39bed24df33581ab1b48bff2d55caaf287f",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "8664122a2edec0348d5b45ba285b40d6d0cb2a425883ac86f2ca53f289d1956e",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "84243ac1e5acd3aa880ba0fcba87c3b03d984aead24432f26e28954858b5ac79",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "74c56661502b42edfa97ed79bdfd3fa753e76d8b0659bb065c942ce54901cbae",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "354cc438149f641ae0b62866cfcf07a6389a8c74d55ff093422cd5a999c9ee88",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "9237d3d2ab5cec4c3883b47cd19a77cecb56e615e30485c13279169e7074362e",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "ca20a32facc345c8de376017368244086ae6594b30d7f15da21c745d6ba2aa75",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "bcb364d3e2f47b6db85b1e2988cbd15215bb3e9421d8390be05a873c3b4b87be",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "7c48676535dd8946c437ad03788d38070804377c728dd2d17e2f4f7b486369dc",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "a79a9f8a4ff3c2c24f9e49df18bfc4debd0c71cf4501e4d8e60efda729e16098",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "b6783d39e79a3bf4bc9de8202e708e5ecc590961d0825a3beeb4ed07bc77ebf2",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "8b080b0fd9cdca3329b50a89a8bee585d10a094b7473fe6e7eb5480ec19df0eb",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "8e08fce8dc46d7a26ae6a8915dc948d56253a98f6fbd2a1e82f0e4d711a41bb8",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "7de00acf414037216f99b84d17cc65023eb738dafccd7510154db05f05c9f4af",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "80ba0eef59ebab67c8dcd33b00ff2b109471306df067367a7ebe39c8f0a7bcb8",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "35a19d95e8d5e0216fd5c780053f5e67cb553fba7b4121521b93b6c264c26406",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "3f9ef61b3cdfba4254121410293a2e61fefe6e169630448b9fc73e8ff1b5f681",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "a661d26e682065a61e45ab4a431c60bc91ba0667ea18bedf7b87931c8b8fcf7a",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "3a511362542952f669751c7ff7b44e4fc6410d1c5a2673715dcc16bcb056f3e2",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "0b6e06e36b8e2f201ca7e39244de660069ff6e79ecbf268e03ff33e1d3ea4979",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "bba543e3c78d228e48b85c985eee3d9a2ed9592e3013dc9bdd61a2eb352e34cf",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "85e52a74a53ea3e56bc730c206c20a6c6cbad5a6167a15a978a310ad2eac77de",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "f30d348b93c91f5b03968da329fdfbccc17e7885f214d5fedb376979ccea4b00",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "55b45e5cc7eecd4a3af5f43a71d157892ead9bd6d7530e96f763ba91a2e00ab8",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "302928148c37c4386e675508f7c118ef4122774ae253604ee799ec17f9fdab36",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "2d7b40e0151517c2e3c5d07611d33dbb0f2f824f607c814c36d0f94f44981b1e",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "847798dedc4ae57d2413d1ea9bc82a00d9e8678ec14800cdc6fe832113a49be9",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "41d85e6b4f5849de90351f68d3a58ed86a71b4ae8a4e2ba7668c6bc0a7ceecca",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "9b1ae8d28859e4b1b8d0f5bf32c0a8987993463f74ab615bde0d55562eabec42",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "tests-consumer-fixture-defect",
+  "finding_id": "d24c19dcab6322ee87c8ff028f453e3e84bbd122d227c89cbde5d76df12e187f",
+  "job": "qualification",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "5aa9889263a0357d2e4073df9699d231992b766801f1d0267b75dbfc0c02cea2",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "eb37b5dd96cc3c120bcaa76877eda92409933e1dd28311c5d0b587ce1be33c59",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "74e3b5429ec237d0d7f7d35ada4322e8bb9150e21cdc20ee1b0192010608b2c8",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "53ea3cc8a0d1dd50cdc43ddaaabe9885d417aa58d695b436fc3deafe11243605",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "b40e9e2b4b60a5ccd05f76da2619bd38063d36899ef569f5cfb5f0b36b577b9c",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "5685518a53e727476527ff9965b6c6670b128d576040d00777b509e20f6d676e",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "1a4c5ed504100a57eb5bfecd12b31ba00e474ff6ece9dae27f6bf2f0983bc5b9",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "c8c8e5000e2b8e32475dd719833cb4f034f19c39faad3ffca4022412b74efeed",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "99912fa02aa3cf8ca6c66344fb9a9ef1a03b191b17a8a9c3275764df71f55ed0",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "dafba502636d5ee99bb1058b35bc61034b6c5a38e8f29f6ec008983b9083eec4",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "c7a3d4e0653085e53768e72039882db7ab93c3223cef0d3be6a8b417f2e9e4d9",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "40b07ac5cee25ec94376d2d9bba6fab36b698eed5d6e7f43f9c2a955e4835839",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "749171573904313b188fafc111fe2d99e5f16658bb3936c84e2a360d0ebc2d45",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "f09be9ae78736248629e653f47c608d27600612489702d6a760c02a9f35b5861",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "7bce29d584d9b72c4ec92e3a42927b7da5418716607cea767b893ff6753b6c6a",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "2ab527b7e30ad00c8d3568145ad2193cb82a686e81957157628e22f43c3695b5",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "263775150a0b6af8ea81e3316176d2906158c49841a54be5dd8e398091408098",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "e6c2c8ea593b45b430c5d650fd8269a487622bf48667a9dcf4fb3f8f6e5f1a79",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "9f3b7b074fd96b0c2a27c4ef7fd6f1957dd5a7acf0c15e799026ecad7d059e00",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "80f64d4d72d2725c4d6f0c0da94326463a3bb115135f06df1d6db32af5b0bd55",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "0096917cbf2c39b113bf05172455678a42ef724b14bc8211942f90f9442d4602",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "9f0b151ec34a02a247638c80e32ad6a3fb50429872afd99b9791c7f7268d73f2",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "9fb177840efe748793c96fb35da17f2dab58990a29acfce0306938ea18e3b314",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "8b7bda6610a25ded9ab740e5f137aae16173d15bb67bc34c1420aa7ea67a4c7a",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "64da78076a2bfe55c5ae1602bb6d316fd0e7911613858278faa051b8c2b969cf",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "9e185632798733602dc959a8bd8d55dc65958433bb7297b45653f2e066810b0c",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-01-defect",
+  "finding_id": "1cf52c12eb50adddc2c00a68129d49eb0ce4aefd1a9e66071b4abbd3d5a169dc",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "28cf95c6bf81e545f9cc04a8661a5ee4defd4c6e9935119c85eccec4b8ce5ef3",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "2511efb45cdf25f3a7b831b122ddcae1a9b35f7e36f72a5547304337d8d105f6",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "0ea0c393557b1c807100dbba8707eb487869100a9888a3b1aa9159709b97784c",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "d3ed3444c98be13e88773a7e394cfdf421f97192c702330c188ecbe54504ad1e",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "d2c5059e44a0c48dd0a3ce5434f4787747a9ed1c36a4f04bdef04b95ed2e159b",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "ef72d3e6fed224a0e57f9a0299f27862a5bc86ac1bb92d87fd2135fb8dadfb4b",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "242eb68732af1559a908da06e31dc25ec2c3b7ece1dfabe4d645a2120173cc09",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "8ac31ed826134816d8ea307918bb3054f026c716bb41d94d842e7cc57e4a0c28",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "0c7f94e6b034031d5602e8612ded1a4937dd319ce22fe789c309d5580e20c48a",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "9a2b728c70f3c459a7fab40b01f92664a3470fd940885fcafb175a7b8d0c2422",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "7a69b9ce097b830d31d9abfe81d64cf5fd48a8aea48a92474f91bd68ea107e74",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "9751ef0ff6eba85a3e2b5ff4959ecc98df8a51a4636152f76e00b2431886751d",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "b39d5673e3316a92c10bc0564e4ecefd4e63ae96e1d9a8fbcb94140375ff4b0d",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "33b10f6a19e1cda34028899381a825bfdf0c22c1cb2e2cd589df9e6ea24cc3e8",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "1d5b4592bffeca66934b6300413123c32ebed86fd806b87f13ce86eb6cff5a8c",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "6dacd52d91994e4c166459fda88d9754f46f4eea9b45a201ac0ca935d1969423",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "97cb4e5efc221b316693b5c99d2ad80a96af914279b7a060271a5eb8384dee6c",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "a44b9f8995fdc06e4a2b431a6970086909cd6e51b4a67186d7a2ecc93fa2a397",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "694effdbd56ed34665e33e46f2001e93bb6bac50347d08354b3b6628f020cf29",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "335db682a775f0fb54eac9df8c661a6cba7e00398d8b18d32772a67515b84717",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "d7860fac4151f98b0ecd91e684afb9c22efc8207dfc5ca78ea9c1e4093b12845",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "690a506e8a2d62daa9862c763e40c3cf7be20d58067eb5c1d0597f515874005b",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-06-defect",
+  "finding_id": "a983d1e1de5ae38a6d4fd0e7472123ee78c4bc2f3b5dde5873fa574ac52bf042",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "ed4d93f69c39dd86ebbd5e2210d1a65bd9d596dba35f4e98fd25feb530a3e2e0",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "4001baa73e4b4fcdbcdb221f66c918ca65f492ece12744f8b47be998e945f944",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "53c9f3fe0406b4b05c2f10235c3167100ae70d391dcfef3a27cadc458bde1222",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "260b5c89f609078d7e5b4b277df6b1ed5f4390db773ba54748e8ca7948fd81ac",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "211265ec2cac9cb5b551f1cdc6cad31e23b65405920208f29b13899abd16769c",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "e429c527495ac6a556f5da51f99eb01a9501fbc0b41b41d409a3530d82139cd6",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "ea45279ba9f0394ce5caf3af38d819b44b4d20ddf4b307081398fbe3a27d4aa4",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "263a798f210829968a541354d1cb109872e80ed6b9d9c8d3659356c28e4fe6a9",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "79be212946a9487b26fad68139ec9c4d467fc8449ef35ff035bee9184390e3e8",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "6495dcee0ca53a1457fc2eb0a556243498082f5a17fcd7c2e7804500e2e0524a",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "6c9db4a796d213322c79c71c0688f4087371b354a4076f729252c41b654e6981",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "8609456fcd9d10510d271066a1d3fa51516578029e359193604c47415fd60ff7",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "966283728978c5f3b6c6dde8e0dece34bb5f125a798c5aad683f875ed8e32363",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "35a7ddd052734a85eef27626076616ee53983b7864b1f6b2879d3c5f2a6f8442",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "c9f2625330c95a7fb051215bfb1a2f0e826ab7a8beefa1f8246c188a26ca74b8",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "1cc273b86dba103e7682006f8d3284363423c108e0730ebf489e751873e66c79",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "c3a644858b34c5ee8dd56e46ecd5cc2370290478b6a24dfef5bfb6b65309e3c5",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "62b4508f0d506b66e91bb6b786a83f31c4681b6ce86667407cbe3654d6e888af",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "bee6e87ad38f6b701db670e1e912a3b69b33f70f6d49db09682a479df5d626b7",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "c34a66671f37c85f9f3e71ebc2882e637a4eaa15f9642f276ada5156258c3a07",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "e2488d51d1941cbfdcb890da029aa9e303601adad3315a0f5de510b61ac92a36",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "34d2345b32ab4650a734566f229b44cab3a41856058099577c036f4df02ac2da",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "3af24e21dedda493c636a315bd71b823ea2fa234846d3e8e4a42adad0a092a45",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-09-defect",
+  "finding_id": "83a507334ec69779b1def41209ed49af4d4d340a20a86579034c41865eef2cf1",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "e742b385ea3d0f7d012cfc10fea6e2841556c29f7b813e836931a2f690a319da",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "13ae2fe21d3029a7f86051e116e0fd0f9cda4f38e9c170bc0f9d063c7e60cfd2",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "09d4e23e76cd896fa4914597e3ceb574ce73a9506ee4133f97401b50456e61f9",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "a54ec978f2f41abf3b8c95d42b25b8c2284239b959e590c256477adaafad7960",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "a8e46166e0c6f7b87d8c55f879df89c2400d54004a4f1672c93d7938881f12d8",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "1c02e78e2151e89942d358432543940929518479a0b599d0a8decc12c53f2503",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "540120703fecaf0aac7f0dc6adf82f7000825d5b94ecce408ae80829d23cff49",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "f7b7992c1bf94691e05e407d57875ec80ec511adb65f921a0fe4e4839929434c",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "035081e769598367bd14e28f02946f16b877483ecd48bbe31e554937a40b1e93",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "3a9abc6afad9cb68e0aa68517e2dc3ab4d4d6d2030c49f70e0c56352fdab0487",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "d4130a6d5223630344a5a119bc2d35c65a4c51404a2e7671bb1006748bd28f33",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "9366114f72fbe6e231d5cf5d9c2bfb25dbfe84f354e79ae8fba399ad206797d8",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "8b0accfd97588b1b1f55a4299546fa3510969a61de87036c2c923dd7816bd76f",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "3f55fefae17b83733f653fc19d4e8292fb1fb5cf0e23546c866910ef9db8e5b7",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "3492e6f4c631af5a962fb5f925371f27814516f61f99509a1d99d9162f962ce6",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "15a15e900cc8944233418f2ca9bf53487c2e4b5eed36a70cb30a044e348b1b1e",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "14c76979152cba945fb118e7496d23d6369b584ac8dd3e9cb740df5feadb31e4",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "41973ac55bcda367fc10253b15632b33091ac4c73f64733a1257007ef1cbce7d",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "a87483105289e70f5ae06e88e68848ccf7016ef590e95b14ad031537c8161b1a",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ },
+ {
+  "ambiguous": false,
+  "defect_id": "dev2-10-defect",
+  "finding_id": "6e33567a73c9390b46d54152907f53d48c3a84a38f8f9e0e18ad70b3e0b8d924",
+  "job": "routing",
+  "method": "automated",
+  "rationale": "anchored in the labeled file; problem statement names the labeled trigger",
+  "reviewer": "reproduce.py RULES"
+ }
+]

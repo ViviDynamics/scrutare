@@ -67,7 +67,37 @@ or validators, human adjudication, any use of `evaluations/holdout-v1`, closing
 - [x] 4. Installed-nare proof that a scripted HTTP 500 is retried and retained.
 - [x] 5. Development corpus v2 with executable gold controls: red contract and
   routing-activation tests.
-- [ ] 6. Freeze and run the qualification schedule; retain every outcome.
-- [ ] 7. If qualified, run the component subset that fits; publish the report
+- [x] 6. Freeze and run the qualification schedule; retain every outcome.
+- [x] 7. If qualified, run the component subset that fits; publish the report
   with reproduction and hashes.
 - [ ] 8. Independent review, both Python lanes, CI, merge, issue status blocks.
+
+## Outcome
+
+Tasks 1 to 5 merged in PR #67 at `2f1e95c33a959c4fe761bed999d8d149f30c9a36`, the
+source frozen for every run below.
+
+The qualification schedule passed its unchanged criteria on the first attempt of
+all 36 cells; no upstream failure occurred, so no rerun was used and the rerun
+path was not exercised against the live provider. Nominal $36.
+
+With $39 left, the subset was chosen before any call, from label classes only:
+routed versus fixed panel on two covered and two missed development-v2 cases
+(24 cells), because specialist activation is certain there and had never been
+measured; and the four focused arms on one dispute-prone clean case (12 cells),
+the cheapest chance of a first real dispute. Captured Ruff evidence was not run:
+the fixtures pass the selected rules, so that arm had nothing to add.
+
+The first routing freeze had an operator error (the related paths were frozen as
+one space-joined string). It was stopped after 13 seconds, is retained and
+published as aborted, counts $3, and is used in no result. The corrected jobs
+were refrozen with zero reruns so that first attempts fit the remaining $36.
+Total nominal $75.
+
+Results are in `evaluations/reports/2026-10-13-qualification-rerun`. Every arm
+found every labeled defect in every completed cell, no reviewer raised the
+tempting allegation, and no discussion round ran, so the runs measure cost,
+latency and failures but no quality difference. Two fixed-panel cells failed on
+an out-of-range citation. Remaining for #51: human adjudication, harder
+development cases that discriminate between arms and produce disputes, a
+reliability estimate over more than one schedule, and unseen validation.

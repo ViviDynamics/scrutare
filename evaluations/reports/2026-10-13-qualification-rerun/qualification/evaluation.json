@@ -1,0 +1,26 @@
+{
+  "models": {
+    "default": {
+      "provider": "openai",
+      "base_url": "https://litellm.vividynamics.com/v1",
+      "model": "gpt-6.1-sol"
+    }
+  },
+  "budgets": {
+    "per_persona_tokens": 100000,
+    "review_max_tokens": 100000
+  },
+  "rounds": {
+    "max": 3
+  },
+  "context": {
+    "enabled": true,
+    "related_paths": [
+      "client.py",
+      "policy.py",
+      "schema.py",
+      "formatting.py",
+      "test_formatting.py"
+    ]
+  }
+}

@@ -1,0 +1,1467 @@
+{
+ "actual_human_judgments": 0,
+ "automated_decisions": 190,
+ "defaults_promoted": false,
+ "holdout_used": false,
+ "jobs": {
+  "dispute": {
+   "all_gate_tests_pass": true,
+   "arms": {
+    "aggregate": {
+     "actual_assessor_calls": 0,
+     "automated_false_positive_findings": 0,
+     "automated_matched_findings": 0,
+     "cells": 3,
+     "cells_needing_rerun": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_false_positive_rate_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 3,
+     "complete_assessor_calls": 0,
+     "defect_cells": 0,
+     "defect_cells_detected": 0,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "duplicate_matched_findings": 0,
+     "findings": 0,
+     "max_tokens": 39637,
+     "mean_latency_seconds": 11.03,
+     "mean_tokens": 39618.7,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 11.33,
+     "pending_human_findings": 0,
+     "per_case": {
+      "dev2-07": {
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "detected": 0,
+       "latency_seconds": [
+        11.006,
+        10.748,
+        11.329
+       ],
+       "mean_latency_seconds": 11.03,
+       "mean_tokens": 39618.7,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        39609,
+        39637,
+        39610
+       ]
+      }
+     },
+     "provisional_defect_recall": null,
+     "provisional_defect_recall_wilson95": null,
+     "provisional_finding_precision": null,
+     "total_tokens": 118856,
+     "usage": {
+      "cache_read": 102695,
+      "cache_write": 0,
+      "input": 13528,
+      "output": 2633
+     }
+    },
+    "assessed": {
+     "actual_assessor_calls": 0,
+     "automated_false_positive_findings": 0,
+     "automated_matched_findings": 0,
+     "cells": 3,
+     "cells_needing_rerun": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_false_positive_rate_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 3,
+     "complete_assessor_calls": 0,
+     "defect_cells": 0,
+     "defect_cells_detected": 0,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "duplicate_matched_findings": 0,
+     "findings": 0,
+     "max_tokens": 39634,
+     "mean_latency_seconds": 11.78,
+     "mean_tokens": 39630.3,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 12.13,
+     "pending_human_findings": 0,
+     "per_case": {
+      "dev2-07": {
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "detected": 0,
+       "latency_seconds": [
+        11.927,
+        11.292,
+        12.135
+       ],
+       "mean_latency_seconds": 11.78,
+       "mean_tokens": 39630.3,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        39634,
+        39628,
+        39629
+       ]
+      }
+     },
+     "provisional_defect_recall": null,
+     "provisional_defect_recall_wilson95": null,
+     "provisional_finding_precision": null,
+     "total_tokens": 118891,
+     "usage": {
+      "cache_read": 116115,
+      "cache_write": 0,
+      "input": 108,
+      "output": 2668
+     }
+    },
+    "focused1": {
+     "actual_assessor_calls": 0,
+     "automated_false_positive_findings": 0,
+     "automated_matched_findings": 0,
+     "cells": 3,
+     "cells_needing_rerun": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_false_positive_rate_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 3,
+     "complete_assessor_calls": 0,
+     "defect_cells": 0,
+     "defect_cells_detected": 0,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "duplicate_matched_findings": 0,
+     "findings": 0,
+     "max_tokens": 39639,
+     "mean_latency_seconds": 10.38,
+     "mean_tokens": 39621.0,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 10.5,
+     "pending_human_findings": 0,
+     "per_case": {
+      "dev2-07": {
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "detected": 0,
+       "latency_seconds": [
+        10.44,
+        10.495,
+        10.2
+       ],
+       "mean_latency_seconds": 10.38,
+       "mean_tokens": 39621.0,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        39613,
+        39611,
+        39639
+       ]
+      }
+     },
+     "provisional_defect_recall": null,
+     "provisional_defect_recall_wilson95": null,
+     "provisional_finding_precision": null,
+     "total_tokens": 118863,
+     "usage": {
+      "cache_read": 116115,
+      "cache_write": 0,
+      "input": 108,
+      "output": 2640
+     }
+    },
+    "focused3": {
+     "actual_assessor_calls": 0,
+     "automated_false_positive_findings": 0,
+     "automated_matched_findings": 0,
+     "cells": 3,
+     "cells_needing_rerun": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_false_positive_rate_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 3,
+     "complete_assessor_calls": 0,
+     "defect_cells": 0,
+     "defect_cells_detected": 0,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "duplicate_matched_findings": 0,
+     "findings": 0,
+     "max_tokens": 39645,
+     "mean_latency_seconds": 11.78,
+     "mean_tokens": 39625.7,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 13.02,
+     "pending_human_findings": 0,
+     "per_case": {
+      "dev2-07": {
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "detected": 0,
+       "latency_seconds": [
+        11.488,
+        10.818,
+        13.022
+       ],
+       "mean_latency_seconds": 11.78,
+       "mean_tokens": 39625.7,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        39645,
+        39603,
+        39629
+       ]
+      }
+     },
+     "provisional_defect_recall": null,
+     "provisional_defect_recall_wilson95": null,
+     "provisional_finding_precision": null,
+     "total_tokens": 118877,
+     "usage": {
+      "cache_read": 116115,
+      "cache_write": 0,
+      "input": 108,
+      "output": 2654
+     }
+    }
+   },
+   "first_attempt_status_counts": {
+    "complete": 12
+   },
+   "job": "dispute",
+   "nominal_ceiling_estimate_usd": 12.0,
+   "observed_usage_upper_estimate_usd": 1.04,
+   "rerun_attempts": 0,
+   "retry_tokens": 0,
+   "status_counts": {
+    "complete": 12
+   },
+   "tests": {
+    "all_attempts_within_ceiling": true,
+    "all_runs_complete_and_accounted": true,
+    "experiment_terminal": true,
+    "matrix_exact": true,
+    "retries_within_declared_policy": true
+   },
+   "total_tokens_final_attempts": 475487,
+   "usage": {
+    "cache_read": 451040,
+    "cache_write": 0,
+    "input": 13852,
+    "output": 10595
+   }
+  },
+  "qualification": {
+   "all_gate_tests_pass": true,
+   "arms": {
+    "aggregate": {
+     "actual_assessor_calls": 0,
+     "automated_false_positive_findings": 0,
+     "automated_matched_findings": 24,
+     "cells": 9,
+     "cells_needing_rerun": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_false_positive_rate_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 0,
+     "defect_cells": 6,
+     "defect_cells_detected": 6,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "duplicate_matched_findings": 18,
+     "findings": 24,
+     "max_tokens": 40406,
+     "mean_latency_seconds": 18.9,
+     "mean_tokens": 37630.0,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 23.85,
+     "pending_human_findings": 0,
+     "per_case": {
+      "contract-explicit-default-clean": {
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "detected": 0,
+       "latency_seconds": [
+        11.347,
+        13.289,
+        10.994
+       ],
+       "mean_latency_seconds": 11.88,
+       "mean_tokens": 34844.3,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        34839,
+        34852,
+        34842
+       ]
+      },
+      "security-auth-order": {
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "detected": 3,
+       "latency_seconds": [
+        22.648,
+        21.899,
+        22.119
+       ],
+       "mean_latency_seconds": 22.22,
+       "mean_tokens": 40381.7,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        40375,
+        40406,
+        40364
+       ]
+      },
+      "tests-consumer-fixture": {
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "detected": 3,
+       "latency_seconds": [
+        23.853,
+        22.221,
+        21.73
+       ],
+       "mean_latency_seconds": 22.6,
+       "mean_tokens": 37664.0,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        37727,
+        37581,
+        37684
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.6097,
+      1.0
+     ],
+     "provisional_finding_precision": 1.0,
+     "total_tokens": 338670,
+     "usage": {
+      "cache_read": 275118,
+      "cache_write": 0,
+      "input": 39279,
+      "output": 24273
+     }
+    },
+    "assessed": {
+     "actual_assessor_calls": 6,
+     "automated_false_positive_findings": 0,
+     "automated_matched_findings": 24,
+     "cells": 9,
+     "cells_needing_rerun": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_false_positive_rate_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 6,
+     "defect_cells": 6,
+     "defect_cells_detected": 6,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "duplicate_matched_findings": 18,
+     "findings": 24,
+     "max_tokens": 57005,
+     "mean_latency_seconds": 45.89,
+     "mean_tokens": 48288.7,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 64.13,
+     "pending_human_findings": 0,
+     "per_case": {
+      "contract-explicit-default-clean": {
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "detected": 0,
+       "latency_seconds": [
+        12.438,
+        11.557,
+        11.533
+       ],
+       "mean_latency_seconds": 11.84,
+       "mean_tokens": 34851.3,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        34840,
+        34854,
+        34860
+       ]
+      },
+      "security-auth-order": {
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "detected": 3,
+       "latency_seconds": [
+        64.134,
+        62.819,
+        63.57
+       ],
+       "mean_latency_seconds": 63.51,
+       "mean_tokens": 56927.3,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        57005,
+        56909,
+        56868
+       ]
+      },
+      "tests-consumer-fixture": {
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "detected": 3,
+       "latency_seconds": [
+        61.971,
+        61.379,
+        63.566
+       ],
+       "mean_latency_seconds": 62.31,
+       "mean_tokens": 53087.3,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        53129,
+        52724,
+        53409
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.6097,
+      1.0
+     ],
+     "provisional_finding_precision": 1.0,
+     "total_tokens": 434598,
+     "usage": {
+      "cache_read": 362773,
+      "cache_write": 0,
+      "input": 34397,
+      "output": 37428
+     }
+    },
+    "focused1": {
+     "actual_assessor_calls": 6,
+     "automated_false_positive_findings": 0,
+     "automated_matched_findings": 24,
+     "cells": 9,
+     "cells_needing_rerun": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_false_positive_rate_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 6,
+     "defect_cells": 6,
+     "defect_cells_detected": 6,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "duplicate_matched_findings": 18,
+     "findings": 24,
+     "max_tokens": 57203,
+     "mean_latency_seconds": 43.1,
+     "mean_tokens": 48297.6,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 61.86,
+     "pending_human_findings": 0,
+     "per_case": {
+      "contract-explicit-default-clean": {
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "detected": 0,
+       "latency_seconds": [
+        11.452,
+        10.515,
+        10.316
+       ],
+       "mean_latency_seconds": 10.76,
+       "mean_tokens": 34853.3,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        34858,
+        34864,
+        34838
+       ]
+      },
+      "security-auth-order": {
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "detected": 3,
+       "latency_seconds": [
+        58.131,
+        61.862,
+        58.178
+       ],
+       "mean_latency_seconds": 59.39,
+       "mean_tokens": 57153.7,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        57119,
+        57203,
+        57139
+       ]
+      },
+      "tests-consumer-fixture": {
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "detected": 3,
+       "latency_seconds": [
+        59.849,
+        57.907,
+        59.699
+       ],
+       "mean_latency_seconds": 59.15,
+       "mean_tokens": 52885.7,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        52918,
+        52831,
+        52908
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.6097,
+      1.0
+     ],
+     "provisional_finding_precision": 1.0,
+     "total_tokens": 434678,
+     "usage": {
+      "cache_read": 362767,
+      "cache_write": 0,
+      "input": 34394,
+      "output": 37517
+     }
+    },
+    "focused3": {
+     "actual_assessor_calls": 6,
+     "automated_false_positive_findings": 0,
+     "automated_matched_findings": 24,
+     "cells": 9,
+     "cells_needing_rerun": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_false_positive_rate_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 6,
+     "defect_cells": 6,
+     "defect_cells_detected": 6,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "duplicate_matched_findings": 18,
+     "findings": 24,
+     "max_tokens": 57161,
+     "mean_latency_seconds": 46.65,
+     "mean_tokens": 48379.1,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 70.79,
+     "pending_human_findings": 0,
+     "per_case": {
+      "contract-explicit-default-clean": {
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "detected": 0,
+       "latency_seconds": [
+        10.898,
+        10.838,
+        12.347
+       ],
+       "mean_latency_seconds": 11.36,
+       "mean_tokens": 34852.7,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        34863,
+        34853,
+        34842
+       ]
+      },
+      "security-auth-order": {
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "detected": 3,
+       "latency_seconds": [
+        61.929,
+        58.369,
+        66.114
+       ],
+       "mean_latency_seconds": 62.14,
+       "mean_tokens": 56999.7,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        56928,
+        56910,
+        57161
+       ]
+      },
+      "tests-consumer-fixture": {
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "detected": 3,
+       "latency_seconds": [
+        63.499,
+        65.044,
+        70.79
+       ],
+       "mean_latency_seconds": 66.44,
+       "mean_tokens": 53285.0,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        53266,
+        52816,
+        53773
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.6097,
+      1.0
+     ],
+     "provisional_finding_precision": 1.0,
+     "total_tokens": 435412,
+     "usage": {
+      "cache_read": 362883,
+      "cache_write": 0,
+      "input": 34452,
+      "output": 38077
+     }
+    }
+   },
+   "first_attempt_status_counts": {
+    "complete": 36
+   },
+   "job": "qualification",
+   "nominal_ceiling_estimate_usd": 36.0,
+   "observed_usage_upper_estimate_usd": 4.39,
+   "rerun_attempts": 0,
+   "retry_tokens": 0,
+   "status_counts": {
+    "complete": 36
+   },
+   "tests": {
+    "aggregate_bug_cells_nonempty_valid_v2": true,
+    "all_attempts_within_ceiling": true,
+    "all_runs_complete_and_accounted": true,
+    "assessed_bug_cells_actual_complete_assessor": true,
+    "experiment_terminal": true,
+    "matrix_exact": true,
+    "retries_within_declared_policy": true
+   },
+   "total_tokens_final_attempts": 1643358,
+   "usage": {
+    "cache_read": 1363541,
+    "cache_write": 0,
+    "input": 142522,
+    "output": 137295
+   }
+  },
+  "routing": {
+   "all_gate_tests_pass": false,
+   "arms": {
+    "evidence": {
+     "actual_assessor_calls": 0,
+     "automated_false_positive_findings": 0,
+     "automated_matched_findings": 40,
+     "cells": 12,
+     "cells_needing_rerun": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 0,
+     "clean_cells_with_findings": 0,
+     "clean_false_positive_rate_wilson95": null,
+     "complete_and_accounted": 10,
+     "complete_assessor_calls": 0,
+     "defect_cells": 12,
+     "defect_cells_detected": 10,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "duplicate_matched_findings": 30,
+     "findings": 40,
+     "max_tokens": 45647,
+     "mean_latency_seconds": 23.79,
+     "mean_tokens": 42961.0,
+     "not_complete": 2,
+     "not_complete_rate_wilson95": [
+      0.047,
+      0.448
+     ],
+     "not_complete_reasons": {
+      "citation_validation": 2
+     },
+     "p95_latency_seconds_nearest_rank": 25.63,
+     "pending_human_findings": 0,
+     "per_case": {
+      "dev2-01": {
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "detected": 3,
+       "latency_seconds": [
+        23.267,
+        22.67,
+        22.379
+       ],
+       "mean_latency_seconds": 22.77,
+       "mean_tokens": 41753.3,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        41722,
+        41799,
+        41739
+       ]
+      },
+      "dev2-06": {
+       "cells": 3,
+       "cells_with_findings": 2,
+       "complete": 2,
+       "detected": 2,
+       "latency_seconds": [
+        24.453,
+        24.336,
+        22.936
+       ],
+       "mean_latency_seconds": 23.91,
+       "mean_tokens": 42371.0,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        42428,
+        42336,
+        42349
+       ]
+      },
+      "dev2-09": {
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "detected": 3,
+       "latency_seconds": [
+        24.582,
+        21.83,
+        23.271
+       ],
+       "mean_latency_seconds": 23.23,
+       "mean_tokens": 42083.0,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        42189,
+        42013,
+        42047
+       ]
+      },
+      "dev2-10": {
+       "cells": 3,
+       "cells_with_findings": 2,
+       "complete": 2,
+       "detected": 2,
+       "latency_seconds": [
+        24.526,
+        25.629,
+        25.553
+       ],
+       "mean_latency_seconds": 25.24,
+       "mean_tokens": 45636.7,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        45647,
+        45646,
+        45617
+       ]
+      }
+     },
+     "provisional_defect_recall": 0.8333,
+     "provisional_defect_recall_wilson95": [
+      0.552,
+      0.953
+     ],
+     "provisional_finding_precision": 1.0,
+     "total_tokens": 515532,
+     "usage": {
+      "cache_read": 416404,
+      "cache_write": 0,
+      "input": 57080,
+      "output": 42048
+     }
+    },
+    "routing": {
+     "actual_assessor_calls": 0,
+     "automated_false_positive_findings": 0,
+     "automated_matched_findings": 54,
+     "cells": 12,
+     "cells_needing_rerun": 0,
+     "cells_with_specialist": 6,
+     "clean_cells": 0,
+     "clean_cells_with_findings": 0,
+     "clean_false_positive_rate_wilson95": null,
+     "complete_and_accounted": 12,
+     "complete_assessor_calls": 0,
+     "defect_cells": 12,
+     "defect_cells_detected": 12,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "duplicate_matched_findings": 42,
+     "findings": 54,
+     "max_tokens": 59337,
+     "mean_latency_seconds": 24.65,
+     "mean_tokens": 53369.1,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2425
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 29.04,
+     "pending_human_findings": 0,
+     "per_case": {
+      "dev2-01": {
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "detected": 3,
+       "latency_seconds": [
+        23.043,
+        24.097,
+        23.17
+       ],
+       "mean_latency_seconds": 23.44,
+       "mean_tokens": 58291.0,
+       "reviewers": [
+        5
+       ],
+       "specialists": [
+        "performance-concurrency"
+       ],
+       "tokens": [
+        58558,
+        58617,
+        57698
+       ]
+      },
+      "dev2-06": {
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "detected": 3,
+       "latency_seconds": [
+        27.415,
+        24.127,
+        25.349
+       ],
+       "mean_latency_seconds": 25.63,
+       "mean_tokens": 58962.0,
+       "reviewers": [
+        5
+       ],
+       "specialists": [
+        "data-integrity-migrations"
+       ],
+       "tokens": [
+        58219,
+        59330,
+        59337
+       ]
+      },
+      "dev2-09": {
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "detected": 3,
+       "latency_seconds": [
+        22.173,
+        23.069,
+        22.463
+       ],
+       "mean_latency_seconds": 22.57,
+       "mean_tokens": 46428.0,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        46199,
+        46941,
+        46144
+       ]
+      },
+      "dev2-10": {
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "detected": 3,
+       "latency_seconds": [
+        26.272,
+        25.616,
+        29.04
+       ],
+       "mean_latency_seconds": 26.98,
+       "mean_tokens": 49795.3,
+       "reviewers": [
+        4
+       ],
+       "specialists": [],
+       "tokens": [
+        49828,
+        49727,
+        49831
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.7575,
+      1.0
+     ],
+     "provisional_finding_precision": 1.0,
+     "total_tokens": 640429,
+     "usage": {
+      "cache_read": 477868,
+      "cache_write": 0,
+      "input": 114488,
+      "output": 48073
+     }
+    }
+   },
+   "first_attempt_status_counts": {
+    "complete": 22,
+    "failed": 2
+   },
+   "job": "routing",
+   "nominal_ceiling_estimate_usd": 24.0,
+   "observed_usage_upper_estimate_usd": 3.03,
+   "rerun_attempts": 0,
+   "retry_tokens": 0,
+   "status_counts": {
+    "complete": 22,
+    "failed": 2
+   },
+   "tests": {
+    "all_attempts_within_ceiling": true,
+    "all_runs_complete_and_accounted": false,
+    "experiment_terminal": true,
+    "matrix_exact": true,
+    "retries_within_declared_policy": true
+   },
+   "total_tokens_final_attempts": 1155961,
+   "usage": {
+    "cache_read": 894272,
+    "cache_write": 0,
+    "input": 171568,
+    "output": 90121
+   }
+  }
+ },
+ "judgments": "automated and provisional",
+ "paired": {
+  "assessment_vs_aggregate": {
+   "baseline": "aggregate",
+   "candidate": "assessed",
+   "cases": {
+    "contract-explicit-default-clean": {
+     "complete": {
+      "aggregate": 3,
+      "assessed": 3
+     },
+     "detected": {
+      "aggregate": "0/3",
+      "assessed": "0/3"
+     },
+     "latency_ratio": 0.997,
+     "mean_latency_seconds": {
+      "aggregate": 11.88,
+      "assessed": 11.84
+     },
+     "mean_tokens": {
+      "aggregate": 34844.3,
+      "assessed": 34851.3
+     },
+     "specialists": [],
+     "token_ratio": 1.0
+    },
+    "security-auth-order": {
+     "complete": {
+      "aggregate": 3,
+      "assessed": 3
+     },
+     "detected": {
+      "aggregate": "3/3",
+      "assessed": "3/3"
+     },
+     "latency_ratio": 2.858,
+     "mean_latency_seconds": {
+      "aggregate": 22.22,
+      "assessed": 63.51
+     },
+     "mean_tokens": {
+      "aggregate": 40381.7,
+      "assessed": 56927.3
+     },
+     "specialists": [],
+     "token_ratio": 1.41
+    },
+    "tests-consumer-fixture": {
+     "complete": {
+      "aggregate": 3,
+      "assessed": 3
+     },
+     "detected": {
+      "aggregate": "3/3",
+      "assessed": "3/3"
+     },
+     "latency_ratio": 2.757,
+     "mean_latency_seconds": {
+      "aggregate": 22.6,
+      "assessed": 62.31
+     },
+     "mean_tokens": {
+      "aggregate": 37664.0,
+      "assessed": 53087.3
+     },
+     "specialists": [],
+     "token_ratio": 1.409
+    }
+   },
+   "detection_difference_cells": 0,
+   "token_ratio_range": [
+    1.0,
+    1.41
+   ]
+  },
+  "dispute_case_assessment_vs_aggregate": {
+   "baseline": "aggregate",
+   "candidate": "assessed",
+   "cases": {
+    "dev2-07": {
+     "complete": {
+      "aggregate": 3,
+      "assessed": 3
+     },
+     "detected": {
+      "aggregate": "0/3",
+      "assessed": "0/3"
+     },
+     "latency_ratio": 1.068,
+     "mean_latency_seconds": {
+      "aggregate": 11.03,
+      "assessed": 11.78
+     },
+     "mean_tokens": {
+      "aggregate": 39618.7,
+      "assessed": 39630.3
+     },
+     "specialists": [],
+     "token_ratio": 1.0
+    }
+   },
+   "detection_difference_cells": 0,
+   "token_ratio_range": [
+    1.0,
+    1.0
+   ]
+  },
+  "one_round_vs_assessment": {
+   "baseline": "assessed",
+   "candidate": "focused1",
+   "cases": {
+    "contract-explicit-default-clean": {
+     "complete": {
+      "assessed": 3,
+      "focused1": 3
+     },
+     "detected": {
+      "assessed": "0/3",
+      "focused1": "0/3"
+     },
+     "latency_ratio": 0.909,
+     "mean_latency_seconds": {
+      "assessed": 11.84,
+      "focused1": 10.76
+     },
+     "mean_tokens": {
+      "assessed": 34851.3,
+      "focused1": 34853.3
+     },
+     "specialists": [],
+     "token_ratio": 1.0
+    },
+    "security-auth-order": {
+     "complete": {
+      "assessed": 3,
+      "focused1": 3
+     },
+     "detected": {
+      "assessed": "3/3",
+      "focused1": "3/3"
+     },
+     "latency_ratio": 0.935,
+     "mean_latency_seconds": {
+      "assessed": 63.51,
+      "focused1": 59.39
+     },
+     "mean_tokens": {
+      "assessed": 56927.3,
+      "focused1": 57153.7
+     },
+     "specialists": [],
+     "token_ratio": 1.004
+    },
+    "tests-consumer-fixture": {
+     "complete": {
+      "assessed": 3,
+      "focused1": 3
+     },
+     "detected": {
+      "assessed": "3/3",
+      "focused1": "3/3"
+     },
+     "latency_ratio": 0.949,
+     "mean_latency_seconds": {
+      "assessed": 62.31,
+      "focused1": 59.15
+     },
+     "mean_tokens": {
+      "assessed": 53087.3,
+      "focused1": 52885.7
+     },
+     "specialists": [],
+     "token_ratio": 0.996
+    }
+   },
+   "detection_difference_cells": 0,
+   "token_ratio_range": [
+    0.996,
+    1.004
+   ]
+  },
+  "routing_vs_fixed": {
+   "baseline": "evidence",
+   "candidate": "routing",
+   "cases": {
+    "dev2-01": {
+     "complete": {
+      "evidence": 3,
+      "routing": 3
+     },
+     "detected": {
+      "evidence": "3/3",
+      "routing": "3/3"
+     },
+     "latency_ratio": 1.029,
+     "mean_latency_seconds": {
+      "evidence": 22.77,
+      "routing": 23.44
+     },
+     "mean_tokens": {
+      "evidence": 41753.3,
+      "routing": 58291.0
+     },
+     "specialists": [
+      "performance-concurrency"
+     ],
+     "token_ratio": 1.396
+    },
+    "dev2-06": {
+     "complete": {
+      "evidence": 2,
+      "routing": 3
+     },
+     "detected": {
+      "evidence": "2/3",
+      "routing": "3/3"
+     },
+     "latency_ratio": 1.072,
+     "mean_latency_seconds": {
+      "evidence": 23.91,
+      "routing": 25.63
+     },
+     "mean_tokens": {
+      "evidence": 42371.0,
+      "routing": 58962.0
+     },
+     "specialists": [
+      "data-integrity-migrations"
+     ],
+     "token_ratio": 1.392
+    },
+    "dev2-09": {
+     "complete": {
+      "evidence": 3,
+      "routing": 3
+     },
+     "detected": {
+      "evidence": "3/3",
+      "routing": "3/3"
+     },
+     "latency_ratio": 0.972,
+     "mean_latency_seconds": {
+      "evidence": 23.23,
+      "routing": 22.57
+     },
+     "mean_tokens": {
+      "evidence": 42083.0,
+      "routing": 46428.0
+     },
+     "specialists": [],
+     "token_ratio": 1.103
+    },
+    "dev2-10": {
+     "complete": {
+      "evidence": 2,
+      "routing": 3
+     },
+     "detected": {
+      "evidence": "2/3",
+      "routing": "3/3"
+     },
+     "latency_ratio": 1.069,
+     "mean_latency_seconds": {
+      "evidence": 25.24,
+      "routing": 26.98
+     },
+     "mean_tokens": {
+      "evidence": 45636.7,
+      "routing": 49795.3
+     },
+     "specialists": [],
+     "token_ratio": 1.091
+    }
+   },
+   "detection_difference_cells": 2,
+   "token_ratio_range": [
+    1.091,
+    1.396
+   ]
+  },
+  "three_rounds_vs_one": {
+   "baseline": "focused1",
+   "candidate": "focused3",
+   "cases": {
+    "contract-explicit-default-clean": {
+     "complete": {
+      "focused1": 3,
+      "focused3": 3
+     },
+     "detected": {
+      "focused1": "0/3",
+      "focused3": "0/3"
+     },
+     "latency_ratio": 1.056,
+     "mean_latency_seconds": {
+      "focused1": 10.76,
+      "focused3": 11.36
+     },
+     "mean_tokens": {
+      "focused1": 34853.3,
+      "focused3": 34852.7
+     },
+     "specialists": [],
+     "token_ratio": 1.0
+    },
+    "security-auth-order": {
+     "complete": {
+      "focused1": 3,
+      "focused3": 3
+     },
+     "detected": {
+      "focused1": "3/3",
+      "focused3": "3/3"
+     },
+     "latency_ratio": 1.046,
+     "mean_latency_seconds": {
+      "focused1": 59.39,
+      "focused3": 62.14
+     },
+     "mean_tokens": {
+      "focused1": 57153.7,
+      "focused3": 56999.7
+     },
+     "specialists": [],
+     "token_ratio": 0.997
+    },
+    "tests-consumer-fixture": {
+     "complete": {
+      "focused1": 3,
+      "focused3": 3
+     },
+     "detected": {
+      "focused1": "3/3",
+      "focused3": "3/3"
+     },
+     "latency_ratio": 1.123,
+     "mean_latency_seconds": {
+      "focused1": 59.15,
+      "focused3": 66.44
+     },
+     "mean_tokens": {
+      "focused1": 52885.7,
+      "focused3": 53285.0
+     },
+     "specialists": [],
+     "token_ratio": 1.008
+    }
+   },
+   "detection_difference_cells": 0,
+   "token_ratio_range": [
+    0.997,
+    1.008
+   ]
+  }
+ },
+ "pending_human_findings": 0,
+ "schema_version": 1,
+ "spend": {
+  "aborted_routing_three_started_cells": 3.0,
+  "dispute": 12.0,
+  "limit_usd": 75.0,
+  "method": "attempts x configured ceiling x advertised output rate",
+  "observed_usage_note": "all cached and uncached input at the advertised input rate; no invoice or billed amount is asserted",
+  "observed_usage_upper_estimate_usd": 8.46,
+  "qualification": 36.0,
+  "routing": 24.0,
+  "total_nominal_usd": 75.0
+ }
+}
