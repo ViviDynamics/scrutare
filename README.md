@@ -70,9 +70,10 @@ a chair, and the MCP review server. These new source features need a subsequent
 release before they are available in a published wheel or image. Successful main
 CI now automatically tags and publishes releases; see [GitHub releases](https://github.com/ViviDynamics/scrutare/releases)
 for the newest wheel and matching image, and [release automation](docs/releases.md#release-contract)
-for versioning and recovery. The GitHub App
-service in issue [#18](https://github.com/ViviDynamics/scrutare/issues/18) is
-deferred and is not implemented on `main`.
+for versioning and recovery. The [GitHub App service](docs/app.md) is
+implemented on `main` as `scrutare-app`; issue
+[#18](https://github.com/ViviDynamics/scrutare/issues/18) stays open until it is
+deployed and has reviewed real pull requests under the App identity.
 
 PR ingestion, YAML configuration validation, the persona registry, and the pure
 findings pipeline, code-derived verdicts, and durable Python poster API are
