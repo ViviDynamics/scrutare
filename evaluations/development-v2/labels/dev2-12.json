@@ -1,0 +1,23 @@
+{
+  "case_id": "dev2-12",
+  "clean_label_requires_context": true,
+  "counterexamples": [
+    "Every accepted argument is a Window, whose total is at least one; the removed branch was unreachable."
+  ],
+  "defects": [],
+  "defensible_observations": [],
+  "routing_expectation": {
+    "class": "none",
+    "expected_specialists": []
+  },
+  "tempting_allegations": [
+    {
+      "allegation": "Removing the zero check allows a ZeroDivisionError.",
+      "evidence": "ratio.py isinstance guard in both revisions; window.py constructor.",
+      "why_wrong": "hit_ratio rejects anything that is not a Window, and Window refuses to be constructed without samples, so total is never zero."
+    }
+  ],
+  "unchanged_supporting_paths": [
+    "src/stats/window.py"
+  ]
+}

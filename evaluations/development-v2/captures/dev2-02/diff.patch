@@ -1,0 +1,19 @@
+diff --git a/src/profile_cache.py b/src/profile_cache.py
+index b73a6a75f01f0a8f5d6754687f76e4c2a4a65f60..a34e0170f0c8bfb83aa5d3a1f23e1fed246bd929 100644
+--- a/src/profile_cache.py
++++ b/src/profile_cache.py
+@@ -7,10 +7,9 @@ class ProfileCache:
+         self._entries = {}
+ 
+     def get(self, tenant_id, user_id):
+-        key = (tenant_id, user_id)
+-        if key not in self._entries:
+-            self._entries[key] = self._loader(tenant_id, user_id)
+-        return self._entries[key]
++        if user_id not in self._entries:
++            self._entries[user_id] = self._loader(tenant_id, user_id)
++        return self._entries[user_id]
+ 
+     def invalidate(self, tenant_id, user_id):
+-        self._entries.pop((tenant_id, user_id), None)
++        self._entries.pop(user_id, None)

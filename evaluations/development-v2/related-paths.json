@@ -1,0 +1,7 @@
+[
+  "src/billing/tables.py",
+  "src/migrations/0006_add_status.py",
+  "src/stats/window.py",
+  "src/tables.sql",
+  "src/worker.py"
+]

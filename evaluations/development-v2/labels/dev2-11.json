@@ -1,0 +1,24 @@
+{
+  "case_id": "dev2-11",
+  "clean_label_requires_context": false,
+  "counterexamples": [
+    "The returned totals are identical."
+  ],
+  "defects": [
+    {
+      "evidence": "summary.py now calls load_customers() inside the loop; its docstring says each call is a full remote fetch.",
+      "fix_or_counterexample": "Call load_customers once before the loop.",
+      "id": "dev2-11-defect",
+      "impact": "The whole customer directory is fetched remotely once per order instead of once per report.",
+      "match_criteria": "Identify the repeated directory fetch inside the loop.",
+      "trigger": "A report over many orders."
+    }
+  ],
+  "defensible_observations": [],
+  "routing_expectation": {
+    "class": "missed",
+    "expected_specialists": []
+  },
+  "tempting_allegations": [],
+  "unchanged_supporting_paths": []
+}

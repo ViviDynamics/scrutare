@@ -133,7 +133,9 @@ class FakeProvider:
                     raise AssertionError("Concurrent transport barrier timed out")
                 await asyncio.sleep(0.01)
         await asyncio.sleep(self.scenario.get("delay_seconds", 0))
-        if self.scenario.get("error"):
+        # A path-scoped error lets a fresh evaluator attempt directory succeed.
+        if self.scenario.get("error") and self.scenario.get(
+                "error_unless_path_contains", "\0") not in str(artifact):
             raise RuntimeError(self.scenario["error"])
         if not self.replies:
             raise AssertionError("Offline transport exhausted scripted replies")

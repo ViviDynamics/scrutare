@@ -1,0 +1,30 @@
+{
+  "case_id": "dev2-05",
+  "clean_label_requires_context": false,
+  "counterexamples": [
+    "A table whose rows all have NULL status ends in the same state."
+  ],
+  "defects": [
+    {
+      "evidence": "0007_backfill_status.py now updates every row; the status IS NULL restriction is gone. 0006 states new writes already set status.",
+      "fix_or_counterexample": "Restrict the update to rows where status IS NULL.",
+      "id": "dev2-05-defect",
+      "impact": "Every existing status is overwritten with open; the original values are lost.",
+      "match_criteria": "Identify that the update is no longer restricted to rows without a status, or that existing statuses are overwritten.",
+      "trigger": "The backfill runs after the application has written rows with a real status such as closed."
+    }
+  ],
+  "defensible_observations": [
+    "The head also drops batching, so one statement updates and locks the whole table. This is a reasonable separate remark, not the labeled defect; it needs a human decision."
+  ],
+  "routing_expectation": {
+    "class": "covered",
+    "expected_specialists": [
+      "data-integrity-migrations"
+    ]
+  },
+  "tempting_allegations": [],
+  "unchanged_supporting_paths": [
+    "src/migrations/0006_add_status.py"
+  ]
+}

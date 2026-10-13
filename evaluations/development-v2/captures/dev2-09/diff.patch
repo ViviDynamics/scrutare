@@ -1,0 +1,16 @@
+diff --git a/src/jobs/dispatcher.py b/src/jobs/dispatcher.py
+index 51d45454079d36c6303a9991144532d64663e288..c7ea9cd0d6984b4f6476e9961f7542caabc224cd 100644
+--- a/src/jobs/dispatcher.py
++++ b/src/jobs/dispatcher.py
+@@ -8,9 +8,9 @@ class Dispatcher:
+         self._owners = {}
+ 
+     def claim(self, job_id, worker):
++        if job_id in self._owners:
++            return False
+         with self._lock:
+-            if job_id in self._owners:
+-                return False
+             self._owners[job_id] = worker
+             return True
+ 

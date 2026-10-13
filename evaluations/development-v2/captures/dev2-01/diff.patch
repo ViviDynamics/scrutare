@@ -1,0 +1,17 @@
+diff --git a/src/concurrency/counter.py b/src/concurrency/counter.py
+index a9b906c2ec47064d6e4c335ecb65b4018f333474..ec8f8bb65ddd6f1f74abae278f26e4aa9a291872 100644
+--- a/src/concurrency/counter.py
++++ b/src/concurrency/counter.py
+@@ -8,9 +8,10 @@ class HitCounter:
+         self._value = 0
+ 
+     def add(self, amount):
++        updated = self._value + amount
+         with self._lock:
+-            self._value = self._value + amount
+-            return self._value
++            self._value = updated
++            return updated
+ 
+     def value(self):
+         with self._lock:

@@ -88,6 +88,59 @@ Interrupted experiments can be scored from `runs.jsonl` instead of `experiment.j
 the frozen schedule supplies explicit missing records. `--split holdout` must be a
 fresh frozen job after development decisions; do not tune prompts from holdout results.
 
+## Recorded reruns after upstream HTTP 5xx
+
+nare 2026.10.4 does not retry on its OpenAI-compatible rail, and the review engine
+deliberately seals a review after any provider failure because that call's billing
+is unknown. One upstream overload therefore ends a whole cell. `run
+--transient-retries N` (0 to 5, default 0) lets the evaluator rerun such a cell
+from the start, in a fresh directory prepared from the same frozen bytes, after
+`--transient-retry-delay-seconds`. The product itself never retries.
+
+A cell is eligible only when the attempt did not complete, the evaluator raised no
+error, and every native session in it either completed, never started, or failed
+with reason `provider` and a retained `chat completion failed with HTTP` 500, 502,
+503, 504 or 529 result. Budget, protocol, citation, timeout, 4xx, other 5xx and
+unreadable outcomes are never rerun, nor is a review that stopped for changed
+inputs or evidence. A rerun whose prepared input hashes differ from the frozen snapshot is
+refused and recorded as `RetryInputsDiffer`.
+
+Nothing is hidden. The first attempt stays at `<case>/<arm>/<repeat>`; reruns go to
+`_retries/<case>/<arm>/<repeat>/attempt-NNNN`. Each attempt keeps its own
+`evaluation.json`, sessions and artifact manifest. The cell record lists every
+attempt with status, usage, latency and the classified HTTP status per failed
+session. `usage` is the final attempt's ledger, `retry_usage` sums the earlier
+attempts as a lower bound, and `latency_seconds` covers all attempts and waits.
+Each attempt runs under its own full review ceiling, so the worst-case spend of a
+job is (cells + reruns) times the ceiling, and a waiting cell keeps its concurrency
+slot. Each attempt's own `evaluation.json` holds that attempt's latency; the job
+record holds the total. Scoring adds `retry_usage` to an arm's tokens, reports
+`retried_runs` and `retry_tokens`, and counts a rerun cell as an accounting failure
+because its earlier spend is only a lower bound.
+`--transient-retry-budget M` additionally bounds reruns across the whole job, so the
+worst-case spend is known in advance; an eligible cell refused by that bound keeps
+its failure and records `retry_denied`. The policy is written to `snapshot.json`
+before the first call. Report how many
+cells needed a rerun beside any completion rate; a cell that completed on its
+third attempt is not the same evidence as one that completed on its first.
+
+`run --variants a,b` schedules only the named arms of the comparison set, in the
+set's own order, and records the selection in the snapshot. Use it to spend on
+one paired comparison instead of the whole set; unknown or repeated names are
+refused.
+
+## Development corpus v2
+
+[`evaluations/development-v2`](../evaluations/development-v2/README.md) adds twelve
+original development cases. Eight changed-path sets activate the built-in
+`performance-concurrency` or `data-integrity-migrations` specialists, three place
+a specialist-area defect on a path no rule matches, and four clean changes invite
+a specific wrong allegation that public code refutes (for `dev2-12` only in
+context-enabled arms; see its README). Activation comes from
+`files.json` and built-in rules only; expectations live in evaluator-only labels
+for checking. Pass `related-paths.json` as `context.related_paths`. No dispute is
+forced, and these cases can never serve as unseen validation.
+
 Ordinary CI uses `--evidence-kind offline` and deterministic provider substitutions
 to verify orchestration and scoring. Offline metrics measure software behavior only.
 A real baseline requires explicit model jobs and completed independent human
