@@ -1,0 +1,27 @@
+diff --git a/src/task_queue.py b/src/task_queue.py
+index 4a6d8be01e29c8ae9f3f3620c1195cc5be1d46c7..1d727729ef3c0341b88ec9080748c55f4c5e8c29 100644
+--- a/src/task_queue.py
++++ b/src/task_queue.py
+@@ -2,11 +2,12 @@
+ 
+ `Worker` in worker.py is the only owner and wraps every call in `Worker._lock`.
+ """
++from collections import deque
+ 
+ 
+ class TaskQueue:
+     def __init__(self):
+-        self._items = []
++        self._items = deque()
+ 
+     def put(self, item):
+         self._items.append(item)
+@@ -14,7 +15,7 @@ class TaskQueue:
+     def drain(self, limit):
+         batch = []
+         while self._items and len(batch) < limit:
+-            batch.append(self._items.pop(0))
++            batch.append(self._items.popleft())
+         return batch
+ 
+     def __len__(self):

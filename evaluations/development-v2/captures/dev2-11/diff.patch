@@ -1,0 +1,15 @@
+diff --git a/src/reports/summary.py b/src/reports/summary.py
+index 7f6bef70c3e3b4672a2dc29757b4dd2699627391..7a96bb96362e5b0c0cc80d97311e4736302647e1 100644
+--- a/src/reports/summary.py
++++ b/src/reports/summary.py
+@@ -5,9 +5,8 @@
+ 
+ 
+ def totals_by_customer(orders, load_customers):
+-    customers = load_customers()
+     totals = {}
+     for order in orders:
+-        name = customers[order["customer_id"]]
++        name = load_customers()[order["customer_id"]]
+         totals[name] = totals.get(name, 0) + order["total"]
+     return totals

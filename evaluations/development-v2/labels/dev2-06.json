@@ -1,0 +1,26 @@
+{
+  "case_id": "dev2-06",
+  "clean_label_requires_context": false,
+  "counterexamples": [
+    "A transfer between two existing accounts ends with the same balances."
+  ],
+  "defects": [
+    {
+      "evidence": "ledger_transaction.py _adjust now commits after each adjustment, so transfer is no longer one transaction.",
+      "fix_or_counterexample": "Write the audit rows without committing; commit once in transfer.",
+      "id": "dev2-06-defect",
+      "impact": "The debit is already committed; the rollback cannot undo it and money leaves the source without arriving anywhere.",
+      "match_criteria": "Identify the commit between debit and credit, or the resulting partial transfer.",
+      "trigger": "The debit succeeds and the credit fails, for example an unknown target account."
+    }
+  ],
+  "defensible_observations": [],
+  "routing_expectation": {
+    "class": "covered",
+    "expected_specialists": [
+      "data-integrity-migrations"
+    ]
+  },
+  "tempting_allegations": [],
+  "unchanged_supporting_paths": []
+}

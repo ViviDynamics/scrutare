@@ -1,0 +1,15 @@
+diff --git a/src/ledger_transaction.py b/src/ledger_transaction.py
+index 0fe2a835ddaaee377816810e3409361ae56a9121..b6c902b24c80ada4244199034dce29ef2719f5b9 100644
+--- a/src/ledger_transaction.py
++++ b/src/ledger_transaction.py
+@@ -11,6 +11,10 @@ def _adjust(connection, account_id, delta):
+     )
+     if cursor.rowcount != 1:
+         raise UnknownAccount(account_id)
++    connection.execute(
++        "INSERT INTO audit(account_id, delta) VALUES (?, ?)", (account_id, delta)
++    )
++    connection.commit()
+ 
+ 
+ def transfer(connection, source, target, amount):

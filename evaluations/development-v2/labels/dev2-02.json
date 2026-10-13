@@ -1,0 +1,26 @@
+{
+  "case_id": "dev2-02",
+  "clean_label_requires_context": false,
+  "counterexamples": [
+    "A deployment with one tenant observes no difference."
+  ],
+  "defects": [
+    {
+      "evidence": "profile_cache.py get and invalidate now key entries by user_id alone; the loader still depends on tenant_id.",
+      "fix_or_counterexample": "Key entries by (tenant_id, user_id).",
+      "id": "dev2-02-defect",
+      "impact": "The second tenant receives the first tenant's cached profile.",
+      "match_criteria": "Identify that the cache key no longer includes the tenant, or the resulting cross-tenant result.",
+      "trigger": "Two tenants look up the same user_id."
+    }
+  ],
+  "defensible_observations": [],
+  "routing_expectation": {
+    "class": "covered",
+    "expected_specialists": [
+      "performance-concurrency"
+    ]
+  },
+  "tempting_allegations": [],
+  "unchanged_supporting_paths": []
+}

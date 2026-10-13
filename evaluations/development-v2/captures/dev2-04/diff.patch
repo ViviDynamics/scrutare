@@ -1,0 +1,21 @@
+diff --git a/src/async_fetch.py b/src/async_fetch.py
+index 1594ff1c5576c3ad6d380efb35b77f2afdef357a..59c9e6cc6fac78467bcb48c5d7fd359c3f864c1b 100644
+--- a/src/async_fetch.py
++++ b/src/async_fetch.py
+@@ -2,11 +2,10 @@
+ import asyncio
+ 
+ 
+-async def fetch_all(keys, fetch, limit):
+-    semaphore = asyncio.Semaphore(limit)
++async def _bounded(key, fetch, limit):
++    async with asyncio.Semaphore(limit):
++        return await fetch(key)
+ 
+-    async def one(key):
+-        async with semaphore:
+-            return await fetch(key)
+ 
+-    return await asyncio.gather(*(one(key) for key in keys))
++async def fetch_all(keys, fetch, limit):
++    return await asyncio.gather(*(_bounded(key, fetch, limit) for key in keys))
