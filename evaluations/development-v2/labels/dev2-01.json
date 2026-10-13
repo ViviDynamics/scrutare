@@ -1,5 +1,6 @@
 {
   "case_id": "dev2-01",
+  "clean_label_requires_context": false,
   "counterexamples": [
     "A single-threaded caller still sees correct totals."
   ],
@@ -13,6 +14,7 @@
       "trigger": "Two threads call add concurrently; one reads the value before the other finishes its locked write."
     }
   ],
+  "defensible_observations": [],
   "routing_expectation": {
     "class": "covered",
     "expected_specialists": [

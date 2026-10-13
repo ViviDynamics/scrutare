@@ -1,9 +1,11 @@
 diff --git a/src/database_writer.py b/src/database_writer.py
-index cda35ac1a172fcf82720a11d4d5beb7647e02843..70195f6f7888f71ebf0ab1386af0aa7f421e5c6c 100644
+index 810373ab38b428ccafb2113f50b760c7b5e6b834..27bf2c19dd875fc79f5907d8c990153dc16616e5 100644
 --- a/src/database_writer.py
 +++ b/src/database_writer.py
-@@ -1,9 +1,21 @@
- """Append events. `events.idempotency_key` is the primary key (see tables.sql)."""
+@@ -2,11 +2,23 @@
+ 
+ Each writer owns its connection: nothing else is ever pending on it.
+ """
 +import sqlite3
 +import time
  

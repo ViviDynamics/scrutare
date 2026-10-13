@@ -1,5 +1,6 @@
 {
   "case_id": "dev2-05",
+  "clean_label_requires_context": false,
   "counterexamples": [
     "A table whose rows all have NULL status ends in the same state."
   ],
@@ -12,6 +13,9 @@
       "match_criteria": "Identify that the update is no longer restricted to rows without a status, or that existing statuses are overwritten.",
       "trigger": "The backfill runs after the application has written rows with a real status such as closed."
     }
+  ],
+  "defensible_observations": [
+    "The head also drops batching, so one statement updates and locks the whole table. This is a reasonable separate remark, not the labeled defect; it needs a human decision."
   ],
   "routing_expectation": {
     "class": "covered",

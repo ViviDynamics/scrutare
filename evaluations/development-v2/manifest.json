@@ -188,12 +188,12 @@
         "base": {
           "directory": "sources/dev2-08/base",
           "repository": "development-fixtures/local",
-          "revision": "70c66aa5614df4960b5ebdad4cacb991bf4e3d7f"
+          "revision": "790f36d5b03d3726e8ee6e8b2fdadb9c70b41537"
         },
         "head": {
           "directory": "sources/dev2-08/head",
           "repository": "development-fixtures/local",
-          "revision": "d72a85b5f6e80555094337ee12777eafc56f5cf2"
+          "revision": "71fb861f61b6f0de2460562c506df01806db73dd"
         }
       },
       "domain": "data-integrity",

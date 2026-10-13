@@ -38,8 +38,8 @@ or validators, human adjudication, any use of `evaluations/holdout-v1`, closing
   from the same frozen bytes. Eligibility is mechanical: the attempt did not
   complete, raised no evaluator exception, and every native session either
   completed, never started, or failed with reason `provider` and a retained
-  `HTTP 5xx` chat-completion error. Budget, protocol, citation, timeout and 4xx
-  failures are never retried.
+  HTTP 500, 502, 503, 504 or 529 chat-completion error. Budget, protocol,
+  citation, timeout, 4xx and changed-evidence failures are never retried.
 - Every attempt keeps its directory, record, usage and latency. `usage` is the
   final attempt's ledger; `retry_usage` sums earlier attempts as a lower bound;
   `latency_seconds` is total wall time including waits. The policy is written
@@ -47,13 +47,16 @@ or validators, human adjudication, any use of `evaluations/holdout-v1`, closing
 - Qualification keeps the same three cases, four arms, three repetitions,
   100,000 ceiling, six turns, 120 seconds, concurrency 3 and the same three
   criteria. The only declared difference is at most three recorded retries per
-  cell with a 20-second wait. Cells that needed a retry are reported as such.
+  cell and twelve per job, with a 20-second wait. Cells that needed a retry are
+  reported as such.
 - New cases are original Elastic-2.0 development fixtures in a separate corpus
   directory. Routing activation comes only from changed paths and built-in
   rules. No label is visible to a model and no dispute is forced.
-- Spend uses the stream's established conservative convention: cells times the
-  configured ceiling at the proxy-advertised output rate. Limit for this
-  increment: US$75. Observed-usage cost is reported beside it.
+- Spend uses the stream's established conservative convention: attempts times
+  the configured ceiling at the proxy-advertised output rate. Every rerun is a
+  further attempt with its own ceiling, so each job also declares a job-wide
+  rerun budget and its worst case is (cells + budget) times the ceiling. Limit
+  for this increment: US$75. Observed-usage cost is reported beside it.
 
 ## Tasks
 - [x] 1. Classify retained session failures: red tests for HTTP 5xx, 4xx,

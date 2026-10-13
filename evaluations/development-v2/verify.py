@@ -72,13 +72,14 @@ def verify(root: Path) -> dict[str, Any]:
         raise ValueError('Only checked-in original development-v2 fixtures may be executed.')
     failures: list[str] = []
     frozen = root / 'freeze-sha256.json'
-    if frozen.exists() and json.loads(frozen.read_text()) != inventory(root):
+    if not frozen.is_file() or json.loads(frozen.read_text()) != inventory(root):
         raise ValueError('Fixture bytes differ from the sealed inventory; refusing to execute.')
     manifest = json.loads((root / 'manifest.json').read_text())
     report: dict[str, Any] = {
         'schema_version': 1, 'cases': len(manifest['cases']), 'patches_verified': 0,
         'commit_pairs_reconstructed': 0, 'defects_verified': 0, 'clean_controls_verified': 0,
         'control_executions': 0, 'tempting_allegation_cases': 0,
+        'clean_labels_requiring_context': 0,
         'routing_classes': {'covered': 0, 'missed': 0, 'none': 0}}
     with tempfile.TemporaryDirectory(prefix='scrutare-dev2-verify-') as temporary:
         work = Path(temporary)
@@ -147,6 +148,7 @@ def verify(root: Path) -> dict[str, Any]:
             else:
                 failures.append(f'{identifier}: clean control')
             report['tempting_allegation_cases'] += bool(gold['tempting_allegations'])
+            report['clean_labels_requiring_context'] += gold['clean_label_requires_context']
             report['routing_classes'][gold['routing_expectation']['class']] += 1
     report['failures'] = failures
     return report

@@ -406,6 +406,10 @@ def upgrade(connection):
             'fix_or_counterexample': 'Restrict the update to rows where status IS NULL.',
         }],
         'counterexamples': ['A table whose rows all have NULL status ends in the same state.'],
+        'defensible_observations': [
+            'The head also drops batching, so one statement updates and locks the whole '
+            'table. This is a reasonable separate remark, not the labeled defect; it needs '
+            'a human decision.'],
         'unchanged_supporting_paths': ['src/migrations/0006_add_status.py'],
         'control': '''
 import runpy
@@ -576,7 +580,10 @@ for table in ("orders", "invoices"):
         'routing': {'class': 'covered', 'expected_specialists': ['data-integrity-migrations']},
         'base': {
             'src/database_writer.py': '''\
-"""Append events. `events.idempotency_key` is the primary key (see tables.sql)."""
+"""Append events. `events.idempotency_key` is the primary key (see tables.sql).
+
+Each writer owns its connection: nothing else is ever pending on it.
+"""
 
 
 def record_event(connection, idempotency_key, payload):
@@ -595,7 +602,10 @@ CREATE TABLE events (
         },
         'head': {
             'src/database_writer.py': '''\
-"""Append events. `events.idempotency_key` is the primary key (see tables.sql)."""
+"""Append events. `events.idempotency_key` is the primary key (see tables.sql).
+
+Each writer owns its connection: nothing else is ever pending on it.
+"""
 import sqlite3
 import time
 
@@ -629,6 +639,10 @@ def record_event(connection, idempotency_key, payload, sleep=time.sleep):
                          'key, so a repeated execution is a no-op.',
             'evidence': 'database_writer.py statement text; tables.sql primary key.',
         }],
+        'defensible_observations': [
+            'The retry also repeats OperationalError causes that cannot succeed, such as a '
+            'missing table, before raising. This is a reasonable remark, not a labeled '
+            'defect and not the tempting allegation; it needs a human decision.'],
         'unchanged_supporting_paths': ['src/tables.sql'],
         'control': '''
 import sqlite3
@@ -945,6 +959,7 @@ def hit_ratio(window):
                          'to be constructed without samples, so total is never zero.',
             'evidence': 'ratio.py isinstance guard in both revisions; window.py constructor.',
         }],
+        'clean_label_requires_context': True,
         'unchanged_supporting_paths': ['src/stats/window.py'],
         'control': '''
 import sys
@@ -1035,6 +1050,8 @@ def build() -> None:
             'case_id': identifier, 'defects': case['defects'],
             'counterexamples': case['counterexamples'],
             'tempting_allegations': case.get('tempting_allegations', []),
+            'defensible_observations': case.get('defensible_observations', []),
+            'clean_label_requires_context': case.get('clean_label_requires_context', False),
             'unchanged_supporting_paths': supporting,
             'routing_expectation': case['routing']})
         control = ROOT / 'controls' / f'{identifier}.py'

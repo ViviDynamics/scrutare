@@ -1,9 +1,11 @@
 {
   "case_id": "dev2-07",
+  "clean_label_requires_context": false,
   "counterexamples": [
     "Both tables receive the same column with the same default in both revisions."
   ],
   "defects": [],
+  "defensible_observations": [],
   "routing_expectation": {
     "class": "covered",
     "expected_specialists": [

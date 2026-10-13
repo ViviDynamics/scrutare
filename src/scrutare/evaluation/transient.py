@@ -8,7 +8,11 @@ from typing import Any
 
 from scrutare.evaluation.corpus import parse_json
 
-_HTTP_5XX = re.compile(r'RuntimeError: chat completion failed with HTTP (5[0-9]{2}):')
+# Server-side unavailability only; 501 and 505 describe requests that would fail again.
+_HTTP_5XX = re.compile(r'RuntimeError: chat completion failed with HTTP (500|502|503|504|529):')
+# Review-level stops that a session interruption explains. Changed inputs or evidence do not.
+_INTERRUPTIBLE = ('initial', 'correction', 'discovery_incomplete', 'assessment_incomplete',
+                  'perspectives', 'chair')
 
 
 def _provider_status(stdout: Path) -> int | None:
@@ -34,10 +38,18 @@ def transient_provider_failures(directory: Path) -> list[dict[str, Any]] | None:
 
     Complete and never-started sessions are compatible with an upstream
     interruption. Budget, protocol, citation, timeout, 4xx and unreadable
-    evidence are not, and make the whole attempt ineligible for a rerun.
+    evidence are not, and make the whole attempt ineligible for a rerun, as
+    does a review-level stop for changed inputs or evidence.
     """
     failures = []
     try:
+        for name in ('panel.json', 'debate.json'):
+            summary = directory / name
+            if summary.is_symlink():
+                return None
+            if summary.is_file() and parse_json(summary.read_bytes())[
+                    'reason'] not in _INTERRUPTIBLE:
+                return None
         for result in sorted(directory.glob('sessions/*/attempt-*/result.json')):
             if result.is_symlink() or not result.is_file():
                 return None
@@ -51,6 +63,6 @@ def transient_provider_failures(directory: Path) -> list[dict[str, Any]] | None:
             if code is None:
                 return None
             failures.append({'session_key': key, 'http_status': code})
-    except (OSError, ValueError, KeyError, TypeError):
+    except (OSError, ValueError, KeyError, TypeError, RecursionError):
         return None
     return failures or None

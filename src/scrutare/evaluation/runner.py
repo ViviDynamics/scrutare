@@ -152,19 +152,24 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                          variant_names: tuple[str, ...] | None = None,
                          transient_retries: int = 0,
                          transient_retry_delay_seconds: float = 0.0,
+                         transient_retry_budget: int | None = None,
                          ) -> dict[str, Any]:
     """Fresh 3-repeat job; ordinary CI calls this only with explicitly offline evidence.
 
     A cell interrupted only by upstream HTTP 5xx may rerun in a fresh directory
-    up to `transient_retries` times. Every attempt stays on disk and in its record.
+    up to `transient_retries` times, within `transient_retry_budget` reruns for the
+    whole job when one is given. Every attempt stays on disk and in its record.
     """
     if (evidence_kind not in ('model', 'offline') or not cases
             or type(concurrency) is not int or not 1 <= concurrency <= 32):
         raise ValueError('nonempty cases and model/offline evidence kind required')
     if (type(transient_retries) is not int or not 0 <= transient_retries <= 5
             or type(transient_retry_delay_seconds) not in (int, float)
-            or not 0 <= transient_retry_delay_seconds <= 600):
-        raise ValueError('transient retry policy requires 0-5 retries and 0-600 seconds')
+            or not 0 <= transient_retry_delay_seconds <= 600
+            or transient_retry_budget is not None and (
+                type(transient_retry_budget) is not int or transient_retry_budget < 0)):
+        raise ValueError('transient retry policy requires 0-5 retries, 0-600 seconds and a '
+                         'nonnegative job budget')
     variants = comparison_configs(config, comparison_set=comparison_set,
                                   variant_names=variant_names)
     needs_context = any(v.context.enabled for v in variants.values())
@@ -229,10 +234,12 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         'variant_selection': list(variants),
         'transient_retry': {
             'max_retries': transient_retries, 'delay_seconds': transient_retry_delay_seconds,
+            'max_job_retries': transient_retry_budget,
             'eligibility': 'attempt incomplete without evaluator error; every native session '
                            'complete, not started, or failed with a retained provider HTTP 5xx',
             'accounting': 'usage is the final attempt; retry_usage sums earlier attempts as '
-                          'a lower bound; latency_seconds spans all attempts and waits'},
+                          'a lower bound; latency_seconds spans all attempts and waits; '
+                          'each attempt has its own review ceiling'},
         'variant_personas': {variant: {name: {
                 'profile': value.inspection.procedures,
                 'system_prompt': load_persona(
@@ -399,6 +406,8 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         record['latency_seconds'] = time.monotonic() - started
         return record, interrupted
 
+    reruns = {'used': 0}
+
     async def execute(case: Case, variant: str, conf: ReviewConfig, repeat: int) -> None:
         run_id = f'{case.id}/{variant}/{repeat}'
         directory = output / run_id
@@ -427,13 +436,33 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
             if (interrupted or not transient_retries or attempts[-1][
                     'transient_provider_failures'] is None or len(attempts) > transient_retries):
                 break
-            await asyncio.sleep(transient_retry_delay_seconds)
-            directory = (output / '_retries' / run_id / f'attempt-{len(attempts) + 1:04d}')
-            if prepared_content_hashes(prepare(directory, case, conf)) != case_variants[
-                    case.id][variant]['inputs_sha256']:
-                # Never spend on inputs that differ from the frozen first attempt.
-                record['error'] = 'RetryInputsDiffer'
+            if transient_retry_budget is not None and reruns['used'] >= transient_retry_budget:
+                # The declared spend bound wins; the eligible failure stays recorded.
+                record['retry_denied'] = 'job_retry_budget'
                 break
+            reruns['used'] += 1
+            refused = None
+            planned = output / '_retries' / run_id / f'attempt-{len(attempts) + 1:04d}'
+            try:
+                await asyncio.sleep(transient_retry_delay_seconds)
+                if prepared_content_hashes(prepare(planned, case, conf)) != case_variants[
+                        case.id][variant]['inputs_sha256']:
+                    # Never spend on inputs that differ from the frozen first attempt.
+                    refused = 'RetryInputsDiffer'
+            except asyncio.CancelledError:
+                # The spent attempt must still reach the job record before cancellation.
+                interrupted, refused = True, 'Interrupted'
+            except Exception as error:
+                refused = type(error).__name__
+            if refused is not None:
+                record['error'] = refused
+                attempts.append({'attempt': len(attempts) + 1, 'run_dir': str(planned),
+                    'status': 'refused', 'error': refused, 'accounting_complete': True,
+                    'usage': TokenUsage().to_dict(), 'latency_seconds': 0.0,
+                    'transient_provider_failures': None})
+                record['attempts'] = list(attempts)
+                break
+            directory = planned
         if transient_retries:
             record['latency_seconds'] = time.monotonic() - started
         completed[run_id] = record

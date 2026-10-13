@@ -1,9 +1,11 @@
 {
   "case_id": "dev2-03",
+  "clean_label_requires_context": false,
   "counterexamples": [
     "Order, the limit and the reported length are unchanged; only the removal cost at the front of the buffer changes."
   ],
   "defects": [],
+  "defensible_observations": [],
   "routing_expectation": {
     "class": "covered",
     "expected_specialists": [

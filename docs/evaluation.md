@@ -99,9 +99,10 @@ from the start, in a fresh directory prepared from the same frozen bytes, after
 
 A cell is eligible only when the attempt did not complete, the evaluator raised no
 error, and every native session in it either completed, never started, or failed
-with reason `provider` and a retained `chat completion failed with HTTP 5xx`
-result. Budget, protocol, citation, timeout, 4xx and unreadable outcomes are never
-rerun. A rerun whose prepared input hashes differ from the frozen snapshot is
+with reason `provider` and a retained `chat completion failed with HTTP` 500, 502,
+503, 504 or 529 result. Budget, protocol, citation, timeout, 4xx, other 5xx and
+unreadable outcomes are never rerun, nor is a review that stopped for changed
+inputs or evidence. A rerun whose prepared input hashes differ from the frozen snapshot is
 refused and recorded as `RetryInputsDiffer`.
 
 Nothing is hidden. The first attempt stays at `<case>/<arm>/<repeat>`; reruns go to
@@ -110,7 +111,16 @@ Nothing is hidden. The first attempt stays at `<case>/<arm>/<repeat>`; reruns go
 attempt with status, usage, latency and the classified HTTP status per failed
 session. `usage` is the final attempt's ledger, `retry_usage` sums the earlier
 attempts as a lower bound, and `latency_seconds` covers all attempts and waits.
-The policy is written to `snapshot.json` before the first call. Report how many
+Each attempt runs under its own full review ceiling, so the worst-case spend of a
+job is (cells + reruns) times the ceiling, and a waiting cell keeps its concurrency
+slot. Each attempt's own `evaluation.json` holds that attempt's latency; the job
+record holds the total. Scoring adds `retry_usage` to an arm's tokens, reports
+`retried_runs` and `retry_tokens`, and counts a rerun cell as an accounting failure
+because its earlier spend is only a lower bound.
+`--transient-retry-budget M` additionally bounds reruns across the whole job, so the
+worst-case spend is known in advance; an eligible cell refused by that bound keeps
+its failure and records `retry_denied`. The policy is written to `snapshot.json`
+before the first call. Report how many
 cells needed a rerun beside any completion rate; a cell that completed on its
 third attempt is not the same evidence as one that completed on its first.
 
@@ -125,7 +135,8 @@ refused.
 original development cases. Eight changed-path sets activate the built-in
 `performance-concurrency` or `data-integrity-migrations` specialists, three place
 a specialist-area defect on a path no rule matches, and four clean changes invite
-a specific wrong allegation that public code refutes. Activation comes from
+a specific wrong allegation that public code refutes (for `dev2-12` only in
+context-enabled arms; see its README). Activation comes from
 `files.json` and built-in rules only; expectations live in evaluator-only labels
 for checking. Pass `related-paths.json` as `context.related_paths`. No dispute is
 forced, and these cases can never serve as unseen validation.

@@ -1,9 +1,13 @@
 {
   "case_id": "dev2-08",
+  "clean_label_requires_context": false,
   "counterexamples": [
     "Recording one key twice, or retrying after a commit whose acknowledgement was lost, leaves exactly one row."
   ],
   "defects": [],
+  "defensible_observations": [
+    "The retry also repeats OperationalError causes that cannot succeed, such as a missing table, before raising. This is a reasonable remark, not a labeled defect and not the tempting allegation; it needs a human decision."
+  ],
   "routing_expectation": {
     "class": "covered",
     "expected_specialists": [

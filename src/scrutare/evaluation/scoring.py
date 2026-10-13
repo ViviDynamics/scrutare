@@ -82,8 +82,13 @@ def score_experiment(runs: list[dict[str, Any]], labels: dict[str, Any],
             defects = labels[run['case_id']]['defects']
             counts['possible_defects'] += len(defects)
             counts[f"{run['status']}_runs"] += 1
-            counts['accounting_failures'] += not run['accounting_complete']
-            counts['tokens'] += run['usage']['total']
+            # Earlier attempts were interrupted upstream, so their spend is a lower bound.
+            earlier = run.get('attempts', [])[:-1]
+            counts['retried_runs'] += bool(earlier)
+            counts['retry_tokens'] += run.get('retry_usage', {}).get('total', 0)
+            counts['accounting_failures'] += (not run['accounting_complete'] or any(
+                not attempt['accounting_complete'] for attempt in earlier))
+            counts['tokens'] += run['usage']['total'] + run.get('retry_usage', {}).get('total', 0)
             latency.append(run['latency_seconds'])
             detections: dict[str, set[str]] = defaultdict(set)
             pending = 0
@@ -130,6 +135,6 @@ def score_experiment(runs: list[dict[str, Any]], labels: dict[str, Any],
                 'missing_runs', 'invalid_runs', 'accounting_failures', 'tokens',
                 'pending_findings', 'true_positive_findings', 'false_positive_findings',
                 'duplicates', 'true_positive_defects', 'possible_defects',
-                'eligible_clean_runs')},
+                'eligible_clean_runs', 'retried_runs', 'retry_tokens')},
         }
     return results

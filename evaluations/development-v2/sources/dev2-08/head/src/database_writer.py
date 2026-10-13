@@ -1,4 +1,7 @@
-"""Append events. `events.idempotency_key` is the primary key (see tables.sql)."""
+"""Append events. `events.idempotency_key` is the primary key (see tables.sql).
+
+Each writer owns its connection: nothing else is ever pending on it.
+"""
 import sqlite3
 import time
 

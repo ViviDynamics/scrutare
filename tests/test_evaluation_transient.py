@@ -48,6 +48,8 @@ def test_only_retained_http_5xx_provider_failures_are_transient(tmp_path):
     ('failed', 'citation_validation', OVERLOAD),
     ('failed', 'timeout', OVERLOAD),
     ('partial', 'budget', OVERLOAD),
+    ('failed', 'provider', OVERLOAD.replace('HTTP 500', 'HTTP 501')),
+    ('failed', 'provider', OVERLOAD.replace('HTTP 500', 'HTTP 505')),
 ])
 def test_other_failures_make_the_whole_attempt_ineligible(tmp_path, status, reason, error):
     session(tmp_path, 'security', status='failed', reason='provider', error=OVERLOAD)
@@ -66,6 +68,27 @@ def test_complete_missing_or_unreadable_evidence_is_never_transient(tmp_path):
     assert transient_provider_failures(tmp_path) is None
     (broken / 'result.json').write_text('[]')
     assert transient_provider_failures(tmp_path) is None
+
+
+@pytest.mark.parametrize('name,reason,eligible', [
+    ('panel.json', 'discovery_incomplete', True), ('debate.json', 'discovery_incomplete', True),
+    ('panel.json', 'initial', True), ('panel.json', 'initial_evidence', False),
+    ('debate.json', 'evidence', False), ('panel.json', 'converged', False),
+    ('debate.json', None, False),
+])
+def test_review_level_stop_must_be_one_an_interruption_explains(tmp_path, name, reason, eligible):
+    session(tmp_path, 'security', status='failed', reason='provider', error=OVERLOAD)
+    (tmp_path / name).write_text(json.dumps({'status': 'failed', 'reason': reason}
+                                            if reason else ['malformed']))
+    assert (transient_provider_failures(tmp_path) is not None) is eligible
+
+
+@pytest.mark.parametrize('code', [500, 502, 503, 504, 529])
+def test_each_server_unavailability_status_is_reported(tmp_path, code):
+    session(tmp_path, 'security', status='failed', reason='provider',
+            error=OVERLOAD.replace('HTTP 500', f'HTTP {code}'))
+    assert transient_provider_failures(tmp_path) == [
+        {'session_key': 'security/attempt-0001', 'http_status': code}]
 
 
 def overloaded(directory):
@@ -140,6 +163,116 @@ def test_retry_bound_is_exhausted_and_failure_stays_in_the_schedule(tmp_path, mo
     assert result['status'] == 'complete'
 
 
+def test_cancellation_during_the_wait_keeps_the_spent_attempt_in_the_job(tmp_path, monkeypatch):
+    cases = corpus(tmp_path / 'corpus')
+    async def execute(directory, conf, *, runtime):
+        return overloaded(directory)
+    patch_engine(monkeypatch, execute)
+    async def job():
+        task = asyncio.create_task(run_experiment(cases, config(), tmp_path / 'out',
+            runtime=NareRuntime(Path('/unused')), evidence_kind='offline',
+            transient_retries=1, transient_retry_delay_seconds=30, variant_names=('senior',)))
+        await asyncio.sleep(0.2)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+    asyncio.run(job())
+    saved = json.loads((tmp_path / 'out/experiment.json').read_text())
+    lines = [json.loads(line) for line in (tmp_path / 'out/runs.jsonl').read_text().splitlines()]
+    assert saved['status'] == 'incomplete' and len(lines) == 1
+    first = saved['runs'][0]
+    assert first == lines[0] and first['error'] == 'Interrupted'
+    assert first['status'] == 'failed' and first['usage']['total'] == 7
+    assert [a['status'] for a in first['attempts']] == ['failed', 'refused']
+    assert first['attempts'][0]['transient_provider_failures']
+    assert [r['status'] for r in saved['runs'][1:]] == ['missing', 'missing']
+
+
+def test_retry_preparation_failure_is_recorded_without_stopping_the_job(tmp_path, monkeypatch):
+    from scrutare.evaluation import runner
+    cases = corpus(tmp_path / 'corpus')
+    original = runner.prepare_review_inputs
+    def prepare(directory, conf):
+        if 'attempt-' in directory.name:
+            raise OSError('disk')
+        return original(directory, conf)
+    async def execute(directory, conf, *, runtime):
+        return overloaded(directory) if directory.name == '2' else complete()
+    patch_engine(monkeypatch, execute)
+    monkeypatch.setattr(runner, 'prepare_review_inputs', prepare)
+    result = run(cases, tmp_path / 'out', transient_retries=1, variant_names=('senior',))
+    assert result['status'] == 'complete'
+    assert [r['status'] for r in result['runs']] == ['complete', 'failed', 'complete']
+    assert result['runs'][1]['error'] == 'OSError'
+    assert [a['status'] for a in result['runs'][1]['attempts']] == ['failed', 'refused']
+
+
+def test_focused_arm_interrupted_upstream_reruns_with_its_trace(tmp_path, monkeypatch):
+    from test_evaluation_context import declared
+    cases = declared(tmp_path / 'corpus')
+    trace = {'schema_version': 2, 'kind': 'focused_evidence_discussion',
+             'bypassed_candidate_ids': [], 'rounds': [], 'final_assessments': []}
+    async def execute(directory, conf, *, runtime):
+        if directory.name == '1':
+            (directory / 'debate.json').write_text(json.dumps(
+                {**trace, 'status': 'failed', 'reason': 'discovery_incomplete'}))
+            return overloaded(directory)
+        (directory / 'debate.json').write_text(json.dumps(
+            {**trace, 'status': 'complete', 'reason': 'undisputed'}))
+        return complete()
+    patch_engine(monkeypatch, execute)
+    from test_evaluation_context import context_config
+    result = asyncio.run(run_experiment(cases, context_config(), tmp_path / 'out',
+        runtime=NareRuntime(Path('/unused')), evidence_kind='offline',
+        comparison_set='focused', variant_names=('focused1',), transient_retries=1))
+    first = result['runs'][0]
+    assert first['status'] == 'complete' and len(first['attempts']) == 2
+    assert first['discussion_trace']['reason'] == 'undisputed'
+    assert first['attempts'][0]['transient_provider_failures'] == [
+        {'session_key': 'senior-dev/attempt-0001', 'http_status': 500}]
+    assert all(len(r['attempts']) == 1 for r in result['runs'][1:])
+
+
+def test_scoring_counts_retry_spend_and_marks_its_accounting_uncertain():
+    from scrutare.evaluation.scoring import score_experiment
+    usage = {'input': 5, 'output': 0, 'cache_read': 0, 'cache_write': 0, 'total': 5}
+    plain = {'run_id': 'a/senior/1', 'case_id': 'a', 'variant': 'senior', 'repeat': 1,
+             'status': 'complete', 'accounting_complete': True, 'usage': usage,
+             'findings': [], 'latency_seconds': 1.0}
+    retried = {**plain, 'run_id': 'a/senior/2', 'repeat': 2,
+               'retry_usage': {**usage, 'input': 7, 'total': 7},
+               'attempts': [{'attempt': 1, 'status': 'failed', 'accounting_complete': False},
+                            {'attempt': 2, 'status': 'complete', 'accounting_complete': True}]}
+    labels = {'a': {'case_id': 'a', 'defects': [], 'counterexamples': []}}
+    before = score_experiment([plain], labels, [])['senior']
+    assert (before['tokens'], before['retried_runs'], before['retry_tokens'],
+            before['accounting_failures'], before['quality_final']) == (5, 0, 0, 0, True)
+    after = score_experiment([plain, retried], labels, [])['senior']
+    assert (after['tokens'], after['retried_runs'], after['retry_tokens']) == (17, 1, 7)
+    assert after['accounting_failures'] == 1 and after['quality_final'] is False
+    assert after['complete_runs'] == 2
+
+
+def test_job_retry_budget_bounds_total_reruns_and_records_the_denial(tmp_path, monkeypatch):
+    cases = corpus(tmp_path / 'corpus')
+    calls = []
+    async def execute(directory, conf, *, runtime):
+        calls.append(directory)
+        return overloaded(directory)
+    patch_engine(monkeypatch, execute)
+    result = run(cases, tmp_path / 'out', transient_retries=3, transient_retry_budget=2,
+                 variant_names=('senior',))
+    assert len(calls) == 5
+    assert sorted(len(r['attempts']) for r in result['runs']) == [1, 1, 3]
+    assert sum(len(r['attempts']) - 1 for r in result['runs']) == 2
+    denied = [r for r in result['runs'] if r.get('retry_denied') == 'job_retry_budget']
+    # The cell that spent both reruns was still eligible for a third and is denied too.
+    assert len(denied) == 3 and all(r['status'] == 'failed' and r['attempts'][-1][
+        'transient_provider_failures'] for r in denied)
+    snapshot = json.loads((tmp_path / 'out/snapshot.json').read_text())
+    assert snapshot['transient_retry']['max_job_retries'] == 2
+
+
 def test_ineligible_failure_and_exception_are_not_retried(tmp_path, monkeypatch):
     cases = corpus(tmp_path / 'corpus')
     calls = []
@@ -171,7 +304,9 @@ def test_default_never_retries_and_keeps_existing_record_shape(tmp_path, monkeyp
     patch_engine(monkeypatch, execute)
     result = run(cases, tmp_path / 'out')
     assert len(calls) == 9
-    assert all('attempts' not in r and 'retry_usage' not in r for r in result['runs'])
+    assert all(set(r) == {'run_id', 'case_id', 'variant', 'repeat', 'run_dir', 'status',
+                          'accounting_complete', 'usage', 'findings', 'error',
+                          'latency_seconds'} for r in result['runs'])
     snapshot = json.loads((tmp_path / 'out/snapshot.json').read_text())
     assert snapshot['transient_retry']['max_retries'] == 0
 
@@ -189,15 +324,24 @@ def test_retry_refuses_inputs_that_differ_from_the_frozen_snapshot(tmp_path, mon
     patch_engine(monkeypatch, execute)
     result = run(cases, tmp_path / 'out', transient_retries=2, variant_names=('senior',))
     assert len(calls) == 3
-    assert all(r['status'] == 'failed' and r['error'] == 'RetryInputsDiffer'
-               and len(r['attempts']) == 1 for r in result['runs'])
+    for record in result['runs']:
+        failed, refused = record['attempts']
+        assert record['status'] == failed['status'] == 'failed'
+        assert record['error'] == refused['error'] == 'RetryInputsDiffer'
+        assert refused['status'] == 'refused' and refused['usage']['total'] == 0
+        assert record['run_dir'] == failed['run_dir'] != refused['run_dir']
+        assert Path(refused['run_dir']).is_dir()
+        assert not (Path(refused['run_dir']) / 'evaluation.json').exists()
+        assert record['usage']['total'] == 7 and record['retry_usage']['total'] == 0
 
 
 @pytest.mark.parametrize('options', [{'transient_retries': -1}, {'transient_retries': 6},
                                      {'transient_retries': True},
                                      {'transient_retry_delay_seconds': -1},
                                      {'transient_retry_delay_seconds': float('nan')},
-                                     {'transient_retry_delay_seconds': 601}])
+                                     {'transient_retry_delay_seconds': 601},
+                                     {'transient_retry_budget': -1},
+                                     {'transient_retry_budget': 1.5}])
 def test_retry_policy_is_bounded(tmp_path, monkeypatch, options):
     patch_engine(monkeypatch, lambda *a, **k: None)
     with pytest.raises(ValueError):
@@ -251,10 +395,12 @@ def test_cli_passes_explicit_arms_and_retry_policy(tmp_path, monkeypatch):
         str(tmp_path / 'corpus'), '--config', str(tmp_path / 'config.yaml'), '--output',
         str(tmp_path / 'out'), '--nare-executable', '/unused', '--evidence-kind', 'offline',
         '--variants', 'senior,debate', '--transient-retries', '2',
-        '--transient-retry-delay-seconds', '1.5'])
+        '--transient-retry-delay-seconds', '1.5', '--transient-retry-budget', '4'])
     cli.main()
     assert seen['variant_names'] == ('senior', 'debate')
     assert seen['transient_retries'] == 2 and seen['transient_retry_delay_seconds'] == 1.5
+    assert seen['transient_retry_budget'] == 4
     monkeypatch.setattr(sys, 'argv', sys.argv[:12])
     cli.main()
     assert seen['variant_names'] is None and seen['transient_retries'] == 0
+    assert seen['transient_retry_budget'] is None

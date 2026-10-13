@@ -36,10 +36,22 @@ only a module constant, a retried insert that is idempotent by primary key, and 
 removed zero check that an unchanged constructor makes unreachable. The fact that
 refutes each allegation is public: it is in the changed file in both revisions,
 or in an unchanged file listed in `related-paths.json`. No clean label depends on
-a restriction only the evaluator knows. Labels list these under
+a restriction only the evaluator knows. One caveat: for `dev2-12` the refuting
+fact is in an unchanged file, so its clean label holds only in arms that run with
+repository context and those related paths. A diff-only arm cannot see it, and a
+zero-division finding there is reasonable; exclude `dev2-12` from clean
+false-positive comparisons that include a context-off arm. Its label carries
+`clean_label_requires_context`. Labels list the allegations under
 `tempting_allegations`. Whether a reviewer raises one, and whether assessment or
 discussion then disputes it, is left entirely to the run. Nothing forces a
 dispute, and a run with no dispute is a valid observation.
+
+Two labels also list `defensible_observations`: remarks a reviewer may reasonably
+make that are neither the labeled defect nor the tempting allegation (`dev2-05`
+loses batching, `dev2-08` also retries errors that cannot succeed). Do not score
+these automatically as false positives; they need a person's decision. `dev2-03`
+states its locking contract inside the changed hunk, so it may rarely draw the
+allegation at all.
 
 ## Layout and isolation
 

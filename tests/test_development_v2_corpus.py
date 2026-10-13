@@ -76,6 +76,7 @@ def test_trusted_gold_controls_and_sealed_inventory():
     assert report['commit_pairs_reconstructed'] == 12
     assert report['defects_verified'] == 8 and report['clean_controls_verified'] == 4
     assert report['control_executions'] == 24 and report['tempting_allegation_cases'] == 4
+    assert report['clean_labels_requiring_context'] == 1
     assert report['routing_classes'] == {'covered': 8, 'missed': 3, 'none': 1}
     assert report == json.loads((ROOT / 'mechanical-report.json').read_text())
     assert module.inventory(ROOT) == json.loads((ROOT / 'freeze-sha256.json').read_text())
@@ -88,6 +89,11 @@ def test_verifier_refuses_other_paths_and_changed_bytes(tmp_path, monkeypatch):
     sealed = module.inventory(ROOT)
     changed = {**sealed, 'files': {**sealed['files'], 'README.md': '0' * 64}}
     monkeypatch.setattr(module, 'inventory', lambda root: changed)
+    with pytest.raises(ValueError, match='sealed inventory'):
+        module.verify(ROOT)
+    monkeypatch.undo()
+    monkeypatch.setattr(module.Path, 'is_file', lambda self: self.name != 'freeze-sha256.json'
+                        and Path.exists(self) and not Path.is_dir(self))
     with pytest.raises(ValueError, match='sealed inventory'):
         module.verify(ROOT)
 
@@ -151,5 +157,8 @@ def test_production_projection_exposes_sources_but_no_evaluator_artifact(tmp_pat
         assert sum(cells['routing']['allocations'].values()) == 600
         root = tmp_path / 'out' / case.id / 'routing/1/review-inputs'
         manifest = json.loads((root / 'repository-context.json').read_text())
-        present = {e['path'] for e in manifest['entries'] if not e.get('absent')}
-        assert set(label['unchanged_supporting_paths']) <= present
+        captured = {e['path']: e for e in manifest['entries']
+                    if e['status'] == 'captured' and e['side'] == 'head'}
+        for path in label['unchanged_supporting_paths']:
+            head = next(s.directory for s in case.context_sources if s.side == 'head')
+            assert (root / captured[path]['artifact']).read_bytes() == (head / path).read_bytes()
