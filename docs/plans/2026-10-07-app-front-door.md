@@ -20,9 +20,17 @@ cannot be inferred from a development GitHub token.
   environment. Models never receive App, GitHub, API, or webhook credentials.
 
 ## Tasks
-- [ ] Signed event and API validation with refusal tests.
-- [ ] Durable idempotent bounded queue with interrupted-job evidence.
-- [ ] App JWT and narrowed installation tokens, repository config, CLI worker.
-- [ ] HTTP entry point, Kubernetes resources, threat model and operator guide.
-- [ ] Full two-lane preflight, review, CI and source PR. Live acceptance remains
-  explicit until an installed App actually reviews a PR on open and push.
+- [x] Signed event and API validation with refusal tests.
+- [x] Durable idempotent bounded queue with interrupted-job evidence.
+- [x] App JWT and narrowed installation tokens, repository config, CLI worker.
+- [x] HTTP entry point, Kubernetes resources, threat model and operator guide.
+- [x] Resumed 2026-10-13 on the current engine: CLI exit 130 and signal deaths are
+  uncertain interruptions, success requires the byte-identical installed result,
+  a job deadline fits the installation token lifetime, and current-surface
+  configuration reaches the CLI only with every rail's origin approved.
+- [x] Queued pushes covered by a started review are superseded, not re-reviewed.
+- [x] Garden manifests follow the infrastructure repository's plain Argo CD
+  directory conventions; the image smoke check starts the deployed console.
+- [x] Full two-lane preflight, review, CI and source PR.
+- [ ] Out of this plan's source scope: live acceptance stays open on the issue
+  until an installed App actually reviews a PR on open and push.
