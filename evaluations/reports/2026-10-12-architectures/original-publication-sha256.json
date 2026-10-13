@@ -1,0 +1,17 @@
+{
+  "files": {
+    "adjudicate-architectures.py": "cbf7b8ee6a49af756a86d8bc22d6c0400e290f00c1ea8b66ba51457b9dd61b43",
+    "adjudication-provenance.json": "d99092bd1354e8a22ec83a5db0ed63a886772f8f900e6f2e4a54409f783d68a6",
+    "automated-architecture-report.json": "5a699dc2e0b20ab831b8660753e1b411469a46d4aa431581f3452371f1c63eb4",
+    "automated-architecture-report.md": "353a2030536f5efd827ba9cdef63f9518e2bbeec692eeb291835e06fe649293b",
+    "automated-decisions.json": "be77cba16c30f145e82cfca3f4595d7cda4cccd0a37f44a0f6f36b11313af46f",
+    "automated-metrics.json": "5aa7074c17dec5d72533896cae391471d09377b273a7bac7cfccd018be1a5c69",
+    "blinded-packet.json": "d94a3ecbfa82e3c5a3de26a0b25665fbcd926611259ab115b4e2f706cba07d21",
+    "experiment.json": "10fb9fc76ecb2051966e1e01bb34c1fcf22712fc1bcb000d75590fe64a05025a",
+    "pending-human-adjudication.json": "a99f2f3c401289910376637a3a1ed913105d2b912c3a9ac50f2d9295cd36bb26",
+    "report-architectures.py": "965ed18d9845a2120ef6d0b40fde6bd53a7ab02a30027fc1f10a7ed79d318c23",
+    "reviewed-case-dispositions.json": "68164d341a1382c0e4b2916d256c954771bd95ebf2f446573045db41d5ef81eb",
+    "snapshot.json": "f35e1d5e82fbc10f80555e5a4ae4c7973f04770de18c6dc73ccf6e83025a49fa"
+  },
+  "schema_version": 1
+}

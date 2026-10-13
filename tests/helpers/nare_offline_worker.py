@@ -162,6 +162,19 @@ class FakeProvider:
                               for citation in candidate["evidence"]["citations"]]}
                 for candidate in pool["candidates"]]}
             reply = {"content": [{"type": "text", "text": json.dumps(output)}]}
+        if reply.get("discuss_candidates"):
+            prompt = arguments[1]
+            pool, _ = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])
+            action = reply["discuss_candidates"]
+            rows = []
+            for candidate in pool["candidates"]:
+                citations = [{key: value for key, value in citation.items()
+                              if key not in ("validation", "validation_reason")}
+                             for citation in candidate["evidence"]["citations"]]
+                rows.append({"candidate_id": candidate["candidate_id"], "action": action,
+                             "reason": "Perspective cites captured code; no truth claim.",
+                             "citations": citations})
+            reply = {"content": [{"type": "text", "text": json.dumps({"proposals": rows})}]}
         if reply.get("select_pool"):
             prompt = arguments[1]
             pool, _ = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])

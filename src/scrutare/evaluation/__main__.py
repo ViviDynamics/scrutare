@@ -17,7 +17,7 @@ from scrutare.evaluation.scoring import adjudication_packet, score_experiment
 def main() -> None:
     parser = argparse.ArgumentParser(description='Non-posting captured review evaluation')
     sub = parser.add_subparsers(dest='command', required=True)
-    run = sub.add_parser('run', help='explicit model job, three repeats and three variants')
+    run = sub.add_parser('run', help='explicit model job with three repeats')
     run.add_argument('--corpus', type=Path, required=True)
     run.add_argument('--split', choices=('development', 'holdout', 'all'), default='development')
     run.add_argument('--config', type=Path, required=True)
@@ -25,7 +25,9 @@ def main() -> None:
     run.add_argument('--nare-executable', type=Path, required=True)
     run.add_argument('--timeout-seconds', type=float, default=600)
     run.add_argument('--concurrency', type=int, default=1)
-    run.add_argument('--comparison-set', choices=('baseline', 'procedures'), default='baseline')
+    run.add_argument('--comparison-set',
+                     choices=('baseline', 'procedures', 'architectures', 'focused'),
+                     default='baseline')
     run.add_argument('--max-turns', type=int, default=50)
     run.add_argument('--evidence-kind', choices=('model', 'offline'), default='model')
     packet = sub.add_parser('adjudicate', help='export blinded finding packet for human matching')

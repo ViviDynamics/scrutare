@@ -175,3 +175,120 @@ independent uncertainty evidence before promotion. The published baseline under
 `evaluations/reports/2026-10-08-baseline` is provisional automated evidence, with
 34 observations awaiting real human adjudication. No default promotion follows
 from it.
+
+## Remaining architecture comparisons
+
+`run --comparison-set architectures` schedules seven panel arms, each with the
+same model, total review ceiling and three repetitions per case. These components
+stay opt-in in ordinary reviews. Inherited enabled components are cleared before
+the comparison sets its explicit flags; trusted context selectors and routing
+rules remain fixed across the relevant arms.
+
+| Arm | Context | Procedures | Evidence | Assessment | Captured tools | Routing |
+| --- | --- | --- | --- | --- | --- | --- |
+| `baseline` | off | baseline | legacy | off | off | off |
+| `context` | on | baseline | legacy | off | off | off |
+| `procedures` | on | v1 | legacy | off | off | off |
+| `evidence` | on | v1 | v2 | off | off | off |
+| `assessment` | on | v1 | v2 | on | off | off |
+| `tools` | on | v1 | v2 | on | on | off |
+| `routing` | on | v1 | v2 | off | off | on |
+
+The four fixed reviewers are senior-dev, junior-dev, security and devops. At a
+40,000 ceiling, assessment reserves 8,000 for the independent executor and the
+four discovery reviewers receive 8,000 each. Unassessed fixed panels receive
+10,000 each. Routing uses the production planner and shared ledger: five effective
+reviewers receive 8,000 each; six share the same 40,000 rather than increase it.
+Case-level snapshots record ordered effective reviewers, exact system prompts and
+hashes, executor prompt identity, actual quota allocations, routing activation and
+omission reasons, and prepared input hashes **before runtime inspection**. Capture
+and source bytes also freeze before that first await. Preparations happen before
+the measured model-review latency interval; separately captured tool runtime is
+recorded in the tool manifest and must be reported as an additional collection cost.
+
+Compare consecutive component arms for context, procedures, evidence and assessment;
+compare tools with assessment, and routing with evidence. The development pilot has
+20 cases, yielding 420 review cells. Its generic changed-file paths may leave the
+automatic specialists inactive; actual activation counts determine what that arm
+measures. Do not force specialists using known defect labels. Development runs and
+previously seen original holdout results cannot authorize promotion.
+
+Tool evidence can be explicitly collected from original Elastic-2.0 development
+fixtures before the model job:
+
+```python
+from pathlib import Path
+from scrutare.evaluation.tool_capture import capture_development_ruff
+
+index = capture_development_ruff(
+    Path("evaluations/pilot"), Path("private-tool-captures"),
+    executable=Path("/absolute/path/to/ruff-0.16.10"),
+)
+```
+
+This producer copies bounded unlinked head source bytes, uses Ruff's built-in parser
+with `--isolated --no-cache --select E4,E7,E9,F`, and never executes fixture code,
+repository commands or project configuration. It refuses external provenance and
+symlinked inputs. Its child environment contains only a fixed PATH and LANG, with
+no provider credentials. Host network isolation is not enforced and is recorded
+as such; this trusted fixture collector is not an OS sandbox. The production review
+adapter consumes captures only and never invokes Ruff.
+
+The output directory contains one `<case-id>.json` envelope and `index.json`, with
+source, capture and raw stdout/stderr hashes, inspected paths, exit status and
+complete/failed/unavailable status. Copy these captures inside the private corpus
+copy and add the relative `analysis_capture` path to each development manifest
+entry before loading it. Captures bind declared head revisions, and the model root
+contains only diagnostics whose paths/ranges bind captured context bytes. Diagnostics
+are evidence rather than automatic findings; absent captures become unavailable,
+and a silent tool is never proof of correctness. Preserve original index provenance
+alongside published normalized results. Paid collection/evaluation remains explicit.
+
+## Focused discussion comparisons
+
+`run --comparison-set focused` schedules `aggregate`, `assessed`, `focused1`, and
+`focused3`, each repeated three times with the same context, v1 procedures, v2
+claim evidence, original four reviewer names, model rail and total ceiling.
+`aggregate` is an unassessed panel; `assessed` adds independent assessment;
+`focused1` and `focused3` add evidence discussion capped at one or three rounds.
+Tool evidence and routing are disabled in all four to isolate the protocol.
+At 40,000 tokens, the aggregate reviewers receive 10,000 each; the other arms
+reserve 8,000 for assessment and 8,000 per reviewer. Focused discovery,
+correction and discussion reuse each reviewer's original grant, and all assessor
+invocations share the one assessor reservation. No debate chair or new round quota
+is introduced. Supported undisputed claims may bypass discussion entirely.
+
+Before the first runtime await, focused case snapshots record these actual
+participants/allocations, exact reviewer and assessor system prompts, input hashes,
+and SHA256 hashes of the production assessment/discussion descriptor source.
+The latter identifies the fixed protocol code; its quoted candidate-dependent text
+is retained in native session evidence after candidates exist.
+
+Focused evaluation records additionally retain a compact `discussion_trace` with
+the producing `debate.json` SHA256, outcome reason, bypassed IDs, final independent
+assessment dispositions, and per-round measured token deltas, latency, proposals,
+new citation identities and disposition changes. Native session directories and
+runtime metadata stay private. Citation identity checks and model dispositions
+are not semantic truth or human adjudication. Missing/invalid traces remain
+explicitly unavailable with null rounds; they invalidate otherwise successful
+focused cells rather than imply successful zero-round execution. Failed cells keep
+their failure status and observed usage in the full scheduled denominator.
+
+The 20 development cases yield 240 cells. Compare assessed with aggregate, one
+focused round with assessed, and three with one; do not attribute differences to a
+larger token ceiling. Preserve actual attempted/completed rounds and extra cost,
+including bypassed discussions and exhausted disputes. These development results
+cannot promote a default or substitute for independently adjudicated, unseen
+holdout evidence. Ordinary baseline/procedures/architecture modes remain available.
+
+The [published architecture development experiment](../evaluations/reports/2026-10-12-architectures/README.md)
+retains 420 scheduled cells, including 185 complete, 116 failed and 119 invalid
+outcomes. Its 652 automated observation judgments leave 54 pending actual humans.
+The [focused protocol experiment](../evaluations/reports/2026-10-12-focused/README.md)
+retains 240 cells: three complete empty results, 178 failed and 59 invalid. Discovery
+failures prevented every native assessor invocation and all actual discussion
+rounds; the one-versus-three bounds were not exercised. No specialists activated
+on the original pilot paths. These are protocol reliability limits on the current
+aliased model rail, with no demonstrated architecture winner or default promotion.
+Both packages include portable scoring/table reproduction, source reconstruction
+patches, public artifact hashes and explicit provenance/privacy limitations.

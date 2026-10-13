@@ -1,0 +1,23 @@
+{
+  "candidate_commit": "5fae2b2cb8160a391eb1eff003d21f1666a6a1f1",
+  "candidate_source_archive_sha256": "bac81b3ad59220fe62c032b03e2efc2923446a694df585ac512d2886a07329d3",
+  "candidate_source_patch_sha256": "3eed637e187abeee0db239fb0abe81b3769d892038e1ad9845465cfa6afb80f4",
+  "concurrency": 3,
+  "corpus_manifest_sha256": "24cb4019cf7d4d61e3770f1a369918359a3230d218e0047011f0358211e6218d",
+  "credential_values_retained": false,
+  "dated_backend_revision_verified": false,
+  "holdout_used": false,
+  "human_judgments": 0,
+  "max_turns": 6,
+  "model": "gpt-4.1-nano",
+  "original_holdout_previously_seen": true,
+  "provider_endpoint": "https://litellm.vividynamics.com/v1",
+  "quality_final": false,
+  "schedule": "20developmentcases x7architectures x3repeats=420",
+  "source_base_commit": "9e0c38873830137b37724d48785549e72a19289c",
+  "source_reconstruction": "remote-known base plus retained binary patch",
+  "timeout_seconds": 120,
+  "tool_index_sha256": "0a78f484eed9925a8b29c65529e5485578b8a6b468efab5589e5ad4452dc2f48",
+  "total_token_ceiling": 40000,
+  "wheel_sha256": "4df673a9aef0555b02c59fd80a84cd2a707cd9b48b1c9a356d2225cc05d572ef"
+}

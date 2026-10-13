@@ -1,0 +1,9 @@
+{
+  "dispositions_sha256": "68164d341a1382c0e4b2916d256c954771bd95ebf2f446573045db41d5ef81eb",
+  "human_judgments": 0,
+  "method": "independent_automated_source_and_executable_control_review",
+  "original_control_report_sha256": "d155c5415d391fba51dcf915e26e558a7a902f754e190ec80a2f853a6765dc40",
+  "original_private_control_report_sha256": "8e0a0c79503cf31d420ac6e06eef8e6e819c1b9eb8fe440f463bb0bc345455e2",
+  "packet_sha256": "d94a3ecbfa82e3c5a3de26a0b25665fbcd926611259ab115b4e2f706cba07d21",
+  "schema_version": 1
+}

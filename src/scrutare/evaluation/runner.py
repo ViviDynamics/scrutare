@@ -10,16 +10,30 @@ from pathlib import Path
 from typing import Any, Literal, cast
 
 from scrutare import __version__
-from scrutare.config import BudgetSettings, InspectionSettings, ReviewConfig
+from scrutare.config import (
+    AnalysisSettings,
+    AssessmentSettings,
+    BudgetSettings,
+    DiscussionSettings,
+    FindingSettings,
+    InspectionSettings,
+    ReviewConfig,
+)
+from scrutare.engine import assessment_inputs, discussion_inputs
+from scrutare.engine.assessment_inputs import assessor_persona
+from scrutare.engine.budgets import ReviewBudgetLedger
 from scrutare.engine.nare_session import inspect_nare_runtime
 from scrutare.engine.repository_context import capture_repository_context, encoded
 from scrutare.engine.repository_snapshot import RepositorySnapshot
-from scrutare.engine.review_inputs import prepare_review_inputs
+from scrutare.engine.review_inputs import prepare_review_inputs, prepared_content_hashes
+from scrutare.engine.routing import plan_routing
 from scrutare.engine.session_models import NareRuntime, TokenUsage
 from scrutare.engine.static_analysis import capture_static_analysis, read_capture
 from scrutare.engine.strategy import run_review
 from scrutare.evaluation.corpus import Case, parse_json, read_json, source_contents
-from scrutare.personas import load_persona
+from scrutare.evaluation.focused_trace import discussion_trace
+from scrutare.personas import PersonaDefinition, load_persona, resolve_personas
+from scrutare.personas.registry import procedure_record
 from scrutare.provenance import write_artifact_manifest
 
 
@@ -32,7 +46,7 @@ def write_json(path: Path, data: Any) -> None:
 def comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline'
                        ) -> dict[str, ReviewConfig]:
     """Freeze current roster, shared rail and total cap; reserve a fifth debate chair quota."""
-    if comparison_set not in ('baseline', 'procedures'):
+    if comparison_set not in ('baseline', 'procedures', 'architectures', 'focused'):
         raise ValueError('unknown comparison set')
     if config.models.overrides:
         raise ValueError('comparison requires a single fixed model rail without overrides')
@@ -40,6 +54,28 @@ def comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline'
     if total < 5:
         raise ValueError('comparison total ceiling must support five participants')
     roster = ('senior-dev', 'junior-dev', 'security', 'devops')
+    if comparison_set in ('architectures', 'focused'):
+        base = replace(config, strategy='panel', personas=roster,
+            budgets=BudgetSettings((total + 3) // 4, total),
+            context=replace(config.context, enabled=False),
+            findings=FindingSettings(), inspection=InspectionSettings(),
+            analysis=AnalysisSettings(), routing=replace(config.routing, enabled=False))
+        context = replace(base, context=replace(base.context, enabled=True))
+        procedures = replace(context, inspection=InspectionSettings('v1'))
+        evidence = replace(procedures, findings=FindingSettings('v2'))
+        assessed = replace(evidence, findings=FindingSettings('v2',
+            AssessmentSettings(True, total // 5)))
+        if comparison_set == 'focused':
+            discussion = replace(assessed, strategy='debate',
+                findings=replace(assessed.findings, discussion=DiscussionSettings(True)))
+            return {'aggregate': evidence, 'assessed': assessed,
+                'focused1': replace(discussion, rounds=replace(config.rounds, max=1)),
+                'focused3': replace(discussion, rounds=replace(config.rounds, max=3))}
+        return {'baseline': base, 'context': context, 'procedures': procedures,
+            'evidence': evidence,
+            'assessment': assessed,
+            'tools': replace(assessed, analysis=AnalysisSettings(True)),
+            'routing': replace(evidence, routing=replace(config.routing, enabled=True))}
     if comparison_set == 'procedures':
         return {name: replace(config, strategy='panel', personas=names,
                     inspection=InspectionSettings(cast(Literal['baseline', 'v1'], profile)),
@@ -100,17 +136,19 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
             or type(concurrency) is not int or not 1 <= concurrency <= 32):
         raise ValueError('nonempty cases and model/offline evidence kind required')
     variants = comparison_configs(config, comparison_set=comparison_set)
+    needs_context = any(v.context.enabled for v in variants.values())
+    needs_analysis = any(v.analysis.enabled for v in variants.values())
     # Freeze before the first await; snapshot hashes and every repeat use these bytes.
     captures = {case.id: {name: (case.capture / name).read_bytes()
                          for name in ('diff.patch', 'files.json', 'metadata.json')}
                 for case in cases}
     analysis_captures = {case.id: read_capture(case.analysis_capture)
                          if case.analysis_capture is not None else None
-                         for case in cases} if config.analysis.enabled else {}
+                         for case in cases} if needs_analysis else {}
     context_clients: dict[str, RepositorySnapshot] = {}
     context_sources: dict[str, dict[str, Any]] = {}
     derived_metadata: dict[str, bytes] = {}
-    if config.context.enabled:
+    if needs_context:
         for case in cases:
             if not case.context_sources:
                 raise ValueError('context evaluation requires explicit corpus source declarations')
@@ -167,7 +205,7 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                 for name in value.personas if isinstance(name, str)}
                 for variant, value in variants.items()},
         'personas': {name: load_persona(name).system_prompt for name in
-                    variants['current4' if comparison_set == 'procedures' else 'panel'].personas
+                    variants.get('panel', next(iter(variants.values()))).personas
                      if isinstance(name, str)},
         'cases': [{'id': case.id, 'split': case.split, 'domain': case.domain,
                    'capture_sha256': {name: hashlib.sha256(data).hexdigest()
@@ -176,11 +214,93 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                    **({'analysis_source_sha256': hashlib.sha256(
                        cast(bytes, analysis_captures[case.id]))
                        .hexdigest() if analysis_captures[case.id] is not None else None}
-                      if config.analysis.enabled else {}),
-                   **({'context_source': context_sources[case.id]} if config.context.enabled
+                      if needs_analysis else {}),
+                   **({'context_source': context_sources[case.id]} if needs_context
                       else {})}
                   for case in cases],
     }
+    # Prepare every case synchronously before provider inspection. This records
+    # actual routed participants and fixed ledger reservations, not guessed rosters.
+    case_variants: dict[str, dict[str, Any]] = {}
+    for case in cases:
+        case_variants[case.id] = {}
+        for variant, conf in variants.items():
+            for repeat in range(1, 4):
+                directory = output / case.id / variant / str(repeat)
+                directory.mkdir(parents=True)
+                for name, data in captures[case.id].items():
+                    (directory / name).write_bytes(data)
+                write_json(directory / 'config.json', conf.to_dict())
+                write_json(directory / 'config.yaml', conf.to_dict())
+                if conf.context.enabled:
+                    (directory / 'metadata.original.json').write_bytes(
+                        captures[case.id]['metadata.json'])
+                    (directory / 'metadata.json').write_bytes(derived_metadata[case.id])
+                    capture_repository_context(context_clients[case.id], directory, conf,
+                                               source=context_clients[case.id].provenance())
+                capture_static_analysis(directory, conf,
+                                        capture_bytes=analysis_captures.get(case.id)
+                                        if conf.analysis.enabled else None)
+                inputs = prepare_review_inputs(directory, conf)
+                if repeat != 1:
+                    continue
+                personas = resolve_personas(conf.personas,
+                                            procedures=conf.inspection.procedures)
+                routing = None
+                if conf.routing.enabled:
+                    focus = read_json(inputs.root / 'routing-focus.json')
+                    plan = plan_routing(read_json(inputs.root / 'files.json'),
+                                        tuple(focus['global_supporting_paths']), conf)
+                    personas, routing = plan.personas, plan.record
+                names = tuple(p.name for p in personas)
+                phases = {}
+                if conf.strategy == 'debate' and not conf.findings.discussion.enabled:
+                    name = 'debate-chair'
+                    while name in names:
+                        name += '-chair'
+                    phases[name] = replace(load_persona('senior-dev',
+                        procedures=conf.inspection.procedures), name=name)
+                names += tuple(phases)
+                reserved = None
+                if conf.findings.assessment.enabled:
+                    name = 'evidence-assessor'
+                    while name in names:
+                        name += '-assessor'
+                    phases[name] = assessor_persona(name)
+                    names += (name,)
+                    reserved = {name: conf.findings.assessment.tokens}
+                ledger = ReviewBudgetLedger(names, conf.budgets,
+                                            reserved_allocations=reserved)
+                inline_names = {p.name for p in conf.personas
+                                if isinstance(p, PersonaDefinition)} | {
+                    rule.persona.name for rule in conf.routing.rules
+                    if isinstance(rule.persona, PersonaDefinition)}
+                def describe(persona: PersonaDefinition) -> dict[str, Any]:
+                    return {**procedure_record(persona,
+                        procedures=conf.inspection.procedures, inline=persona.name in inline_names),
+                        'system_prompt': persona.system_prompt}
+                phase_descriptions = {n: {**describe(p), 'origin': 'engine',
+                    'version': 'assessment-v1' if n.startswith('evidence-assessor')
+                               else 'debate-chair-v1'} for n, p in phases.items()}
+                cell = {'effective_personas': [p.name for p in personas],
+                        'personas': {p.name: describe(p) for p in personas},
+                        'phase_personas': phase_descriptions,
+                        'allocations': dict(ledger.allocations),
+                        'review_ceiling': conf.budgets.review_max_tokens,
+                        'inputs_sha256': prepared_content_hashes(inputs),
+                        'routing': routing}
+                if conf.findings.discussion.enabled:
+                    cell['phase_budget_policy'] = 'reuse_discovery_and_assessor_grants'
+                    cell['protocol_sources'] = {
+                        'assessment_inputs_sha256': hashlib.sha256(Path(
+                            assessment_inputs.__file__).read_bytes()).hexdigest(),
+                        'discussion_inputs_sha256': hashlib.sha256(Path(
+                            discussion_inputs.__file__).read_bytes()).hexdigest()}
+                if conf.analysis.enabled:
+                    cell['analysis_status'] = read_json(inputs.root / 'static-analysis.json')[
+                        'status']
+                case_variants[case.id][variant] = cell
+    snapshot['case_variants'] = case_variants
     write_json(output / 'snapshot.json', snapshot)
     capability = await inspect_nare_runtime(runtime)
     snapshot.update(nare_version=capability.version, nare_contract=capability.contract)
@@ -204,21 +324,6 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
     async def execute(case: Case, variant: str, conf: ReviewConfig, repeat: int) -> None:
         run_id = f'{case.id}/{variant}/{repeat}'
         directory = output / run_id
-        directory.mkdir(parents=True)
-        for name, data in captures[case.id].items():
-            with (directory / name).open('xb') as stream:
-                stream.write(data)
-        write_json(directory / 'config.json', conf.to_dict())
-        write_json(directory / 'config.yaml', conf.to_dict())
-        if conf.context.enabled:
-            with (directory / 'metadata.original.json').open('xb') as stream:
-                stream.write(captures[case.id]['metadata.json'])
-            (directory / 'metadata.json').write_bytes(derived_metadata[case.id])
-            capture_repository_context(context_clients[case.id], directory, conf,
-                                       source=context_clients[case.id].provenance())
-        capture_static_analysis(directory, conf,
-                                capture_bytes=analysis_captures.get(case.id))
-        prepare_review_inputs(directory, conf)
         started = time.monotonic()
         record: dict[str, Any] = {
             'run_id': run_id, 'case_id': case.id, 'variant': variant, 'repeat': repeat,
@@ -245,6 +350,12 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
             # Provider details remain in private engine captures.
             record['error'] = type(error).__name__
             record['usage'] = _observed_usage(directory).to_dict()
+        if conf.findings.discussion.enabled:
+            record['discussion_trace'] = discussion_trace(directory)
+            if record['discussion_trace']['availability'] != 'recorded':
+                if record['status'] != 'failed':
+                    record['status'] = 'invalid'
+                    record['error'] = 'UnavailableFocusedTrace'
         record['latency_seconds'] = time.monotonic() - started
         write_json(directory / 'evaluation.json', record)
         write_artifact_manifest(directory)
