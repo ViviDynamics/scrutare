@@ -1,0 +1,24 @@
+{
+  "case_id": "dev2-01",
+  "counterexamples": [
+    "A single-threaded caller still sees correct totals."
+  ],
+  "defects": [
+    {
+      "evidence": "counter.py add now computes self._value + amount before acquiring the lock and writes that stale sum inside it.",
+      "fix_or_counterexample": "Read and write self._value inside the same locked block.",
+      "id": "dev2-01-defect",
+      "impact": "An increment is lost and the counter under-reports.",
+      "match_criteria": "Identify the read of the shared value outside the lock, or the resulting lost update.",
+      "trigger": "Two threads call add concurrently; one reads the value before the other finishes its locked write."
+    }
+  ],
+  "routing_expectation": {
+    "class": "covered",
+    "expected_specialists": [
+      "performance-concurrency"
+    ]
+  },
+  "tempting_allegations": [],
+  "unchanged_supporting_paths": []
+}

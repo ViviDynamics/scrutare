@@ -1,0 +1,11 @@
+diff --git a/src/stats/ratio.py b/src/stats/ratio.py
+index a6b66ca1142e8551aacf557ac13630c7123a8c79..79c40b5ef4644c07093ca39a4fadb98d3072726a 100644
+--- a/src/stats/ratio.py
++++ b/src/stats/ratio.py
+@@ -5,6 +5,4 @@ from window import Window
+ def hit_ratio(window):
+     if not isinstance(window, Window):
+         raise TypeError("hit_ratio requires a Window")
+-    if window.total == 0:
+-        return 0.0
+     return window.hits / window.total

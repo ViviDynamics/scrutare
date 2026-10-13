@@ -1,0 +1,21 @@
+{
+  "case_id": "dev2-07",
+  "counterexamples": [
+    "Both tables receive the same column with the same default in both revisions."
+  ],
+  "defects": [],
+  "routing_expectation": {
+    "class": "covered",
+    "expected_specialists": [
+      "data-integrity-migrations"
+    ]
+  },
+  "tempting_allegations": [
+    {
+      "allegation": "Building SQL with an f-string is an injection vulnerability.",
+      "evidence": "0008_add_region.py REGIONAL_TABLES and the loop in upgrade.",
+      "why_wrong": "The only interpolated value is a table name from the module constant REGIONAL_TABLES; no caller or external input reaches it, and SQL identifiers cannot be bound as parameters."
+    }
+  ],
+  "unchanged_supporting_paths": []
+}

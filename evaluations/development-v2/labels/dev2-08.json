@@ -1,0 +1,23 @@
+{
+  "case_id": "dev2-08",
+  "counterexamples": [
+    "Recording one key twice, or retrying after a commit whose acknowledgement was lost, leaves exactly one row."
+  ],
+  "defects": [],
+  "routing_expectation": {
+    "class": "covered",
+    "expected_specialists": [
+      "data-integrity-migrations"
+    ]
+  },
+  "tempting_allegations": [
+    {
+      "allegation": "Retrying the insert can write the same event twice.",
+      "evidence": "database_writer.py statement text; tables.sql primary key.",
+      "why_wrong": "The statement is INSERT OR IGNORE and idempotency_key is the primary key, so a repeated execution is a no-op."
+    }
+  ],
+  "unchanged_supporting_paths": [
+    "src/tables.sql"
+  ]
+}

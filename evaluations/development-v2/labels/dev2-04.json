@@ -1,0 +1,24 @@
+{
+  "case_id": "dev2-04",
+  "counterexamples": [
+    "Results and their order are unchanged."
+  ],
+  "defects": [
+    {
+      "evidence": "async_fetch.py _bounded creates a new Semaphore(limit) per key, so no two requests share one.",
+      "fix_or_counterexample": "Create one semaphore in fetch_all and share it.",
+      "id": "dev2-04-defect",
+      "impact": "Every request runs at once; the concurrency bound no longer protects the upstream service.",
+      "match_criteria": "Identify that the semaphore is no longer shared across requests, or that the limit is not enforced.",
+      "trigger": "fetch_all is called with more keys than limit."
+    }
+  ],
+  "routing_expectation": {
+    "class": "covered",
+    "expected_specialists": [
+      "performance-concurrency"
+    ]
+  },
+  "tempting_allegations": [],
+  "unchanged_supporting_paths": []
+}

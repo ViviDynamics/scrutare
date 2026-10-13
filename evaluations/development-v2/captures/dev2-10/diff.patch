@@ -1,0 +1,14 @@
+diff --git a/src/billing/orders.py b/src/billing/orders.py
+index 5d31a23c74503a92893a4c89f10b194480a37b59..8b3a34920388aa367a4edf670786cb596563d9fb 100644
+--- a/src/billing/orders.py
++++ b/src/billing/orders.py
+@@ -3,8 +3,7 @@
+ 
+ def save_order(connection, order_id, customer, note):
+     connection.execute(
+-        "INSERT INTO orders(id, customer, note) VALUES (?, ?, ?) "
+-        "ON CONFLICT(id) DO UPDATE SET customer = excluded.customer, note = excluded.note",
++        "INSERT OR REPLACE INTO orders(id, customer, note) VALUES (?, ?, ?)",
+         (order_id, customer, note),
+     )
+     connection.commit()

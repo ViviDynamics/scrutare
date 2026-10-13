@@ -1,0 +1,23 @@
+{
+  "case_id": "dev2-03",
+  "counterexamples": [
+    "Order, the limit and the reported length are unchanged; only the removal cost at the front of the buffer changes."
+  ],
+  "defects": [],
+  "routing_expectation": {
+    "class": "covered",
+    "expected_specialists": [
+      "performance-concurrency"
+    ]
+  },
+  "tempting_allegations": [
+    {
+      "allegation": "drain checks the buffer and then pops without a lock, so two threads can race.",
+      "evidence": "task_queue.py module docstring in both revisions; worker.py next_batch, submit and pending.",
+      "why_wrong": "The buffer was equally unsynchronized before the change, its public docstring assigns locking to the owner, and the only owner (worker.py) holds its lock around every call."
+    }
+  ],
+  "unchanged_supporting_paths": [
+    "src/worker.py"
+  ]
+}

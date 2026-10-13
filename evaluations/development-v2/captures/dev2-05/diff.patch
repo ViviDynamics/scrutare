@@ -1,0 +1,22 @@
+diff --git a/src/migrations/0007_backfill_status.py b/src/migrations/0007_backfill_status.py
+index a66382932cdab18a8c8503e07a9e96a57336cca5..c49d5976f80b866aa98626f4a3d8ae4852792c98 100644
+--- a/src/migrations/0007_backfill_status.py
++++ b/src/migrations/0007_backfill_status.py
+@@ -1,15 +1,6 @@
+ """Backfill orders.status for rows written before 0006 added the column."""
+ 
+-BATCH = 500
+-
+ 
+ def upgrade(connection):
+-    while True:
+-        cursor = connection.execute(
+-            "UPDATE orders SET status = 'open' WHERE id IN ("
+-            "SELECT id FROM orders WHERE status IS NULL LIMIT ?)",
+-            (BATCH,),
+-        )
+-        connection.commit()
+-        if cursor.rowcount == 0:
+-            return
++    connection.execute("UPDATE orders SET status = 'open'")
++    connection.commit()

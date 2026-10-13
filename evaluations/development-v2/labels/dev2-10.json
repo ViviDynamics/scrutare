@@ -1,0 +1,24 @@
+{
+  "case_id": "dev2-10",
+  "counterexamples": [
+    "Saving a new order, or one without line items, ends in the same state."
+  ],
+  "defects": [
+    {
+      "evidence": "orders.py now uses INSERT OR REPLACE; tables.py declares line_items.order_id with ON DELETE CASCADE and enables foreign keys.",
+      "fix_or_counterexample": "Keep the ON CONFLICT DO UPDATE upsert.",
+      "id": "dev2-10-defect",
+      "impact": "REPLACE deletes the existing order row first; the ON DELETE CASCADE foreign key removes all of its line items.",
+      "match_criteria": "Identify that REPLACE deletes and reinserts the row, or that dependent line items are lost.",
+      "trigger": "save_order is called for an order that already has line items."
+    }
+  ],
+  "routing_expectation": {
+    "class": "missed",
+    "expected_specialists": []
+  },
+  "tempting_allegations": [],
+  "unchanged_supporting_paths": [
+    "src/billing/tables.py"
+  ]
+}

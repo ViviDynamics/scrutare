@@ -1,0 +1,13 @@
+diff --git a/src/migrations/0008_add_region.py b/src/migrations/0008_add_region.py
+index 04022a9d698de7a82de98b2357fa2707c4e95cbc..69959def25d4c936f9b1daa501d5c1370a0e281d 100644
+--- a/src/migrations/0008_add_region.py
++++ b/src/migrations/0008_add_region.py
+@@ -4,6 +4,6 @@ REGIONAL_TABLES = ("orders", "invoices")
+ 
+ 
+ def upgrade(connection):
+-    connection.execute("ALTER TABLE orders ADD COLUMN region TEXT NOT NULL DEFAULT 'eu'")
+-    connection.execute("ALTER TABLE invoices ADD COLUMN region TEXT NOT NULL DEFAULT 'eu'")
++    for table in REGIONAL_TABLES:
++        connection.execute(f"ALTER TABLE {table} ADD COLUMN region TEXT NOT NULL DEFAULT 'eu'")
+     connection.commit()

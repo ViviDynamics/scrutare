@@ -1,0 +1,22 @@
+{
+  "case_id": "dev2-09",
+  "counterexamples": [
+    "Claims that do not overlap in time behave as before."
+  ],
+  "defects": [
+    {
+      "evidence": "dispatcher.py claim now tests membership before taking the lock and does not re-check inside it.",
+      "fix_or_counterexample": "Check and assign inside one locked block.",
+      "id": "dev2-09-defect",
+      "impact": "Both receive True and run the job; the second silently replaces the first as owner.",
+      "match_criteria": "Identify the membership check outside the lock without a re-check, or the resulting double claim.",
+      "trigger": "Two workers claim the same unowned job at the same time."
+    }
+  ],
+  "routing_expectation": {
+    "class": "missed",
+    "expected_specialists": []
+  },
+  "tempting_allegations": [],
+  "unchanged_supporting_paths": []
+}
