@@ -1,0 +1,14 @@
+{
+  "case_id": "sealed-h40",
+  "counterexamples": [
+    "The tuple literal preserves the public result."
+  ],
+  "defects": [],
+  "expected_exit": {
+    "base": 0,
+    "head": 0
+  },
+  "expected_head_error": null,
+  "mechanical_control": "controls/sealed-h40.py",
+  "unchanged_supporting_paths": []
+}

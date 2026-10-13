@@ -1,0 +1,8 @@
+diff --git a/src/app.py b/src/app.py
+index 7c3a9ff..383dd04 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,2 +1,2 @@
+ def remove(db, tenant, item):
+-    db.execute('DELETE FROM items WHERE tenant = ? AND item = ?', (tenant, item))
++    db.execute('DELETE FROM items WHERE item = ?', (item,))

@@ -1,0 +1,23 @@
+{
+  "case_id": "sealed-h04",
+  "counterexamples": [
+    "Normalize to UTC before extracting date."
+  ],
+  "defects": [
+    {
+      "evidence": "src/app.py: The UTC reporting day becomes the wrong day.",
+      "fix_or_counterexample": "Normalize to UTC before extracting date.",
+      "id": "sealed-h04-defect",
+      "impact": "The UTC reporting day becomes the wrong day.",
+      "match_criteria": "Identify the changed behavior for A timestamp just after local midnight in UTC+02:00 and its consequence: The UTC reporting day becomes the wrong day.",
+      "trigger": "A timestamp just after local midnight in UTC+02:00"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "AssertionError",
+  "mechanical_control": "controls/sealed-h04.py",
+  "unchanged_supporting_paths": []
+}

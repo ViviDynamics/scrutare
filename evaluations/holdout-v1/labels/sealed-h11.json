@@ -1,0 +1,23 @@
+{
+  "case_id": "sealed-h11",
+  "counterexamples": [
+    "Match complete role tokens rather than substrings."
+  ],
+  "defects": [
+    {
+      "evidence": "src/app.py: A nonadministrator gets deletion rights.",
+      "fix_or_counterexample": "Match complete role tokens rather than substrings.",
+      "id": "sealed-h11-defect",
+      "impact": "A nonadministrator gets deletion rights.",
+      "match_criteria": "Identify the changed behavior for A nonadmin role contains the admin substring and its consequence: A nonadministrator gets deletion rights.",
+      "trigger": "A nonadmin role contains the admin substring"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "AssertionError",
+  "mechanical_control": "controls/sealed-h11.py",
+  "unchanged_supporting_paths": []
+}

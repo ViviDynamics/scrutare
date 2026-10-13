@@ -1,0 +1,23 @@
+{
+  "case_id": "sealed-h03",
+  "counterexamples": [
+    "Keep the explicit required half-up rounding mode."
+  ],
+  "defects": [
+    {
+      "evidence": "src/app.py: Implicit half-even rounding undercharges a cent.",
+      "fix_or_counterexample": "Keep the explicit required half-up rounding mode.",
+      "id": "sealed-h03-defect",
+      "impact": "Implicit half-even rounding undercharges a cent.",
+      "match_criteria": "Identify the changed behavior for An exact half-cent 1.225 and its consequence: Implicit half-even rounding undercharges a cent.",
+      "trigger": "An exact half-cent 1.225"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "AssertionError",
+  "mechanical_control": "controls/sealed-h03.py",
+  "unchanged_supporting_paths": []
+}

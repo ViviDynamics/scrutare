@@ -1,0 +1,12 @@
+diff --git a/src/app.py b/src/app.py
+index ef1ef52..380f230 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,5 +1,5 @@
+-from decimal import ROUND_HALF_UP, Decimal
++from decimal import Decimal
+ 
+ 
+ def cents(text):
+-    return Decimal(text).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
++    return Decimal(text).quantize(Decimal('0.01'))

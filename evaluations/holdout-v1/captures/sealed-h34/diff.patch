@@ -1,0 +1,10 @@
+diff --git a/src/app.py b/src/app.py
+index 222687f..db5bcc8 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,4 +1,2 @@
+ def mode(name):
+-    if name not in {'fast', 'safe'}:
+-        raise ValueError('unknown mode')
+-    return name
++    return name if name in {'fast', 'safe'} else 'fast'

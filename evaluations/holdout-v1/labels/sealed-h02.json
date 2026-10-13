@@ -1,0 +1,25 @@
+{
+  "case_id": "sealed-h02",
+  "counterexamples": [
+    "Round the positive count up."
+  ],
+  "defects": [
+    {
+      "evidence": "src/app.py: The final partial batch is omitted.",
+      "fix_or_counterexample": "Round the positive count up.",
+      "id": "sealed-h02-defect",
+      "impact": "The final partial batch is omitted.",
+      "match_criteria": "Identify the changed behavior for batches(11) with the unchanged ten-item batch contract and its consequence: The final partial batch is omitted.",
+      "trigger": "batches(11) with the unchanged ten-item batch contract"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "AssertionError",
+  "mechanical_control": "controls/sealed-h02.py",
+  "unchanged_supporting_paths": [
+    "src/contracts.py"
+  ]
+}

@@ -1,0 +1,9 @@
+diff --git a/src/concurrency/semaphore.py b/src/concurrency/semaphore.py
+index 5ee3bf4..451d1da 100644
+--- a/src/concurrency/semaphore.py
++++ b/src/concurrency/semaphore.py
+@@ -1,4 +1,2 @@
+ def acquire(permits):
+-    if permits <= 0:
+-        return permits, False
+     return permits - 1, True

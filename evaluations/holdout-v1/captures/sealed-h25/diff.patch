@@ -1,0 +1,11 @@
+diff --git a/src/migrations/upgrade.py b/src/migrations/upgrade.py
+index 3253d17..0ca4982 100644
+--- a/src/migrations/upgrade.py
++++ b/src/migrations/upgrade.py
+@@ -2,5 +2,5 @@ from src.contracts import COPY
+ 
+ 
+ def migrate(db):
+-    db.execute(COPY)
+     db.execute('DROP TABLE legacy')
++    db.execute(COPY)

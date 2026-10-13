@@ -1,0 +1,23 @@
+{
+  "case_id": "sealed-h34",
+  "counterexamples": [
+    "Keep the explicit invalid-enum error."
+  ],
+  "defects": [
+    {
+      "evidence": "src/app.py: An invalid request silently selects fast mode.",
+      "fix_or_counterexample": "Keep the explicit invalid-enum error.",
+      "id": "sealed-h34-defect",
+      "impact": "An invalid request silently selects fast mode.",
+      "match_criteria": "Identify the changed behavior for A misspelled explicit safety mode and its consequence: An invalid request silently selects fast mode.",
+      "trigger": "A misspelled explicit safety mode"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "AssertionError",
+  "mechanical_control": "controls/sealed-h34.py",
+  "unchanged_supporting_paths": []
+}

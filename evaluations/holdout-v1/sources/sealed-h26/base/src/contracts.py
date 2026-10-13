@@ -1,0 +1,1 @@
+EVENTS = ('one', 'two')

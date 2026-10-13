@@ -1,0 +1,8 @@
+diff --git a/src/app.py b/src/app.py
+index e197f5e..570d3b3 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,2 +1,2 @@
+ def check_error(error):
+-    assert isinstance(error, ValueError)
++    assert isinstance(error, Exception)

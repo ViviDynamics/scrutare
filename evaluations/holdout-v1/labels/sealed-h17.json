@@ -1,0 +1,23 @@
+{
+  "case_id": "sealed-h17",
+  "counterexamples": [
+    "Assert the required value, not mere truthiness."
+  ],
+  "defects": [
+    {
+      "evidence": "src/app.py: The test accepts a wrong value.",
+      "fix_or_counterexample": "Assert the required value, not mere truthiness.",
+      "id": "sealed-h17-defect",
+      "impact": "The test accepts a wrong value.",
+      "match_criteria": "Identify the changed behavior for A nonzero but incorrect balance 41 and its consequence: The test accepts a wrong value.",
+      "trigger": "A nonzero but incorrect balance 41"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "AssertionError",
+  "mechanical_control": "controls/sealed-h17.py",
+  "unchanged_supporting_paths": []
+}

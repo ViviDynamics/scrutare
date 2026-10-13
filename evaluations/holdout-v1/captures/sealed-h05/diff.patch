@@ -1,0 +1,8 @@
+diff --git a/src/app.py b/src/app.py
+index 298d115..1aef54e 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,2 +1,2 @@
+ def ready(state):
+-    return state == 'ready'
++    return state == 'READY'

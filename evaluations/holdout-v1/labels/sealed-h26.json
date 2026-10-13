@@ -1,0 +1,25 @@
+{
+  "case_id": "sealed-h26",
+  "counterexamples": [
+    "Snapshot the batch before clearing the queue."
+  ],
+  "defects": [
+    {
+      "evidence": "src/concurrency/worker.py: Every pending item is silently discarded.",
+      "fix_or_counterexample": "Snapshot the batch before clearing the queue.",
+      "id": "sealed-h26-defect",
+      "impact": "Every pending item is silently discarded.",
+      "match_criteria": "Identify the changed behavior for A worker drains a nonempty pending queue and its consequence: Every pending item is silently discarded.",
+      "trigger": "A worker drains a nonempty pending queue"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "AssertionError",
+  "mechanical_control": "controls/sealed-h26.py",
+  "unchanged_supporting_paths": [
+    "src/contracts.py"
+  ]
+}

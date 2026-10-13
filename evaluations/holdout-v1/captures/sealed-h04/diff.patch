@@ -1,0 +1,11 @@
+diff --git a/src/app.py b/src/app.py
+index 66911aa..3637ce4 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,5 +1,2 @@
+-from datetime import timezone
+-
+-
+ def utc_day(value):
+-    return value.astimezone(timezone.utc).date().isoformat()
++    return value.date().isoformat()

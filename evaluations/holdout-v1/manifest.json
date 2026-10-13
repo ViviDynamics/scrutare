@@ -1,0 +1,1045 @@
+{
+  "cases": [
+    {
+      "capture": "captures/sealed-h01",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h01/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "d2412b2565c499ef737cc3baffa9e0a2ded68735"
+        },
+        "head": {
+          "directory": "sources/sealed-h01/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "d4637925b3d8e305705b0a870692750d3d895dea"
+        }
+      },
+      "domain": "correctness",
+      "id": "sealed-h01",
+      "labels": "labels/sealed-h01.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h02",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h02/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "701c754dad019bb4dbeffd56a7122189df8eb27f"
+        },
+        "head": {
+          "directory": "sources/sealed-h02/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "ce38ca7398043dfc714a597dca210cd98f4ddd91"
+        }
+      },
+      "domain": "correctness",
+      "id": "sealed-h02",
+      "labels": "labels/sealed-h02.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h03",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h03/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "656fac2fed40896bf133907fab66b2171965d97e"
+        },
+        "head": {
+          "directory": "sources/sealed-h03/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "8fc0b1005f8b1438d068f7389fadb6cc922d5ba1"
+        }
+      },
+      "domain": "correctness",
+      "id": "sealed-h03",
+      "labels": "labels/sealed-h03.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h04",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h04/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "f1de011674ac0350a413b890143999fd40201b98"
+        },
+        "head": {
+          "directory": "sources/sealed-h04/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "53742e107181568070f6b08c155220ee06973d69"
+        }
+      },
+      "domain": "correctness",
+      "id": "sealed-h04",
+      "labels": "labels/sealed-h04.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h05",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h05/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "a8d869e9ce98bcb07515d0437e391145bd0544d6"
+        },
+        "head": {
+          "directory": "sources/sealed-h05/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "c972bb3e5f2ad991305d03c08c0f69eb5370a058"
+        }
+      },
+      "domain": "correctness",
+      "id": "sealed-h05",
+      "labels": "labels/sealed-h05.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h06",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h06/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "2c5bec0a2c6d8ac5e3a0e3ca6a0d2cc1ecb42971"
+        },
+        "head": {
+          "directory": "sources/sealed-h06/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "760cde6538978844ecfc49fe43272e81fb4a53cf"
+        }
+      },
+      "domain": "correctness",
+      "id": "sealed-h06",
+      "labels": "labels/sealed-h06.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h07",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h07/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "d0bed3450c1c5b5175ebf6ab244508556840cfea"
+        },
+        "head": {
+          "directory": "sources/sealed-h07/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "2c55f792ef636900a1989dd6c7d225b6c0808f3b"
+        }
+      },
+      "domain": "correctness",
+      "id": "sealed-h07",
+      "labels": "labels/sealed-h07.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h08",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h08/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "456e8fdd2a5b803c111d17063371329e8f8e7340"
+        },
+        "head": {
+          "directory": "sources/sealed-h08/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "139befa24748b09201fc6d3eb749cc67c48e08b9"
+        }
+      },
+      "domain": "correctness",
+      "id": "sealed-h08",
+      "labels": "labels/sealed-h08.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h09",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h09/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "6a71768673b7a9a37ddff2c7d331d32da5badb3d"
+        },
+        "head": {
+          "directory": "sources/sealed-h09/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "2c0cb27a77486702380ca61606d1cc816117af58"
+        }
+      },
+      "domain": "security",
+      "id": "sealed-h09",
+      "labels": "labels/sealed-h09.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h10",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h10/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "0d0ed2f382b663312ce9253ef864cb5f817bbc89"
+        },
+        "head": {
+          "directory": "sources/sealed-h10/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "532c0ad65e59327f94f530df0bbc53fdd30fa66e"
+        }
+      },
+      "domain": "security",
+      "id": "sealed-h10",
+      "labels": "labels/sealed-h10.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h11",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h11/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "139d15c53c4c51b6bd34f69f5239dc0fe469fdd6"
+        },
+        "head": {
+          "directory": "sources/sealed-h11/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "229c4a14846db2e11c08e36a68650c115f23f28e"
+        }
+      },
+      "domain": "security",
+      "id": "sealed-h11",
+      "labels": "labels/sealed-h11.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h12",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h12/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "23aac8663262182008c57ece0ab92e21b38c3879"
+        },
+        "head": {
+          "directory": "sources/sealed-h12/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "b0cffa0b7cb02417f596d6d436c960c0ef3747eb"
+        }
+      },
+      "domain": "security",
+      "id": "sealed-h12",
+      "labels": "labels/sealed-h12.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h13",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h13/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "dd3ce76ae4f980d1aa5600c7d7cdc25b9da9c3bb"
+        },
+        "head": {
+          "directory": "sources/sealed-h13/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "5b759eab126566fdb384922c2f2da97fc19b36d4"
+        }
+      },
+      "domain": "security",
+      "id": "sealed-h13",
+      "labels": "labels/sealed-h13.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h14",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h14/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "3f459ff814ade4cad0284dab17aa5acdd24973e3"
+        },
+        "head": {
+          "directory": "sources/sealed-h14/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "fa61ef16543f901ece9ac86dacc853039a07425e"
+        }
+      },
+      "domain": "security",
+      "id": "sealed-h14",
+      "labels": "labels/sealed-h14.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h15",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h15/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "cd5fb441f56041bce806c146f31515c9be368b3a"
+        },
+        "head": {
+          "directory": "sources/sealed-h15/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "37e088a4138d64d2f3de3e51276df3c512c03bf3"
+        }
+      },
+      "domain": "security",
+      "id": "sealed-h15",
+      "labels": "labels/sealed-h15.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h16",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h16/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "4b97b814b98189bac4a73d6585f7b536cb6821a1"
+        },
+        "head": {
+          "directory": "sources/sealed-h16/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "29a048448cab27dd5d6b49f6e4be7e8cb3b045cc"
+        }
+      },
+      "domain": "security",
+      "id": "sealed-h16",
+      "labels": "labels/sealed-h16.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h17",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h17/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "26317d12efaa2d68a0fa9d8b3ba91805c5044c52"
+        },
+        "head": {
+          "directory": "sources/sealed-h17/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "e905039f336a1649e350d5da3addde7eb25a8443"
+        }
+      },
+      "domain": "tests",
+      "id": "sealed-h17",
+      "labels": "labels/sealed-h17.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h18",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h18/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "1b38ca17ebf45536e07a6dc83d83837175fd34fd"
+        },
+        "head": {
+          "directory": "sources/sealed-h18/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "c8968c2345e44e85bcca2de50d5909b4c8e0ab8e"
+        }
+      },
+      "domain": "tests",
+      "id": "sealed-h18",
+      "labels": "labels/sealed-h18.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h19",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h19/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "d1af0867f607c65555606024a32ea5f3f5eaf97d"
+        },
+        "head": {
+          "directory": "sources/sealed-h19/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "98fc6691525477df2fb9164fe211a2dae5aae92d"
+        }
+      },
+      "domain": "tests",
+      "id": "sealed-h19",
+      "labels": "labels/sealed-h19.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h20",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h20/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "ff56452afd4224dbe727c1462be55cf6c2249a2c"
+        },
+        "head": {
+          "directory": "sources/sealed-h20/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "04cec2c366c9067a3bda93513ff383e8981d83c6"
+        }
+      },
+      "domain": "tests",
+      "id": "sealed-h20",
+      "labels": "labels/sealed-h20.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h21",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h21/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "2d0327474278d075324469049eabf43b8a64b839"
+        },
+        "head": {
+          "directory": "sources/sealed-h21/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "beef797ae499067c9364ae4f7fbeda08d483d208"
+        }
+      },
+      "domain": "tests",
+      "id": "sealed-h21",
+      "labels": "labels/sealed-h21.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h22",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h22/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "bf73ed600783c80194107bd8009b4c777d72ef83"
+        },
+        "head": {
+          "directory": "sources/sealed-h22/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "8a53f8b6c77b15fc9233243fec83ebe7f192b6a6"
+        }
+      },
+      "domain": "tests",
+      "id": "sealed-h22",
+      "labels": "labels/sealed-h22.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h23",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h23/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "0bfd714d16631e3f991e768c5cdc56275a37c038"
+        },
+        "head": {
+          "directory": "sources/sealed-h23/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "e4159015d316a601b1d966c539ea303054487b77"
+        }
+      },
+      "domain": "tests",
+      "id": "sealed-h23",
+      "labels": "labels/sealed-h23.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h24",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h24/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "ed14df785de80f51d1a2ca041640e4e2050f8d6b"
+        },
+        "head": {
+          "directory": "sources/sealed-h24/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "9bf25765b7354f777ae679edb8907ec31ce8cd7a"
+        }
+      },
+      "domain": "tests",
+      "id": "sealed-h24",
+      "labels": "labels/sealed-h24.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h25",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h25/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "a70696f76e399f7982b08659c4c765a50934b970"
+        },
+        "head": {
+          "directory": "sources/sealed-h25/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "f699138f73cd7dabe910066ea862b25b91484f11"
+        }
+      },
+      "domain": "operations",
+      "id": "sealed-h25",
+      "labels": "labels/sealed-h25.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h26",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h26/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "ddad253224ab8fc71fb99fcf31bb8e26d31b197c"
+        },
+        "head": {
+          "directory": "sources/sealed-h26/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "328909fd1245395d322aca5c2a6050220064dab7"
+        }
+      },
+      "domain": "operations",
+      "id": "sealed-h26",
+      "labels": "labels/sealed-h26.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h27",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h27/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "4ee5adf177f9d0438838b1333676d475d723f940"
+        },
+        "head": {
+          "directory": "sources/sealed-h27/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "b2f615b3c6025e3df31095bebedf68c95b726c2f"
+        }
+      },
+      "domain": "operations",
+      "id": "sealed-h27",
+      "labels": "labels/sealed-h27.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h28",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h28/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "be6d91ff39f4cd2b82071a8577249867d24d0062"
+        },
+        "head": {
+          "directory": "sources/sealed-h28/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "218171e64dea9dbfd9c2d85635dc7c8cd88f60ab"
+        }
+      },
+      "domain": "operations",
+      "id": "sealed-h28",
+      "labels": "labels/sealed-h28.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h29",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h29/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "f365e9350018fd69f14c9aa8d82ee241d4370920"
+        },
+        "head": {
+          "directory": "sources/sealed-h29/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "bb322f66d52f27b0210909c5d130a3365a18c5c9"
+        }
+      },
+      "domain": "operations",
+      "id": "sealed-h29",
+      "labels": "labels/sealed-h29.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h30",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h30/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "a4e0a5f51ff5aeaa9a75357d8bba7c53cb250fb8"
+        },
+        "head": {
+          "directory": "sources/sealed-h30/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "9a2f22cfd1955d67b75cf26715fbd1e4ecd2a4b1"
+        }
+      },
+      "domain": "operations",
+      "id": "sealed-h30",
+      "labels": "labels/sealed-h30.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h31",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h31/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "38ff4ca5fe0b06b9d4442f3488b92ca5eb32bf89"
+        },
+        "head": {
+          "directory": "sources/sealed-h31/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "ec2fc64c09d083eb81d9bf6576b32214718834a4"
+        }
+      },
+      "domain": "operations",
+      "id": "sealed-h31",
+      "labels": "labels/sealed-h31.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h32",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h32/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "564e856b76c50e9cd636c953ccd060e3ee3d66c9"
+        },
+        "head": {
+          "directory": "sources/sealed-h32/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "8360f94785daaf2a4f92d8062effeb668e571898"
+        }
+      },
+      "domain": "operations",
+      "id": "sealed-h32",
+      "labels": "labels/sealed-h32.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h33",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h33/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "5e607073b04a4a48b3ee632faa413581284f5934"
+        },
+        "head": {
+          "directory": "sources/sealed-h33/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "ee4d1942d55e88309b6d88bb5ede377c51b87c30"
+        }
+      },
+      "domain": "consumer",
+      "id": "sealed-h33",
+      "labels": "labels/sealed-h33.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h34",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h34/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "b2750bee655b8e23ed75faeb5972540388fe6f09"
+        },
+        "head": {
+          "directory": "sources/sealed-h34/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "89bc6a5a6ac1fcaab63301b2dc40d32d6f6baaa0"
+        }
+      },
+      "domain": "consumer",
+      "id": "sealed-h34",
+      "labels": "labels/sealed-h34.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h35",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h35/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "2073f7da1c07a5e58038fa891b9b3c9c833a2785"
+        },
+        "head": {
+          "directory": "sources/sealed-h35/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "97304e755eaf4cad9011b14f9b256990cbb73e5e"
+        }
+      },
+      "domain": "consumer",
+      "id": "sealed-h35",
+      "labels": "labels/sealed-h35.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h36",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h36/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "4fdf47fcca7b8e798f0cb9fe5e59dec621685ccb"
+        },
+        "head": {
+          "directory": "sources/sealed-h36/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "dc2e1240eb2737606ae69613a3ef219e6e796e63"
+        }
+      },
+      "domain": "consumer",
+      "id": "sealed-h36",
+      "labels": "labels/sealed-h36.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h37",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h37/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "866df067ef6bcc09d365dfca97816a46db18251d"
+        },
+        "head": {
+          "directory": "sources/sealed-h37/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "af5e1212c3f9dbc837170bb947430d37d5d51d29"
+        }
+      },
+      "domain": "consumer",
+      "id": "sealed-h37",
+      "labels": "labels/sealed-h37.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h38",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h38/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "605db032e1f422559042fc1c48ba8bc54b0701bb"
+        },
+        "head": {
+          "directory": "sources/sealed-h38/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "89053a883302ef703f2bda4edb7f1cd8bf05da8a"
+        }
+      },
+      "domain": "consumer",
+      "id": "sealed-h38",
+      "labels": "labels/sealed-h38.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h39",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h39/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "de5abb8165233ca511019aa5d72809aac7cc7f4f"
+        },
+        "head": {
+          "directory": "sources/sealed-h39/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "8d37fe0b96f6e1d6e9e6e984920652a0c1c3678f"
+        }
+      },
+      "domain": "consumer",
+      "id": "sealed-h39",
+      "labels": "labels/sealed-h39.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    },
+    {
+      "capture": "captures/sealed-h40",
+      "context_sources": {
+        "base": {
+          "directory": "sources/sealed-h40/base",
+          "repository": "sealed-fixtures/local",
+          "revision": "f3b83a94e36df95e22be9165b11b993d1a0baf7b"
+        },
+        "head": {
+          "directory": "sources/sealed-h40/head",
+          "repository": "sealed-fixtures/local",
+          "revision": "1ae6013eb824d03e396d5f0994f6f11c56bc20ee"
+        }
+      },
+      "domain": "consumer",
+      "id": "sealed-h40",
+      "labels": "labels/sealed-h40.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Purpose-written local synthetic Git fixtures; no hosted PR claim."
+      },
+      "split": "holdout"
+    }
+  ],
+  "schema_version": 1
+}

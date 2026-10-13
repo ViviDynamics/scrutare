@@ -1,0 +1,10 @@
+diff --git a/src/app.py b/src/app.py
+index 56b696b..808fd9f 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,2 +1,4 @@
++ROLES = frozenset(('reader', 'writer'))
++
+ def authorized(role):
+-    return role in {'reader', 'writer'}
++    return role in ROLES

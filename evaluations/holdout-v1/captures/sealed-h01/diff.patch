@@ -1,0 +1,8 @@
+diff --git a/src/app.py b/src/app.py
+index c48c00a..b072307 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,2 +1,2 @@
+ def bucket(value, width):
+-    return value // width
++    return int(value / width)

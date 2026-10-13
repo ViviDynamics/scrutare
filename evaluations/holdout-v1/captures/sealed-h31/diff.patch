@@ -1,0 +1,12 @@
+diff --git a/src/concurrency/worker.py b/src/concurrency/worker.py
+index c333a01..a866593 100644
+--- a/src/concurrency/worker.py
++++ b/src/concurrency/worker.py
+@@ -2,6 +2,6 @@ def drain(queue):
+     'Drain a built-in list queue, returning an independently owned list.'
+     if type(queue) is not list:
+         raise TypeError('built-in list queue required')
+-    batch = queue.copy()
++    batch = list(queue)
+     queue.clear()
+     return batch

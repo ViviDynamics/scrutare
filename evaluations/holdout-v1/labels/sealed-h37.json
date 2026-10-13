@@ -1,0 +1,25 @@
+{
+  "case_id": "sealed-h37",
+  "counterexamples": [
+    "Do not consume an unreturned preview."
+  ],
+  "defects": [
+    {
+      "evidence": "src/app.py: The first item disappears from the returned list.",
+      "fix_or_counterexample": "Do not consume an unreturned preview.",
+      "id": "sealed-h37-defect",
+      "impact": "The first item disappears from the returned list.",
+      "match_criteria": "Identify the changed behavior for An unchanged caller supplies a one-pass iterator and its consequence: The first item disappears from the returned list.",
+      "trigger": "An unchanged caller supplies a one-pass iterator"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "AssertionError",
+  "mechanical_control": "controls/sealed-h37.py",
+  "unchanged_supporting_paths": [
+    "src/contracts.py"
+  ]
+}
