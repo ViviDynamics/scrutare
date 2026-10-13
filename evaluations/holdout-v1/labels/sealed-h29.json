@@ -1,0 +1,23 @@
+{
+  "case_id": "sealed-h29",
+  "counterexamples": [
+    "Convert milliseconds into seconds at the API boundary."
+  ],
+  "defects": [
+    {
+      "evidence": "src/app.py: A quarter-second timeout becomes 250 seconds.",
+      "fix_or_counterexample": "Convert milliseconds into seconds at the API boundary.",
+      "id": "sealed-h29-defect",
+      "impact": "A quarter-second timeout becomes 250 seconds.",
+      "match_criteria": "Identify the changed behavior for A 250ms configured request timeout and its consequence: A quarter-second timeout becomes 250 seconds.",
+      "trigger": "A 250ms configured request timeout"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "AssertionError",
+  "mechanical_control": "controls/sealed-h29.py",
+  "unchanged_supporting_paths": []
+}

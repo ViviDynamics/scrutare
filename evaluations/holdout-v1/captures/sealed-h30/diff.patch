@@ -1,0 +1,10 @@
+diff --git a/src/migrations/store.py b/src/migrations/store.py
+index 328e18b..e2a78df 100644
+--- a/src/migrations/store.py
++++ b/src/migrations/store.py
+@@ -1,3 +1,4 @@
+ def store(db, value):
++    query = 'INSERT INTO events VALUES (?)'
+     with db:
+-        db.execute('INSERT INTO events VALUES (?)', (value,))
++        db.execute(query, (value,))

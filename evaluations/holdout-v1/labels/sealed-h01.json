@@ -1,0 +1,23 @@
+{
+  "case_id": "sealed-h01",
+  "counterexamples": [
+    "Preserve floor division rather than truncation toward zero."
+  ],
+  "defects": [
+    {
+      "evidence": "src/app.py: Negative coordinates enter bucket zero instead of minus one.",
+      "fix_or_counterexample": "Preserve floor division rather than truncation toward zero.",
+      "id": "sealed-h01-defect",
+      "impact": "Negative coordinates enter bucket zero instead of minus one.",
+      "match_criteria": "Identify the changed behavior for bucket(-1, 10) and its consequence: Negative coordinates enter bucket zero instead of minus one.",
+      "trigger": "bucket(-1, 10)"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "AssertionError",
+  "mechanical_control": "controls/sealed-h01.py",
+  "unchanged_supporting_paths": []
+}

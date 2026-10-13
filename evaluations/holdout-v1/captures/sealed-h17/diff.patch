@@ -1,0 +1,8 @@
+diff --git a/src/app.py b/src/app.py
+index d60b860..80d1b73 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,2 +1,2 @@
+ def check_balance(actual):
+-    assert actual == 42
++    assert actual

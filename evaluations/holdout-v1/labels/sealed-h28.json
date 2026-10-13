@@ -1,0 +1,25 @@
+{
+  "case_id": "sealed-h28",
+  "counterexamples": [
+    "Compare values in the same seconds unit."
+  ],
+  "defects": [
+    {
+      "evidence": "src/app.py: Retries continue approximately a thousand times longer than allowed.",
+      "fix_or_counterexample": "Compare values in the same seconds unit.",
+      "id": "sealed-h28-defect",
+      "impact": "Retries continue approximately a thousand times longer than allowed.",
+      "match_criteria": "Identify the changed behavior for Monotonic seconds exceed the existing ten-second deadline and its consequence: Retries continue approximately a thousand times longer than allowed.",
+      "trigger": "Monotonic seconds exceed the existing ten-second deadline"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "AssertionError",
+  "mechanical_control": "controls/sealed-h28.py",
+  "unchanged_supporting_paths": [
+    "src/contracts.py"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "case_id": "sealed-h19",
+  "counterexamples": [
+    "Return a fresh dict for each fixture request."
+  ],
+  "defects": [
+    {
+      "evidence": "src/app.py: Tests share mutable fixture state and become order dependent.",
+      "fix_or_counterexample": "Return a fresh dict for each fixture request.",
+      "id": "sealed-h19-defect",
+      "impact": "Tests share mutable fixture state and become order dependent.",
+      "match_criteria": "Identify the changed behavior for One test mutates its fixture before a subsequent test reads a fixture and its consequence: Tests share mutable fixture state and become order dependent.",
+      "trigger": "One test mutates its fixture before a subsequent test reads a fixture"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "AssertionError",
+  "mechanical_control": "controls/sealed-h19.py",
+  "unchanged_supporting_paths": [
+    "src/contracts.py"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "case_id": "sealed-h18",
+  "counterexamples": [
+    "Keep required-key assertions."
+  ],
+  "defects": [
+    {
+      "evidence": "src/app.py: The test no longer detects a required contract field.",
+      "fix_or_counterexample": "Keep required-key assertions.",
+      "id": "sealed-h18-defect",
+      "impact": "The test no longer detects a required contract field.",
+      "match_criteria": "Identify the changed behavior for A response missing request_id but still shaped as a dict and its consequence: The test no longer detects a required contract field.",
+      "trigger": "A response missing request_id but still shaped as a dict"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "AssertionError",
+  "mechanical_control": "controls/sealed-h18.py",
+  "unchanged_supporting_paths": [
+    "src/contracts.py"
+  ]
+}

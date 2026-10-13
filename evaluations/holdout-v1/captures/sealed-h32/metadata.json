@@ -1,0 +1,30 @@
+{
+  "head_sha": "911c3248b0cb66c815a0c5d5914e0b29caabe1d2",
+  "pr_number": 32,
+  "pull_request": {
+    "base": {
+      "ref": "main",
+      "repo": {
+        "full_name": "sealed-fixtures/local"
+      },
+      "sha": "e31d8385c695c34c0c3d85209718e59e8c4647e8"
+    },
+    "body": "",
+    "changed_files": 1,
+    "head": {
+      "ref": "candidate",
+      "repo": {
+        "full_name": "sealed-fixtures/local"
+      },
+      "sha": "911c3248b0cb66c815a0c5d5914e0b29caabe1d2"
+    },
+    "merged": false,
+    "number": 32,
+    "state": "open",
+    "title": "Update implementation"
+  },
+  "repository": "sealed-fixtures/local",
+  "schema_version": 1,
+  "scrutare_version": "2026.10.2",
+  "status": "ingested"
+}

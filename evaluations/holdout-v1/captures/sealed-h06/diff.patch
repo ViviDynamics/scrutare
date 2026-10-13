@@ -1,0 +1,8 @@
+diff --git a/src/app.py b/src/app.py
+index 00bca55..b06b215 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,2 +1,2 @@
+ def partition(index, width):
+-    return index // width, index % width
++    return divmod(index, width)

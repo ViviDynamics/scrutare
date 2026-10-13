@@ -1,0 +1,11 @@
+diff --git a/src/app.py b/src/app.py
+index 63cfa94..de8b193 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,5 +1,2 @@
+-from pathlib import PurePosixPath
+-
+-
+ def allowed(path, root):
+-    return PurePosixPath(path).is_relative_to(PurePosixPath(root))
++    return path.startswith(root)

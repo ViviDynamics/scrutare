@@ -1,0 +1,8 @@
+diff --git a/src/app.py b/src/app.py
+index ebff56f..1a0c68d 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,2 +1,2 @@
+ def can_delete(roles):
+-    return 'admin' in roles.split(',')
++    return 'admin' in roles

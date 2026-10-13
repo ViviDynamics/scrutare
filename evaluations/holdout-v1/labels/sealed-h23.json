@@ -1,0 +1,14 @@
+{
+  "case_id": "sealed-h23",
+  "counterexamples": [
+    "Both expressions allocate a separate list per call."
+  ],
+  "defects": [],
+  "expected_exit": {
+    "base": 0,
+    "head": 0
+  },
+  "expected_head_error": null,
+  "mechanical_control": "controls/sealed-h23.py",
+  "unchanged_supporting_paths": []
+}

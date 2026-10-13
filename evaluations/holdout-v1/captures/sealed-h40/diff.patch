@@ -1,0 +1,8 @@
+diff --git a/src/app.py b/src/app.py
+index 9279810..698c547 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,2 +1,2 @@
+ def values():
+-    return tuple([1, 2])
++    return (1, 2)

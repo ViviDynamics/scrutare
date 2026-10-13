@@ -1,0 +1,25 @@
+{
+  "case_id": "sealed-h33",
+  "counterexamples": [
+    "Retain the empty-string default or migrate the consumer."
+  ],
+  "defects": [
+    {
+      "evidence": "src/app.py: None crosses the string-only boundary and raises AttributeError.",
+      "fix_or_counterexample": "Retain the empty-string default or migrate the consumer.",
+      "id": "sealed-h33-defect",
+      "impact": "None crosses the string-only boundary and raises AttributeError.",
+      "match_criteria": "Identify the changed behavior for An unchanged string consumer renders a record with no description and its consequence: None crosses the string-only boundary and raises AttributeError.",
+      "trigger": "An unchanged string consumer renders a record with no description"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "AttributeError",
+  "mechanical_control": "controls/sealed-h33.py",
+  "unchanged_supporting_paths": [
+    "src/contracts.py"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "case_id": "sealed-h35",
+  "counterexamples": [
+    "Slice Unicode code points rather than an incomplete encoded byte prefix."
+  ],
+  "defects": [
+    {
+      "evidence": "src/app.py: A valid string raises UnicodeDecodeError.",
+      "fix_or_counterexample": "Slice Unicode code points rather than an incomplete encoded byte prefix.",
+      "id": "sealed-h35-defect",
+      "impact": "A valid string raises UnicodeDecodeError.",
+      "match_criteria": "Identify the changed behavior for A one-character preview of a multibyte character and its consequence: A valid string raises UnicodeDecodeError.",
+      "trigger": "A one-character preview of a multibyte character"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "UnicodeDecodeError",
+  "mechanical_control": "controls/sealed-h35.py",
+  "unchanged_supporting_paths": []
+}

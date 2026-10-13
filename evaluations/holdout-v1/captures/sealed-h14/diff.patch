@@ -1,0 +1,9 @@
+diff --git a/src/app.py b/src/app.py
+index 2e97bad..65920d3 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,2 +1,3 @@
+ def find(db, name):
+-    return db.execute('SELECT name FROM users WHERE name = ?', (name,)).fetchall()
++    query = 'SELECT name FROM users WHERE name = ?'
++    return db.execute(query, (name,)).fetchall()

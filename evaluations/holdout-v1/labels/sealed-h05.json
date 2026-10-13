@@ -1,0 +1,25 @@
+{
+  "case_id": "sealed-h05",
+  "counterexamples": [
+    "Preserve the lowercase wire value or migrate all consumers."
+  ],
+  "defects": [
+    {
+      "evidence": "src/app.py: Valid ready jobs are rejected.",
+      "fix_or_counterexample": "Preserve the lowercase wire value or migrate all consumers.",
+      "id": "sealed-h05-defect",
+      "impact": "Valid ready jobs are rejected.",
+      "match_criteria": "Identify the changed behavior for An unchanged caller uses READY='ready' and its consequence: Valid ready jobs are rejected.",
+      "trigger": "An unchanged caller uses READY='ready'"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "AssertionError",
+  "mechanical_control": "controls/sealed-h05.py",
+  "unchanged_supporting_paths": [
+    "src/contracts.py"
+  ]
+}

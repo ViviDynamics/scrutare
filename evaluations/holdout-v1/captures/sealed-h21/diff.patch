@@ -1,0 +1,8 @@
+diff --git a/src/app.py b/src/app.py
+index bb4e1f8..564d164 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,2 +1,2 @@
+ def inputs():
+-    return [-1, 0, 1]
++    return [0, 1]

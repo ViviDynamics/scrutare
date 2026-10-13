@@ -1,0 +1,23 @@
+{
+  "case_id": "sealed-h09",
+  "counterexamples": [
+    "Compare path components, not string prefixes."
+  ],
+  "defects": [
+    {
+      "evidence": "src/app.py: The lexical prefix check permits access outside the allowed directory.",
+      "fix_or_counterexample": "Compare path components, not string prefixes.",
+      "id": "sealed-h09-defect",
+      "impact": "The lexical prefix check permits access outside the allowed directory.",
+      "match_criteria": "Identify the changed behavior for A sibling directory whose spelling shares the allowed prefix and its consequence: The lexical prefix check permits access outside the allowed directory.",
+      "trigger": "A sibling directory whose spelling shares the allowed prefix"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "AssertionError",
+  "mechanical_control": "controls/sealed-h09.py",
+  "unchanged_supporting_paths": []
+}

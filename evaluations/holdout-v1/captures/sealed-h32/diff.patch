@@ -1,0 +1,8 @@
+diff --git a/src/app.py b/src/app.py
+index df5edc3..6666fa8 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,2 +1,2 @@
+ def expired(now, deadline):
+-    return not now < deadline
++    return now >= deadline

@@ -1,0 +1,25 @@
+{
+  "case_id": "sealed-h10",
+  "counterexamples": [
+    "Parse and compare the exact hostname."
+  ],
+  "defects": [
+    {
+      "evidence": "src/app.py: An external redirect is allowed.",
+      "fix_or_counterexample": "Parse and compare the exact hostname.",
+      "id": "sealed-h10-defect",
+      "impact": "An external redirect is allowed.",
+      "match_criteria": "Identify the changed behavior for An attacker-controlled host includes the trusted host as a substring and its consequence: An external redirect is allowed.",
+      "trigger": "An attacker-controlled host includes the trusted host as a substring"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "AssertionError",
+  "mechanical_control": "controls/sealed-h10.py",
+  "unchanged_supporting_paths": [
+    "src/contracts.py"
+  ]
+}

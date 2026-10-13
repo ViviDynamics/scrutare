@@ -1,0 +1,8 @@
+diff --git a/src/app.py b/src/app.py
+index 9bad20e..b96a589 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,2 +1,2 @@
+ def check_empty(values):
+-    assert values == []
++    assert len(values) == 0

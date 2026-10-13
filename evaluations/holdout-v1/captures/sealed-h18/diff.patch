@@ -1,0 +1,11 @@
+diff --git a/src/app.py b/src/app.py
+index b2b606c..5151d32 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,5 +1,2 @@
+-from src.contracts import REQUIRED
+-
+-
+ def check_payload(payload):
+-    assert REQUIRED <= payload.keys()
++    assert isinstance(payload, dict)

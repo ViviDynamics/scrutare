@@ -1,0 +1,10 @@
+diff --git a/src/concurrency/worker.py b/src/concurrency/worker.py
+index f266221..9eeb9fa 100644
+--- a/src/concurrency/worker.py
++++ b/src/concurrency/worker.py
+@@ -1,4 +1,3 @@
+ def drain(queue):
+-    batch = list(queue)
+     queue.clear()
+-    return batch
++    return list(queue)
