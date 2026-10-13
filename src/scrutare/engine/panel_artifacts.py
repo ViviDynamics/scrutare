@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
 
 from scrutare.engine.session_artifacts import SessionArtifactError, _directory, write_owned_bytes
@@ -24,6 +25,9 @@ def preflight_panel(run_dir: Path) -> None:
         if ".." in path.parts:
             raise SessionArtifactError("Cannot reserve panel: unsafe run directory.")
         with _directory(path) as parent:
+            if any(re.fullmatch(r"assessment-round-[0-9]{4}\.json", name)
+                   for name in os.listdir(parent)):
+                raise SessionArtifactError("Cannot reserve panel: existing execution artifact.")
             for name in _PRIOR_EVIDENCE:
                 try:
                     os.stat(name, dir_fd=parent, follow_symlinks=False)

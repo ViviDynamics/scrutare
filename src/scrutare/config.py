@@ -124,9 +124,19 @@ class AssessmentSettings:
 
 
 @dataclass(frozen=True)
+class DiscussionSettings:
+    enabled: bool = False
+
+    def __post_init__(self) -> None:
+        if type(self.enabled) is not bool:
+            raise ConfigError("findings.discussion.enabled: expected boolean")
+
+
+@dataclass(frozen=True)
 class FindingSettings:
     evidence: Literal["legacy", "v2"] = "legacy"
     assessment: AssessmentSettings = AssessmentSettings()
+    discussion: DiscussionSettings = DiscussionSettings()
 
     def __post_init__(self) -> None:
         if self.evidence not in ("legacy", "v2"):
@@ -180,6 +190,9 @@ class ReviewConfig:
                 raise ConfigError("findings.assessment: requires evidence v2")
             if self.findings.assessment.tokens >= self.budgets.review_max_tokens:
                 raise ConfigError("findings.assessment.tokens: must leave discovery capacity")
+        if self.findings.discussion.enabled and (
+                self.strategy != "debate" or not self.findings.assessment.enabled):
+            raise ConfigError("findings.discussion: requires assessed v2 debate")
 
     def to_dict(self) -> dict[str, Any]:
         result: dict[str, Any] = {
@@ -216,6 +229,8 @@ class ReviewConfig:
             result["findings"] = {"evidence": self.findings.evidence}
             if self.findings.assessment != AssessmentSettings():
                 result["findings"]["assessment"] = asdict(self.findings.assessment)
+            if self.findings.discussion != DiscussionSettings():
+                result["findings"]["discussion"] = asdict(self.findings.discussion)
         if self.analysis.enabled:
             result["analysis"] = asdict(self.analysis)
         if self.routing != RoutingSettings():
@@ -233,12 +248,13 @@ class ReviewConfig:
 
 
 def _finding_settings(value: object) -> FindingSettings:
-    fields = _mapping(value, "findings", ("evidence", "assessment"))
+    fields = _mapping(value, "findings", ("evidence", "assessment", "discussion"))
     assessment = _mapping(fields.get("assessment", {}), "findings.assessment",
                           ("enabled", "tokens"))
     return FindingSettings(cast(Literal["legacy", "v2"], _choice(
         fields.get("evidence", "legacy"), "findings.evidence", ("legacy", "v2"))),
-        AssessmentSettings(**assessment))
+        AssessmentSettings(**assessment), DiscussionSettings(**_mapping(
+            fields.get("discussion", {}), "findings.discussion", ("enabled",))))
 
 
 def _analysis_settings(value: object, context: ContextSettings) -> AnalysisSettings:
