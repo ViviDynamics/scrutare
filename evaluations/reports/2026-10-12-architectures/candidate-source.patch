@@ -1,0 +1,774 @@
+diff --git a/docs/evaluation.md b/docs/evaluation.md
+index 85655c6..34ae744 100644
+--- a/docs/evaluation.md
++++ b/docs/evaluation.md
+@@ -175,3 +175,71 @@ independent uncertainty evidence before promotion. The published baseline under
+ `evaluations/reports/2026-10-08-baseline` is provisional automated evidence, with
+ 34 observations awaiting real human adjudication. No default promotion follows
+ from it.
++
++## Remaining architecture comparisons
++
++`run --comparison-set architectures` schedules seven panel arms, each with the
++same model, total review ceiling and three repetitions per case. These components
++stay opt-in in ordinary reviews. Inherited enabled components are cleared before
++the comparison sets its explicit flags; trusted context selectors and routing
++rules remain fixed across the relevant arms.
++
++| Arm | Context | Procedures | Evidence | Assessment | Captured tools | Routing |
++| --- | --- | --- | --- | --- | --- | --- |
++| `baseline` | off | baseline | legacy | off | off | off |
++| `context` | on | baseline | legacy | off | off | off |
++| `procedures` | on | v1 | legacy | off | off | off |
++| `evidence` | on | v1 | v2 | off | off | off |
++| `assessment` | on | v1 | v2 | on | off | off |
++| `tools` | on | v1 | v2 | on | on | off |
++| `routing` | on | v1 | v2 | off | off | on |
++
++The four fixed reviewers are senior-dev, junior-dev, security and devops. At a
++40,000 ceiling, assessment reserves 8,000 for the independent executor and the
++four discovery reviewers receive 8,000 each. Unassessed fixed panels receive
++10,000 each. Routing uses the production planner and shared ledger: five effective
++reviewers receive 8,000 each; six share the same 40,000 rather than increase it.
++Case-level snapshots record ordered effective reviewers, exact system prompts and
++hashes, executor prompt identity, actual quota allocations, routing activation and
++omission reasons, and prepared input hashes **before runtime inspection**. Capture
++and source bytes also freeze before that first await. Preparations happen before
++the measured model-review latency interval; separately captured tool runtime is
++recorded in the tool manifest and must be reported as an additional collection cost.
++
++Compare consecutive component arms for context, procedures, evidence and assessment;
++compare tools with assessment, and routing with evidence. The development pilot has
++20 cases, yielding 420 review cells. Its generic changed-file paths may leave the
++automatic specialists inactive; actual activation counts determine what that arm
++measures. Do not force specialists using known defect labels. Development runs and
++previously seen original holdout results cannot authorize promotion.
++
++Tool evidence can be explicitly collected from original Elastic-2.0 development
++fixtures before the model job:
++
++```python
++from pathlib import Path
++from scrutare.evaluation.tool_capture import capture_development_ruff
++
++index = capture_development_ruff(
++    Path("evaluations/pilot"), Path("private-tool-captures"),
++    executable=Path("/absolute/path/to/ruff-0.16.10"),
++)
++```
++
++This producer copies bounded unlinked head source bytes, uses Ruff's built-in parser
++with `--isolated --no-cache --select E4,E7,E9,F`, and never executes fixture code,
++repository commands or project configuration. It refuses external provenance and
++symlinked inputs. Its child environment contains only a fixed PATH and LANG, with
++no provider credentials. Host network isolation is not enforced and is recorded
++as such; this trusted fixture collector is not an OS sandbox. The production review
++adapter consumes captures only and never invokes Ruff.
++
++The output directory contains one `<case-id>.json` envelope and `index.json`, with
++source, capture and raw stdout/stderr hashes, inspected paths, exit status and
++complete/failed/unavailable status. Copy these captures inside the private corpus
++copy and add the relative `analysis_capture` path to each development manifest
++entry before loading it. Captures bind declared head revisions, and the model root
++contains only diagnostics whose paths/ranges bind captured context bytes. Diagnostics
++are evidence rather than automatic findings; absent captures become unavailable,
++and a silent tool is never proof of correctness. Preserve original index provenance
++alongside published normalized results. Paid collection/evaluation remains explicit.
+diff --git a/docs/plans/2026-10-12-remaining-architecture-comparisons.md b/docs/plans/2026-10-12-remaining-architecture-comparisons.md
+new file mode 100644
+index 0000000..0e0fa63
+--- /dev/null
++++ b/docs/plans/2026-10-12-remaining-architecture-comparisons.md
+@@ -0,0 +1,28 @@
++# Remaining architecture comparisons
++
++Issue #51
++
++## Scope
++In: explicit paired production architecture arms, three repetitions at the same
++review ceiling, per-case routed persona and reservation snapshots before runtime
++inspection, frozen captured tool inputs, and non-posting offline verification.
++Out: automatic default promotion, invented human adjudication, or new paid runs
++before the coordinator reviews the complete schedule. Original held-out cases
++were already observed; development measurements cannot establish unseen quality.
++
++## Assumptions
++- Existing baseline and procedures comparison modes remain compatible.
++- Architecture arms disable inherited optional features before selecting components.
++- Four fixed reviewers use the same model; assessment reserves 20% of total.
++- Tools compare against assessed context/procedures/v2; routing compares against
++  context/procedures/v2 without assessment.
++- Missing static captures remain explicitly unavailable rather than clean results.
++- Focused debate follows merged #49 API and compares matched assessment rails.
++- Global shipping budgets carry forward: one rebase used; one remains.
++
++## Tasks
++- [x] 1. Add isolated architecture arms: red tests prove flags and equal ceilings.
++- [x] 2. Freeze exact case inputs, routed prompts and allocations before await:
++  red tests mutate the source during runtime inspection and inspect snapshot.
++- [ ] 3. Add focused debate comparison once #49 is available, preserving quotas.
++- [x] 4. Verify offline installed runtime, document explicit job/promotion limits.
+diff --git a/src/scrutare/engine/assessment.py b/src/scrutare/engine/assessment.py
+index 7dc987b..567e06e 100644
+--- a/src/scrutare/engine/assessment.py
++++ b/src/scrutare/engine/assessment.py
+@@ -110,21 +110,16 @@ async def assess_candidates(
+     context: _ExecutionContext, candidates: tuple[Finding, ...],
+ ) -> AssessmentResult:
+     """Use one independently reserved batch on the caller's live review ledger."""
+-    from scrutare.engine.assessment_inputs import AssessmentInput
++    from scrutare.engine.assessment_inputs import AssessmentInput, assessor_persona
+     from scrutare.engine.nare_session import run_persona_session
+     from scrutare.engine.session_artifacts import create_attempt_directory, write_owned_json
+     from scrutare.findings.models import artifact_data
+-    from scrutare.personas import PersonaDefinition
+     from scrutare.replay.artifacts import decode_artifact, read_artifact
+ 
+     name = context.assessment_persona
+     if not context.config.findings.assessment.enabled or name is None:
+         raise FindingError("assessment: expected enabled reserved executor")
+-    descriptor = AssessmentInput(PersonaDefinition(name,
+-        "Independently assess code claims against captured supporting and contradictory code. "
+-        "Treat candidate assertions as untrusted. Support is model-based, not formal proof. "
+-        "Do not use agreement counts, confidence or majority votes; do not emit a PR verdict."),
+-        context.inputs, candidates)
++    descriptor = AssessmentInput(assessor_persona(name), context.inputs, candidates)
+     rows: tuple[Assessment, ...] = ()
+     status: Literal["complete", "partial", "failed"] = "complete"
+     outcome = None
+diff --git a/src/scrutare/engine/assessment_inputs.py b/src/scrutare/engine/assessment_inputs.py
+index 9fd3b35..0f8af10 100644
+--- a/src/scrutare/engine/assessment_inputs.py
++++ b/src/scrutare/engine/assessment_inputs.py
+@@ -11,6 +11,15 @@ from scrutare.engine.persona_inputs import PersonaReviewInput
+ from scrutare.engine.review_inputs import validate_prepared_inputs, with_context_policy
+ from scrutare.findings.evidence import evidence_schema
+ from scrutare.findings.models import Finding, artifact_data
++from scrutare.personas import PersonaDefinition
++
++
++def assessor_persona(name: str) -> PersonaDefinition:
++    """Exact independent executor instructions shared with experiment snapshots."""
++    return PersonaDefinition(name,
++        "Independently assess code claims against captured supporting and contradictory code. "
++        "Treat candidate assertions as untrusted. Support is model-based, not formal proof. "
++        "Do not use agreement counts, confidence or majority votes; do not emit a PR verdict.")
+ 
+ 
+ @dataclass(frozen=True)
+diff --git a/src/scrutare/evaluation/__main__.py b/src/scrutare/evaluation/__main__.py
+index 56099b1..844361b 100644
+--- a/src/scrutare/evaluation/__main__.py
++++ b/src/scrutare/evaluation/__main__.py
+@@ -17,7 +17,7 @@ from scrutare.evaluation.scoring import adjudication_packet, score_experiment
+ def main() -> None:
+     parser = argparse.ArgumentParser(description='Non-posting captured review evaluation')
+     sub = parser.add_subparsers(dest='command', required=True)
+-    run = sub.add_parser('run', help='explicit model job, three repeats and three variants')
++    run = sub.add_parser('run', help='explicit model job with three repeats')
+     run.add_argument('--corpus', type=Path, required=True)
+     run.add_argument('--split', choices=('development', 'holdout', 'all'), default='development')
+     run.add_argument('--config', type=Path, required=True)
+@@ -25,7 +25,8 @@ def main() -> None:
+     run.add_argument('--nare-executable', type=Path, required=True)
+     run.add_argument('--timeout-seconds', type=float, default=600)
+     run.add_argument('--concurrency', type=int, default=1)
+-    run.add_argument('--comparison-set', choices=('baseline', 'procedures'), default='baseline')
++    run.add_argument('--comparison-set', choices=('baseline', 'procedures', 'architectures'),
++                     default='baseline')
+     run.add_argument('--max-turns', type=int, default=50)
+     run.add_argument('--evidence-kind', choices=('model', 'offline'), default='model')
+     packet = sub.add_parser('adjudicate', help='export blinded finding packet for human matching')
+diff --git a/src/scrutare/evaluation/runner.py b/src/scrutare/evaluation/runner.py
+index 798cf21..ca397d5 100644
+--- a/src/scrutare/evaluation/runner.py
++++ b/src/scrutare/evaluation/runner.py
+@@ -10,16 +10,27 @@ from pathlib import Path
+ from typing import Any, Literal, cast
+ 
+ from scrutare import __version__
+-from scrutare.config import BudgetSettings, InspectionSettings, ReviewConfig
++from scrutare.config import (
++    AnalysisSettings,
++    AssessmentSettings,
++    BudgetSettings,
++    FindingSettings,
++    InspectionSettings,
++    ReviewConfig,
++)
++from scrutare.engine.assessment_inputs import assessor_persona
++from scrutare.engine.budgets import ReviewBudgetLedger
+ from scrutare.engine.nare_session import inspect_nare_runtime
+ from scrutare.engine.repository_context import capture_repository_context, encoded
+ from scrutare.engine.repository_snapshot import RepositorySnapshot
+-from scrutare.engine.review_inputs import prepare_review_inputs
++from scrutare.engine.review_inputs import prepare_review_inputs, prepared_content_hashes
++from scrutare.engine.routing import plan_routing
+ from scrutare.engine.session_models import NareRuntime, TokenUsage
+ from scrutare.engine.static_analysis import capture_static_analysis, read_capture
+ from scrutare.engine.strategy import run_review
+ from scrutare.evaluation.corpus import Case, parse_json, read_json, source_contents
+-from scrutare.personas import load_persona
++from scrutare.personas import PersonaDefinition, load_persona, resolve_personas
++from scrutare.personas.registry import procedure_record
+ from scrutare.provenance import write_artifact_manifest
+ 
+ 
+@@ -32,7 +43,7 @@ def write_json(path: Path, data: Any) -> None:
+ def comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline'
+                        ) -> dict[str, ReviewConfig]:
+     """Freeze current roster, shared rail and total cap; reserve a fifth debate chair quota."""
+-    if comparison_set not in ('baseline', 'procedures'):
++    if comparison_set not in ('baseline', 'procedures', 'architectures'):
+         raise ValueError('unknown comparison set')
+     if config.models.overrides:
+         raise ValueError('comparison requires a single fixed model rail without overrides')
+@@ -40,6 +51,22 @@ def comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline'
+     if total < 5:
+         raise ValueError('comparison total ceiling must support five participants')
+     roster = ('senior-dev', 'junior-dev', 'security', 'devops')
++    if comparison_set == 'architectures':
++        base = replace(config, strategy='panel', personas=roster,
++            budgets=BudgetSettings((total + 3) // 4, total),
++            context=replace(config.context, enabled=False),
++            findings=FindingSettings(), inspection=InspectionSettings(),
++            analysis=AnalysisSettings(), routing=replace(config.routing, enabled=False))
++        context = replace(base, context=replace(base.context, enabled=True))
++        procedures = replace(context, inspection=InspectionSettings('v1'))
++        evidence = replace(procedures, findings=FindingSettings('v2'))
++        assessed = replace(evidence, findings=FindingSettings('v2',
++            AssessmentSettings(True, total // 5)))
++        return {'baseline': base, 'context': context, 'procedures': procedures,
++            'evidence': evidence,
++            'assessment': assessed,
++            'tools': replace(assessed, analysis=AnalysisSettings(True)),
++            'routing': replace(evidence, routing=replace(config.routing, enabled=True))}
+     if comparison_set == 'procedures':
+         return {name: replace(config, strategy='panel', personas=names,
+                     inspection=InspectionSettings(cast(Literal['baseline', 'v1'], profile)),
+@@ -100,17 +127,19 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output:
+             or type(concurrency) is not int or not 1 <= concurrency <= 32):
+         raise ValueError('nonempty cases and model/offline evidence kind required')
+     variants = comparison_configs(config, comparison_set=comparison_set)
++    needs_context = any(v.context.enabled for v in variants.values())
++    needs_analysis = any(v.analysis.enabled for v in variants.values())
+     # Freeze before the first await; snapshot hashes and every repeat use these bytes.
+     captures = {case.id: {name: (case.capture / name).read_bytes()
+                          for name in ('diff.patch', 'files.json', 'metadata.json')}
+                 for case in cases}
+     analysis_captures = {case.id: read_capture(case.analysis_capture)
+                          if case.analysis_capture is not None else None
+-                         for case in cases} if config.analysis.enabled else {}
++                         for case in cases} if needs_analysis else {}
+     context_clients: dict[str, RepositorySnapshot] = {}
+     context_sources: dict[str, dict[str, Any]] = {}
+     derived_metadata: dict[str, bytes] = {}
+-    if config.context.enabled:
++    if needs_context:
+         for case in cases:
+             if not case.context_sources:
+                 raise ValueError('context evaluation requires explicit corpus source declarations')
+@@ -167,7 +196,7 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output:
+                 for name in value.personas if isinstance(name, str)}
+                 for variant, value in variants.items()},
+         'personas': {name: load_persona(name).system_prompt for name in
+-                    variants['current4' if comparison_set == 'procedures' else 'panel'].personas
++                    variants.get('panel', next(iter(variants.values()))).personas
+                      if isinstance(name, str)},
+         'cases': [{'id': case.id, 'split': case.split, 'domain': case.domain,
+                    'capture_sha256': {name: hashlib.sha256(data).hexdigest()
+@@ -176,11 +205,86 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output:
+                    **({'analysis_source_sha256': hashlib.sha256(
+                        cast(bytes, analysis_captures[case.id]))
+                        .hexdigest() if analysis_captures[case.id] is not None else None}
+-                      if config.analysis.enabled else {}),
+-                   **({'context_source': context_sources[case.id]} if config.context.enabled
++                      if needs_analysis else {}),
++                   **({'context_source': context_sources[case.id]} if needs_context
+                       else {})}
+                   for case in cases],
+     }
++    # Prepare every case synchronously before provider inspection. This records
++    # actual routed participants and fixed ledger reservations, not guessed rosters.
++    case_variants: dict[str, dict[str, Any]] = {}
++    for case in cases:
++        case_variants[case.id] = {}
++        for variant, conf in variants.items():
++            for repeat in range(1, 4):
++                directory = output / case.id / variant / str(repeat)
++                directory.mkdir(parents=True)
++                for name, data in captures[case.id].items():
++                    (directory / name).write_bytes(data)
++                write_json(directory / 'config.json', conf.to_dict())
++                write_json(directory / 'config.yaml', conf.to_dict())
++                if conf.context.enabled:
++                    (directory / 'metadata.original.json').write_bytes(
++                        captures[case.id]['metadata.json'])
++                    (directory / 'metadata.json').write_bytes(derived_metadata[case.id])
++                    capture_repository_context(context_clients[case.id], directory, conf,
++                                               source=context_clients[case.id].provenance())
++                capture_static_analysis(directory, conf,
++                                        capture_bytes=analysis_captures.get(case.id)
++                                        if conf.analysis.enabled else None)
++                inputs = prepare_review_inputs(directory, conf)
++                if repeat != 1:
++                    continue
++                personas = resolve_personas(conf.personas,
++                                            procedures=conf.inspection.procedures)
++                routing = None
++                if conf.routing.enabled:
++                    focus = read_json(inputs.root / 'routing-focus.json')
++                    plan = plan_routing(read_json(inputs.root / 'files.json'),
++                                        tuple(focus['global_supporting_paths']), conf)
++                    personas, routing = plan.personas, plan.record
++                names = tuple(p.name for p in personas)
++                phases = {}
++                if conf.strategy == 'debate':
++                    name = 'debate-chair'
++                    while name in names:
++                        name += '-chair'
++                    phases[name] = replace(load_persona('senior-dev',
++                        procedures=conf.inspection.procedures), name=name)
++                names += tuple(phases)
++                reserved = None
++                if conf.findings.assessment.enabled:
++                    name = 'evidence-assessor'
++                    while name in names:
++                        name += '-assessor'
++                    phases[name] = assessor_persona(name)
++                    names += (name,)
++                    reserved = {name: conf.findings.assessment.tokens}
++                ledger = ReviewBudgetLedger(names, conf.budgets,
++                                            reserved_allocations=reserved)
++                inline_names = {p.name for p in conf.personas
++                                if isinstance(p, PersonaDefinition)} | {
++                    rule.persona.name for rule in conf.routing.rules
++                    if isinstance(rule.persona, PersonaDefinition)}
++                def describe(persona: PersonaDefinition) -> dict[str, Any]:
++                    return {**procedure_record(persona,
++                        procedures=conf.inspection.procedures, inline=persona.name in inline_names),
++                        'system_prompt': persona.system_prompt}
++                phase_descriptions = {n: {**describe(p), 'origin': 'engine',
++                    'version': 'assessment-v1' if n.startswith('evidence-assessor')
++                               else 'debate-chair-v1'} for n, p in phases.items()}
++                cell = {'effective_personas': [p.name for p in personas],
++                        'personas': {p.name: describe(p) for p in personas},
++                        'phase_personas': phase_descriptions,
++                        'allocations': dict(ledger.allocations),
++                        'review_ceiling': conf.budgets.review_max_tokens,
++                        'inputs_sha256': prepared_content_hashes(inputs),
++                        'routing': routing}
++                if conf.analysis.enabled:
++                    cell['analysis_status'] = read_json(inputs.root / 'static-analysis.json')[
++                        'status']
++                case_variants[case.id][variant] = cell
++    snapshot['case_variants'] = case_variants
+     write_json(output / 'snapshot.json', snapshot)
+     capability = await inspect_nare_runtime(runtime)
+     snapshot.update(nare_version=capability.version, nare_contract=capability.contract)
+@@ -204,21 +308,6 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output:
+     async def execute(case: Case, variant: str, conf: ReviewConfig, repeat: int) -> None:
+         run_id = f'{case.id}/{variant}/{repeat}'
+         directory = output / run_id
+-        directory.mkdir(parents=True)
+-        for name, data in captures[case.id].items():
+-            with (directory / name).open('xb') as stream:
+-                stream.write(data)
+-        write_json(directory / 'config.json', conf.to_dict())
+-        write_json(directory / 'config.yaml', conf.to_dict())
+-        if conf.context.enabled:
+-            with (directory / 'metadata.original.json').open('xb') as stream:
+-                stream.write(captures[case.id]['metadata.json'])
+-            (directory / 'metadata.json').write_bytes(derived_metadata[case.id])
+-            capture_repository_context(context_clients[case.id], directory, conf,
+-                                       source=context_clients[case.id].provenance())
+-        capture_static_analysis(directory, conf,
+-                                capture_bytes=analysis_captures.get(case.id))
+-        prepare_review_inputs(directory, conf)
+         started = time.monotonic()
+         record: dict[str, Any] = {
+             'run_id': run_id, 'case_id': case.id, 'variant': variant, 'repeat': repeat,
+diff --git a/src/scrutare/evaluation/tool_capture.py b/src/scrutare/evaluation/tool_capture.py
+new file mode 100644
+index 0000000..e94e65a
+--- /dev/null
++++ b/src/scrutare/evaluation/tool_capture.py
+@@ -0,0 +1,95 @@
++"""Explicit Ruff evidence generation from declared original development sources.
++
++The production review adapter only consumes these files. This opt-in utility uses
++Ruff's built-in parser on copied bytes; it never runs repository commands, imports
++source code, loads project configuration or discovers third-party plugins.
++"""
++from __future__ import annotations
++
++import hashlib
++import json
++import os
++import subprocess
++import tempfile
++import time
++from pathlib import Path
++from typing import Any
++
++from scrutare.evaluation.corpus import load_corpus, read_json, source_contents
++from scrutare.evaluation.runner import write_json
++
++
++def capture_development_ruff(corpus: Path, output: Path, *, executable: Path) -> dict[str, Any]:
++    """Capture exactly Ruff 0.16.10; no provider, GitHub or review invocation."""
++    if any(path.is_symlink() for path in (corpus, *corpus.parents)):
++        raise ValueError('tool capture corpus must be unlinked')
++    manifest = read_json(corpus / 'manifest.json')
++    for entry in manifest['cases']:
++        if entry['split'] != 'development':
++            continue
++        provenance = entry.get('provenance', {})
++        if (provenance.get('origin') != 'original'
++                or provenance.get('license') != 'Elastic-2.0'
++                or provenance.get('external_material', False) is not False):
++            raise ValueError('tool capture requires original licensed development sources')
++    cases = load_corpus(corpus, 'development')
++    sources = {}
++    revisions = {}
++    for case in cases:
++        head = next((source for source in case.context_sources if source.side == 'head'), None)
++        if head is None:
++            raise ValueError('tool capture requires declared head source')
++        sources[case.id] = source_contents(head.directory)
++        revisions[case.id] = head.revision
++    if not cases:
++        raise ValueError('tool capture requires development cases')
++    if any(path.is_symlink() for path in (output, *output.parents)):
++        raise ValueError('tool capture output must be unlinked')
++    executable = executable.absolute()
++    environment = {'PATH': '/usr/bin:/bin', 'LANG': 'C.UTF-8'}
++    version = subprocess.run([str(executable), '--version'], capture_output=True,
++                             check=True, timeout=30, env=environment)
++    if version.stdout.strip() != b'ruff 0.16.10':
++        raise ValueError('tool capture requires Ruff 0.16.10')
++    output = output.absolute()
++    output.mkdir(parents=True, exist_ok=False, mode=0o700)
++    index: dict[str, Any] = {'schema_version': 1, 'tool': {'name': 'ruff', 'version': '0.16.10'},
++        'split': 'development', 'execution': 'isolated_configuration_builtin_parser',
++        'network_isolation': 'not_enforced', 'cases': {}}
++    for case in cases:
++        contents = sources[case.id]
++        selected = sorted(path for path in contents if path.endswith(('.py', '.pyi')))
++        with tempfile.TemporaryDirectory(prefix='scrutare-ruff-capture-') as temporary:
++            root = Path(temporary)
++            for path, data in contents.items():
++                destination = root / path
++                destination.parent.mkdir(parents=True, exist_ok=True)
++                destination.write_bytes(data)
++            command = [str(executable), 'check', '--isolated', '--no-cache',
++                       '--select', 'E4,E7,E9,F', '--output-format', 'json', '--',
++                       *(str(root / path) for path in selected)]
++            started = time.monotonic()
++            result = subprocess.run(command, capture_output=True, timeout=60, env=environment,
++                                    cwd=temporary) if selected else None
++            duration = time.monotonic() - started
++            diagnostics = (json.loads(result.stdout)
++                           if result and result.returncode in (0, 1) else [])
++            status = 'unavailable' if result is None else ('complete' if result.returncode in (0, 1)
++                                                          else 'failed')
++            capture = {'schema_version': 1, 'revision': revisions[case.id], 'tool': index['tool'],
++                'status': status, 'duration_seconds': duration, 'source_root': str(root),
++                'diagnostics': diagnostics}
++            filename = case.id + '.json'
++            write_json(output / filename, capture)
++            index['cases'][case.id] = {
++                'capture': filename, 'capture_sha256': hashlib.sha256(
++                    (output / filename).read_bytes()).hexdigest(),
++                'source_sha256': {path: hashlib.sha256(data).hexdigest()
++                                  for path, data in sorted(contents.items())},
++                'inspected_paths': selected, 'status': status,
++                'exit_code': result.returncode if result else None,
++                'stdout_sha256': hashlib.sha256(result.stdout).hexdigest() if result else None,
++                'stderr_sha256': hashlib.sha256(result.stderr).hexdigest() if result else None}
++    write_json(output / 'index.json', index)
++    os.chmod(output / 'index.json', 0o600)
++    return index
+diff --git a/tests/test_evaluation_architectures.py b/tests/test_evaluation_architectures.py
+new file mode 100644
+index 0000000..275a662
+--- /dev/null
++++ b/tests/test_evaluation_architectures.py
+@@ -0,0 +1,277 @@
++"""Paired component comparisons freeze real production inputs and participants."""
++import asyncio
++import json
++from dataclasses import replace
++from pathlib import Path
++from types import SimpleNamespace
++
++import pytest
++from test_evaluation_context import complete, declared
++from test_evaluation_runner import config
++from test_nare_cli_integration import installed as installed
++
++from scrutare.config import AnalysisSettings, ContextSettings, FindingSettings, RoutingSettings
++from scrutare.engine.session_models import NareRuntime
++from scrutare.evaluation.runner import comparison_configs, run_experiment
++
++
++def test_architecture_arms_isolate_components_with_one_total_ceiling():
++    variants = comparison_configs(config(), comparison_set='architectures')
++    assert list(variants) == ['baseline', 'context', 'procedures', 'evidence',
++                             'assessment', 'tools', 'routing']
++    assert all(v.strategy == 'panel' and v.budgets.review_max_tokens == 400
++               and v.models == config().models for v in variants.values())
++    assert not variants['baseline'].context.enabled
++    assert variants['context'].context.enabled
++    assert variants['context'].inspection.procedures == 'baseline'
++    assert variants['procedures'].inspection.procedures == 'v1'
++    assert variants['procedures'].findings.evidence == 'legacy'
++    assert variants['evidence'].findings.evidence == 'v2'
++    assert variants['assessment'].findings.assessment.enabled
++    assert variants['assessment'].findings.assessment.tokens == 80
++    assert variants['tools'].analysis.enabled and variants['tools'].findings.assessment.enabled
++    assert variants['tools'].findings == variants['assessment'].findings
++    assert variants['routing'].routing.enabled
++    assert not variants['routing'].analysis.enabled
++    assert not variants['routing'].findings.assessment.enabled
++
++
++def test_architecture_comparison_clears_inherited_optional_features():
++    conf = replace(config(), context=ContextSettings(enabled=True),
++                   findings=FindingSettings('v2'), analysis=AnalysisSettings(True),
++                   routing=RoutingSettings(enabled=True))
++    variants = comparison_configs(conf, comparison_set='architectures')
++    assert not variants['baseline'].analysis.enabled and not variants['baseline'].routing.enabled
++    assert variants['baseline'].findings.evidence == 'legacy'
++    assert not variants['evidence'].analysis.enabled and not variants['evidence'].routing.enabled
++
++
++def test_architecture_snapshot_binds_effective_roster_and_inputs_before_runtime(
++        tmp_path, monkeypatch):
++    cases = declared(tmp_path / 'corpus')
++    conf = replace(config(), context=ContextSettings(related_paths=('caller.py',)),
++        routing=RoutingSettings(force=('performance-concurrency',)))
++    async def inspect(runtime):
++        snapshot = json.loads((tmp_path / 'out/snapshot.json').read_text())
++        cells = snapshot['case_variants']['a']
++        assert len(snapshot['expected_runs']) == 21
++        routed = cells['routing']
++        assert len(routed['personas']) == 5
++        assert routed['effective_personas'] == ['senior-dev', 'junior-dev', 'security',
++                                               'devops', 'performance-concurrency']
++        assert routed['allocations']['performance-concurrency'] == 80
++        assert sum(routed['allocations'].values()) == 400
++        assert routed['personas']['performance-concurrency']['version'] == 'routing-v1'
++        assert cells['assessment']['allocations']['evidence-assessor'] == 80
++        assert sum(cells['assessment']['allocations'].values()) == 400
++        assessor = cells['assessment']['phase_personas']['evidence-assessor']
++        assert assessor['system_prompt_sha256']
++        assert assessor['origin'] == 'engine' and assessor['version'] == 'assessment-v1'
++        assert 'repository-context.json' not in cells['baseline']['inputs_sha256']
++        assert 'repository-context.json' in cells['context']['inputs_sha256']
++        assert cells['tools']['analysis_status'] == 'unavailable'
++        (tmp_path / 'corpus/sources/a/head/caller.py').write_text('mutated()\n')
++        return SimpleNamespace(version='2026.10.4', contract=1)
++    async def execute(directory, conf, *, runtime):
++        if conf.context.enabled:
++            assert 'mutated()' not in ''.join(p.read_text() for p in
++                (directory / 'review-inputs').iterdir() if p.is_file())
++        return complete()
++    monkeypatch.setattr('scrutare.evaluation.runner.inspect_nare_runtime', inspect)
++    monkeypatch.setattr('scrutare.evaluation.runner.run_review', execute)
++    result = asyncio.run(run_experiment(cases, conf, tmp_path / 'out',
++        runtime=NareRuntime(Path('/unused')), evidence_kind='offline',
++        comparison_set='architectures'))
++    assert len(result['runs']) == 21 and all(r['status'] == 'complete' for r in result['runs'])
++
++
++def test_real_ruff_capture_parses_sources_without_executing_code_or_config(tmp_path):
++    import hashlib
++    import sys
++
++    from scrutare.evaluation.tool_capture import capture_development_ruff
++
++    root = tmp_path / 'corpus'
++    cases = declared(root)
++    head = root / 'sources/a/head'
++    (head / 'app.py').write_text('value = undefined_name\n')
++    (head / 'ruff.toml').write_text('invalid config must not be loaded!')
++    (head / 'side_effect.py').write_text(
++        f"open({str(tmp_path / 'executed')!r}, 'w').write('executed')\n")
++    binary = Path(sys.executable).parent / 'ruff'
++    index = capture_development_ruff(root, tmp_path / 'tools', executable=binary)
++    entry = index['cases']['a']
++    assert entry['status'] == 'complete' and entry['exit_code'] == 1
++    assert entry['inspected_paths'] == ['app.py', 'caller.py', 'side_effect.py']
++    saved = (tmp_path / 'tools' / entry['capture']).read_bytes()
++    assert hashlib.sha256(saved).hexdigest() == entry['capture_sha256']
++    data = json.loads(saved)
++    assert data['revision'] == cases[0].context_sources[1].revision
++    assert data['tool'] == {'name': 'ruff', 'version': '0.16.10'}
++    assert any(row['code'] == 'F821' and row['message'] == 'Undefined name `undefined_name`'
++               for row in data['diagnostics'])
++    assert entry['source_sha256']['app.py'] == hashlib.sha256(
++        (head / 'app.py').read_bytes()).hexdigest()
++    assert not (tmp_path / 'executed').exists()
++
++
++def test_tool_capture_refuses_external_provenance_before_spawning(tmp_path, monkeypatch):
++    from scrutare.evaluation.tool_capture import capture_development_ruff
++
++    root = tmp_path / 'corpus'
++    declared(root)
++    path = root / 'manifest.json'
++    manifest = json.loads(path.read_text())
++    manifest['cases'][0]['provenance']['origin'] = 'external-pull-request'
++    path.write_text(json.dumps(manifest))
++    spawned = []
++    monkeypatch.setattr('scrutare.evaluation.tool_capture.subprocess.run',
++                        lambda *a, **k: spawned.append(a))
++    import pytest
++    with pytest.raises(ValueError, match='original'):
++        capture_development_ruff(root, tmp_path / 'tools', executable=Path('/unused'))
++    assert not spawned and not (tmp_path / 'tools').exists()
++
++
++def test_tool_capture_rejects_linked_source_root(tmp_path):
++    import pytest
++
++    from scrutare.evaluation.tool_capture import capture_development_ruff
++
++    declared(tmp_path / 'real')
++    (tmp_path / 'linked').symlink_to(tmp_path / 'real', target_is_directory=True)
++    with pytest.raises(ValueError, match='unlinked'):
++        capture_development_ruff(tmp_path / 'linked', tmp_path / 'tools',
++                                 executable=Path('/unused'))
++
++
++@pytest.mark.parametrize('excluded_rename', [False, True])
++def test_installed_nare_architecture_arms_share_captured_tools_and_accounting(
++        tmp_path, installed, monkeypatch, excluded_rename):
++    import sys
++
++    from test_nare_cli_integration import offline_runtime, text, tool
++
++    from scrutare.evaluation.corpus import load_corpus
++    from scrutare.evaluation.tool_capture import capture_development_ruff
++
++    root = tmp_path / 'corpus'
++    cases = declared(root)
++    if excluded_rename:
++        files = cases[0].capture / 'files.json'
++        files.write_text(json.dumps([{'filename': 'async_queue.py',
++            'previous_filename': 'app.py', 'status': 'renamed'}]))
++        patch = cases[0].capture / 'diff.patch'
++        patch.write_text(patch.read_text().replace('b/app.py', 'b/async_queue.py'))
++        head = root / 'sources/a/head'
++        (head / 'app.py').rename(head / 'async_queue.py')
++    capture_development_ruff(root, root / 'tools',
++                             executable=Path(sys.executable).parent / 'ruff')
++    path = root / 'manifest.json'
++    manifest = json.loads(path.read_text())
++    manifest['cases'][0]['analysis_capture'] = 'tools/a.json'
++    path.write_text(json.dumps(manifest))
++    cases = load_corpus(root)
++    runtime = offline_runtime(tmp_path, installed, default={
++        'replies': [tool(), text({'findings': []})]})
++    binary = tmp_path / 'bin'
++    binary.mkdir()
++    gh = binary / 'gh'
++    gh.write_text('#!/bin/sh\nprintf forbidden > "$GH_FORBIDDEN"\nexit 99\n')
++    gh.chmod(0o700)
++    monkeypatch.setenv('PATH', f'{binary}:/usr/bin:/bin')
++    monkeypatch.setenv('GH_FORBIDDEN', str(tmp_path / 'github-called'))
++    conf = replace(config(), context=ContextSettings(related_paths=('caller.py',)),
++                   routing=RoutingSettings(force=() if excluded_rename else
++                                           ('performance-concurrency',)))
++    if excluded_rename:
++        from scrutare.config import PathSettings
++        conf = replace(conf, github=replace(conf.github,
++                       paths=PathSettings(exclude=('async_queue.py',))))
++    result = asyncio.run(run_experiment(cases, conf, tmp_path / 'out',
++        runtime=runtime, evidence_kind='offline', comparison_set='architectures'))
++    assert len(result['runs']) == 21
++    assert all(r['status'] == 'complete' and r['accounting_complete'] for r in result['runs'])
++    assert all(r['usage']['total'] > 0 for r in result['runs'])
++    assert not (tmp_path / 'github-called').exists()
++    snapshot = json.loads((tmp_path / 'out/snapshot.json').read_text())
++    for run in result['runs']:
++        directory = Path(run['run_dir'])
++        cell = snapshot['case_variants']['a'][run['variant']]
++        if run['variant'] == 'tools':
++            analysis = json.loads((directory / 'review-inputs/static-analysis.json').read_text())
++            assert analysis['status'] == 'complete'
++            assert any(d['rule'] == 'F821' for d in analysis['diagnostics'])
++            assert cell['analysis_status'] == 'complete'
++        if run['variant'] == 'routing':
++            routing = json.loads((directory / 'routing.json').read_text())
++            assert routing['allocations'] == cell['allocations']
++            assert routing['effective_personas'] == cell['effective_personas']
++            if excluded_rename:
++                assert cell['effective_personas'] == ['senior-dev', 'junior-dev',
++                                                      'security', 'devops']
++                assert set(cell['allocations'].values()) == {100}
++        for saved in directory.glob('sessions/*/attempt-*/session.json'):
++            session = json.loads(saved.read_text())
++            assert session['policy']['root'] == str(directory / 'review-inputs')
++            assert session['policy']['tools'] == ['read']
++    observations = list((tmp_path / 'out').rglob('offline-observations.json'))
++    assert observations
++    assert all(json.loads(p.read_bytes())['guard_violations'] == [] for p in observations)
++    assert all(json.loads(p.read_bytes())['credential_names'] == [] for p in observations)
++
++
++def test_legacy_baseline_snapshot_retains_four_original_persona_prompts(tmp_path, monkeypatch):
++    from test_evaluation_context import patch_engine
++    from test_evaluation_runner import corpus
++
++    cases = corpus(tmp_path / 'corpus')
++    async def execute(directory, conf, *, runtime):
++        return complete()
++    patch_engine(monkeypatch, execute)
++    asyncio.run(run_experiment(cases, config(), tmp_path / 'out',
++        runtime=NareRuntime(Path('/unused')), evidence_kind='offline'))
++    snapshot = json.loads((tmp_path / 'out/snapshot.json').read_text())
++    assert list(snapshot['personas']) == ['devops', 'junior-dev', 'security', 'senior-dev']
++
++
++def test_snapshot_routing_uses_effective_selection_for_excluded_rename(tmp_path, monkeypatch):
++    from scrutare.config import PathSettings
++    from scrutare.engine.routing import plan_routing
++
++    cases = declared(tmp_path / 'corpus')
++    files = cases[0].capture / 'files.json'
++    files.write_text(json.dumps([{'filename': 'async_queue.py', 'previous_filename': 'app.py',
++                                 'status': 'renamed'}]))
++    patch = cases[0].capture / 'diff.patch'
++    patch.write_text(patch.read_text().replace('b/app.py', 'b/async_queue.py'))
++    head = tmp_path / 'corpus/sources/a/head'
++    (head / 'app.py').rename(head / 'async_queue.py')
++    conf = config()
++    conf = replace(conf, context=ContextSettings(related_paths=('caller.py',)),
++                   github=replace(conf.github, paths=PathSettings(exclude=('async_queue.py',))))
++    async def inspect(runtime):
++        snapshot = json.loads((tmp_path / 'out/snapshot.json').read_text())
++        cell = snapshot['case_variants']['a']['routing']
++        assert cell['effective_personas'] == ['senior-dev', 'junior-dev', 'security', 'devops']
++        assert cell['allocations'] == {'senior-dev': 100, 'junior-dev': 100,
++                                      'security': 100, 'devops': 100}
++        assert cell['routing']['selected_paths'] == []
++        return SimpleNamespace(version='2026.10.4', contract=1)
++    async def execute(directory, cfg, *, runtime):
++        if cfg.routing.enabled:
++            root = directory / 'review-inputs'
++            focus = json.loads((root / 'routing-focus.json').read_text())
++            plan = plan_routing(json.loads((root / 'files.json').read_text()),
++                                tuple(focus['global_supporting_paths']), cfg)
++            snapshot = json.loads((tmp_path / 'out/snapshot.json').read_text())
++            cell = snapshot['case_variants']['a']['routing']
++            assert cell['effective_personas'] == [p.name for p in plan.personas]
++            assert cell['routing'] == plan.record
++        return complete()
++    monkeypatch.setattr('scrutare.evaluation.runner.inspect_nare_runtime', inspect)
++    monkeypatch.setattr('scrutare.evaluation.runner.run_review', execute)
++    result = asyncio.run(run_experiment(cases, conf, tmp_path / 'out',
++        runtime=NareRuntime(Path('/unused')), evidence_kind='offline',
++        comparison_set='architectures'))
++    assert all(r['status'] == 'complete' for r in result['runs'])
