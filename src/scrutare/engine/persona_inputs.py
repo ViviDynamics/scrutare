@@ -46,11 +46,22 @@ class PersonaReviewInput:
     def prompt(self) -> str:
         """Reference only artifacts inside the prepared root, without embedding capture data."""
         validate_prepared_inputs(self.inputs)
+        discovery = ""
+        if (self.inputs.root / "repository-context.json").exists():
+            discovery = (
+                " For initial discovery, batch reads of diff.patch, files.json, context.json, "
+                "and repository-context.json in the same native turn, using these "
+                "read-root-relative names. Then batch relevant captured source reads using "
+                "manifest artifact names as read-root-relative paths; finding locations "
+                "still use logical repository paths. Avoid unnecessary rereads; "
+                "retain all relevant evidence and counterexamples."
+            )
         return with_context_policy(self.inputs, (
             "Review the captured changes using diff.patch, files.json, and context.json "
             "in your read root. files.json is the complete effective file selection; "
             "diff.patch contains only those changes. If the selection is empty, "
             "report no findings. Use only these artifacts as review inputs."
+            + discovery
             + self.evidence_prompt
         ))
 

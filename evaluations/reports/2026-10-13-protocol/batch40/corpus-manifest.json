@@ -1,0 +1,83 @@
+{
+  "cases": [
+    {
+      "capture": "captures/contract-explicit-default-clean",
+      "context_sources": {
+        "base": {
+          "directory": "sources/contract-explicit-default-clean/base",
+          "repository": "pilot/local",
+          "revision": "47d93aad498e463bbcf02337f70bda1918cdef86"
+        },
+        "head": {
+          "directory": "sources/contract-explicit-default-clean/head",
+          "repository": "pilot/local",
+          "revision": "cd1909d9ca4782afbc0c893ec46fe78cea9b54b3"
+        }
+      },
+      "domain": "correctness",
+      "id": "contract-explicit-default-clean",
+      "labels": "labels/contract-explicit-default-clean.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/security-auth-order",
+      "context_sources": {
+        "base": {
+          "directory": "sources/security-auth-order/base",
+          "repository": "pilot/local",
+          "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a"
+        },
+        "head": {
+          "directory": "sources/security-auth-order/head",
+          "repository": "pilot/local",
+          "revision": "6147f5510465027638029cdda0f64ba53068c56a"
+        }
+      },
+      "domain": "security",
+      "id": "security-auth-order",
+      "labels": "labels/security-auth-order.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/tests-consumer-fixture",
+      "context_sources": {
+        "base": {
+          "directory": "sources/tests-consumer-fixture/base",
+          "repository": "pilot/local",
+          "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f"
+        },
+        "head": {
+          "directory": "sources/tests-consumer-fixture/head",
+          "repository": "pilot/local",
+          "revision": "1661991abd288a4346c65099a0a8be1c954c0035"
+        }
+      },
+      "domain": "tests",
+      "id": "tests-consumer-fixture",
+      "labels": "labels/tests-consumer-fixture.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written pilot example; no external PR or code copied."
+      },
+      "split": "development"
+    }
+  ],
+  "schema_version": 1
+}
