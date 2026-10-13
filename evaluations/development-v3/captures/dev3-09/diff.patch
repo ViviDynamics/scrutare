@@ -1,0 +1,17 @@
+diff --git a/src/concurrency/account_locks.py b/src/concurrency/account_locks.py
+index daf8101cb0efb5908d281e46e9506158f1b9f117..48c7d523df8ca007732df3d30d0055a4bdeb7d57 100644
+--- a/src/concurrency/account_locks.py
++++ b/src/concurrency/account_locks.py
+@@ -6,8 +6,9 @@ class InsufficientFunds(Exception):
+ 
+ 
+ def move(source, target, amount):
+-    first, second = sorted((source, target), key=lambda account: account.number)
+-    with first.lock:
+-        with second.lock:
++    with source.lock:
++        if source.balance < amount:
++            raise InsufficientFunds(source.number)
++        with target.lock:
+             source.balance -= amount
+             target.balance += amount

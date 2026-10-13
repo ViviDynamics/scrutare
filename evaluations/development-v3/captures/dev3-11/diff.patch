@@ -1,0 +1,18 @@
+diff --git a/src/inventory/stock.py b/src/inventory/stock.py
+index a02809469adcdee81f64cd23a3b758e13f5c51ab..39c8d13ba1fbc8aa874635018defc1d4d2746c23 100644
+--- a/src/inventory/stock.py
++++ b/src/inventory/stock.py
+@@ -6,9 +6,8 @@ class OutOfStock(Exception):
+ 
+ 
+ def reserve(stock, sku, quantity):
+-    """Reserve `quantity` units, or raise OutOfStock when fewer remain."""
++    """Reserve up to `quantity` units and return how many were reserved."""
+     available = stock.get(sku, 0)
+-    if available < quantity:
+-        raise OutOfStock(sku)
+-    stock[sku] = available - quantity
+-    return quantity
++    granted = min(available, quantity)
++    stock[sku] = available - granted
++    return granted

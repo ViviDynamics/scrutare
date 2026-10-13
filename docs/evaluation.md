@@ -150,6 +150,27 @@ chance to, no discussion round ran, and two cells failed citation validation, so
 the package shows cost and failure differences and no quality difference. Its
 judgments are automated and provisional; no default changed.
 
+## Development corpus v3
+
+[`evaluations/development-v3`](../evaluations/development-v3/README.md) adds twelve
+more original development cases for comparisons the earlier corpus could not
+separate: two defects pinned Ruff names (`F811`, `F821`), a clean facade on which
+Ruff reports unused imports that are its public surface, a defect Ruff cannot see,
+three clean changes that invite a wrong allegation (two on specialist paths),
+three defects on specialist paths (two of them behind a reassuring comment that an
+unchanged file contradicts), and a defect/clean pair whose deciding caller is
+deliberately not captured. The manifest declares no `analysis_capture`; capture
+tool evidence privately per job. Four fixture files are exempt from the
+repository lint for exactly the labeled codes. No dispute is forced, and these
+cases can never serve as unseen validation.
+
+`context.line_counts: true` in the evaluation configuration passes through to
+every context-enabled arm. It is the opt-in described in
+[repository-context.md](repository-context.md); use it to measure whether stating
+the citation bound reduces `line_range_outside_capture` refusals. It changes the
+manifest and prompts the reviewers see, so compare it only against the same arms
+without it.
+
 Ordinary CI uses `--evidence-kind offline` and deterministic provider substitutions
 to verify orchestration and scoring. Offline metrics measure software behavior only.
 A real baseline requires explicit model jobs and completed independent human

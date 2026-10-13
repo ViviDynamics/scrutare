@@ -1,0 +1,31 @@
+{
+  "case_id": "dev3-04",
+  "clean_label_requires_context": false,
+  "counterexamples": [
+    "A caller that passed 0-based pages would be correct."
+  ],
+  "defects": [
+    {
+      "evidence": "pager.py now computes the offset as page * size, while views.py still passes a 1-based page.",
+      "fix_or_counterexample": "Keep (page - 1) * size, or convert the caller.",
+      "id": "dev3-04-defect",
+      "impact": "The first page shows the second page of rows; the first rows are never shown and the last page is empty.",
+      "match_criteria": "Identify the off-by-one page offset or that 1-based callers now skip the first page.",
+      "trigger": "Open the first page of any list view."
+    }
+  ],
+  "defensible_observations": [],
+  "evidence_outside_capture": [],
+  "routing_expectation": {
+    "class": "none",
+    "expected_specialists": []
+  },
+  "tempting_allegations": [],
+  "tool_expectation": {
+    "relation": "silent_on_a_real_defect",
+    "ruff_codes": []
+  },
+  "unchanged_supporting_paths": [
+    "src/listing/views.py"
+  ]
+}

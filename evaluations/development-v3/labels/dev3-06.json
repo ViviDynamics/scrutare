@@ -1,0 +1,28 @@
+{
+  "case_id": "dev3-06",
+  "clean_label_requires_context": false,
+  "counterexamples": [
+    "A reader that runs while a writer holds the lock receives the previous complete tuple, exactly as a reader that had taken the lock a moment earlier would."
+  ],
+  "defects": [],
+  "defensible_observations": [],
+  "evidence_outside_capture": [],
+  "routing_expectation": {
+    "class": "covered",
+    "expected_specialists": [
+      "performance-concurrency"
+    ]
+  },
+  "tempting_allegations": [
+    {
+      "allegation": "snapshot now reads shared state without the lock, so a request can observe a partially updated route table or race with add/remove.",
+      "evidence": "route_table.py module docstring; add and remove rebind self._routes to a new tuple under the lock in both revisions.",
+      "why_wrong": "snapshot performs one attribute read that yields a complete immutable tuple. Writers never mutate a published tuple; they bind a new one. The base released the lock before its caller iterated, so it gave the same old-or-new guarantee and no more."
+    }
+  ],
+  "tool_expectation": {
+    "relation": "not_a_tools_case",
+    "ruff_codes": []
+  },
+  "unchanged_supporting_paths": []
+}

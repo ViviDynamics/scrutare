@@ -1,0 +1,14 @@
+diff --git a/src/listing/pager.py b/src/listing/pager.py
+index 711abaffec37de7412056c0b12f10828cdcd234e..333df3f7b720bcb0a21cfcec049d80cbba2fa3e7 100644
+--- a/src/listing/pager.py
++++ b/src/listing/pager.py
+@@ -2,6 +2,6 @@
+ 
+ 
+ def page_slice(items, page, size):
+-    """Return one page of items. Pages are numbered from 1."""
+-    start = (page - 1) * size
+-    return items[start:start + size]
++    """Return one page of items."""
++    offset = page * size
++    return items[offset:offset + size]

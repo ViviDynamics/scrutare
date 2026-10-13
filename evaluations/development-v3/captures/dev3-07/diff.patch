@@ -1,0 +1,25 @@
+diff --git a/src/migrations/0009_backfill_region.py b/src/migrations/0009_backfill_region.py
+index 7167b4966db3f033e6a4b1035043c340000002ab..e41a0ba24633424a798937e47b29d17cb6bba70f 100644
+--- a/src/migrations/0009_backfill_region.py
++++ b/src/migrations/0009_backfill_region.py
+@@ -1,8 +1,15 @@
+ """Backfill accounts.region for rows created before the column existed."""
+ 
++BATCH = 500
+ 
+-def upgrade(connection):
+-    connection.execute(
+-        "UPDATE accounts SET region = COALESCE((SELECT region FROM country_regions"
+-        " WHERE country = accounts.country), 'unknown') WHERE region IS NULL")
+-    connection.commit()
++
++def upgrade(connection, batch=BATCH):
++    """Backfill in small committed batches so the table is never locked for long."""
++    while True:
++        cursor = connection.execute(
++            "UPDATE accounts SET region = COALESCE((SELECT region FROM country_regions"
++            " WHERE country = accounts.country), 'unknown') WHERE id IN ("
++            "SELECT id FROM accounts WHERE region IS NULL ORDER BY id LIMIT ?)", (batch,))
++        connection.commit()
++        if cursor.rowcount == 0:
++            break

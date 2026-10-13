@@ -1,0 +1,18 @@
+{
+  "cases": 12,
+  "clean_controls_verified": 5,
+  "clean_labels_requiring_context": 0,
+  "commit_pairs_reconstructed": 12,
+  "control_executions": 24,
+  "defects_verified": 7,
+  "evidence_outside_capture_cases": 2,
+  "failures": [],
+  "patches_verified": 12,
+  "routing_classes": {
+    "covered": 5,
+    "missed": 0,
+    "none": 7
+  },
+  "schema_version": 1,
+  "tempting_allegation_cases": 5
+}

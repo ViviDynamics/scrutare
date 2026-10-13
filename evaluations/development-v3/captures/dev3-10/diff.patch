@@ -1,0 +1,16 @@
+diff --git a/src/migrations/0011_unique_email.py b/src/migrations/0011_unique_email.py
+index 545949b35beb9e4a05849c120a6948b71edf1028..357bef42638ce8dde90b689428de6638e0adac01 100644
+--- a/src/migrations/0011_unique_email.py
++++ b/src/migrations/0011_unique_email.py
+@@ -2,10 +2,6 @@
+ 
+ 
+ def upgrade(connection):
+-    # Addresses stored before signup normalised them can differ only by case.
+-    # Keep the oldest account and park the others on a placeholder for support to merge.
+-    connection.execute(
+-        "UPDATE accounts SET email = 'duplicate-' || id || '@invalid' WHERE id NOT IN ("
+-        "SELECT MIN(id) FROM accounts GROUP BY lower(email))")
++    # signup.normalise lowercases every address, so duplicates cannot exist.
+     connection.execute("CREATE UNIQUE INDEX accounts_email_unique ON accounts (lower(email))")
+     connection.commit()

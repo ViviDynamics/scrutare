@@ -1,0 +1,28 @@
+{
+  "case_id": "dev3-05",
+  "clean_label_requires_context": false,
+  "counterexamples": [
+    "Both compared digests are public: the expected one is published to every client and the actual one is computed from bytes the caller already holds."
+  ],
+  "defects": [],
+  "defensible_observations": [],
+  "evidence_outside_capture": [],
+  "routing_expectation": {
+    "class": "none",
+    "expected_specialists": []
+  },
+  "tempting_allegations": [
+    {
+      "allegation": "Replacing hmac.compare_digest with == opens a timing side channel on the digest comparison.",
+      "evidence": "manifest.py module docstring and PUBLISHED table; verify.py computes a plain SHA-256 of the payload with no key.",
+      "why_wrong": "A timing channel matters only when one side is secret. The expected checksum is published in the release manifest and the actual digest is derived from the payload being checked, so there is nothing to leak; the result is identical for every input."
+    }
+  ],
+  "tool_expectation": {
+    "relation": "not_a_tools_case",
+    "ruff_codes": []
+  },
+  "unchanged_supporting_paths": [
+    "src/downloads/manifest.py"
+  ]
+}

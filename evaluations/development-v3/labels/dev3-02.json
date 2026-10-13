@@ -1,0 +1,31 @@
+{
+  "case_id": "dev3-02",
+  "clean_label_requires_context": false,
+  "counterexamples": [
+    "Ordinary requests, polling and small uploads still work."
+  ],
+  "defects": [
+    {
+      "evidence": "http_settings.py renames DEFAULT_TIMEOUT to DEFAULT_TIMEOUT_SECONDS at its definition and in connect_options, but upload_options still reads DEFAULT_TIMEOUT in the large-upload branch.",
+      "fix_or_counterexample": "Rename the remaining use in upload_options.",
+      "id": "dev3-02-defect",
+      "impact": "Large uploads raise NameError instead of receiving a longer timeout.",
+      "match_criteria": "Identify the remaining reference to the old constant name in upload_options, or the resulting NameError for large uploads.",
+      "trigger": "Call upload_options with a size above LARGE_UPLOAD_BYTES."
+    }
+  ],
+  "defensible_observations": [],
+  "evidence_outside_capture": [],
+  "routing_expectation": {
+    "class": "none",
+    "expected_specialists": []
+  },
+  "tempting_allegations": [],
+  "tool_expectation": {
+    "relation": "names_the_defect",
+    "ruff_codes": [
+      "F821"
+    ]
+  },
+  "unchanged_supporting_paths": []
+}

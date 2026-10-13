@@ -1,0 +1,9 @@
+[
+  "src/downloads/manifest.py",
+  "src/listing/views.py",
+  "src/plugins/builtin.py",
+  "src/plugins/registry.py",
+  "src/region_reader.py",
+  "src/render/pricing_page.py",
+  "src/signup.py"
+]

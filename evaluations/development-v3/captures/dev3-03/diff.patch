@@ -1,0 +1,12 @@
+diff --git a/src/plugins/api.py b/src/plugins/api.py
+index d0526e33dfd45616be348ab471c439737774fb42..722e80056dbff665cff991e0efc6baaceac88561 100644
+--- a/src/plugins/api.py
++++ b/src/plugins/api.py
+@@ -4,3 +4,7 @@ from registry import Plugin, register
+ 
+ def describe(plugin):
+     return f"{plugin.name} ({plugin.version})"
++
++
++def describe_all(plugins):
++    return [describe(plugin) for plugin in sorted(plugins, key=lambda item: item.name)]

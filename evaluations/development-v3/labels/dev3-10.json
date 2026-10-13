@@ -1,0 +1,33 @@
+{
+  "case_id": "dev3-10",
+  "clean_label_requires_context": false,
+  "counterexamples": [
+    "A database created entirely after release 2.3 migrates."
+  ],
+  "defects": [
+    {
+      "evidence": "0011_unique_email.py drops the step that resolves case-variant duplicates, citing signup.normalise, while signup.py states that normalisation applies only to signups since release 2.3.",
+      "fix_or_counterexample": "Keep the duplicate-resolution step before the index.",
+      "id": "dev3-10-defect",
+      "impact": "Creating the unique index fails and the migration cannot be applied.",
+      "match_criteria": "Identify that pre-existing case-variant duplicates still exist and make the unique index creation fail.",
+      "trigger": "Run the migration on a database that holds two accounts created before release 2.3 whose addresses differ only by case."
+    }
+  ],
+  "defensible_observations": [],
+  "evidence_outside_capture": [],
+  "routing_expectation": {
+    "class": "covered",
+    "expected_specialists": [
+      "data-integrity-migrations"
+    ]
+  },
+  "tempting_allegations": [],
+  "tool_expectation": {
+    "relation": "not_a_tools_case",
+    "ruff_codes": []
+  },
+  "unchanged_supporting_paths": [
+    "src/signup.py"
+  ]
+}
