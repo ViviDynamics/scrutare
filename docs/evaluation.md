@@ -142,7 +142,8 @@ for checking. Pass `related-paths.json` as `context.related_paths`. No dispute i
 forced, and these cases can never serve as unseen validation.
 
 The [qualification and first routing/dispute measurements](../evaluations/reports/2026-10-13-qualification-rerun/README.md)
-retain one frozen 36-cell schedule that passed its gate without a rerun, 24
+retain one frozen 36-cell schedule that passed its gate without a rerun (the
+second schedule with that configuration; the first failed), 24
 routed-versus-fixed cells in which specialists activated from paths alone, and
 12 cells on a dispute-prone case. Every arm found every labeled defect it had the
 chance to, no discussion round ran, and two cells failed citation validation, so

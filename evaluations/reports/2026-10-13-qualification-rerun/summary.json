@@ -9,7 +9,6 @@
    "arms": {
     "aggregate": {
      "actual_assessor_calls": 0,
-     "automated_false_positive_findings": 0,
      "automated_matched_findings": 0,
      "cells": 3,
      "cells_needing_rerun": 0,
@@ -65,7 +64,6 @@
      },
      "provisional_defect_recall": null,
      "provisional_defect_recall_wilson95": null,
-     "provisional_finding_precision": null,
      "total_tokens": 118856,
      "usage": {
       "cache_read": 102695,
@@ -76,7 +74,6 @@
     },
     "assessed": {
      "actual_assessor_calls": 0,
-     "automated_false_positive_findings": 0,
      "automated_matched_findings": 0,
      "cells": 3,
      "cells_needing_rerun": 0,
@@ -132,7 +129,6 @@
      },
      "provisional_defect_recall": null,
      "provisional_defect_recall_wilson95": null,
-     "provisional_finding_precision": null,
      "total_tokens": 118891,
      "usage": {
       "cache_read": 116115,
@@ -143,7 +139,6 @@
     },
     "focused1": {
      "actual_assessor_calls": 0,
-     "automated_false_positive_findings": 0,
      "automated_matched_findings": 0,
      "cells": 3,
      "cells_needing_rerun": 0,
@@ -199,7 +194,6 @@
      },
      "provisional_defect_recall": null,
      "provisional_defect_recall_wilson95": null,
-     "provisional_finding_precision": null,
      "total_tokens": 118863,
      "usage": {
       "cache_read": 116115,
@@ -210,7 +204,6 @@
     },
     "focused3": {
      "actual_assessor_calls": 0,
-     "automated_false_positive_findings": 0,
      "automated_matched_findings": 0,
      "cells": 3,
      "cells_needing_rerun": 0,
@@ -266,7 +259,6 @@
      },
      "provisional_defect_recall": null,
      "provisional_defect_recall_wilson95": null,
-     "provisional_finding_precision": null,
      "total_tokens": 118877,
      "usage": {
       "cache_read": 116115,
@@ -307,7 +299,6 @@
    "arms": {
     "aggregate": {
      "actual_assessor_calls": 0,
-     "automated_false_positive_findings": 0,
      "automated_matched_findings": 24,
      "cells": 9,
      "cells_needing_rerun": 0,
@@ -410,7 +401,6 @@
       0.6097,
       1.0
      ],
-     "provisional_finding_precision": 1.0,
      "total_tokens": 338670,
      "usage": {
       "cache_read": 275118,
@@ -421,7 +411,6 @@
     },
     "assessed": {
      "actual_assessor_calls": 6,
-     "automated_false_positive_findings": 0,
      "automated_matched_findings": 24,
      "cells": 9,
      "cells_needing_rerun": 0,
@@ -524,7 +513,6 @@
       0.6097,
       1.0
      ],
-     "provisional_finding_precision": 1.0,
      "total_tokens": 434598,
      "usage": {
       "cache_read": 362773,
@@ -535,7 +523,6 @@
     },
     "focused1": {
      "actual_assessor_calls": 6,
-     "automated_false_positive_findings": 0,
      "automated_matched_findings": 24,
      "cells": 9,
      "cells_needing_rerun": 0,
@@ -638,7 +625,6 @@
       0.6097,
       1.0
      ],
-     "provisional_finding_precision": 1.0,
      "total_tokens": 434678,
      "usage": {
       "cache_read": 362767,
@@ -649,7 +635,6 @@
     },
     "focused3": {
      "actual_assessor_calls": 6,
-     "automated_false_positive_findings": 0,
      "automated_matched_findings": 24,
      "cells": 9,
      "cells_needing_rerun": 0,
@@ -752,7 +737,6 @@
       0.6097,
       1.0
      ],
-     "provisional_finding_precision": 1.0,
      "total_tokens": 435412,
      "usage": {
       "cache_read": 362883,
@@ -795,7 +779,6 @@
    "arms": {
     "evidence": {
      "actual_assessor_calls": 0,
-     "automated_false_positive_findings": 0,
      "automated_matched_findings": 40,
      "cells": 12,
      "cells_needing_rerun": 0,
@@ -919,7 +902,6 @@
       0.552,
       0.953
      ],
-     "provisional_finding_precision": 1.0,
      "total_tokens": 515532,
      "usage": {
       "cache_read": 416404,
@@ -930,7 +912,6 @@
     },
     "routing": {
      "actual_assessor_calls": 0,
-     "automated_false_positive_findings": 0,
      "automated_matched_findings": 54,
      "cells": 12,
      "cells_needing_rerun": 0,
@@ -1056,7 +1037,6 @@
       0.7575,
       1.0
      ],
-     "provisional_finding_precision": 1.0,
      "total_tokens": 640429,
      "usage": {
       "cache_read": 477868,
@@ -1095,7 +1075,7 @@
    }
   }
  },
- "judgments": "automated and provisional",
+ "judgments": "automated keyword filters, provisional",
  "paired": {
   "assessment_vs_aggregate": {
    "baseline": "aggregate",
@@ -1458,8 +1438,8 @@
   "dispute": 12.0,
   "limit_usd": 75.0,
   "method": "attempts x configured ceiling x advertised output rate",
-  "observed_usage_note": "all cached and uncached input at the advertised input rate; no invoice or billed amount is asserted",
-  "observed_usage_upper_estimate_usd": 8.46,
+  "observed_usage_estimate_usd": 8.45,
+  "observed_usage_note": "completed jobs only, all cached and uncached input at the advertised input rate; in-flight calls of the aborted job are unknown; no invoice or billed amount is asserted",
   "qualification": 36.0,
   "routing": 24.0,
   "total_nominal_usd": 75.0

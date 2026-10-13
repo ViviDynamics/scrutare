@@ -65,10 +65,17 @@ def test_reproduction_refuses_changed_evidence(tmp_path, monkeypatch):
 def test_unmatched_finding_stays_pending_never_false(tmp_path):
     reproduce = module()
     run = {'run_id': 'dev2-01/evidence/1', 'case_id': 'dev2-01', 'findings': [
-        {'file': 'src/concurrency/counter.py', 'side': 'RIGHT', 'problem': 'Unclear naming.'},
-        {'file': 'src/other.py', 'side': 'RIGHT',
+        {'file': 'src/concurrency/counter.py', 'side': 'RIGHT', 'line': 11,
+         'problem': 'Unclear naming.'},
+        {'file': 'src/other.py', 'side': 'RIGHT', 'line': 11,
          'problem': 'Computing outside the lock loses increments.'},
-        {'file': 'src/concurrency/counter.py', 'side': 'RIGHT',
+        {'file': 'src/concurrency/counter.py', 'side': 'RIGHT', 'line': 3,
+         'problem': 'Computing the count outside the lock loses concurrent increments.'},
+        {'file': 'src/concurrency/counter.py', 'side': 'RIGHT', 'line': 11,
          'problem': 'Computing the count outside the lock loses concurrent increments.'}]}
-    assert [reproduce.decide(run, i) for i in range(3)] == [None, None, 'dev2-01-defect']
-    assert reproduce.decide({**run, 'case_id': 'dev2-07'}, 2) is None
+    assert [reproduce.decide(run, i) for i in range(4)] == [
+        None, None, None, 'dev2-01-defect']
+    assert reproduce.decide({**run, 'case_id': 'dev2-07'}, 3) is None
+    summary = json.loads((PACKAGE / 'summary.json').read_text())
+    assert summary['pending_human_findings'] == 0 and summary['automated_decisions'] == 190
+    assert 'precision' not in json.dumps(summary)

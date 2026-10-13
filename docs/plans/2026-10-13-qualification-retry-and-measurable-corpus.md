@@ -79,7 +79,11 @@ source frozen for every run below.
 
 The qualification schedule passed its unchanged criteria on the first attempt of
 all 36 cells; no upstream failure occurred, so no rerun was used and the rerun
-path was not exercised against the live provider. Nominal $36.
+path was not exercised against the live provider. Nominal $36. The Sol100k gate
+had declared a stop if unqualified; this schedule ran because #51 then planned a
+separate prospective run and this increment's brief allowed one schedule plus at
+most two more, which supersedes that stop rule.
+One of two schedules with this configuration has therefore passed.
 
 With $39 left, the subset was chosen before any call, from label classes only:
 routed versus fixed panel on two covered and two missed development-v2 cases
@@ -89,7 +93,7 @@ the cheapest chance of a first real dispute. Captured Ruff evidence was not run:
 the fixtures pass the selected rules, so that arm had nothing to add.
 
 The first routing freeze had an operator error (the related paths were frozen as
-one space-joined string). It was stopped after 13 seconds, is retained and
+one space-joined string). It was stopped within about 13 seconds, is retained and
 published as aborted, counts $3, and is used in no result. The corrected jobs
 were refrozen with zero reruns so that first attempts fit the remaining $36.
 Total nominal $75.

@@ -14,20 +14,24 @@ from pathlib import Path
 JOBS = ('qualification', 'routing', 'dispute')
 # Proxy-advertised gpt-6.1-sol rates retained on 2026-10-13 (per token, US dollars).
 INPUT_RATE, OUTPUT_RATE = 2e-06, 1e-05
-# One labeled defect per case. A finding is matched automatically only when it is
-# anchored in the labeled changed file and its problem statement names the trigger.
+# One labeled defect per case: (defect id, changed file, lines of the labeled change,
+# keyword patterns). These are keyword filters written after the outputs existed and
+# confirmed by reading every distinct problem statement. They are not a semantic judge:
+# a differently worded wrong finding on the same line could match. Anything they do
+# not match is left pending for a person and is never counted as a false positive.
 RULES = {
-    'security-auth-order': ('security-auth-order-defect', 'api.py', (
+    'security-auth-order': ('security-auth-order-defect', 'api.py', (5,), (
         r'(clear|delet)\w*.*before.*(authori|permi|ownership)',
         r'(authori|permi)\w*.*before.*clear')),
-    'tests-consumer-fixture': ('tests-consumer-fixture-defect', 'formatting.py', (
+    'tests-consumer-fixture': ('tests-consumer-fixture-defect', 'formatting.py', (2,), (
         r'label.*(test|contract)',)),
-    'dev2-01': ('dev2-01-defect', 'src/concurrency/counter.py', (
+    'dev2-01': ('dev2-01-defect', 'src/concurrency/counter.py', (11,), (
         r'outside the lock.*(los|overwrit)', r'overwrit.*outside the lock')),
-    'dev2-06': ('dev2-06-defect', 'src/ledger_transaction.py', (r'commit.*atomic',)),
-    'dev2-09': ('dev2-09-defect', 'src/jobs/dispatcher.py', (
+    'dev2-06': ('dev2-06-defect', 'src/ledger_transaction.py', (16, 17), (
+        r'commit.*atomic',)),
+    'dev2-09': ('dev2-09-defect', 'src/jobs/dispatcher.py', (11,), (
         r'outside the lock.*(same job|duplicate)', r'concurrent claims.*both succeed')),
-    'dev2-10': ('dev2-10-defect', 'src/billing/orders.py', (r'delet\w*.*line items',)),
+    'dev2-10': ('dev2-10-defect', 'src/billing/orders.py', (6,), (r'delet\w*.*line items',)),
 }
 
 
@@ -47,10 +51,10 @@ def decide(run, index):
     rule = RULES.get(run['case_id'])
     if rule is None:
         return None
-    defect, path, patterns = rule
+    defect, path, lines, patterns = rule
     text = finding['problem'].lower()
-    if finding['file'] == path and finding['side'] == 'RIGHT' and any(
-            re.search(pattern, text) for pattern in patterns):
+    if (finding['file'] == path and finding['side'] == 'RIGHT' and finding['line'] in lines
+            and any(re.search(pattern, text) for pattern in patterns)):
         return defect
     return None
 
@@ -65,8 +69,8 @@ def decisions(package):
                     rows.append({'job': job, 'finding_id': finding_id(run, index),
                                  'defect_id': defect, 'reviewer': 'reproduce.py RULES',
                                  'method': 'automated', 'ambiguous': False,
-                                 'rationale': 'anchored in the labeled file; problem '
-                                              'statement names the labeled trigger'})
+                                 'rationale': 'anchored on the labeled changed line; '
+                                              'problem statement passes the keyword filter'})
     return rows
 
 
@@ -195,10 +199,7 @@ def summarize(package, job, matched):
             'cells_needing_rerun': sum(len(c['attempts']) > 1 for c in selected),
             'findings': sum(c['findings'] for c in selected),
             'automated_matched_findings': judged,
-            'automated_false_positive_findings': 0,
             'pending_human_findings': counts['pending_findings'],
-            'provisional_finding_precision': 1.0 if judged and not counts[
-                'pending_findings'] else None,
             'defect_cells': counts['defect_cells'],
             'defect_cells_detected': counts['defect_cells_detected'],
             'provisional_defect_recall': (round(counts['defect_cells_detected']
@@ -273,7 +274,7 @@ def build(package):
     matched = {row['finding_id'] for row in rows}
     summaries = {job: summarize(package, job, matched) for job in JOBS}
     return rows, {
-        'schema_version': 1, 'judgments': 'automated and provisional',
+        'schema_version': 1, 'judgments': 'automated keyword filters, provisional',
         'actual_human_judgments': 0, 'holdout_used': False, 'defaults_promoted': False,
         'automated_decisions': len(rows),
         'pending_human_findings': sum(a['pending_human_findings'] for s in summaries.values()
@@ -297,10 +298,13 @@ def build(package):
             'total_nominal_usd': round(3.0 + sum(
                 s['nominal_ceiling_estimate_usd'] for s in summaries.values()), 2),
             'limit_usd': 75.0,
-            'observed_usage_upper_estimate_usd': round(sum(
-                s['observed_usage_upper_estimate_usd'] for s in summaries.values()), 2),
-            'observed_usage_note': 'all cached and uncached input at the advertised input '
-                                   'rate; no invoice or billed amount is asserted'}}
+            'observed_usage_estimate_usd': round(sum(
+                (s['usage']['input'] + s['usage']['cache_read'] + s['usage']['cache_write'])
+                * INPUT_RATE + s['usage']['output'] * OUTPUT_RATE
+                for s in summaries.values()), 2),
+            'observed_usage_note': 'completed jobs only, all cached and uncached input at the '
+                                   'advertised input rate; in-flight calls of the aborted job '
+                                   'are unknown; no invoice or billed amount is asserted'}}
 
 
 def main():
