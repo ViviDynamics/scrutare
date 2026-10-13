@@ -18,7 +18,7 @@ were already observed; development measurements cannot establish unseen quality.
   context/procedures/v2 without assessment.
 - Missing static captures remain explicitly unavailable rather than clean results.
 - Focused debate follows merged #49 API and compares matched assessment rails.
-- Global shipping budgets carry forward: one rebase used; one remains.
+- Global shipping budgets carry forward: both permitted rebases used; none remain.
 
 ## Tasks
 - [x] 1. Add isolated architecture arms: red tests prove flags and equal ceilings.

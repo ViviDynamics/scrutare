@@ -1,0 +1,32 @@
+{
+  "files": {
+    "README.md": "3ffba551ebea4081ff28bd21097871b27e7893114b99438cde54973ee29bc809",
+    "adjudicate-focused.py": "8abbdf4b101af8ad217e82016750eb016b8da17eae28dc9a41a32ec2c85d23be",
+    "adjudication-provenance.json": "c8b546da1169be281429e81c51617974984be8964168d8b7e7bb3f74fcbe722a",
+    "automated-decisions.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "automated-focused-report.json": "abe9193d746838d3576abdb8ad0f4c8d518a7d3675176c5d8406be6ccd338ad4",
+    "automated-focused-report.md": "1a84baa0c6fcbebb37642cd72609edd52bd88877b5c31c85692c79cd71710091",
+    "automated-metrics.json": "d84cf3ffd5048864f650fded149ee60d63b9739af8aa7c8caf217ab42fe12e71",
+    "blinded-packet.json": "544afd64671ea1d03ada43b37b74a27f5f2ebfd36ae826361a86e4b43cef2b0b",
+    "candidate-source.patch": "8d6c1b56b8a930a84056c9ec0341a6a7066de000d414797901260a4947a172dd",
+    "corpus-manifest.json": "0ebfd2d6af7a075c372ef55b1fc2f633784fd69f2dd3ddf21150dc60cc58cdcd",
+    "evaluation.json": "456cf2789ce396e320b43aa3dba199d722072ce07d4d705b98bc5730dfb3bba5",
+    "experiment.json": "de3e91854f54558cc71a4f8a7b335b4105ab6d92ba9422d9404554ab663b3289",
+    "normalized-diagnostics.json": "6af122fe33187a19d3d6ebfe3e138877d3fde0af67d774aaa5126982068b852e",
+    "original-publication-sha256.json": "e09fe8725c070915845d7d72490c4861d5d52b0fd8abb5d49de854f9230d2cc4",
+    "pending-human-adjudication.json": "066baa440b48f50d5663f821c5fe36cce93f3e1f5eca4928346fcc3b64517251",
+    "public-reproduction-verification.json": "53821c6a9bb4b60f2647196cbab25895117157d054c3b55b2bfa236d48221d0f",
+    "report-focused.py": "ab25443558a56627a3dde8df74acc6629fe91efd70847ad33e0b73139af50ec2",
+    "run-provenance.json": "3913184e73654dee30272e9a5001a1e2918f1b941c19802aa396b8372ba85035",
+    "snapshot.json": "6d26ba274a18a4e42851b9cf3c004e8cdf81efc84dd5cfe6666dd0050c520710",
+    "source-provenance.json": "2dccfcaf6f42c1d9e6dc1f68a93fe9e253799588b8e9595653e0d44ac2abb36e",
+    "source-reconstruction.json": "4c9492f1e0877e275c69f6cfe2df3f8ba00f097a5f6fcf00b5fba375a1f9751a"
+  },
+  "publication_transformations": [
+    "run directories use relative stable run identities; executable uses version reference",
+    "source provenance omits private argv, paths and credential references",
+    "portable reproduction scripts use explicit public corpus/output directories",
+    "original private hashes retained separately; judgments and quality metrics unchanged"
+  ],
+  "schema_version": 1
+}

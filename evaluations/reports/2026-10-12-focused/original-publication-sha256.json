@@ -1,0 +1,18 @@
+{
+  "files": {
+    "adjudicate-focused.py": "4e2833c6032c69702eee040b96f5b1722a87e61c94509cdee35271555c39ef02",
+    "adjudication-provenance.json": "c8b546da1169be281429e81c51617974984be8964168d8b7e7bb3f74fcbe722a",
+    "automated-decisions.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "automated-focused-report.json": "276bf501cc2cd8b623c534ba6eaecbdfd1d3c9537137a35dd3fa70e2119de1db",
+    "automated-focused-report.md": "1a84baa0c6fcbebb37642cd72609edd52bd88877b5c31c85692c79cd71710091",
+    "automated-metrics.json": "d84cf3ffd5048864f650fded149ee60d63b9739af8aa7c8caf217ab42fe12e71",
+    "blinded-packet.json": "544afd64671ea1d03ada43b37b74a27f5f2ebfd36ae826361a86e4b43cef2b0b",
+    "experiment.json": "7ba614aeb298e7e56284389fbaf717e93d47e22e4670e84d3b054838911a91ab",
+    "normalized-diagnostics.json": "6af122fe33187a19d3d6ebfe3e138877d3fde0af67d774aaa5126982068b852e",
+    "pending-human-adjudication.json": "066baa440b48f50d5663f821c5fe36cce93f3e1f5eca4928346fcc3b64517251",
+    "report-focused.py": "e65776a9f39eec74888bbcc8a232e3e5ed43ea0ca9d4326d54534413345bfc6b",
+    "snapshot.json": "bd54572bbe957f9106f7ea608c21fa87f7ddf3fe141651b74c84dd364b68e914",
+    "source-provenance.json": "2dccfcaf6f42c1d9e6dc1f68a93fe9e253799588b8e9595653e0d44ac2abb36e"
+  },
+  "schema_version": 1
+}

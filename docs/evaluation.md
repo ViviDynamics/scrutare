@@ -280,3 +280,15 @@ larger token ceiling. Preserve actual attempted/completed rounds and extra cost,
 including bypassed discussions and exhausted disputes. These development results
 cannot promote a default or substitute for independently adjudicated, unseen
 holdout evidence. Ordinary baseline/procedures/architecture modes remain available.
+
+The [published architecture development experiment](../evaluations/reports/2026-10-12-architectures/README.md)
+retains 420 scheduled cells, including 185 complete, 116 failed and 119 invalid
+outcomes. Its 652 automated observation judgments leave 54 pending actual humans.
+The [focused protocol experiment](../evaluations/reports/2026-10-12-focused/README.md)
+retains 240 cells: three complete empty results, 178 failed and 59 invalid. Discovery
+failures prevented every native assessor invocation and all actual discussion
+rounds; the one-versus-three bounds were not exercised. No specialists activated
+on the original pilot paths. These are protocol reliability limits on the current
+aliased model rail, with no demonstrated architecture winner or default promotion.
+Both packages include portable scoring/table reproduction, source reconstruction
+patches, public artifact hashes and explicit provenance/privacy limitations.

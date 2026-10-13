@@ -1,0 +1,12 @@
+{
+  "diagnostics": [],
+  "duration_seconds": 0.012219808995723724,
+  "revision": "db2db4b745c013b2d2e4e36777af29a7ec916d51",
+  "schema_version": 1,
+  "source_root": "/tmp/scrutare-ruff-capture-fa_tmnzi",
+  "status": "complete",
+  "tool": {
+    "name": "ruff",
+    "version": "0.16.10"
+  }
+}
