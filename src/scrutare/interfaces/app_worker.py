@@ -142,8 +142,16 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
                 f"https://github.com/{job['repository']}/pull/{job['number']}",
                 "--config", str(config_path), "--nare-executable",
                 os.environ.get("SCRUTARE_APP_NARE_EXECUTABLE", "nare")]
-        completed = runner(argv, cwd=repository_root, env=environment,
-                           capture_output=True, shell=False)
+        try:
+            completed = runner(argv, cwd=repository_root, env=environment,
+                               capture_output=True, shell=False, timeout=settings.job_timeout)
+        except subprocess.TimeoutExpired as expired:
+            (root / "stdout.json").write_bytes(expired.stdout or b"")
+            (root / "stderr.log").write_bytes(expired.stderr or b"")
+            store.finish(job["id"], "interrupted", {
+                "error": "review exceeded the job deadline; delivery may have occurred; "
+                         "inspect job artifacts", "work_dir": str(root)})
+            return
         # CLI diagnostics exclude credentials. Save both streams for failed-run inspection.
         (root / "stdout.json").write_bytes(completed.stdout)
         (root / "stderr.log").write_bytes(completed.stderr)

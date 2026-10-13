@@ -30,6 +30,7 @@ def load_settings() -> AppSettings:
             Path(os.environ.get("SCRUTARE_APP_DATA_DIR", "/data")),
             tuple(json.loads(os.environ["SCRUTARE_APP_MODEL_ORIGINS"])),
             int(os.environ.get("SCRUTARE_APP_MAX_PENDING", "100")),
+            int(os.environ.get("SCRUTARE_APP_JOB_TIMEOUT", "3300")),
         )
         if not settings.private_key.is_file():
             raise AppError("App private key file is unavailable")
@@ -130,14 +131,16 @@ def make_server(settings: AppSettings, store: JobStore, host: str, port: int, *,
 
 
 class WorkerProcess:
-    """Forward shutdown to the CLI so its owned nare groups can clean up."""
+    """Bound each CLI run and forward shutdown so its owned nare groups can clean up."""
 
-    def __init__(self) -> None:
+    def __init__(self, grace: float = 30) -> None:
         self.lock = threading.Lock()
         self.process: subprocess.Popen[bytes] | None = None
         self.stopping = False
+        self.grace = grace
 
-    def __call__(self, argv: list[str], **kwargs: Any) -> subprocess.CompletedProcess[bytes]:
+    def __call__(self, argv: list[str], *, timeout: float | None = None,
+                 **kwargs: Any) -> subprocess.CompletedProcess[bytes]:
         kwargs.pop("capture_output")
         with self.lock:
             if self.stopping:
@@ -146,23 +149,40 @@ class WorkerProcess:
                                             start_new_session=True, **kwargs)
             process = self.process
         try:
-            stdout, stderr = process.communicate()
+            try:
+                stdout, stderr = process.communicate(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                # Interrupt first so the CLI can stop nare and install its diagnostics.
+                self._signal(process, signal.SIGINT)
+                try:
+                    stdout, stderr = process.communicate(timeout=self.grace)
+                except subprocess.TimeoutExpired:
+                    self._signal(process, signal.SIGKILL)
+                    stdout, stderr = process.communicate()
+                raise subprocess.TimeoutExpired(argv, timeout or 0, stdout, stderr) from None
             return subprocess.CompletedProcess(argv, process.returncode, stdout, stderr)
         finally:
             with self.lock:
                 self.process = None
+
+    @staticmethod
+    def _signal(process: subprocess.Popen[bytes], signum: int) -> None:
+        try:
+            os.killpg(process.pid, signum)
+        except ProcessLookupError:
+            pass
 
     def stop(self) -> None:
         with self.lock:
             self.stopping = True
             process = self.process
             if process is not None and process.poll() is None:
-                os.killpg(process.pid, signal.SIGINT)
+                self._signal(process, signal.SIGINT)
         if process is not None:
             try:
-                process.wait(timeout=30)
+                process.wait(timeout=self.grace)
             except subprocess.TimeoutExpired:
-                os.killpg(process.pid, signal.SIGKILL)
+                self._signal(process, signal.SIGKILL)
                 process.wait()
 
 

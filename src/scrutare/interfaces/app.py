@@ -36,13 +36,16 @@ class AppSettings:
     data_dir: Path
     model_origins: tuple[str, ...] = ()
     max_pending: int = 100
+    # Installation tokens last one hour; stop a review before its credential expires.
+    job_timeout: int = 3300
 
     def __post_init__(self) -> None:
         if (type(self.app_id) is not int or self.app_id <= 0
                 or not self.webhook_secret or not self.api_token
                 or type(self.max_pending) is not int or self.max_pending <= 0
+                or type(self.job_timeout) is not int or not 0 < self.job_timeout <= 3300
                 or not self.installations):
-            raise AppError("App settings require identity, secrets, repositories and queue limit")
+            raise AppError("App settings require identity, secrets, repositories and limits")
         for repo, installation in self.installations.items():
             self.authorize(repo, 1, installation)
 

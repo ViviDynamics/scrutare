@@ -55,7 +55,8 @@ def test_app_posts_through_installed_engine_and_retains_real_evidence(
         argv[0] = str(python)
         kwargs["env"].update(PATH=f"{binary}:/usr/bin:/bin", SCRUTARE_GH_SPEC=str(spec),
                              SCRUTARE_GH_LOG=str(tmp_path / "gh.jsonl"))
-        return subprocess.run(argv, timeout=60, **kwargs)
+        assert kwargs["timeout"] == config.job_timeout
+        return subprocess.run(argv, **(kwargs | {"timeout": 60}))
     first = store.claim()
     run_job(config, store, first, client=Client(), runner=runner)
     posted = store.get(first["id"])

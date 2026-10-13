@@ -3,6 +3,7 @@
 import json
 import os
 import subprocess
+from dataclasses import replace
 
 import jwt
 import pytest
@@ -186,3 +187,25 @@ def test_every_posted_verdict_is_a_successful_job(tmp_path, verdict):
     saved = store.get(job["id"])
     assert saved["status"] == "posted"
     assert saved["result"]["verdict"] == verdict
+
+
+def test_job_deadline_stops_the_cli_before_its_installation_token_expires(tmp_path):
+    store, job = claimed(tmp_path)
+    seen = {}
+    def runner(argv, **kwargs):
+        seen.update(kwargs)
+        raise subprocess.TimeoutExpired(argv, kwargs["timeout"], output=b"", stderr=b"late\n")
+    config = replace(settings(tmp_path), job_timeout=90)
+    run_job(config, store, job, client=TrustedClient(), runner=runner)
+    saved = store.get(job["id"])
+    assert seen["timeout"] == 90
+    assert saved["status"] == "interrupted"
+    assert "deadline" in saved["result"]["error"]
+    assert (tmp_path / "work" / job["id"] / "stderr.log").read_bytes() == b"late\n"
+
+
+@pytest.mark.parametrize("seconds", [0, -1, 3301, True, 1.5])
+def test_job_deadline_must_fit_inside_the_token_lifetime(tmp_path, seconds):
+    with pytest.raises(AppError):
+        replace(settings(tmp_path), job_timeout=seconds)
+    assert settings(tmp_path).job_timeout == 3300

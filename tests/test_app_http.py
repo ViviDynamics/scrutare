@@ -57,3 +57,22 @@ def test_startup_requires_identity_secrets_and_operator_allowlist(tmp_path, monk
     from scrutare.interfaces.app import AppError
     with pytest.raises(AppError):
         load_settings()
+
+
+@pytest.mark.parametrize("script", [
+    "import time; time.sleep(60)",
+    "import signal, time; signal.signal(signal.SIGINT, signal.SIG_IGN); print('up', flush=True);"
+    " time.sleep(60)",
+])
+def test_worker_process_enforces_deadline_on_the_whole_cli_group(script):
+    import subprocess
+    import sys
+    import time
+
+    from scrutare.interfaces.app_server import WorkerProcess
+    runner = WorkerProcess(grace=1)
+    started = time.monotonic()
+    with pytest.raises(subprocess.TimeoutExpired):
+        runner([sys.executable, "-c", script], capture_output=True, shell=False, timeout=1)
+    assert time.monotonic() - started < 20
+    assert runner.process is None
