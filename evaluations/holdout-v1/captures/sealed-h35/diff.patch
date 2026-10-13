@@ -1,0 +1,8 @@
+diff --git a/src/app.py b/src/app.py
+index 0fa6a56..24a3dac 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,2 +1,2 @@
+ def preview(text, count):
+-    return text[:count]
++    return text.encode('utf-8')[:count].decode('utf-8')

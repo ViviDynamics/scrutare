@@ -1,0 +1,8 @@
+diff --git a/src/app.py b/src/app.py
+index 8c7e8af..00884d1 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,2 +1,2 @@
+ def fixture():
+-    return list((1, 2))
++    return [1, 2]

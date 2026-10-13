@@ -1,0 +1,25 @@
+{
+  "case_id": "sealed-h36",
+  "counterexamples": [
+    "Preserve limit or update callers in the same change."
+  ],
+  "defects": [
+    {
+      "evidence": "src/app.py: The keyword rename raises TypeError for the existing consumer.",
+      "fix_or_counterexample": "Preserve limit or update callers in the same change.",
+      "id": "sealed-h36-defect",
+      "impact": "The keyword rename raises TypeError for the existing consumer.",
+      "match_criteria": "Identify the changed behavior for An unchanged caller passes the published limit keyword and its consequence: The keyword rename raises TypeError for the existing consumer.",
+      "trigger": "An unchanged caller passes the published limit keyword"
+    }
+  ],
+  "expected_exit": {
+    "base": 0,
+    "head": 1
+  },
+  "expected_head_error": "TypeError",
+  "mechanical_control": "controls/sealed-h36.py",
+  "unchanged_supporting_paths": [
+    "src/contracts.py"
+  ]
+}

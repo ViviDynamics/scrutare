@@ -1,0 +1,8 @@
+diff --git a/src/app.py b/src/app.py
+index 37eb0e3..ee03c1d 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,2 +1,2 @@
+ def description(record):
+-    return record.get('description') or ''
++    return record.get('description')

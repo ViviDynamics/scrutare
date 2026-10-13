@@ -1,0 +1,572 @@
+{
+  "cases": 40,
+  "clean_controls_verified": 15,
+  "defects_verified": 25,
+  "failures": [],
+  "inventory_sha256": "d39a024184b9e32244ecca0c4eee9597e939b2c54e4a0c35edf490bdb65d352f",
+  "kind": "trusted_mechanical_controls_not_model_accuracy",
+  "patches_verified": 40,
+  "results": [
+    {
+      "base_sha": "d2412b2565c499ef737cc3baffa9e0a2ded68735",
+      "case_id": "sealed-h01",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "d4637925b3d8e305705b0a870692750d3d895dea"
+    },
+    {
+      "base_sha": "701c754dad019bb4dbeffd56a7122189df8eb27f",
+      "case_id": "sealed-h02",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "ce38ca7398043dfc714a597dca210cd98f4ddd91"
+    },
+    {
+      "base_sha": "656fac2fed40896bf133907fab66b2171965d97e",
+      "case_id": "sealed-h03",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "8fc0b1005f8b1438d068f7389fadb6cc922d5ba1"
+    },
+    {
+      "base_sha": "f1de011674ac0350a413b890143999fd40201b98",
+      "case_id": "sealed-h04",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "53742e107181568070f6b08c155220ee06973d69"
+    },
+    {
+      "base_sha": "a8d869e9ce98bcb07515d0437e391145bd0544d6",
+      "case_id": "sealed-h05",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "c972bb3e5f2ad991305d03c08c0f69eb5370a058"
+    },
+    {
+      "base_sha": "2c5bec0a2c6d8ac5e3a0e3ca6a0d2cc1ecb42971",
+      "case_id": "sealed-h06",
+      "control_errors": {
+        "base": null,
+        "head": null
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 0
+      },
+      "expected_defect": false,
+      "head_sha": "760cde6538978844ecfc49fe43272e81fb4a53cf"
+    },
+    {
+      "base_sha": "d0bed3450c1c5b5175ebf6ab244508556840cfea",
+      "case_id": "sealed-h07",
+      "control_errors": {
+        "base": null,
+        "head": null
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 0
+      },
+      "expected_defect": false,
+      "head_sha": "2c55f792ef636900a1989dd6c7d225b6c0808f3b"
+    },
+    {
+      "base_sha": "456e8fdd2a5b803c111d17063371329e8f8e7340",
+      "case_id": "sealed-h08",
+      "control_errors": {
+        "base": null,
+        "head": null
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 0
+      },
+      "expected_defect": false,
+      "head_sha": "139befa24748b09201fc6d3eb749cc67c48e08b9"
+    },
+    {
+      "base_sha": "6a71768673b7a9a37ddff2c7d331d32da5badb3d",
+      "case_id": "sealed-h09",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "2c0cb27a77486702380ca61606d1cc816117af58"
+    },
+    {
+      "base_sha": "0d0ed2f382b663312ce9253ef864cb5f817bbc89",
+      "case_id": "sealed-h10",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "532c0ad65e59327f94f530df0bbc53fdd30fa66e"
+    },
+    {
+      "base_sha": "139d15c53c4c51b6bd34f69f5239dc0fe469fdd6",
+      "case_id": "sealed-h11",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "229c4a14846db2e11c08e36a68650c115f23f28e"
+    },
+    {
+      "base_sha": "23aac8663262182008c57ece0ab92e21b38c3879",
+      "case_id": "sealed-h12",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "b0cffa0b7cb02417f596d6d436c960c0ef3747eb"
+    },
+    {
+      "base_sha": "dd3ce76ae4f980d1aa5600c7d7cdc25b9da9c3bb",
+      "case_id": "sealed-h13",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "5b759eab126566fdb384922c2f2da97fc19b36d4"
+    },
+    {
+      "base_sha": "3f459ff814ade4cad0284dab17aa5acdd24973e3",
+      "case_id": "sealed-h14",
+      "control_errors": {
+        "base": null,
+        "head": null
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 0
+      },
+      "expected_defect": false,
+      "head_sha": "fa61ef16543f901ece9ac86dacc853039a07425e"
+    },
+    {
+      "base_sha": "cd5fb441f56041bce806c146f31515c9be368b3a",
+      "case_id": "sealed-h15",
+      "control_errors": {
+        "base": null,
+        "head": null
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 0
+      },
+      "expected_defect": false,
+      "head_sha": "37e088a4138d64d2f3de3e51276df3c512c03bf3"
+    },
+    {
+      "base_sha": "4b97b814b98189bac4a73d6585f7b536cb6821a1",
+      "case_id": "sealed-h16",
+      "control_errors": {
+        "base": null,
+        "head": null
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 0
+      },
+      "expected_defect": false,
+      "head_sha": "29a048448cab27dd5d6b49f6e4be7e8cb3b045cc"
+    },
+    {
+      "base_sha": "26317d12efaa2d68a0fa9d8b3ba91805c5044c52",
+      "case_id": "sealed-h17",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "e905039f336a1649e350d5da3addde7eb25a8443"
+    },
+    {
+      "base_sha": "1b38ca17ebf45536e07a6dc83d83837175fd34fd",
+      "case_id": "sealed-h18",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "c8968c2345e44e85bcca2de50d5909b4c8e0ab8e"
+    },
+    {
+      "base_sha": "d1af0867f607c65555606024a32ea5f3f5eaf97d",
+      "case_id": "sealed-h19",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "98fc6691525477df2fb9164fe211a2dae5aae92d"
+    },
+    {
+      "base_sha": "ff56452afd4224dbe727c1462be55cf6c2249a2c",
+      "case_id": "sealed-h20",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "04cec2c366c9067a3bda93513ff383e8981d83c6"
+    },
+    {
+      "base_sha": "2d0327474278d075324469049eabf43b8a64b839",
+      "case_id": "sealed-h21",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "beef797ae499067c9364ae4f7fbeda08d483d208"
+    },
+    {
+      "base_sha": "bf73ed600783c80194107bd8009b4c777d72ef83",
+      "case_id": "sealed-h22",
+      "control_errors": {
+        "base": null,
+        "head": null
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 0
+      },
+      "expected_defect": false,
+      "head_sha": "8a53f8b6c77b15fc9233243fec83ebe7f192b6a6"
+    },
+    {
+      "base_sha": "0bfd714d16631e3f991e768c5cdc56275a37c038",
+      "case_id": "sealed-h23",
+      "control_errors": {
+        "base": null,
+        "head": null
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 0
+      },
+      "expected_defect": false,
+      "head_sha": "e4159015d316a601b1d966c539ea303054487b77"
+    },
+    {
+      "base_sha": "ed14df785de80f51d1a2ca041640e4e2050f8d6b",
+      "case_id": "sealed-h24",
+      "control_errors": {
+        "base": null,
+        "head": null
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 0
+      },
+      "expected_defect": false,
+      "head_sha": "9bf25765b7354f777ae679edb8907ec31ce8cd7a"
+    },
+    {
+      "base_sha": "a70696f76e399f7982b08659c4c765a50934b970",
+      "case_id": "sealed-h25",
+      "control_errors": {
+        "base": null,
+        "head": "OperationalError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "f699138f73cd7dabe910066ea862b25b91484f11"
+    },
+    {
+      "base_sha": "ddad253224ab8fc71fb99fcf31bb8e26d31b197c",
+      "case_id": "sealed-h26",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "328909fd1245395d322aca5c2a6050220064dab7"
+    },
+    {
+      "base_sha": "4ee5adf177f9d0438838b1333676d475d723f940",
+      "case_id": "sealed-h27",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "b2f615b3c6025e3df31095bebedf68c95b726c2f"
+    },
+    {
+      "base_sha": "be6d91ff39f4cd2b82071a8577249867d24d0062",
+      "case_id": "sealed-h28",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "218171e64dea9dbfd9c2d85635dc7c8cd88f60ab"
+    },
+    {
+      "base_sha": "f365e9350018fd69f14c9aa8d82ee241d4370920",
+      "case_id": "sealed-h29",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "bb322f66d52f27b0210909c5d130a3365a18c5c9"
+    },
+    {
+      "base_sha": "a4e0a5f51ff5aeaa9a75357d8bba7c53cb250fb8",
+      "case_id": "sealed-h30",
+      "control_errors": {
+        "base": null,
+        "head": null
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 0
+      },
+      "expected_defect": false,
+      "head_sha": "9a2f22cfd1955d67b75cf26715fbd1e4ecd2a4b1"
+    },
+    {
+      "base_sha": "38ff4ca5fe0b06b9d4442f3488b92ca5eb32bf89",
+      "case_id": "sealed-h31",
+      "control_errors": {
+        "base": null,
+        "head": null
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 0
+      },
+      "expected_defect": false,
+      "head_sha": "ec2fc64c09d083eb81d9bf6576b32214718834a4"
+    },
+    {
+      "base_sha": "564e856b76c50e9cd636c953ccd060e3ee3d66c9",
+      "case_id": "sealed-h32",
+      "control_errors": {
+        "base": null,
+        "head": null
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 0
+      },
+      "expected_defect": false,
+      "head_sha": "8360f94785daaf2a4f92d8062effeb668e571898"
+    },
+    {
+      "base_sha": "5e607073b04a4a48b3ee632faa413581284f5934",
+      "case_id": "sealed-h33",
+      "control_errors": {
+        "base": null,
+        "head": "AttributeError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "ee4d1942d55e88309b6d88bb5ede377c51b87c30"
+    },
+    {
+      "base_sha": "b2750bee655b8e23ed75faeb5972540388fe6f09",
+      "case_id": "sealed-h34",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "89bc6a5a6ac1fcaab63301b2dc40d32d6f6baaa0"
+    },
+    {
+      "base_sha": "2073f7da1c07a5e58038fa891b9b3c9c833a2785",
+      "case_id": "sealed-h35",
+      "control_errors": {
+        "base": null,
+        "head": "UnicodeDecodeError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "97304e755eaf4cad9011b14f9b256990cbb73e5e"
+    },
+    {
+      "base_sha": "4fdf47fcca7b8e798f0cb9fe5e59dec621685ccb",
+      "case_id": "sealed-h36",
+      "control_errors": {
+        "base": null,
+        "head": "TypeError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "dc2e1240eb2737606ae69613a3ef219e6e796e63"
+    },
+    {
+      "base_sha": "866df067ef6bcc09d365dfca97816a46db18251d",
+      "case_id": "sealed-h37",
+      "control_errors": {
+        "base": null,
+        "head": "AssertionError"
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 1
+      },
+      "expected_defect": true,
+      "head_sha": "af5e1212c3f9dbc837170bb947430d37d5d51d29"
+    },
+    {
+      "base_sha": "605db032e1f422559042fc1c48ba8bc54b0701bb",
+      "case_id": "sealed-h38",
+      "control_errors": {
+        "base": null,
+        "head": null
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 0
+      },
+      "expected_defect": false,
+      "head_sha": "89053a883302ef703f2bda4edb7f1cd8bf05da8a"
+    },
+    {
+      "base_sha": "de5abb8165233ca511019aa5d72809aac7cc7f4f",
+      "case_id": "sealed-h39",
+      "control_errors": {
+        "base": null,
+        "head": null
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 0
+      },
+      "expected_defect": false,
+      "head_sha": "8d37fe0b96f6e1d6e9e6e984920652a0c1c3678f"
+    },
+    {
+      "base_sha": "f3b83a94e36df95e22be9165b11b993d1a0baf7b",
+      "case_id": "sealed-h40",
+      "control_errors": {
+        "base": null,
+        "head": null
+      },
+      "control_exits": {
+        "base": 0,
+        "head": 0
+      },
+      "expected_defect": false,
+      "head_sha": "1ae6013eb824d03e396d5f0994f6f11c56bc20ee"
+    }
+  ],
+  "schema_version": 1
+}

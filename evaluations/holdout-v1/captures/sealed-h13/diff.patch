@@ -1,0 +1,11 @@
+diff --git a/src/app.py b/src/app.py
+index 94503a8..dc7b0c3 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,5 +1,2 @@
+-from src.contracts import EXCLUSIVE
+-
+-
+ def valid(now, expires):
+-    return now < expires if EXCLUSIVE else now <= expires
++    return now <= expires

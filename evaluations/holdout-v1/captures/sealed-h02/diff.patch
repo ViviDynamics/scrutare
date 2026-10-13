@@ -1,0 +1,10 @@
+diff --git a/src/app.py b/src/app.py
+index 261c00c..475d759 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -2,4 +2,4 @@ from src.contracts import SIZE
+ 
+ 
+ def batches(count):
+-    return (count + SIZE - 1) // SIZE
++    return count // SIZE

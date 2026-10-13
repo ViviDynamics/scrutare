@@ -1,0 +1,10 @@
+diff --git a/src/app.py b/src/app.py
+index 0a10438..1b8a94b 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -2,4 +2,4 @@ from src.contracts import TEMPLATE
+ 
+ 
+ def fixture():
+-    return TEMPLATE.copy()
++    return TEMPLATE

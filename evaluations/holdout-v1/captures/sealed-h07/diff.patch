@@ -1,0 +1,11 @@
+diff --git a/src/app.py b/src/app.py
+index 7d7d870..95a7ee6 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,2 +1,5 @@
++from operator import itemgetter
++
++
+ def ordered(rows):
+-    return sorted(rows, key=lambda row: row[0])
++    return sorted(rows, key=itemgetter(0))

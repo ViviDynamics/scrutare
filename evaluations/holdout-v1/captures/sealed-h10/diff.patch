@@ -1,0 +1,13 @@
+diff --git a/src/app.py b/src/app.py
+index f6ae828..00c5922 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -1,7 +1,5 @@
+-from urllib.parse import urlsplit
+-
+ from src.contracts import HOST
+ 
+ 
+ def allowed(url):
+-    return urlsplit(url).hostname == HOST
++    return HOST in url

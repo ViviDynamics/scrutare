@@ -1,0 +1,11 @@
+diff --git a/src/app.py b/src/app.py
+index ad2dccb..f2f861b 100644
+--- a/src/app.py
++++ b/src/app.py
+@@ -2,4 +2,5 @@ from ipaddress import ip_address
+ 
+ 
+ def local(address):
+-    return ip_address(address).is_loopback
++    parsed = ip_address(address)
++    return parsed.is_loopback

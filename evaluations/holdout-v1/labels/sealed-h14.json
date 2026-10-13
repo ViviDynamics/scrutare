@@ -1,0 +1,14 @@
+{
+  "case_id": "sealed-h14",
+  "counterexamples": [
+    "Factoring the query string preserves the placeholder and parameter tuple."
+  ],
+  "defects": [],
+  "expected_exit": {
+    "base": 0,
+    "head": 0
+  },
+  "expected_head_error": null,
+  "mechanical_control": "controls/sealed-h14.py",
+  "unchanged_supporting_paths": []
+}

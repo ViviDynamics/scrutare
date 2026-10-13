@@ -1,0 +1,14 @@
+{
+  "case_id": "sealed-h32",
+  "counterexamples": [
+    "The trusted input contract supplies finite numeric monotonic times."
+  ],
+  "defects": [],
+  "expected_exit": {
+    "base": 0,
+    "head": 0
+  },
+  "expected_head_error": null,
+  "mechanical_control": "controls/sealed-h32.py",
+  "unchanged_supporting_paths": []
+}

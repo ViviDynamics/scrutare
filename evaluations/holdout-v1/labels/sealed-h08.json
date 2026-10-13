@@ -1,0 +1,14 @@
+{
+  "case_id": "sealed-h08",
+  "counterexamples": [
+    "The division only runs after the nonempty check."
+  ],
+  "defects": [],
+  "expected_exit": {
+    "base": 0,
+    "head": 0
+  },
+  "expected_head_error": null,
+  "mechanical_control": "controls/sealed-h08.py",
+  "unchanged_supporting_paths": []
+}
