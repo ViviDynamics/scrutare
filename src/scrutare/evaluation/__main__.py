@@ -28,6 +28,10 @@ def main() -> None:
     run.add_argument('--comparison-set',
                      choices=('baseline', 'procedures', 'architectures', 'focused'),
                      default='baseline')
+    run.add_argument('--variants', help='comma-separated subset of the comparison arms')
+    run.add_argument('--transient-retries', type=int, default=0,
+                     help='recorded fresh reruns of a cell stopped only by upstream HTTP 5xx')
+    run.add_argument('--transient-retry-delay-seconds', type=float, default=0.0)
     run.add_argument('--max-turns', type=int, default=50)
     run.add_argument('--evidence-kind', choices=('model', 'offline'), default='model')
     packet = sub.add_parser('adjudicate', help='export blinded finding packet for human matching')
@@ -47,7 +51,10 @@ def main() -> None:
             parse_config(args.config.read_bytes()), args.output,
             runtime=NareRuntime(args.nare_executable, args.max_turns, args.timeout_seconds),
             evidence_kind=args.evidence_kind, concurrency=args.concurrency,
-            comparison_set=args.comparison_set))
+            comparison_set=args.comparison_set,
+            variant_names=tuple(args.variants.split(',')) if args.variants is not None else None,
+            transient_retries=args.transient_retries,
+            transient_retry_delay_seconds=args.transient_retry_delay_seconds))
     elif args.command == 'adjudicate':
         write_json(args.output, adjudication_packet(read_json(args.experiment)['runs']))
     elif args.command == 'gate':

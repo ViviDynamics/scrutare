@@ -25,13 +25,18 @@ from scrutare.engine.budgets import ReviewBudgetLedger
 from scrutare.engine.nare_session import inspect_nare_runtime
 from scrutare.engine.repository_context import capture_repository_context, encoded
 from scrutare.engine.repository_snapshot import RepositorySnapshot
-from scrutare.engine.review_inputs import prepare_review_inputs, prepared_content_hashes
+from scrutare.engine.review_inputs import (
+    PreparedReviewInputs,
+    prepare_review_inputs,
+    prepared_content_hashes,
+)
 from scrutare.engine.routing import plan_routing
 from scrutare.engine.session_models import NareRuntime, TokenUsage
 from scrutare.engine.static_analysis import capture_static_analysis, read_capture
 from scrutare.engine.strategy import run_review
 from scrutare.evaluation.corpus import Case, parse_json, read_json, source_contents
 from scrutare.evaluation.focused_trace import discussion_trace
+from scrutare.evaluation.transient import transient_provider_failures
 from scrutare.personas import PersonaDefinition, load_persona, resolve_personas
 from scrutare.personas.registry import procedure_record
 from scrutare.provenance import write_artifact_manifest
@@ -43,8 +48,22 @@ def write_json(path: Path, data: Any) -> None:
         stream.write('\n')
 
 
-def comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline'
+def comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline',
+                       variant_names: tuple[str, ...] | None = None
                        ) -> dict[str, ReviewConfig]:
+    """Select explicit arms in their comparison order; never invent or reorder one."""
+    variants = _comparison_configs(config, comparison_set=comparison_set)
+    if variant_names is None:
+        return variants
+    if (not isinstance(variant_names, tuple) or not variant_names
+            or len(set(variant_names)) != len(variant_names)
+            or any(name not in variants for name in variant_names)):
+        raise ValueError('variant selection requires distinct arms of the comparison set')
+    return {name: value for name, value in variants.items() if name in variant_names}
+
+
+def _comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline'
+                        ) -> dict[str, ReviewConfig]:
     """Freeze current roster, shared rail and total cap; reserve a fifth debate chair quota."""
     if comparison_set not in ('baseline', 'procedures', 'architectures', 'focused'):
         raise ValueError('unknown comparison set')
@@ -129,13 +148,25 @@ def _observed_usage(directory: Path) -> TokenUsage:
 
 async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: Path, *,
                          runtime: NareRuntime, evidence_kind: str = 'model', concurrency: int = 1,
-                         comparison_set: str = 'baseline'
+                         comparison_set: str = 'baseline',
+                         variant_names: tuple[str, ...] | None = None,
+                         transient_retries: int = 0,
+                         transient_retry_delay_seconds: float = 0.0,
                          ) -> dict[str, Any]:
-    """Fresh 3-repeat job; ordinary CI calls this only with explicitly offline evidence."""
+    """Fresh 3-repeat job; ordinary CI calls this only with explicitly offline evidence.
+
+    A cell interrupted only by upstream HTTP 5xx may rerun in a fresh directory
+    up to `transient_retries` times. Every attempt stays on disk and in its record.
+    """
     if (evidence_kind not in ('model', 'offline') or not cases
             or type(concurrency) is not int or not 1 <= concurrency <= 32):
         raise ValueError('nonempty cases and model/offline evidence kind required')
-    variants = comparison_configs(config, comparison_set=comparison_set)
+    if (type(transient_retries) is not int or not 0 <= transient_retries <= 5
+            or type(transient_retry_delay_seconds) not in (int, float)
+            or not 0 <= transient_retry_delay_seconds <= 600):
+        raise ValueError('transient retry policy requires 0-5 retries and 0-600 seconds')
+    variants = comparison_configs(config, comparison_set=comparison_set,
+                                  variant_names=variant_names)
     needs_context = any(v.context.enabled for v in variants.values())
     needs_analysis = any(v.analysis.enabled for v in variants.values())
     # Freeze before the first await; snapshot hashes and every repeat use these bytes.
@@ -195,6 +226,13 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                           for case in cases for variant in variants for repeat in range(1, 4)],
         'configs': {name: value.to_dict() for name, value in variants.items()},
         'comparison_set': comparison_set,
+        'variant_selection': list(variants),
+        'transient_retry': {
+            'max_retries': transient_retries, 'delay_seconds': transient_retry_delay_seconds,
+            'eligibility': 'attempt incomplete without evaluator error; every native session '
+                           'complete, not started, or failed with a retained provider HTTP 5xx',
+            'accounting': 'usage is the final attempt; retry_usage sums earlier attempts as '
+                          'a lower bound; latency_seconds spans all attempts and waits'},
         'variant_personas': {variant: {name: {
                 'profile': value.inspection.procedures,
                 'system_prompt': load_persona(
@@ -219,6 +257,24 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                       else {})}
                   for case in cases],
     }
+    def prepare(directory: Path, case: Case, conf: ReviewConfig) -> PreparedReviewInputs:
+        """Materialize one attempt from the bytes frozen above, never from the corpus."""
+        directory.mkdir(parents=True)
+        for name, data in captures[case.id].items():
+            (directory / name).write_bytes(data)
+        write_json(directory / 'config.json', conf.to_dict())
+        write_json(directory / 'config.yaml', conf.to_dict())
+        if conf.context.enabled:
+            (directory / 'metadata.original.json').write_bytes(
+                captures[case.id]['metadata.json'])
+            (directory / 'metadata.json').write_bytes(derived_metadata[case.id])
+            capture_repository_context(context_clients[case.id], directory, conf,
+                                       source=context_clients[case.id].provenance())
+        capture_static_analysis(directory, conf,
+                                capture_bytes=analysis_captures.get(case.id)
+                                if conf.analysis.enabled else None)
+        return prepare_review_inputs(directory, conf)
+
     # Prepare every case synchronously before provider inspection. This records
     # actual routed participants and fixed ledger reservations, not guessed rosters.
     case_variants: dict[str, dict[str, Any]] = {}
@@ -226,22 +282,7 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         case_variants[case.id] = {}
         for variant, conf in variants.items():
             for repeat in range(1, 4):
-                directory = output / case.id / variant / str(repeat)
-                directory.mkdir(parents=True)
-                for name, data in captures[case.id].items():
-                    (directory / name).write_bytes(data)
-                write_json(directory / 'config.json', conf.to_dict())
-                write_json(directory / 'config.yaml', conf.to_dict())
-                if conf.context.enabled:
-                    (directory / 'metadata.original.json').write_bytes(
-                        captures[case.id]['metadata.json'])
-                    (directory / 'metadata.json').write_bytes(derived_metadata[case.id])
-                    capture_repository_context(context_clients[case.id], directory, conf,
-                                               source=context_clients[case.id].provenance())
-                capture_static_analysis(directory, conf,
-                                        capture_bytes=analysis_captures.get(case.id)
-                                        if conf.analysis.enabled else None)
-                inputs = prepare_review_inputs(directory, conf)
+                inputs = prepare(output / case.id / variant / str(repeat), case, conf)
                 if repeat != 1:
                     continue
                 personas = resolve_personas(conf.personas,
@@ -321,9 +362,8 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         temporary.replace(output / 'experiment.json')
         return result
     persist()
-    async def execute(case: Case, variant: str, conf: ReviewConfig, repeat: int) -> None:
-        run_id = f'{case.id}/{variant}/{repeat}'
-        directory = output / run_id
+    async def attempt_once(run_id: str, case: Case, variant: str, conf: ReviewConfig,
+                           repeat: int, directory: Path) -> tuple[dict[str, Any], bool]:
         started = time.monotonic()
         record: dict[str, Any] = {
             'run_id': run_id, 'case_id': case.id, 'variant': variant, 'repeat': repeat,
@@ -357,8 +397,45 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                     record['status'] = 'invalid'
                     record['error'] = 'UnavailableFocusedTrace'
         record['latency_seconds'] = time.monotonic() - started
-        write_json(directory / 'evaluation.json', record)
-        write_artifact_manifest(directory)
+        return record, interrupted
+
+    async def execute(case: Case, variant: str, conf: ReviewConfig, repeat: int) -> None:
+        run_id = f'{case.id}/{variant}/{repeat}'
+        directory = output / run_id
+        started = time.monotonic()
+        attempts: list[dict[str, Any]] = []
+        while True:
+            record, interrupted = await attempt_once(run_id, case, variant, conf, repeat,
+                                                     directory)
+            if transient_retries:
+                # A failed engine status with no evaluator error is the only rerun candidate.
+                transient = (transient_provider_failures(directory)
+                             if record['status'] != 'complete' and record['error'] is None
+                             else None)
+                attempts.append({'attempt': len(attempts) + 1, 'run_dir': record['run_dir'],
+                    'status': record['status'], 'error': record['error'],
+                    'accounting_complete': record['accounting_complete'],
+                    'usage': record['usage'], 'latency_seconds': record['latency_seconds'],
+                    'transient_provider_failures': transient})
+                earlier = [TokenUsage(**{key: a['usage'][key] for key in (
+                    'input', 'output', 'cache_read', 'cache_write')}) for a in attempts[:-1]]
+                record.update(attempt=len(attempts), attempts=list(attempts),
+                    retry_usage=TokenUsage(*(sum(getattr(u, key) for u in earlier) for key in (
+                        'input', 'output', 'cache_read', 'cache_write'))).to_dict())
+            write_json(directory / 'evaluation.json', record)
+            write_artifact_manifest(directory)
+            if (interrupted or not transient_retries or attempts[-1][
+                    'transient_provider_failures'] is None or len(attempts) > transient_retries):
+                break
+            await asyncio.sleep(transient_retry_delay_seconds)
+            directory = (output / '_retries' / run_id / f'attempt-{len(attempts) + 1:04d}')
+            if prepared_content_hashes(prepare(directory, case, conf)) != case_variants[
+                    case.id][variant]['inputs_sha256']:
+                # Never spend on inputs that differ from the frozen first attempt.
+                record['error'] = 'RetryInputsDiffer'
+                break
+        if transient_retries:
+            record['latency_seconds'] = time.monotonic() - started
         completed[run_id] = record
         with (output / 'runs.jsonl').open('a', encoding='utf-8') as stream:
             stream.write(json.dumps(record, sort_keys=True) + '\n')
