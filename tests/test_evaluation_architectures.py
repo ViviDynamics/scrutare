@@ -5,6 +5,7 @@ from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
 from test_evaluation_context import complete, declared
 from test_evaluation_runner import config
 from test_nare_cli_integration import installed as installed
@@ -144,8 +145,9 @@ def test_tool_capture_rejects_linked_source_root(tmp_path):
                                  executable=Path('/unused'))
 
 
+@pytest.mark.parametrize('excluded_rename', [False, True])
 def test_installed_nare_architecture_arms_share_captured_tools_and_accounting(
-        tmp_path, installed, monkeypatch):
+        tmp_path, installed, monkeypatch, excluded_rename):
     import sys
 
     from test_nare_cli_integration import offline_runtime, text, tool
@@ -154,7 +156,15 @@ def test_installed_nare_architecture_arms_share_captured_tools_and_accounting(
     from scrutare.evaluation.tool_capture import capture_development_ruff
 
     root = tmp_path / 'corpus'
-    declared(root)
+    cases = declared(root)
+    if excluded_rename:
+        files = cases[0].capture / 'files.json'
+        files.write_text(json.dumps([{'filename': 'async_queue.py',
+            'previous_filename': 'app.py', 'status': 'renamed'}]))
+        patch = cases[0].capture / 'diff.patch'
+        patch.write_text(patch.read_text().replace('b/app.py', 'b/async_queue.py'))
+        head = root / 'sources/a/head'
+        (head / 'app.py').rename(head / 'async_queue.py')
     capture_development_ruff(root, root / 'tools',
                              executable=Path(sys.executable).parent / 'ruff')
     path = root / 'manifest.json'
@@ -172,7 +182,12 @@ def test_installed_nare_architecture_arms_share_captured_tools_and_accounting(
     monkeypatch.setenv('PATH', f'{binary}:/usr/bin:/bin')
     monkeypatch.setenv('GH_FORBIDDEN', str(tmp_path / 'github-called'))
     conf = replace(config(), context=ContextSettings(related_paths=('caller.py',)),
-                   routing=RoutingSettings(force=('performance-concurrency',)))
+                   routing=RoutingSettings(force=() if excluded_rename else
+                                           ('performance-concurrency',)))
+    if excluded_rename:
+        from scrutare.config import PathSettings
+        conf = replace(conf, github=replace(conf.github,
+                       paths=PathSettings(exclude=('async_queue.py',))))
     result = asyncio.run(run_experiment(cases, conf, tmp_path / 'out',
         runtime=runtime, evidence_kind='offline', comparison_set='architectures'))
     assert len(result['runs']) == 21
@@ -192,6 +207,10 @@ def test_installed_nare_architecture_arms_share_captured_tools_and_accounting(
             routing = json.loads((directory / 'routing.json').read_text())
             assert routing['allocations'] == cell['allocations']
             assert routing['effective_personas'] == cell['effective_personas']
+            if excluded_rename:
+                assert cell['effective_personas'] == ['senior-dev', 'junior-dev',
+                                                      'security', 'devops']
+                assert set(cell['allocations'].values()) == {100}
         for saved in directory.glob('sessions/*/attempt-*/session.json'):
             session = json.loads(saved.read_text())
             assert session['policy']['root'] == str(directory / 'review-inputs')
@@ -214,3 +233,45 @@ def test_legacy_baseline_snapshot_retains_four_original_persona_prompts(tmp_path
         runtime=NareRuntime(Path('/unused')), evidence_kind='offline'))
     snapshot = json.loads((tmp_path / 'out/snapshot.json').read_text())
     assert list(snapshot['personas']) == ['devops', 'junior-dev', 'security', 'senior-dev']
+
+
+def test_snapshot_routing_uses_effective_selection_for_excluded_rename(tmp_path, monkeypatch):
+    from scrutare.config import PathSettings
+    from scrutare.engine.routing import plan_routing
+
+    cases = declared(tmp_path / 'corpus')
+    files = cases[0].capture / 'files.json'
+    files.write_text(json.dumps([{'filename': 'async_queue.py', 'previous_filename': 'app.py',
+                                 'status': 'renamed'}]))
+    patch = cases[0].capture / 'diff.patch'
+    patch.write_text(patch.read_text().replace('b/app.py', 'b/async_queue.py'))
+    head = tmp_path / 'corpus/sources/a/head'
+    (head / 'app.py').rename(head / 'async_queue.py')
+    conf = config()
+    conf = replace(conf, context=ContextSettings(related_paths=('caller.py',)),
+                   github=replace(conf.github, paths=PathSettings(exclude=('async_queue.py',))))
+    async def inspect(runtime):
+        snapshot = json.loads((tmp_path / 'out/snapshot.json').read_text())
+        cell = snapshot['case_variants']['a']['routing']
+        assert cell['effective_personas'] == ['senior-dev', 'junior-dev', 'security', 'devops']
+        assert cell['allocations'] == {'senior-dev': 100, 'junior-dev': 100,
+                                      'security': 100, 'devops': 100}
+        assert cell['routing']['selected_paths'] == []
+        return SimpleNamespace(version='2026.10.4', contract=1)
+    async def execute(directory, cfg, *, runtime):
+        if cfg.routing.enabled:
+            root = directory / 'review-inputs'
+            focus = json.loads((root / 'routing-focus.json').read_text())
+            plan = plan_routing(json.loads((root / 'files.json').read_text()),
+                                tuple(focus['global_supporting_paths']), cfg)
+            snapshot = json.loads((tmp_path / 'out/snapshot.json').read_text())
+            cell = snapshot['case_variants']['a']['routing']
+            assert cell['effective_personas'] == [p.name for p in plan.personas]
+            assert cell['routing'] == plan.record
+        return complete()
+    monkeypatch.setattr('scrutare.evaluation.runner.inspect_nare_runtime', inspect)
+    monkeypatch.setattr('scrutare.evaluation.runner.run_review', execute)
+    result = asyncio.run(run_experiment(cases, conf, tmp_path / 'out',
+        runtime=NareRuntime(Path('/unused')), evidence_kind='offline',
+        comparison_set='architectures'))
+    assert all(r['status'] == 'complete' for r in result['runs'])

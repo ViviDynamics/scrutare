@@ -240,7 +240,7 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                 routing = None
                 if conf.routing.enabled:
                     focus = read_json(inputs.root / 'routing-focus.json')
-                    plan = plan_routing(parse_json(captures[case.id]['files.json']),
+                    plan = plan_routing(read_json(inputs.root / 'files.json'),
                                         tuple(focus['global_supporting_paths']), conf)
                     personas, routing = plan.personas, plan.record
                 names = tuple(p.name for p in personas)
