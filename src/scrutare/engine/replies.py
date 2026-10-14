@@ -43,8 +43,11 @@ def capture_reply_permissions(client: GitHubClient, ref: PullRequestRef, run_dir
         return
     permissions: dict[str, str] = {}
     complete = True
+    # The association is not proof of access. It only orders the bounded lookups, so a
+    # crowd of outside accounts cannot push a maintainer past the limit.
     ordered = sorted((comment for comment in comments if type(comment.get("id")) is int),
-                     key=lambda comment: -comment["id"])
+                     key=lambda comment: (comment.get("author_association") not in (
+                         "OWNER", "MEMBER", "COLLABORATOR"), -comment["id"]))
     for comment in ordered:
         identity = author(comment)
         if identity is None or identity[1] or identity[0] in permissions:

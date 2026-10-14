@@ -444,3 +444,17 @@ def test_no_permission_is_read_unless_the_write_policy_is_enabled(tmp_path, raw)
     client = ReplyClient([inline(2, "lead", in_reply_to_id=1)], {})
     run = ingestion().ingest_pr(client, REF, tmp_path / "runs", **configured(raw))
     assert client.lookups == [] and not (run / "reply-permissions.json").exists()
+
+
+def test_a_flood_of_outside_commenters_cannot_crowd_out_likely_maintainers(tmp_path):
+    comments = [inline(1, "maintainer", author_association="MEMBER"),
+                inline(2, "owner", author_association="OWNER")]
+    comments += [inline(index, f"sock{index}", author_association="NONE")
+                 for index in range(3, 60)]
+    permissions = {f"sock{index}": "read" for index in range(3, 60)}
+    client = ReplyClient(comments, permissions | {"maintainer": "write", "owner": "admin"})
+    run = ingestion().ingest_pr(client, REF, tmp_path / "runs", **configured(REPLIES))
+    # The association only orders the bounded lookups. The verified permission decides.
+    assert client.lookups[:2] == ["owner", "maintainer"] and len(client.lookups) == 32
+    saved = read_json(run, "reply-permissions.json")["permissions"]
+    assert saved["maintainer"] == "write" and saved["owner"] == "admin"

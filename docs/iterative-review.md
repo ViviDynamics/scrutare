@@ -79,8 +79,9 @@ copied into anything Scrutare posts.
 repository permission is `admin` or `write` triggers a reassessment. The
 permission is read at capture with the review's own token and retained in
 `reply-permissions.json`; a lookup that fails counts as untrusted, and at most
-32 accounts are looked up per capture, newest comments first. `author_association`
-is not used, because `MEMBER` and `COLLABORATOR` do not imply write access.
+32 accounts are looked up per capture: likely maintainers first, then newest
+comments. `author_association` only orders those lookups. It never grants trust,
+because `MEMBER` and `COLLABORATOR` do not imply write access.
 `trust: anyone` admits every account GitHub types as `User`. Bots and Scrutare's
 own responses never trigger a reassessment under either policy. An untrusted
 reply triggers nothing and spends nothing. It stays unconsumed until an ordinary

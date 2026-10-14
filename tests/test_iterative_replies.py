@@ -210,6 +210,7 @@ def test_untrusted_reply_triggers_nothing_and_waits_for_an_ordinary_review(
     monkeypatch.setattr(wave, "run_persona_session", inspect)
     run(third, config)
     assert "Not a bug, trust me." in prompts[0] and '"trusted": false' in prompts[0]
+    assert "accounts the repository's reply policy does not trust" in prompts[0]
     assert [c["status"] for c in document(third)["contests"]] == ["evidence"]
     fourth = again(third, "fourth", comments, permissions=permissions, head="def456", patch=patch)
     run(fourth, config)
