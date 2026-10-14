@@ -34,6 +34,16 @@ with log.open("a", encoding="utf-8") as stream:
                                                   if "KEY" in n or "TOKEN" in n]}) + "\n")
 if args == ["repo", "view", "--json", "nameWithOwner"]:
     print(json.dumps({"nameWithOwner": "owner/repo"}))
+elif "POST" in args and endpoint.endswith("/replies"):
+    thread = int(endpoint.split("/")[-2])
+    assert endpoint == f"repos/owner/repo/pulls/12/comments/{thread}/replies"
+    assert "--include" in args and args[args.index("--input") + 1] == "-"
+    created = {"id": 9000 + thread, "in_reply_to_id": thread,
+               "body": json.loads(payload)["body"],
+               "html_url": f"https://github.com/owner/repo/pull/12#discussion_r{9000 + thread}",
+               "user": {"login": "offline-reviewer"}}
+    sys.stdout.buffer.write(b"HTTP/2 201 Created\r\nContent-Type: application/json\r\n\r\n"
+                            + json.dumps(created, ensure_ascii=False).encode())
 elif "POST" in args:
     assert endpoint == "repos/owner/repo/pulls/12/reviews"
     assert "--include" in args and args[args.index("--input") + 1] == "-"
@@ -56,8 +66,14 @@ elif "Accept: application/vnd.github.v3.diff" in args:
 elif "--paginate" in args:
     if endpoint.endswith("/files"):
         print(json.dumps([spec["files"]]))
+    elif endpoint.endswith("/pulls/12/comments") and "review_comments" in spec:
+        print(json.dumps([spec["review_comments"]]))
     else:
         print(json.dumps([[{"body": "DISCUSSION_SENTINEL"}]]))
+elif endpoint.startswith("repos/owner/repo/collaborators/"):
+    login = endpoint.split("/")[4]
+    assert endpoint == f"repos/owner/repo/collaborators/{login}/permission"
+    print(json.dumps({"permission": spec["permissions"][login], "user": {"login": login}}))
 elif endpoint in spec.get("objects", {}):
     print(json.dumps(spec["objects"][endpoint]))
 elif endpoint == "repos/owner/repo/pulls/12":
