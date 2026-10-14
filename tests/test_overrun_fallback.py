@@ -146,3 +146,86 @@ def test_saved_degraded_verdict_parses_and_requires_its_record():
     ):
         with pytest.raises(ReplayError):
             parse_saved_verdict(json.dumps(broken).encode(), evidence_version=2)
+
+
+def phase_ledger(allowance=60, ceiling=200):
+    from scrutare.engine.budgets import ReviewBudgetLedger
+    settings = replace(configuration().budgets, per_persona_tokens=100,
+                       review_max_tokens=ceiling)
+    return ReviewBudgetLedger(("a", "b", "assessor"), settings,
+                              reserved_allocations={"assessor": 40},
+                              phase_allowances={"discussion": allowance})
+
+
+def test_phase_allowance_is_carved_before_discovery_is_split():
+    ledger = phase_ledger()
+    assert dict(ledger.allocations) == {"a": 50, "b": 50, "assessor": 40}
+    a, b = ledger.admit("a", "a/1"), ledger.admit("b", "b/1")
+    assert (a.allocated_tokens, b.allocated_tokens) == (50, 50)
+    from scrutare.engine.session_models import TokenUsage
+    # Discovery spends its whole grant; the phase allowance is still admitted in full.
+    ledger.settle(a, TokenUsage(input=50), True)
+    ledger.settle(b, TokenUsage(input=50), True)
+    leases = ledger.admit_phase("discussion", (("a", "a/3"), ("b", "b/3")))
+    assert [lease.allocated_tokens for lease in leases] == [30, 30]
+    assert [lease.limit_tokens for lease in leases] == [30, 30]
+
+
+def test_phase_sessions_split_atomically_and_account_to_the_phase():
+    from scrutare.engine.session_models import TokenUsage
+    ledger = phase_ledger(allowance=61)
+    a, b = ledger.admit_phase("discussion", (("a", "a/3"), ("b", "b/3")))
+    assert (a.allocated_tokens, b.allocated_tokens) == (31, 30)
+    ledger.settle(a, TokenUsage(input=40), True)  # nine past its grant
+    # The other position's live remainder stays reserved: nothing is left to admit.
+    assert ledger.admit_phase("discussion", (("assessor", "assessor/2"),)) is None
+    ledger.settle(b, TokenUsage(input=10), True)
+    (reassessment,) = ledger.admit_phase("discussion", (("assessor", "assessor/2"),))
+    assert reassessment.allocated_tokens == 11
+    ledger.settle(reassessment, TokenUsage(input=11), True)
+    snapshot = ledger.snapshot()
+    assert snapshot["usage"]["total"] == ledger.usage.total == 61
+    assert [p["usage"]["total"] for p in snapshot["personas"]] == [0, 0, 0]
+    assert snapshot["phases"] == [{
+        "phase": "discussion", "allocated_tokens": 61, "usage": TokenUsage(input=61).to_dict(),
+        "exhausted": True, "overshoot_tokens": 0}]
+    assert {s["session_key"]: s["phase"] for s in snapshot["sessions"]} == {
+        "a/3": "discussion", "b/3": "discussion", "assessor/2": "discussion"}
+    assert snapshot["configured"]["phase_allowances"] == {"discussion": 61}
+
+
+def test_phase_admission_is_all_or_nothing_and_refuses_uncertain_accounting():
+    from scrutare.engine.session_models import TokenUsage
+    ledger = phase_ledger(allowance=1)
+    assert ledger.admit_phase("discussion", (("a", "a/3"), ("b", "b/3"))) is None
+    assert ledger.snapshot()["active_reservations"] == []
+    ledger = phase_ledger()
+    with pytest.raises(ValueError):
+        ledger.admit_phase("assessment", (("a", "a/3"),))
+    with pytest.raises(ValueError):
+        ledger.admit_phase("discussion", ())
+    discovery = ledger.admit("a", "a/1")
+    assert ledger.admit_phase("discussion", (("a", "a/3"),)) is None
+    ledger.mark_uncertain(discovery)
+    ledger.settle(discovery, TokenUsage(input=1), False)
+    assert ledger.admit_phase("discussion", (("b", "b/3"),)) is None
+
+
+def test_phase_allowances_must_leave_discovery_capacity():
+    with pytest.raises(ValueError):
+        phase_ledger(allowance=160)
+    with pytest.raises(ValueError):
+        phase_ledger(allowance=0)
+
+
+def test_snapshot_without_phases_keeps_its_shape():
+    from scrutare.engine.budgets import ReviewBudgetLedger
+    settings = replace(configuration().budgets, review_max_tokens=200)
+    ledger = ReviewBudgetLedger(("a",), settings)
+    lease = ledger.admit("a", "a/1")
+    from scrutare.engine.session_models import TokenUsage
+    ledger.settle(lease, TokenUsage(input=3), True)
+    snapshot = ledger.snapshot()
+    assert "phases" not in snapshot
+    assert set(snapshot["configured"]) == {"review_max_tokens", "per_persona_tokens"}
+    assert all(set(s) == {"session_key", "persona", "usage"} for s in snapshot["sessions"])
