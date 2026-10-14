@@ -5,6 +5,7 @@ import json
 import re
 import unicodedata
 from dataclasses import dataclass
+from hashlib import sha256
 from typing import Any, Literal
 
 from scrutare.config import PostMode, Strategy
@@ -130,8 +131,14 @@ def _evidence_fields(finding: MergedFinding, *, escalated: bool) -> list[str]:
 def build_review_payload(
     verdict: Verdict, diff: bytes | str, *, head_sha: str, strategy: Strategy,
     post_mode: PostMode, run_id: str, human_reviewers: tuple[str, ...] = (),
+    existing_threads: frozenset[tuple[Anchor, str]] = frozenset(),
 ) -> ReviewPayload:
-    """Render the supplied code verdict and every source without external work."""
+    """Render the supplied code verdict and every source without external work.
+
+    `existing_threads` names inline comments Scrutare already posted at this head, by
+    anchor and body SHA-256. A finding whose comment would be byte-identical is counted
+    in the summary but not posted as a second thread.
+    """
     if not isinstance(verdict, Verdict):
         raise PostingError("verdict: expected a code-derived Verdict")
     _head_sha(head_sha)
@@ -163,7 +170,9 @@ def build_review_payload(
     unresolved = []
     for finding in verdict.findings:
         fields = _evidence_fields(finding, escalated=escalated)
-        comments.append(ReviewComment(finding.anchor, "\n\n".join(fields)))
+        text = "\n\n".join(fields)
+        if (finding.anchor, sha256(text.encode("utf-8")).hexdigest()) not in existing_threads:
+            comments.append(ReviewComment(finding.anchor, text))
         if escalated:
             anchor = (
                 _field("File", finding.anchor.file, neutralize_mentions=True)

@@ -38,6 +38,8 @@ Errors identify a field path or YAML location without echoing field values.
 | `github.human_reviewers` | List of nonempty reviewer-name strings for escalation | `[]` |
 | `github.paths.include` | List of nonempty glob strings | `[]` |
 | `github.paths.exclude` | List of nonempty glob strings | `["docs/**", "*.md"]` |
+| `replies.enabled` | Boolean; `true` requires `strategy: iterative` | `false` |
+| `replies.trust` | `write` (verified write access), `anyone` (any non-bot account) | `write` |
 
 Validation only accepts settings here. It does not execute strategies, enforce
 budgets, filter paths, derive a verdict, or post reviews. Configured capture uses
@@ -201,3 +203,13 @@ Focused evidence discussion is a further opt-in for assessed v2 debate reviews:
 independent assessment. It uses `rounds.max` and the existing shared quotas;
 reassessments spend the remaining original assessor reservation. See
 [focused debate](debate.md#focused-evidence-discussion-opt-in).
+
+## Replies on review threads (opt-in)
+
+`replies.enabled: true` lets a reply on one of Scrutare's inline threads contest
+that finding and be answered in the thread. It is accepted only with
+`strategy: iterative`; any other strategy fails with
+`replies.enabled: requires strategy iterative`. `replies.trust` selects who may
+trigger a reassessment. The default section is omitted from canonical
+configuration, so existing captured configurations and iterative histories are
+unchanged. See [iterative review](iterative-review.md#replies-on-scrutare-threads-opt-in).
