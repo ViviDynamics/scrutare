@@ -542,3 +542,50 @@ def test_unframed_secondary_limit_diagnostic_remains_uncertain():
         mod.ReviewClient(runner=runner).create_review(REF, payload())
     assert "secret" not in str(caught.value)
     runner.assert_called_once()
+
+
+def thread_reply(**changes):
+    return {"id": 77, "in_reply_to_id": 50, "body": "Answer",
+            "html_url": "https://github.com/owner/repo/pull/12#discussion_r77",
+            "user": {"login": "scrutare[bot]"}, **changes}
+
+
+def test_thread_reply_is_one_validated_write_to_the_root_comment():
+    mod = client_module()
+    runner = Mock(return_value=response(201, thread_reply()))
+    result = mod.ReviewClient(runner=runner).create_reply(REF, 50, "Answer")
+    assert (result.comment_id, result.thread, result.login) == (77, 50, "scrutare[bot]")
+    assert result.html_url.endswith("#discussion_r77")
+    args = runner.call_args.args[0]
+    assert args[:5] == ["gh", "api", "--method", "POST",
+                        "repos/owner/repo/pulls/12/comments/50/replies"]
+    assert json.loads(runner.call_args.kwargs["input"]) == {"body": "Answer"}
+    assert runner.call_count == 1
+
+
+@pytest.mark.parametrize("changes", [
+    {"id": 0}, {"in_reply_to_id": 51}, {"body": "Different"}, {"user": {"login": "bad login"}},
+    {"html_url": "https://github.com/owner/other/pull/12#discussion_r77"},
+])
+def test_mismatched_thread_reply_receipt_is_uncertain(changes):
+    mod = client_module()
+    runner = Mock(return_value=response(201, thread_reply(**changes)))
+    with pytest.raises(mod.PostingUncertain):
+        mod.ReviewClient(runner=runner).create_reply(REF, 50, "Answer")
+
+
+@pytest.mark.parametrize(("thread", "body"), [(0, "x"), (True, "x"), ("50", "x"), (50, " ")])
+def test_invalid_thread_reply_never_launches(thread, body):
+    mod = client_module()
+    runner = Mock()
+    with pytest.raises(GitHubError):
+        mod.ReviewClient(runner=runner).create_reply(REF, thread, body)
+    runner.assert_not_called()
+
+
+def test_rejected_thread_reply_is_an_explicit_rejection():
+    mod = client_module()
+    runner = Mock(return_value=response(404, {"message": "Not Found"}))
+    with pytest.raises(mod.PostingRejected) as error:
+        mod.ReviewClient(runner=runner).create_reply(REF, 50, "Answer")
+    assert error.value.status == 404 and runner.call_count == 1

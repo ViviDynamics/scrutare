@@ -43,6 +43,16 @@ class PostedReview:
 
 
 @dataclass(frozen=True)
+class ThreadReply:
+    """A confirmed reply on one inline review thread."""
+
+    comment_id: int
+    thread: int
+    html_url: str
+    login: str
+
+
+@dataclass(frozen=True)
 class _Response:
     status: int
     value: Any
@@ -214,6 +224,36 @@ class ReviewClient:
             f"repos/{ref.owner}/{ref.repo}/pulls/{ref.number}/reviews", payload.to_bytes(),
         )
         return _receipt(response.value, ref, payload)
+
+    def create_reply(self, ref: PullRequestRef, thread: int, body: str) -> ThreadReply:
+        """Attempt one reply to a thread's root comment; the caller owns every retry."""
+        ref = _validated_ref(ref)
+        if type(thread) is not int or thread <= 0 or not isinstance(body, str) or not body.strip():
+            raise PostingError("Use a root comment ID and nonempty reply text.")
+        response = self._write(
+            f"repos/{ref.owner}/{ref.repo}/pulls/{ref.number}/comments/{thread}/replies",
+            json.dumps({"body": body}, ensure_ascii=False).encode("utf-8"),
+        )
+        value = response.value
+        identity = value.get("id") if isinstance(value, dict) else None
+        user = value.get("user") if isinstance(value, dict) else None
+        login = user.get("login") if isinstance(user, dict) else None
+        expected_url = (
+            rf"https://github\.com/(?i:{re.escape(ref.owner)}/{re.escape(ref.repo)})"
+            f"/pull/{ref.number}#discussion_r{identity}"
+        )
+        if (
+            not isinstance(value, dict)
+            or type(identity) is not int or identity <= 0
+            or value.get("in_reply_to_id") != thread
+            or value.get("body") != body
+            or not isinstance(value.get("html_url"), str)
+            or re.fullmatch(expected_url, value["html_url"]) is None
+            or not _login(login)
+        ):
+            raise PostingUncertain(_UNCERTAIN)
+        assert isinstance(login, str)
+        return ThreadReply(identity, thread, value["html_url"], login)
 
     def request_reviewers(
         self, ref: PullRequestRef, reviewers: tuple[str, ...],

@@ -3,6 +3,7 @@ import importlib
 import json
 import shutil
 from dataclasses import replace
+from hashlib import sha256
 
 import pytest
 from test_iterative import run, setup
@@ -126,7 +127,8 @@ def test_trusted_reply_without_a_push_reassesses_and_upholds_a_supported_finding
     assert (contest["id"], contest["author"], contest["trusted"]) == (51, "lead", True)
     assert contest["body"] == "This is intentional." and contest["status"] == "contested"
     assert replies["existing_threads"] == [
-        {"comment_id": 50, "path": "src/app.py", "line": 1, "side": "RIGHT"}]
+        {"comment_id": 50, "path": "src/app.py", "line": 1, "side": "RIGHT",
+         "body_sha256": sha256(b"Problem:\n\n> Problem").hexdigest()}]
     pending, = pool["responses"]
     assert pending["key"] == response["key"] and pending["status"] == "pending"
 

@@ -229,8 +229,10 @@ def reply_view(run: Path, config: ReviewConfig, runs: object, comments: object,
             threads[comment["id"]] = anchor
             if anchor is not None and comment.get("original_commit_id") == head and _identity(
                     comment.get("original_line")):
-                existing.append({"comment_id": comment["id"], "path": anchor.file,
-                                 "line": comment["original_line"], "side": anchor.side})
+                existing.append({
+                    "comment_id": comment["id"], "path": anchor.file,
+                    "line": comment["original_line"], "side": anchor.side,
+                    "body_sha256": sha256(comment["body"].encode("utf-8")).hexdigest()})
     entries = []
     for comment in valid:
         identity = author(comment)
