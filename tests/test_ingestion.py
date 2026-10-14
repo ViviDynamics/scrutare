@@ -370,3 +370,102 @@ def test_complete_raw_count_is_checked_before_review_projection(tmp_path):
         ingestion().ingest_pr(client, REF, tmp_path, config_bytes=raw,
                               config_data=config.to_dict(), review_config=config)
     assert list(tmp_path.iterdir()) == []
+
+
+REPLIES = (b"strategy: iterative\nmodels: {default: {model: test-model}}\n"
+           b"replies: {enabled: true}\n")
+
+
+def inline(identity, login, kind="User", **fields):
+    return {"id": identity, "path": "example.py", "line": 1, "body": "text",
+            "user": {"login": login, "type": kind}, **fields}
+
+
+class ReplyClient(FakeClient):
+    def __init__(self, comments, permissions):
+        super().__init__()
+        self.comments, self.permissions, self.lookups = comments, permissions, []
+
+    def get_diff(self, ref):
+        return ("diff --git a/example.py b/example.py\n"
+                "--- a/example.py\n+++ b/example.py\n@@ -1 +1 @@\n-old\n+new\n")
+
+    def get_files(self, ref):
+        return [{"filename": "example.py", "status": "modified"}]
+
+    def get_review_comments(self, ref):
+        return self.comments
+
+    def get_permission(self, ref, login):
+        assert ref == REF
+        self.lookups.append(login)
+        result = self.permissions[login]
+        if isinstance(result, Exception):
+            raise result
+        return result
+
+
+def configured(raw):
+    from scrutare.config import parse_config
+    config = parse_config(raw)
+    return {"config_bytes": raw, "config_data": config.to_dict(), "review_config": config}
+
+
+def test_reply_permissions_are_captured_once_per_human_author(tmp_path):
+    client = ReplyClient(
+        [inline(1, "scrutare[bot]", "Bot"), inline(2, "Lead", in_reply_to_id=1),
+         inline(3, "lead", in_reply_to_id=1), inline(4, "stranger", in_reply_to_id=1),
+         inline(5, "gone", in_reply_to_id=1), inline(6, "helper-bot", "Bot", in_reply_to_id=1),
+         {"id": 7, "body": "no author"}, inline(8, "a/../b")],
+        {"lead": "admin", "stranger": "read", "gone": GitHubError("not found")})
+    run = ingestion().ingest_pr(client, REF, tmp_path / "runs", **configured(REPLIES))
+    # Newest first, one lookup per account, never a bot or a malformed login.
+    assert client.lookups == ["gone", "stranger", "lead"]
+    assert read_json(run, "reply-permissions.json") == {
+        "schema_version": 1, "policy": "write", "complete": True,
+        "permissions": {"gone": "unknown", "lead": "admin", "stranger": "read"}}
+
+
+def test_reply_permission_lookups_are_bounded(tmp_path):
+    comments = [inline(index, f"user{index}") for index in range(1, 41)]
+    client = ReplyClient(comments, {f"user{index}": "read" for index in range(1, 41)})
+    run = ingestion().ingest_pr(client, REF, tmp_path / "runs", **configured(REPLIES))
+    assert len(client.lookups) == 32 and client.lookups[0] == "user40"
+    document = read_json(run, "reply-permissions.json")
+    assert document["complete"] is False and "user8" not in document["permissions"]
+
+
+@pytest.mark.parametrize("raw", [
+    b"strategy: iterative\nmodels: {default: {model: test-model}}\n",
+    b"strategy: iterative\nmodels: {default: {model: test-model}}\n"
+    b"replies: {enabled: true, trust: anyone}\n",
+])
+def test_no_permission_is_read_unless_the_write_policy_is_enabled(tmp_path, raw):
+    client = ReplyClient([inline(2, "lead", in_reply_to_id=1)], {})
+    run = ingestion().ingest_pr(client, REF, tmp_path / "runs", **configured(raw))
+    assert client.lookups == [] and not (run / "reply-permissions.json").exists()
+
+
+def test_a_flood_of_outside_commenters_cannot_crowd_out_likely_maintainers(tmp_path):
+    comments = [inline(1, "maintainer", author_association="MEMBER"),
+                inline(2, "owner", author_association="OWNER")]
+    comments += [inline(index, f"sock{index}", author_association="NONE")
+                 for index in range(3, 60)]
+    permissions = {f"sock{index}": "read" for index in range(3, 60)}
+    client = ReplyClient(comments, permissions | {"maintainer": "write", "owner": "admin"})
+    run = ingestion().ingest_pr(client, REF, tmp_path / "runs", **configured(REPLIES))
+    # The association only orders the bounded lookups. The verified permission decides.
+    assert client.lookups[:2] == ["owner", "maintainer"] and len(client.lookups) == 32
+    saved = read_json(run, "reply-permissions.json")["permissions"]
+    assert saved["maintainer"] == "write" and saved["owner"] == "admin"
+
+
+def test_thread_replies_are_looked_up_before_other_outside_comments(tmp_path):
+    comments = [inline(1, "private-member", author_association="NONE", in_reply_to_id=9)]
+    comments += [inline(index, f"drive{index}", author_association="NONE")
+                 for index in range(2, 50)]
+    client = ReplyClient(comments, {f"drive{index}": "read" for index in range(2, 50)}
+                         | {"private-member": "write"})
+    run = ingestion().ingest_pr(client, REF, tmp_path / "runs", **configured(REPLIES))
+    assert client.lookups[0] == "private-member"
+    assert read_json(run, "reply-permissions.json")["permissions"]["private-member"] == "write"

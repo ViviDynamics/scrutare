@@ -685,3 +685,45 @@ def test_invalid_path_is_a_config_error():
 
     with pytest.raises(ConfigError, match="config: cannot read configuration file"):
         load_config(Path("bad\x00path"))
+
+
+MODEL = "models: {default: {model: test-model}}\n"
+
+
+def test_replies_are_off_by_default_and_absent_from_canonical_configuration():
+    config = parse_config(MODEL + "strategy: iterative\n")
+    assert config.replies.enabled is False and config.replies.trust == "write"
+    assert "replies" not in config.to_dict()
+    explicit = parse_config(MODEL + "strategy: iterative\nreplies: {enabled: false}\n")
+    assert explicit.to_dict() == config.to_dict()
+
+
+def test_enabled_replies_round_trip_with_their_trust_policy():
+    config = parse_config(
+        MODEL + "strategy: iterative\nreplies: {enabled: true, trust: anyone}\n")
+    assert config.replies.enabled is True and config.replies.trust == "anyone"
+    assert config.to_dict()["replies"] == {"enabled": True, "trust": "anyone"}
+    assert parse_config(yaml.safe_dump(config.to_dict())) == config
+    default = parse_config(MODEL + "strategy: iterative\nreplies: {enabled: true}\n")
+    assert default.to_dict()["replies"] == {"enabled": True, "trust": "write"}
+
+
+@pytest.mark.parametrize("strategy", ["panel", "debate"])
+def test_replies_are_refused_outside_iterative(strategy):
+    with pytest.raises(ConfigError, match="replies.enabled: requires strategy iterative"):
+        parse_config(MODEL + f"strategy: {strategy}\nreplies: {{enabled: true}}\n")
+    # The disabled setting stays valid everywhere.
+    assert parse_config(MODEL + f"strategy: {strategy}\nreplies: {{enabled: false}}\n")
+
+
+@pytest.mark.parametrize(("text", "field"), [
+    ("replies: {enabled: yes-please}", "replies.enabled"),
+    ("replies: {enabled: 1}", "replies.enabled"),
+    ("replies: {trust: owners}", "replies.trust"),
+    ("replies: {trust: 3}", "replies.trust"),
+    ("replies: {budget: 9}", "replies.budget"),
+    ("replies: []", "replies"),
+])
+def test_invalid_reply_settings_name_their_field(text, field):
+    with pytest.raises(ConfigError, match=field):
+        parse_config(MODEL + "strategy: iterative\n" + text + "\n")
