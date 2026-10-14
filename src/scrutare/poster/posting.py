@@ -12,7 +12,7 @@ from uuid import uuid4
 
 from scrutare.config import ConfigError, ReviewConfig, parse_config
 from scrutare.engine.github import GitHubError, PullRequestRef, assert_pr_open, resolve_pr
-from scrutare.findings import Verdict, VerdictArtifactError, write_verdict
+from scrutare.findings import Anchor, FindingError, Verdict, VerdictArtifactError, write_verdict
 from scrutare.poster.client import PostedReview, ReviewClient, _receipt
 from scrutare.poster.errors import (
     PostingError,
@@ -84,6 +84,27 @@ def _evidence(run_dir: Path, verdict: Verdict) -> None:
         raise PostingError(
             "Cannot preserve verdict and findings artifacts; inspect the run."
         ) from None
+
+
+def _existing_threads(run_dir: Path, config: ReviewConfig,
+                      head: str) -> frozenset[tuple[Anchor, str]]:
+    """Inline threads the engine found already posted at this head, when replies are on."""
+    path = run_dir / "replies.json"
+    if not config.replies.enabled or not path.exists():
+        return frozenset()
+    try:
+        document = read_json(path)
+        if document["head_sha"] != head:
+            return frozenset()
+        threads = set()
+        for thread in document["existing_threads"]:
+            digest = thread["body_sha256"]
+            if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
+                raise ValueError
+            threads.add((Anchor(thread["path"], thread["line"], thread["side"]), digest))
+        return frozenset(threads)
+    except (KeyError, TypeError, ValueError, FindingError):
+        raise PostingError("Reply evidence is invalid; inspect the saved run.") from None
 
 
 def _saved_receipt(value: Any, ref: PullRequestRef, payload: ReviewPayload) -> PostedReview:
@@ -283,7 +304,8 @@ def _post_review_locked(
         raise PostingError("Invalid posting run identity; inspect the saved run.")
     payload = build_review_payload(verdict, diff, head_sha=head, strategy=config.strategy,
                                    post_mode=config.github.post_mode, run_id=run_id,
-                                   human_reviewers=reviewers)
+                                   human_reviewers=reviewers,
+                                   existing_threads=_existing_threads(run_dir, config, head))
     intent = {"schema_version": 1, "repository": f"{ref.owner}/{ref.repo}",
               "pr_number": ref.number, "head_sha": head, "event": payload.event,
               "run_id": run_id, "payload_sha256": _hash(payload.to_bytes()),

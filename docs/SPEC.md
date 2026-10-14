@@ -263,8 +263,10 @@ rewrite. See the [replay guide](replay.md) for evidence requirements and exits.
 - **M3**: debate strategy with the chair session.
 - **M4**: GitHub App front door: a webhook listener for `pull_request`
   events, its own review identity, deployed to the cluster, with
-  conductor/coordinare integrating through the App or its API. Chat-style
-  replies to PR comments (CodeRabbit parity) follow the App.
+  conductor/coordinare integrating through the App or its API. Replies on
+  Scrutare's own inline threads contest the finding and are answered in the
+  thread under the opt-in [`replies` setting](iterative-review.md#replies-on-scrutare-threads-opt-in).
+  General chat-style replies to PR comments (CodeRabbit parity) follow the App.
 
 ## 11. Nare dependency policy
 

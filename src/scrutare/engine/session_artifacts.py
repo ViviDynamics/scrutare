@@ -102,7 +102,8 @@ def _destination(path: Path, prepared_root: Path) -> tuple[Path, bool]:
     parts = path.relative_to(run).parts
     if len(parts) == 1 and parts[0] in (
         "fanout.json", "panel.json", "debate.json", "findings.json", "verdict.json",
-        "artifacts.json", "result.json", "iterative.json", "assessment.json", "routing.json"
+        "artifacts.json", "result.json", "iterative.json", "assessment.json", "routing.json",
+        "replies.json"
     ):
         return path, False
     if len(parts) == 1 and re.fullmatch(r"assessment-round-[0-9]{4}\.json", parts[0]):

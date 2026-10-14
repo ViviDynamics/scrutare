@@ -15,6 +15,7 @@ _PRIOR_EVIDENCE = (
     "posting.json", "review-payload.json", "escalation.json", "reviewer-request.json",
     ".posting.lock", "artifacts.json", "result.json",
     "iterative.json", "iterative-round", "assessment.json",
+    "replies.json", "reply-posting.json",
 )
 
 

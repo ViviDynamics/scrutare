@@ -378,3 +378,50 @@ def test_all_reads_pin_github_com_despite_parent_host(monkeypatch, value, reposi
     ):
         assert method(ref) == []
     assert os.environ["GH_HOST"] == "alternate.example.com"
+
+
+def test_permission_lookup_reads_one_validated_collaborator_record():
+    mod = github()
+    runner = Mock(return_value=subprocess.CompletedProcess(
+        [], 0, b'{"permission":"write","role_name":"maintain","user":{"login":"Maintainer"}}', b""))
+    ref = mod.PullRequestRef("owner", "repo", 12)
+    assert mod.GitHubClient(runner=runner).get_permission(ref, "maintainer") == "write"
+    assert runner.call_args.args[0] == [
+        "gh", "api", "repos/owner/repo/collaborators/maintainer/permission"]
+
+
+@pytest.mark.parametrize("login", ["", "a/../b", "bot[bot]", "x" * 40, "-lead", "a b", "a?b=c", 7])
+def test_permission_lookup_refuses_unsafe_logins_before_transport(login):
+    mod = github()
+    runner = Mock()
+    with pytest.raises(mod.GitHubError, match="login"):
+        mod.GitHubClient(runner=runner).get_permission(
+            mod.PullRequestRef("owner", "repo", 12), login)
+    runner.assert_not_called()
+
+
+@pytest.mark.parametrize("payload", [
+    b"[]", b'{"permission":"owner","user":{"login":"maintainer"}}',
+    b'{"permission":"write","user":{"login":"someone-else"}}', b'{"permission":"write"}',
+])
+def test_permission_lookup_rejects_malformed_or_mismatched_records(payload):
+    mod = github()
+    runner = Mock(return_value=subprocess.CompletedProcess([], 0, payload, b""))
+    with pytest.raises(mod.GitHubError, match="permission"):
+        mod.GitHubClient(runner=runner).get_permission(
+            mod.PullRequestRef("owner", "repo", 12), "maintainer")
+
+
+@pytest.mark.parametrize("login", ["mona_acme", "mona-lisa_acme1"])
+def test_managed_user_logins_can_be_looked_up(login):
+    mod = github()
+    runner = Mock(return_value=subprocess.CompletedProcess(
+        [], 0, json.dumps({"permission": "write", "user": {"login": login}}).encode(), b""))
+    assert mod.GitHubClient(runner=runner).get_permission(
+        mod.PullRequestRef("owner", "repo", 12), login) == "write"
+    assert runner.call_args.args[0][2] == f"repos/owner/repo/collaborators/{login}/permission"
+
+
+@pytest.mark.parametrize("login", ["_acme", "mona_", "mona__acme", "mona_ac_me", "mona_ac-me"])
+def test_only_one_managed_suffix_is_a_login(login):
+    assert github().human_login(login) is False

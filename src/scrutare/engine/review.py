@@ -20,11 +20,13 @@ from scrutare.engine.session_models import NareRuntime, TokenUsage
 from scrutare.engine.strategy import StrategyNotImplementedError, run_review
 from scrutare.findings import Verdict
 from scrutare.poster import (
+    PostedReply,
     PostedReview,
     PostingError,
     ReviewClient,
     ReviewerRequestReceipt,
     post_escalation,
+    post_replies,
     post_review,
 )
 from scrutare.poster.errors import PostingInterruptedError
@@ -58,17 +60,27 @@ class ReviewRunResult:
     panel_status: str
     usage: TokenUsage
     accounting_complete: bool
-    review: PostedReview
+    review: PostedReview | None
     reviewer_request: ReviewerRequestReceipt | None = None
+    # None unless replies are enabled. A replies-only run that found nothing to
+    # reassess posts no review and reports `unchanged`.
+    replies: tuple[PostedReply, ...] | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        data = {
-            "schema_version": 1, "scrutare_version": __version__, "status": "posted",
+        data: dict[str, Any] = {
+            "schema_version": 1, "scrutare_version": __version__,
+            "status": "posted" if self.review is not None else "unchanged",
             "run_dir": str(self.run_dir), "head_sha": self.head_sha,
             "verdict": self.verdict, "rule": self.rule, "panel_status": self.panel_status,
             "usage": self.usage.to_dict(), "accounting_complete": self.accounting_complete,
-            "review": asdict(self.review),
         }
+        if self.review is not None:
+            data["review"] = asdict(self.review)
+        if self.replies is not None:
+            data["replies"] = [
+                {"thread": reply.thread, "comment_id": reply.comment_id,
+                 "disposition": reply.disposition, "status": reply.status,
+                 "html_url": reply.html_url} for reply in self.replies]
         if self.reviewer_request is not None:
             data["reviewer_request"] = {
                 "reviewers": list(self.reviewer_request.reviewers),
@@ -81,6 +93,12 @@ class ReviewRunResult:
                            indent=2, allow_nan=False) + "\n").encode("utf-8")
 
 
+def preflight_replies_only(config: ReviewConfig, replies_only: bool) -> None:
+    """Refuse a replies-only run the configuration has not opted into."""
+    if replies_only and not config.replies.enabled:
+        raise ReviewRunError("--replies-only requires replies.enabled in the configuration.")
+
+
 def preflight_review(config: ReviewConfig, runtime: NareRuntime) -> None:
     """Reject unsupported strategies or absent executables before any GitHub access."""
     if config.strategy not in ("panel", "iterative", "debate"):
@@ -88,6 +106,17 @@ def preflight_review(config: ReviewConfig, runtime: NareRuntime) -> None:
     if not isinstance(runtime, NareRuntime) or shutil.which(str(runtime.executable)) is None:
         raise ReviewRunError("executable: cannot locate an executable nare runtime")
     # Version and protocol inspection remain authoritative in the engine.
+
+
+def _unchanged_head(run_dir: Path) -> str | None:
+    """The captured head when the engine found nothing that needs a new review."""
+    try:
+        document = json.loads((run_dir / "replies.json").read_bytes())
+        if document["review_required"] is False and isinstance(document["head_sha"], str):
+            return str(document["head_sha"])
+    except (OSError, ValueError, KeyError, TypeError):
+        pass
+    return None
 
 
 def _safe_error(error: Exception) -> str:
@@ -103,9 +132,14 @@ async def review_pr(
     ref: PullRequestRef, config: ReviewConfig, *, config_bytes: bytes,
     runs_root: Path, runtime: NareRuntime, capture_client: GitHubClient | None = None,
     review_client: ReviewClient | None = None,
-    analysis_capture: Path | None = None,
+    analysis_capture: Path | None = None, replies_only: bool = False,
 ) -> ReviewRunResult:
-    """Run once, never reusing captured evidence or inventing a missing verdict."""
+    """Run once, never reusing captured evidence or inventing a missing verdict.
+
+    With `replies_only`, a run that finds no new head and no trusted contest posts no
+    review. Pending threaded responses are still delivered.
+    """
+    preflight_replies_only(config, replies_only)
     preflight_review(config, runtime)
     run_dir: Path | None = None
     confirmed = False
@@ -121,17 +155,24 @@ async def review_pr(
             raise ReviewRunError("Panel failed to produce a usable verdict; inspect the saved run.")
         verdict = panel.verdict
         request = None
-        if verdict.verdict == "escalated":
+        receipt: PostedReview | None = None
+        head = _unchanged_head(run_dir) if replies_only else None
+        if head is not None:
+            pass  # Same head, no trusted contest: the posted review still stands.
+        elif verdict.verdict == "escalated":
             delivery = post_escalation(run_dir, verdict, client=review_client)
             receipt, request = delivery.review, delivery.reviewer_request
         else:
             receipt = post_review(run_dir, verdict, client=review_client)
-        confirmed = True
+        confirmed = receipt is not None
+        replies = (post_replies(run_dir, config, client=review_client)
+                   if config.replies.enabled else None)
         # Deliver pending native SIGINT cancellation while this run and receipt are owned.
         await asyncio.sleep(0)
-        result = ReviewRunResult(run_dir, receipt.commit_id, verdict.verdict, verdict.rule,
+        result = ReviewRunResult(run_dir, receipt.commit_id if receipt is not None else str(head),
+                                 verdict.verdict, verdict.rule,
                                  panel.status, panel.usage, panel.accounting_complete,
-                                 receipt, request)
+                                 receipt, request, replies)
         write_owned_bytes(run_dir / "result.json", result.to_bytes(),
                           prepared_root=run_dir / "review-inputs")
         await asyncio.sleep(0)

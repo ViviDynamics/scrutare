@@ -20,9 +20,12 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 import jwt
 
-from scrutare.config import ConfigError, parse_config
+from scrutare.config import ConfigError, ReviewConfig, parse_config
 from scrutare.interfaces.app import (
     MAX_BODY,
+    REPLY_ACTIONS,
+    REPLY_DELIVERY,
+    REPLY_EVENT,
     REVIEWED_ACTIONS,
     AppError,
     AppSettings,
@@ -156,7 +159,8 @@ class GitHubAppClient:
                     continue
                 age = current - datetime.fromisoformat(
                     item["delivered_at"].replace("Z", "+00:00")).timestamp()
-                if (item["event"] != "pull_request" or item["action"] not in REVIEWED_ACTIONS
+                wanted = {"pull_request": REVIEWED_ACTIONS, REPLY_EVENT: REPLY_ACTIONS}
+                if (item["action"] not in wanted.get(item["event"], ())
                         or item["installation_id"] not in self.settings.installations.values()
                         or age > 86400):
                     continue
@@ -196,8 +200,7 @@ def reconcile(store: JobStore, client: Any) -> int:
 _DEFAULT_ORIGINS = {"anthropic": "https://api.anthropic.com", "openai": "https://api.openai.com"}
 
 
-def _config_origins(raw: bytes, settings: AppSettings) -> None:
-    config = parse_config(raw)
+def _config_origins(config: ReviewConfig, settings: AppSettings) -> None:
     rails = [config.models.default, *(rail for _, rail in config.models.overrides)]
     for rail in rails:
         parsed = urlsplit(rail.base_url or _DEFAULT_ORIGINS[rail.provider])
@@ -223,21 +226,39 @@ def _runs(root: Path) -> set[Path]:
     return {path for path in root.iterdir() if path.is_dir() and not path.name.startswith(".")}
 
 
-def _journal(runs: set[Path]) -> tuple[str, str | None]:
-    """Read these runs' posting journals: confirmed, not_sent or uncertain, and the head."""
+def _replies(run: Path) -> str:
+    """One run's threaded responses: any uncertain POST, else any confirmed one."""
+    journal = run / "reply-posting.json"
+    if not journal.exists():
+        return "not_sent"
     try:
-        states, heads = set(), set()
+        states = {{"posted": "confirmed", "pending": "not_sent", "rejected": "not_sent",
+                   "observed": "not_sent"}.get(response.get("status"), "uncertain")
+                  for response in json.loads(journal.read_bytes())["responses"]}
+    except (OSError, ValueError, AttributeError, TypeError, KeyError):
+        return "uncertain"
+    return next((state for state in ("uncertain", "confirmed") if state in states), "not_sent")
+
+
+def _journal(runs: set[Path]) -> tuple[str, str | None]:
+    """Read these runs' posting journals: confirmed, not_sent or uncertain, and the head.
+
+    The head is the one whose review was or may have been sent; responses carry none.
+    """
+    states: set[str] = set()
+    heads: set[str] = set()
+    try:
         for run in runs:
             journal = run / "posting.json"
-            if not journal.exists():
-                states.add("not_sent")
-                continue
-            document = json.loads(journal.read_bytes())
-            state = {"posted": "confirmed", "prepared": "not_sent",
-                     "rejected": "not_sent"}.get(document.get("status"), "uncertain")
-            states.add(state)
-            if state != "not_sent" and isinstance(document.get("head_sha"), str):
-                heads.add(document["head_sha"])
+            state = "not_sent"
+            if journal.exists():
+                document = json.loads(journal.read_bytes())
+                state = {"posted": "confirmed", "prepared": "not_sent",
+                         "rejected": "not_sent"}.get(document.get("status"), "uncertain")
+                if state != "not_sent" and isinstance(document.get("head_sha"), str):
+                    heads.add(document["head_sha"])
+            states.add(next((value for value in ("uncertain", "confirmed")
+                             if value in (state, _replies(run))), "not_sent"))
         if not states:
             return "not_sent", None
         delivery = states.pop() if len(states) == 1 else "uncertain"
@@ -314,15 +335,32 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
         repository_root.mkdir(parents=True, exist_ok=True, mode=0o700)
         api = client if client is not None else GitHubAppClient(settings)
         token = api.installation_token(job["repository"], job["installation"])
-        if not job["delivery"].startswith("api:"):
+        reply = job["delivery"].startswith(REPLY_DELIVERY)
+        raw: bytes | None = None
+        if not reply and not job["delivery"].startswith("api:"):
             # A late or redelivered event must not re-review a head already reviewed.
             prior = store.reviewed(job["repository"], job["number"],
                                    api.head(job["repository"], job["number"], token))
             if prior is not None:
-                store.finish(job["id"], "superseded", {"superseded_by": prior})
-                return
-        raw = api.configuration(job["repository"], token)
-        _config_origins(raw, settings)
+                # Replies may have been coalesced into this job. Where the repository
+                # answers them, it still runs, and posts only for a trusted contest.
+                try:
+                    raw = api.configuration(job["repository"], token)
+                    reply = parse_config(raw).replies.enabled
+                except (AppError, ConfigError):
+                    reply = False
+                if not reply:
+                    store.finish(job["id"], "superseded", {"superseded_by": prior})
+                    return
+        if raw is None:
+            raw = api.configuration(job["repository"], token)
+        config = parse_config(raw)
+        if reply and not config.replies.enabled:
+            # Opt-in: without the setting a reply starts no review and spends nothing.
+            store.finish(job["id"], "unchanged",
+                         {"reason": "replies are not enabled for this repository"})
+            return
+        _config_origins(config, settings)
         config_path = root / "scrutare.yaml"
         config_path.write_bytes(raw)
         environment = worker_environment(token)
@@ -331,6 +369,9 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
                 f"https://github.com/{job['repository']}/pull/{job['number']}",
                 "--config", str(config_path), "--nare-executable",
                 os.environ.get("SCRUTARE_APP_NARE_EXECUTABLE", "nare")]
+        if reply:
+            # The head was reviewed already. Post again only for a trusted contest.
+            argv.append("--replies-only")
         known = _runs(runs)
         try:
             completed = runner(argv, cwd=repository_root, env=environment,
@@ -362,7 +403,8 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
             result = json.loads(completed.stdout)
             run_dir = Path(result["run_dir"])
             if (type(result["schema_version"]) is not int or result["schema_version"] != 1
-                    or result["status"] != "posted"
+                    or result["status"] not in (("posted", "unchanged") if reply else ("posted",))
+                    or (result["status"] == "unchanged") == ("review" in result)
                     or result["verdict"] not in ("approve", "changes_requested", "escalated")
                     or re.fullmatch(r"[0-9a-f]{40}", result["head_sha"]) is None
                     or not run_dir.resolve().is_relative_to(runs.resolve())
@@ -371,7 +413,10 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
         except (OSError, ValueError, KeyError, TypeError):
             raise AppError("review CLI succeeded without its installed result; "
                            "inspect job artifacts") from None
-        store.finish(job["id"], "posted", result, reviewed=result["head_sha"])
+        if result["status"] == "unchanged":
+            store.finish(job["id"], "unchanged", result)
+        else:
+            store.finish(job["id"], "posted", result, reviewed=result["head_sha"])
     except (AppError, ConfigError) as error:
         stop(str(error))
     except (OSError, ValueError, KeyError, TypeError):
