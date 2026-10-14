@@ -63,7 +63,10 @@
   "withdrawn_freeze": {
     "label": "g2-withdrawn-c8059bb",
     "preparation_written_utc": "2026-10-14T18:46:40Z",
-    "launched": false
+    "launched": false,
+    "preparation_sha256": "4c792dce86d9a4285ab20d21ef08a2f220682aade314089c792524bcddc1754a",
+    "gate_sha256": "c3301ce7135c3ddb33f87b75a1731f759069ecdfde8d63aca02a2eaa5a25337b",
+    "evaluation_sha256": "a0b4f9920ee6fcbafd1d3156940a0ca3073fcb37d617386b3ea00385adf03cf8"
   },
   "note": "freeze-*.json were written by the operator before each launch, and the hashes were posted on #51 before the first call of each schedule: g1 freeze 15:19:59Z, comment 15:20:00Z, launch 15:20:11Z; g2 freeze 18:47:33Z, comment 18:47:48Z, launch 18:48:07Z. Neither comment was edited. The process records and ledger are local operator records; the comments are the only timestamps outside them.",
   "public_freeze_comment_created_utc": {

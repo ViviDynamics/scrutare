@@ -97,7 +97,8 @@ def test_reproduction_refuses_regenerated_freeze_or_mechanical_files(tmp_path, m
     for name, old, new in (
             ('g2/preparation.json', '"concurrency": 3', '"concurrency": 4'),
             ('g2/mechanical-qualification.json', '"gate_sha256":"', '"gate_sha256":"0'),
-            ('freeze-record.json', '"gate_sha256": "c3301ce7', '"gate_sha256": "d3301ce7')):
+            ('freeze-record.json', '"gate_sha256": "c3301ce7', '"gate_sha256": "d3301ce7'),
+            ('g2-withdrawn-c8059bb/preparation.json', '"concurrency": 3', '"concurrency": 4')):
         copy = tmp_path / name.replace('/', '-')
         shutil.copytree(PACKAGE, copy, ignore=shutil.ignore_patterns('__pycache__'))
         text = (copy / name).read_text()
@@ -108,7 +109,8 @@ def test_reproduction_refuses_regenerated_freeze_or_mechanical_files(tmp_path, m
             run(monkeypatch, copy, tmp_path / 'out.json')
     copy = tmp_path / 'extra'
     shutil.copytree(PACKAGE, copy, ignore=shutil.ignore_patterns('__pycache__'))
-    (copy / 'unlisted.json').write_text('{}')
+    (copy / 'g2/__pycache__').mkdir()
+    (copy / 'g2/__pycache__/hidden.json').write_text('{}')
     with pytest.raises(ValueError, match='outside the hash manifest'):
         run(monkeypatch, copy, tmp_path / 'out.json')
 

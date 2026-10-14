@@ -2,7 +2,7 @@
   "config_file": {
     "findings": "no fallbacks, default_fallbacks or context_window_fallbacks keys; model_group_alias maps only claude-haiku, claude-haiku-4-5 and claude-sonnet; spark/glm-5.3-flash is one model_list entry (openai/glm-5.3-flash, api_key none, use_chat_completions_api true); store_model_in_db true, so the live proxy was also read",
     "last_changed_in": "0977cbb8f88af9507c5d28c57f54f527f01acd69",
-    "path": "clusters/garden/namespaces/litellm/litellm-values.yaml",
+    "path": "the LiteLLM Helm values file",
     "read_at_origin_main": "0a3de125003e5b186f5debaabd94e681626c8f2d",
     "repository": "ViviDynamics/infrastructure (private)"
   },
@@ -229,7 +229,7 @@
           "served_by_spark_glm_deployment": 110
         }
       },
-      "note": "python-httpx2 is nare (this evaluator) and Python-urllib/curl are the pre-freeze probes; opencode and claude-cli are other clients of the same proxy and engine; the evaluator authenticated with the proxy admin credential, which the log records by name, not value. attributed_spend_usd is LiteLLM applying its configured rate to a self-hosted model; no provider bills it.",
+      "note": "python-httpx2 is nare (this evaluator) and Python-urllib/curl are the pre-freeze probes; opencode and claude-cli are other clients of the same proxy and engine. attributed_spend_usd is LiteLLM applying its configured rate to a self-hosted model; no provider bills it.",
       "private_raw_rows_sha256": "2654acd347ff008b8303503a6452d18acc82aaf99cb2905d0e94bb23a3c705ab",
       "rows": 126
     },
@@ -272,7 +272,7 @@
           "served_by_spark_glm_deployment": 488
         }
       },
-      "note": "python-httpx2 is nare (this evaluator) and Python-urllib/curl are the pre-freeze probes; opencode and claude-cli are other clients of the same proxy and engine; the evaluator authenticated with the proxy admin credential, which the log records by name, not value. attributed_spend_usd is LiteLLM applying its configured rate to a self-hosted model; no provider bills it.",
+      "note": "python-httpx2 is nare (this evaluator) and Python-urllib/curl are the pre-freeze probes; opencode and claude-cli are other clients of the same proxy and engine. attributed_spend_usd is LiteLLM applying its configured rate to a self-hosted model; no provider bills it.",
       "private_raw_rows_sha256": "6e39a28f2b5df51402b62848df07fea21ac29af02a93595e9fd0a3a1b1052944",
       "rows": 702
     }

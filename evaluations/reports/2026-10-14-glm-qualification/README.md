@@ -49,8 +49,8 @@ none of the 3 assessors did. The other 38:
 | `budget` | 3 discovery, 2 assessors | exceeded 20,000-token grants. Two of the discovery sessions finished their answer and overshot by only 17 and 610 tokens. |
 | `citation_validation` | 1 discovery | one citation past the end of a file (`line_range_outside_capture`), the shape seen before with `gpt-6.1-sol` |
 
-Ten of the 22 failed cells failed only on timeouts. The other twelve also hold
-a schema, budget or citation failure. Three schema failures (in
+Ten of the 22 failed cells failed only on timeouts. The other twelve hold a
+schema, budget or citation failure (five of them with no timeout at all). Three schema failures (in
 `security-auth-order` aggregate repeats 2 and 3) void aggregate defect cells.
 
 The frozen gate permitted ("may run") one further schedule for a failure a
@@ -63,10 +63,12 @@ documented profile change addresses. Some `g2` failures were of that kind:
 - **The one out-of-range citation:** `context.line_counts`.
 
 No setting in Scrutare or nare repairs a malformed final answer, and nare
-reprompts once. Schema failures hit 9 of 144 discovery sessions (6.25%). At that
-rate, the chance that all 144 discovery sessions of a schedule avoid one is about
-0.0001, so the six-aggregate-cell and 36-cell criteria are practically
-unreachable whatever else changes. On that arithmetic the operator chose not to
+reprompts once. Schema failures hit 9 of 144 discovery sessions (6.25%; Wilson
+95% from 3.3%). At that rate, the chance that all 144 discovery sessions of a
+schedule avoid one is about 0.0001 (about 0.008 at the lower bound), so the
+36-cell criterion is practically unreachable whatever else changes. The
+six-aggregate-cell criterion alone needs 24 clean sessions, about a 1 in 5 to
+1 in 8 chance at the observed rates. On that arithmetic the operator chose not to
 run the further schedule. This is a judgment within the clause, not a
 prohibition by it.
 
@@ -178,9 +180,10 @@ Python 3.10 or newer, standard library only, no network. It fails on any
 difference, and it:
 - checks every published hash here and in the two sibling packages it compares
   against, and refuses files outside the manifest;
-- requires each schedule's `preparation.json`, `gate.json` and `evaluation.json`
-  to match the hashes posted on #51, the freeze record, the private-original
-  hashes and the preparation's own input hashes;
+- requires `g1`'s and `g2`'s `preparation.json`, `gate.json` and
+  `evaluation.json` to match the hashes posted on #51, the freeze record, the
+  private-original hashes and the preparation's own input hashes. The withdrawn
+  freeze is bound to the freeze record only, since it was never posted;
 - requires each mechanical summary to name that gate and experiment;
 - recomputes `g2`'s gate, the automated decisions, `g1`'s recorded cells and the
   side-by-side.

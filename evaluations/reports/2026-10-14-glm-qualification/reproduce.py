@@ -94,8 +94,9 @@ def sha(path):
 
 def verify_hashes(package):
     manifest = read(package / 'published-sha256.json')
+    # Only the interpreter cache beside reproduce.py itself is exempt.
     present = {p.relative_to(package).as_posix() for p in package.rglob('*')
-               if p.is_file() and '__pycache__' not in p.parts}
+               if p.is_file() and p.relative_to(package).parts[0] != '__pycache__'}
     if present - {'published-sha256.json'} != set(manifest):
         raise ValueError(f'files outside the hash manifest: {package.name}')
     for name, expected in manifest.items():
@@ -115,6 +116,13 @@ def cross_hashes(package):
             if prep['input_sha256'][name] != sha(directory / name):
                 raise ValueError(f'{job}/{name} differs from its frozen preparation')
         if job in WITHDRAWN:
+            withdrawn = read(package / 'freeze-record.json')['withdrawn_freeze']
+            if withdrawn['label'] != job or withdrawn['launched'] is not False or any(
+                    withdrawn[f'{n}_sha256'] != sha(directory / f'{n}.json')
+                    for n in ('preparation', 'gate', 'evaluation')):
+                raise ValueError(f'{job} differs from its freeze record')
+            if (directory / 'experiment.json').exists():
+                raise ValueError(f'{job} was withdrawn and cannot carry an experiment')
             continue
         posted = POSTED_ON_51[job]
         frozen = record[job]
