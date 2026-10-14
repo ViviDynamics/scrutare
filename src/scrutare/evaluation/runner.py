@@ -65,7 +65,11 @@ def comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline'
             or len(set(variant_names)) != len(variant_names)
             or any(name not in variants for name in variant_names)):
         raise ValueError('variant selection requires distinct arms of the comparison set')
-    return {name: value for name, value in variants.items() if name in variant_names}
+    selected = {name: value for name, value in variants.items() if name in variant_names}
+    if assessment_tokens is not None and not any(
+            value.findings.assessment.enabled for value in selected.values()):
+        raise ValueError('assessment reservation requires a selected arm with an assessor')
+    return selected
 
 
 def _comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline',
@@ -79,6 +83,8 @@ def _comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline
     if total < 5:
         raise ValueError('comparison total ceiling must support five participants')
     roster = ('senior-dev', 'junior-dev', 'security', 'devops')
+    # The bound assumes assessed arms use exactly this fixed roster; an assessed arm with
+    # more reviewers would need a tighter one to keep every grant positive.
     if assessment_tokens is not None and (
             comparison_set not in ('architectures', 'focused')
             or type(assessment_tokens) is not int

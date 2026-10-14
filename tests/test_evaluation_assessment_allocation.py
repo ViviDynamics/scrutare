@@ -37,9 +37,31 @@ def test_explicit_reservation_reaches_every_assessed_arm_and_no_other(
 
 
 def test_unset_reservation_keeps_the_one_fifth_default():
-    for comparison_set in ('baseline', 'procedures', 'architectures', 'focused'):
-        assert comparison_configs(config(), comparison_set=comparison_set) == comparison_configs(
-            config(), comparison_set=comparison_set, assessment_tokens=None)
+    from scrutare.config import BudgetSettings
+
+    for comparison_set, assessed in (('architectures', ('assessment', 'tools')),
+                                     ('focused', ('assessed', 'focused1', 'focused3'))):
+        variants = comparison_configs(config(), comparison_set=comparison_set)
+        for name, variant in variants.items():
+            assert variant.budgets == BudgetSettings(100, 400)
+            assert variant.findings.assessment.enabled == (name in assessed)
+            if name in assessed:
+                assert variant.findings.assessment.tokens == 80
+
+
+def test_largest_reservation_leaves_each_reviewer_one_token():
+    chosen = comparison_configs(config(), comparison_set='focused', assessment_tokens=396)
+    assert chosen['assessed'].findings.assessment.tokens == 396
+    assert chosen['assessed'].budgets.review_max_tokens == 400
+
+
+def test_reservation_is_refused_when_no_selected_arm_has_an_assessor():
+    with pytest.raises(ValueError, match='assessment'):
+        comparison_configs(config(), comparison_set='architectures',
+                           variant_names=('baseline', 'context'), assessment_tokens=120)
+    chosen = comparison_configs(config(), comparison_set='architectures',
+                                variant_names=('evidence', 'assessment'), assessment_tokens=120)
+    assert chosen['assessment'].findings.assessment.tokens == 120
 
 
 @pytest.mark.parametrize('value', [0, -1, 397, 400, 4000, 1.5, True, '120'])
@@ -86,6 +108,28 @@ def test_snapshot_records_the_reservation_and_the_shared_ledger_split(tmp_path, 
                                            'devops': 70, 'evidence-assessor': 120}
             assert default['case_variants']['a'][name]['allocations'][
                 'evidence-assessor'] == 80
+
+
+def test_indivisible_remainder_still_sums_to_the_total_ceiling(tmp_path, monkeypatch):
+    cases = declared(tmp_path / 'corpus')
+    async def inspect(runtime):
+        return SimpleNamespace(version='2026.10.4', contract=1)
+    async def execute(directory, conf, *, runtime):
+        return complete()
+    monkeypatch.setattr('scrutare.evaluation.runner.inspect_nare_runtime', inspect)
+    monkeypatch.setattr('scrutare.evaluation.runner.run_review', execute)
+    conf = replace(config(), context=ContextSettings(related_paths=('caller.py',)))
+    for tokens, expected in ((121, [70, 70, 70, 69]), (396, [1, 1, 1, 1])):
+        out = tmp_path / f'out-{tokens}'
+        asyncio.run(run_experiment(cases, conf, out, runtime=NareRuntime(Path('/unused')),
+            evidence_kind='offline', comparison_set='architectures',
+            variant_names=('assessment',), assessment_tokens=tokens))
+        cell = json.loads((out / 'snapshot.json').read_text())['case_variants']['a'][
+            'assessment']
+        assert cell['allocations']['evidence-assessor'] == tokens
+        assert sorted((v for k, v in cell['allocations'].items()
+                       if k != 'evidence-assessor'), reverse=True) == expected
+        assert sum(cell['allocations'].values()) == 400
 
 
 def test_cli_passes_the_reservation(tmp_path, monkeypatch):
