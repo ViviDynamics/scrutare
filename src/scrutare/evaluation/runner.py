@@ -49,10 +49,16 @@ def write_json(path: Path, data: Any) -> None:
 
 
 def comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline',
-                       variant_names: tuple[str, ...] | None = None
+                       variant_names: tuple[str, ...] | None = None,
+                       assessment_tokens: int | None = None
                        ) -> dict[str, ReviewConfig]:
-    """Select explicit arms in their comparison order; never invent or reorder one."""
-    variants = _comparison_configs(config, comparison_set=comparison_set)
+    """Select explicit arms in their comparison order; never invent or reorder one.
+
+    `assessment_tokens` replaces the default one-fifth assessor reservation in every
+    assessed arm. The total ceiling is unchanged, so the reviewers share the rest.
+    """
+    variants = _comparison_configs(config, comparison_set=comparison_set,
+                                   assessment_tokens=assessment_tokens)
     if variant_names is None:
         return variants
     if (not isinstance(variant_names, tuple) or not variant_names
@@ -62,8 +68,8 @@ def comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline'
     return {name: value for name, value in variants.items() if name in variant_names}
 
 
-def _comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline'
-                        ) -> dict[str, ReviewConfig]:
+def _comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline',
+                        assessment_tokens: int | None = None) -> dict[str, ReviewConfig]:
     """Freeze current roster, shared rail and total cap; reserve a fifth debate chair quota."""
     if comparison_set not in ('baseline', 'procedures', 'architectures', 'focused'):
         raise ValueError('unknown comparison set')
@@ -73,6 +79,12 @@ def _comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline
     if total < 5:
         raise ValueError('comparison total ceiling must support five participants')
     roster = ('senior-dev', 'junior-dev', 'security', 'devops')
+    if assessment_tokens is not None and (
+            comparison_set not in ('architectures', 'focused')
+            or type(assessment_tokens) is not int
+            or not 0 < assessment_tokens <= total - len(roster)):
+        raise ValueError('assessment reservation requires an assessed comparison set and a '
+                         'positive integer that leaves every reviewer a grant')
     if comparison_set in ('architectures', 'focused'):
         base = replace(config, strategy='panel', personas=roster,
             budgets=BudgetSettings((total + 3) // 4, total),
@@ -83,7 +95,8 @@ def _comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline
         procedures = replace(context, inspection=InspectionSettings('v1'))
         evidence = replace(procedures, findings=FindingSettings('v2'))
         assessed = replace(evidence, findings=FindingSettings('v2',
-            AssessmentSettings(True, total // 5)))
+            AssessmentSettings(True, total // 5 if assessment_tokens is None
+                               else assessment_tokens)))
         if comparison_set == 'focused':
             discussion = replace(assessed, strategy='debate',
                 findings=replace(assessed.findings, discussion=DiscussionSettings(True)))
@@ -153,6 +166,7 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                          transient_retries: int = 0,
                          transient_retry_delay_seconds: float = 0.0,
                          transient_retry_budget: int | None = None,
+                         assessment_tokens: int | None = None,
                          ) -> dict[str, Any]:
     """Fresh 3-repeat job; ordinary CI calls this only with explicitly offline evidence.
 
@@ -171,7 +185,8 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         raise ValueError('transient retry policy requires 0-5 retries, 0-600 seconds and a '
                          'nonnegative job budget')
     variants = comparison_configs(config, comparison_set=comparison_set,
-                                  variant_names=variant_names)
+                                  variant_names=variant_names,
+                                  assessment_tokens=assessment_tokens)
     needs_context = any(v.context.enabled for v in variants.values())
     needs_analysis = any(v.analysis.enabled for v in variants.values())
     # Freeze before the first await; snapshot hashes and every repeat use these bytes.
@@ -232,6 +247,7 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         'configs': {name: value.to_dict() for name, value in variants.items()},
         'comparison_set': comparison_set,
         'variant_selection': list(variants),
+        'assessment_tokens': assessment_tokens,
         'transient_retry': {
             'max_retries': transient_retries, 'delay_seconds': transient_retry_delay_seconds,
             'max_job_retries': transient_retry_budget,
