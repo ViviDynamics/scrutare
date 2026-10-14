@@ -75,10 +75,20 @@ new citation bundles (possibly empty), actual token deltas and elapsed time.
 retains bypassed IDs, all rounds and the final independent dispositions, including
 refuted claims excluded from the verdict.
 
+With `findings.discussion.tokens`, positions and reassessments instead draw on a
+separate discussion allowance reserved before discovery; the ledger snapshot
+records it under `phases` and `configured.phase_allowances`
+([configuration](config.md#phase-allowances-and-overrun-fallback-opt-in-unmeasured)).
+
 Persistent disputes reach the configured bound and escalate for human review;
 unresolved blocking claims remain visible and cannot approve. Missing or partial
 sessions, invalid references, denied quotas and incomplete accounting withhold a
-verdict instead of claiming a completed deadlock. Replay validates recorded
+verdict instead of claiming a completed deadlock. With the opt-in
+`findings.discussion.overrun: fallback`, a round whose positions or reassessment
+end past their grant with complete accounting instead keeps the assessment from
+before that round: `debate.json` records `reason: discussion_overrun_fallback`
+and a `degraded` record, the verdict is never an approval, and replay validates
+the overrun from the retained outcomes. Replay validates recorded
 candidate identity, citations, independent transitions, original assessor quota
 and the completed bound; it never reruns the models or certifies semantic truth.
 

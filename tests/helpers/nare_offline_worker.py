@@ -140,6 +140,8 @@ class FakeProvider:
         if not self.replies:
             raise AssertionError("Offline transport exhausted scripted replies")
         reply = self.replies.pop(0)
+        # Generated replies keep any scripted usage, so a test can exceed a real budget.
+        usage = reply.get("usage", {"input": 10, "output": 5})
         if reply.get("assess_candidates"):
             prompt = arguments[1]
             pool, _ = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])
@@ -191,7 +193,7 @@ class FakeProvider:
         return Reply(
             content=reply["content"],
             tool_calls=[ToolCall(**call) for call in reply.get("tool_calls", [])],
-            usage=Usage(**reply.get("usage", {"input": 10, "output": 5})),
+            usage=Usage(**usage),
             stop_reason=reply.get("stop_reason", "end_turn"),
             cost=None,
         )

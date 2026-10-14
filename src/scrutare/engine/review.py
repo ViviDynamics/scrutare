@@ -65,6 +65,8 @@ class ReviewRunResult:
     # None unless replies are enabled. A replies-only run that found nothing to
     # reassess posts no review and reports `unchanged`.
     replies: tuple[PostedReply, ...] | None = None
+    # Present only for an opt-in phase overrun fallback, so callers need not read verdict.json.
+    degraded: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         data: dict[str, Any] = {
@@ -81,6 +83,8 @@ class ReviewRunResult:
                 {"thread": reply.thread, "comment_id": reply.comment_id,
                  "disposition": reply.disposition, "status": reply.status,
                  "html_url": reply.html_url} for reply in self.replies]
+        if self.degraded is not None:
+            data["degraded"] = dict(self.degraded)
         if self.reviewer_request is not None:
             data["reviewer_request"] = {
                 "reviewers": list(self.reviewer_request.reviewers),
@@ -172,7 +176,9 @@ async def review_pr(
         result = ReviewRunResult(run_dir, receipt.commit_id if receipt is not None else str(head),
                                  verdict.verdict, verdict.rule,
                                  panel.status, panel.usage, panel.accounting_complete,
-                                 receipt, request, replies)
+                                 receipt, request, replies,
+                                 verdict.degradation.to_dict()
+                                 if verdict.degradation is not None else None)
         write_owned_bytes(run_dir / "result.json", result.to_bytes(),
                           prepared_root=run_dir / "review-inputs")
         await asyncio.sleep(0)

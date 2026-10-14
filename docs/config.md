@@ -204,6 +204,72 @@ independent assessment. It uses `rounds.max` and the existing shared quotas;
 reassessments spend the remaining original assessor reservation. See
 [focused debate](debate.md#focused-evidence-discussion-opt-in).
 
+### Phase allowances and overrun fallback (opt-in, unmeasured)
+
+By default an assessor or discussion session that ends past its grant voids the
+whole review: no verdict, even when discovery and assessment had completed. Two
+opt-in settings change that; both are omitted from canonical configuration at
+their defaults, so existing configurations produce the same artifacts.
+
+```yaml
+findings:
+  evidence: v2
+  assessment:
+    enabled: true
+    tokens: 30000
+    overrun: fallback        # default: void
+  discussion:
+    enabled: true
+    tokens: 20000            # default: unset, reuse discovery and assessor grants
+    overrun: fallback        # default: void
+```
+
+- `findings.discussion.tokens` is a separate discussion allowance. Like the
+  assessor reservation, the ledger carves it out of `budgets.review_max_tokens`
+  before discovery is split, so discovery cannot spend it. Every discussion-round
+  session draws on it alone: concurrent reviewer positions split what remains
+  evenly, and a reassessment takes what is left after them. The assessor
+  reservation then covers only the initial assessment. Assessor and discussion
+  allowances together must leave discovery capacity.
+- `overrun: fallback` answers a measured overrun with the last complete stage. An
+  assessor overrun keeps the anchor-validated findings unassessed; a discussion
+  overrun (a position or a reassessment) keeps the assessment from before that
+  round. Only an admitted session that stopped for its budget with complete
+  accounting qualifies, and every other session in that step must have completed.
+  A failed, malformed or refused session, or incomplete or unknown accounting,
+  still voids the review.
+- A fallback is recorded as degraded and is never an approval. Status is
+  `partial`; `verdict.json`, `panel.json` or `debate.json` carry a `degraded`
+  record naming the phase, round, allowance, grant, actual usage, overrun and
+  fallback stage. Blocking findings still request changes, unresolved potentially
+  blocking claims still escalate under `unresolved_semantic_assessment`, and
+  otherwise the verdict escalates under `phase_overrun_fallback`. Replay rebuilds
+  the fallback from the retained outcomes without running a model.
+- With any of these settings, one participant's overshoot past its own grant no
+  longer shrinks a later reserved grant: each grant is bounded by its own share of
+  the ceiling, not by what others overspent. Every grant still fits the ceiling's
+  partition, but total actual usage can exceed `review_max_tokens` by overshoot
+  already incurred, as after-turn enforcement always allowed.
+- Discussion grants are shared by every round. Positions take an even share of
+  what remains and a reassessment takes the rest, so a reassessment or a later
+  round can find nothing left and is refused admission. With
+  `findings.discussion.overrun: fallback` and complete accounting, that refusal also
+  falls back to the assessment before the refused round; the round is recorded with
+  `admission: refused` and a degraded record with zero grant and usage. Replay
+  checks the refusal against the recorded allowance usage, or, when grants are
+  reused, against the reviewers' and assessor's spent allocations. Without the
+  fallback policy the review is void, as before.
+- `result.json` and the CLI envelope carry the same `degraded` record. The reusable
+  Action accepts an escalation under `phase_overrun_fallback` only with that record,
+  and accepts escalations under `unresolved_semantic_assessment`.
+- Under the fallback policy an overrun assessor's or reassessor's output is never
+  kept: its assessment file records no assessments.
+- `findings.assessment.overrun: fallback` requires `strategy: panel` or `debate`.
+  Iterative reviews re-derive verdicts from assessment state kept across pushes,
+  so the setting is refused there.
+
+Neither setting has been measured; evaluation comparison sets do not enable them.
+
 ## Replies on review threads (opt-in)
 
 `replies.enabled: true` lets a reply on one of Scrutare's inline threads contest

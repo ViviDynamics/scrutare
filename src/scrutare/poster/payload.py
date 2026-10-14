@@ -128,6 +128,18 @@ def _evidence_fields(finding: MergedFinding, *, escalated: bool) -> list[str]:
     return fields
 
 
+def _degraded(verdict: Verdict) -> str:
+    """Code-derived lines naming a phase overrun fallback; empty for an ordinary verdict."""
+    record = verdict.degradation
+    if record is None:
+        return ""
+    where = f" in round {record.round}" if record.round is not None else ""
+    return (f"Degraded: the {record.phase} phase overran its grant{where} and fell back to "
+            f"{record.fallback_stage}. It is not an approval.\n"
+            f"Grant tokens: {record.grant_tokens}\nUsage tokens: {record.usage_tokens}\n"
+            f"Overrun tokens: {record.overrun_tokens}\n")
+
+
 def build_review_payload(
     verdict: Verdict, diff: bytes | str, *, head_sha: str, strategy: Strategy,
     post_mode: PostMode, run_id: str, human_reviewers: tuple[str, ...] = (),
@@ -157,10 +169,11 @@ def build_review_payload(
         raise PostingError("diff: expected a valid captured Git patch") from None
     if any(finding.anchor not in anchors for finding in verdict.findings):
         raise PostingError("anchor: verdict findings must all belong to the captured diff")
+    degraded = _degraded(verdict)
     body = (
         f"Scrutare review\n\nStrategy: {strategy}\nVerdict: {verdict.verdict}\n"
-        f"Rule: {verdict.rule}\nFindings: {len(verdict.findings)}\nHead SHA: {head_sha}\n\n"
-        f"<!-- scrutare-run:{run_id} -->"
+        f"Rule: {verdict.rule}\n{degraded}Findings: {len(verdict.findings)}\n"
+        f"Head SHA: {head_sha}\n\n<!-- scrutare-run:{run_id} -->"
     )
     escalated = verdict.verdict == "escalated"
     event: ReviewEvent = "COMMENT" if escalated or post_mode == "comment" else (
@@ -198,7 +211,7 @@ def build_review_payload(
                    else "This repository has no escalation targets configured.")
         identifiers = ", ".join(verdict.unresolved_candidates)
         body = (f"Scrutare escalation\n\nStrategy: {strategy}\n"
-                f"Verdict: escalated\nRule: {verdict.rule}\n"
+                f"Verdict: escalated\nRule: {verdict.rule}\n{degraded}"
                 f"Assessment attempts completed: 1\nAssessment attempt limit: 1\n"
                 f"Head SHA: {head_sha}\n\n{targets}\n\nUnresolved findings:\n\n"
                 "Independent model assessment left potentially blocking claims unresolved. "
@@ -206,5 +219,18 @@ def build_review_payload(
                 "original claims, reasons and captured counterevidence.\n\n"
                 + _field("Unresolved candidate IDs", identifiers, neutralize_mentions=True)
                 + "\n\n" + ("\n\n".join(unresolved) or "No current inline claims were supplied.")
+                + f"\n\n<!-- scrutare-run:{run_id} -->")
+    elif escalated and verdict.degradation is not None:
+        targets = ("Escalation targets for human review: "
+                   + " ".join(f"@{login}" for login in reviewers) if reviewers
+                   else "This repository has no escalation targets configured.")
+        body = (f"Scrutare escalation\n\nStrategy: {strategy}\n"
+                f"Verdict: escalated\nRule: {verdict.rule}\n{degraded}"
+                f"Findings: {len(verdict.findings)}\nHead SHA: {head_sha}\n\n{targets}\n\n"
+                "Unresolved findings:\n\n"
+                "A review phase overran its token grant, so this review kept its last complete "
+                "stage instead of finishing. No blocking finding survived that stage, but the "
+                "review is incomplete and needs a person.\n\n"
+                + ("\n\n".join(unresolved) or "No findings survived the last complete stage.")
                 + f"\n\n<!-- scrutare-run:{run_id} -->")
     return ReviewPayload(head_sha, body, event, tuple(comments))

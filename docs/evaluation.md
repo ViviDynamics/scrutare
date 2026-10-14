@@ -296,8 +296,9 @@ the total ceiling minus four, so each of the four reviewers keeps a grant. The
 option is refused for the `baseline` and `procedures` sets and when no selected arm
 has an assessor. The total ceiling does not change: the reviewers of an assessed
 arm share what remains, and unassessed arms are untouched. A review whose assessor
-exhausts its reservation before finishing yields no verdict, so the default fifth
-can be too small; the measurement reports under `evaluations/reports` record where
+exhausts its reservation before finishing yields no verdict (the opt-in
+`findings.assessment.overrun: fallback` is not used by any comparison set), so the
+default fifth can be too small; the measurement reports under `evaluations/reports` record where
 that happened. Size the reservation from observed assessor usage with headroom,
 freeze it before the job, and say so beside the results. The value is recorded in
 `snapshot.json`. Comparing arms run with different reservations is not a paired

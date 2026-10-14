@@ -100,7 +100,14 @@ async def _prepare_execution(
             assessor += "-assessor"
         reserved = {assessor: config.findings.assessment.tokens}
         names += (assessor,)
-    ledger = ReviewBudgetLedger(names, config.budgets, reserved_allocations=reserved)
+    # An opt-in discussion allowance is carved out of the ceiling before discovery is split.
+    phases = ({"discussion": config.findings.discussion.tokens}
+              if config.findings.discussion.tokens is not None else None)
+    findings = config.findings
+    ledger = ReviewBudgetLedger(names, config.budgets, reserved_allocations=reserved,
+                                phase_allowances=phases, protect_reservations=(
+                                    findings.assessment.overrun != "void"
+                                    or findings.discussion.overrun != "void"))
     attempts = tuple(
         create_attempt_directory(run, d.persona.name, prepared_root=inputs.root)
         for d in descriptors
@@ -117,6 +124,8 @@ async def _prepare_execution(
                           "configured_per_persona_ceiling": config.budgets.per_persona_tokens,
                           "reserved_phase_personas": [*budget_personas,
                               *((assessor,) if assessor is not None else ())]}
+        if phases is not None:
+            routing_record["phase_allowances"] = dict(phases)
         write_owned_json(run / "routing.json", routing_record, prepared_root=inputs.root)
     capability = await inspect_nare_runtime(runtime)
     return _ExecutionContext(inputs, descriptors, ledger, capability, runtime, config, run,

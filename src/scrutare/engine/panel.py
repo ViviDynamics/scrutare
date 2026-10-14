@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from hashlib import sha256
 from pathlib import Path
 from typing import Literal
@@ -34,7 +34,7 @@ from scrutare.engine.session_artifacts import (
 from scrutare.engine.session_models import FanOutResult, NareRuntime, ReanchorOutcome, TokenUsage
 from scrutare.findings import dedupe_findings, derive_verdict, parse_diff
 from scrutare.findings.models import artifact_data as asdict
-from scrutare.findings.verdict import Verdict
+from scrutare.findings.verdict import Degradation, Verdict
 from scrutare.findings.verification import (
     AnchorCheck,
     VerificationResult,
@@ -176,6 +176,7 @@ async def run_panel(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime
     descriptors: tuple[PersonaReanchorInput, ...] = ()
     verification = None
     verdict = None
+    degradation: Degradation | None = None
     reason = "initial"
     status: Literal["complete", "partial", "failed"] = "failed"
     eligible = context.ledger.accounting_complete and all(
@@ -204,10 +205,15 @@ async def run_panel(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime
                 if config.findings.assessment.enabled and status != "complete":
                     reason = "assessment_incomplete"
                 elif config.findings.assessment.enabled:
-                    from scrutare.engine.assessment import assess_candidates
+                    from scrutare.engine.assessment import assess_candidates, assessment_fallback
                     assessment = await assess_candidates(context, accepted)
                     if assessment.status != "complete":
-                        status, reason = assessment.status, "assessment_incomplete"
+                        # Opt-in: a measured overrun keeps the anchor-validated findings.
+                        degradation = assessment_fallback(context, assessment)
+                        if degradation is None:
+                            status, reason = assessment.status, "assessment_incomplete"
+                        else:
+                            status, reason = "partial", "assessment_overrun_fallback"
                     else:
                         accepted = assessment.retained
                         unresolved = assessment.unresolved_blocking(
@@ -219,6 +225,9 @@ async def run_panel(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime
                         dedupe_findings(accepted), config.verdict,
                         evidence_version=2 if config.findings.evidence == "v2" else 1,
                         unresolved_candidates=unresolved)
+                    if degradation is not None:
+                        # Default runs keep the established call exactly.
+                        verdict = replace(verdict, degradation=degradation)
         _validate_binding(context, hashes)
     except ReviewInputError:
         status, reason, verdict = "failed", "inputs", None
@@ -227,5 +236,7 @@ async def run_panel(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime
     result = PanelResult(status, verdict, initial, corrections, verification, context.ledger.usage,
                          context.ledger.accounting_complete, context.run_dir)
     document = _document(context, result, reason, hashes, config_hash, descriptors)
+    if degradation is not None and verdict is not None:
+        document["degraded"] = degradation.to_dict()
     publish_panel(context.run_dir, context.inputs.root, document, verdict)
     return result

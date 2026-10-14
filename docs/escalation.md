@@ -8,6 +8,12 @@ escalation. The summary retains the captured head SHA, unresolved findings and
 inline anchors, identifies the completed round bound, and mentions configured
 human targets without claiming that the requests have already succeeded.
 
+An opt-in phase overrun fallback with no blocking finding also escalates, under
+`rule: phase_overrun_fallback`. Its summary names the overrun phase, grant, usage,
+overrun and the stage the review fell back to, and states that it is not an
+approval. See
+[configuration](config.md#phase-allowances-and-overrun-fallback-opt-in-unmeasured).
+
 This is a component API. The strategy runner must supply trustworthy control
 flow evidence that it completed its bound without convergence. `Exhaustion`
 validates this assertion; it does not prove execution history. Session execution,

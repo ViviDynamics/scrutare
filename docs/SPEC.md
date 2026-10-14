@@ -184,6 +184,9 @@ When the strategy's rounds are exhausted without convergence:
   them, the conductor break-case pattern.
 - The run's verdict is `escalated`, distinct from `approved` and
   `changes_requested`, so callers can branch on it.
+- An opt-in phase overrun fallback (assessor or discussion round past its grant)
+  keeps the last complete stage, records the overrun as degraded and never
+  approves: without a blocking finding it escalates (`phase_overrun_fallback`).
 
 ## 8. Failure paths
 

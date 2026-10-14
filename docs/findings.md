@@ -315,6 +315,16 @@ assessment evidence without blocking. Technical failure, incomplete accounting,
 partial discovery/correction, missing coverage or partial assessor output withhold
 a verdict rather than assert semantic uncertainty or approval.
 
+With the opt-in `findings.assessment.overrun: fallback`, an assessor that ends
+past its grant with complete accounting no longer voids the review. Its output is
+not used; the anchor-validated candidates are kept unassessed, the status is
+`partial`, and the verdict carries a `degraded` record. It is never an approval:
+blocking candidates request changes and otherwise the verdict escalates under
+`phase_overrun_fallback`. Replay accepts the fallback only from the recorded
+`partial`/`budget` outcome at the configured allocation, with every
+anchor-validated candidate retained. See
+[configuration](config.md#phase-allowances-and-overrun-fallback-opt-in-unmeasured).
+
 Opt-in iterative review conservatively reassesses all selected hunks on a new
 revision. Same-head reuse preserves original assessments without spending new
 model tokens; it cannot erase semantic uncertainty. Historical evidence on an
