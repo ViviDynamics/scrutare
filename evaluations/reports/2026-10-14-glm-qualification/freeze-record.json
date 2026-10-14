@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "freezes": {
+    "g1": {
+      "label": "g1",
+      "recorded_utc": "2026-10-14T15:19:59Z",
+      "preparation_sha256": "b6440e47eb35fec7416d3f6882eb4e4de57d35ba963e5ce0bc31c4a9edba153e",
+      "gate_sha256": "c3301ce7135c3ddb33f87b75a1731f759069ecdfde8d63aca02a2eaa5a25337b",
+      "evaluation_sha256": "a0b4f9920ee6fcbafd1d3156940a0ca3073fcb37d617386b3ea00385adf03cf8",
+      "wheel_sha256": "e291dbe3c4f09756301d427eb8199318f8571a8f7194cdb44e681348618896da",
+      "source_commit": "c8059bbce47b136309ad133999eda8a5935bc031",
+      "process_json_exists": false,
+      "experiment_exists": false
+    },
+    "g2": {
+      "label": "g2",
+      "recorded_utc": "2026-10-14T18:47:33Z",
+      "preparation_sha256": "5a364521b5f29082db278696519be188aebf1303a07e2db9c3f07509ed046681",
+      "gate_sha256": "b3121fa3c2ba56960528e91e53a05830d406e3d1491bb2b3028f71ab159c996c",
+      "evaluation_sha256": "a0b4f9920ee6fcbafd1d3156940a0ca3073fcb37d617386b3ea00385adf03cf8",
+      "wheel": "scrutare-2026.10.2-py3-none-any.whl",
+      "wheel_sha256": "acebd88294cc84481dd956842f00fc286b6f61215308ecd71f8e297a46ea0654",
+      "source_commit": "5c4a8b6f5e88c5efb13ea80fb953df8599cace07",
+      "process_json_exists": false,
+      "experiment_exists": false
+    }
+  },
+  "launch_ledger": [
+    {
+      "event": "launch",
+      "label": "g1",
+      "at_utc": "2026-10-14T15:20:11Z"
+    },
+    {
+      "event": "launch",
+      "label": "g2",
+      "at_utc": "2026-10-14T18:48:07Z",
+      "method": "systemd-run --user transient unit scrutare-glm-g2, evaluator exec'd as main process"
+    },
+    {
+      "event": "launched",
+      "label": "g2",
+      "pid": 29546,
+      "pgid": 29546,
+      "sid": 29546,
+      "systemd_unit": "scrutare-glm-g2.service",
+      "cgroup": "app.slice/scrutare-glm-g2.service",
+      "started_utc": "2026-10-14T18:48:07Z"
+    },
+    {
+      "event": "exit",
+      "label": "g2",
+      "unit_result": "success",
+      "exec_main_status": 0,
+      "last_artifact_write_utc": "2026-10-14T20:36:34Z",
+      "observed_inactive_utc": "2026-10-14T20:36:43Z"
+    }
+  ],
+  "public_freeze_comments": {
+    "g1": "https://github.com/ViviDynamics/scrutare/issues/51#issuecomment-6171757077",
+    "g2": "https://github.com/ViviDynamics/scrutare/issues/51#issuecomment-6175788942"
+  },
+  "withdrawn_freeze": {
+    "label": "g2-withdrawn-c8059bb",
+    "preparation_written_utc": "2026-10-14T18:46:40Z",
+    "launched": false
+  },
+  "note": "freeze-*.json were written by the operator before each launch and the hashes were posted on #51 before the first call of each schedule (g1 comment 15:19:59Z vs launch 15:20:11Z; g2 comment after 18:47:33Z freeze and before 18:48:07Z launch). The process records and ledger are local operator records."
+}

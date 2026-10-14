@@ -1,0 +1,304 @@
+{
+  "config_file": {
+    "findings": "no fallbacks, default_fallbacks or context_window_fallbacks keys; model_group_alias maps only claude-haiku, claude-haiku-4-5 and claude-sonnet; spark/glm-5.3-flash is one model_list entry (openai/glm-5.3-flash, api_key none, use_chat_completions_api true); store_model_in_db true, so the live proxy was also read",
+    "last_changed_in": "0977cbb8f88af9507c5d28c57f54f527f01acd69",
+    "path": "clusters/garden/namespaces/litellm/litellm-values.yaml",
+    "read_at_origin_main": "0a3de125003e5b186f5debaabd94e681626c8f2d",
+    "repository": "ViviDynamics/infrastructure (private)"
+  },
+  "deployments_before_g1": {
+    "db_stored": [],
+    "spark_glm_group": [
+      {
+        "api_base": "http://192.168.3.40:8045/v1",
+        "input_cost_per_token": 1.5e-07,
+        "litellm_model": "openai/glm-5.3-flash",
+        "max_input_tokens": 262144,
+        "max_output_tokens": 32768,
+        "output_cost_per_token": 5e-07
+      }
+    ],
+    "total": 32,
+    "wildcard_model_names": []
+  },
+  "deployments_before_g2": {
+    "db_stored": [],
+    "spark_glm_group": [
+      {
+        "api_base": "http://192.168.3.40:8045/v1",
+        "input_cost_per_token": 1.5e-07,
+        "litellm_model": "openai/glm-5.3-flash",
+        "max_input_tokens": 262144,
+        "max_output_tokens": 32768,
+        "output_cost_per_token": 5e-07
+      }
+    ],
+    "total": 32,
+    "wildcard_model_names": []
+  },
+  "hostnames": {
+    "litellm.vividynamics.com": "used for every call here; resolves to a private address on the maintainer network and is served by Caddy (no Cloudflare headers); not reachable from GitHub-hosted runners",
+    "llm.vividynamics.com": "public name behind Cloudflare (server: cloudflare, cf-ray); the 2026.10.2 Action acceptance once hit HTTP 524 there; not used here"
+  },
+  "load_probe_12_streams": {
+    "aggregate_tok_s": 168.2,
+    "content": "neutral (a list of nouns); no review content",
+    "per_stream": [
+      {
+        "completion_tokens": 572,
+        "decode_tok_s": 16.6,
+        "status": 200,
+        "total": 35.2,
+        "ttft": 0.72
+      },
+      {
+        "completion_tokens": 582,
+        "decode_tok_s": 16.3,
+        "status": 200,
+        "total": 36.39,
+        "ttft": 0.72
+      },
+      {
+        "completion_tokens": 589,
+        "decode_tok_s": 15.7,
+        "status": 200,
+        "total": 37.81,
+        "ttft": 0.25
+      },
+      {
+        "completion_tokens": 718,
+        "decode_tok_s": 15.4,
+        "status": 200,
+        "total": 47.3,
+        "ttft": 0.72
+      },
+      {
+        "completion_tokens": 705,
+        "decode_tok_s": 17.1,
+        "status": 200,
+        "total": 41.92,
+        "ttft": 0.72
+      },
+      {
+        "completion_tokens": 900,
+        "decode_tok_s": 17.5,
+        "status": 200,
+        "total": 52.1,
+        "ttft": 0.71
+      },
+      {
+        "completion_tokens": 900,
+        "decode_tok_s": 18.8,
+        "status": 200,
+        "total": 48.71,
+        "ttft": 0.72
+      },
+      {
+        "completion_tokens": 900,
+        "decode_tok_s": 18.3,
+        "status": 200,
+        "total": 49.96,
+        "ttft": 0.71
+      },
+      {
+        "completion_tokens": 692,
+        "decode_tok_s": 15.9,
+        "status": 200,
+        "total": 44.27,
+        "ttft": 0.72
+      },
+      {
+        "completion_tokens": 900,
+        "decode_tok_s": 17.9,
+        "status": 200,
+        "total": 51.04,
+        "ttft": 0.72
+      },
+      {
+        "completion_tokens": 688,
+        "decode_tok_s": 17.0,
+        "status": 200,
+        "total": 41.11,
+        "ttft": 0.72
+      },
+      {
+        "completion_tokens": 617,
+        "decode_tok_s": 15.8,
+        "status": 200,
+        "total": 39.79,
+        "ttft": 0.7
+      }
+    ],
+    "started_utc": "2026-10-14T15:16:54Z",
+    "wall_seconds": 52.11
+  },
+  "load_probe_1_streams": {
+    "aggregate_tok_s": 38.4,
+    "content": "neutral (a list of nouns); no review content",
+    "per_stream": [
+      {
+        "completion_tokens": 720,
+        "decode_tok_s": 39.0,
+        "status": 200,
+        "total": 18.73,
+        "ttft": 0.24
+      }
+    ],
+    "started_utc": "2026-10-14T15:16:35Z",
+    "wall_seconds": 18.73
+  },
+  "private_sha256_before_g1": {
+    "raw-model-info.json": "e703d9fca5ddcaa41639ba26d4f9524eb2e106ae4798b3110d919e4f27428920",
+    "router-settings.json": "8c6c3f445994174f3c2b135b183cab58578afa3e4baf1cf8e0752d1699f2c525"
+  },
+  "private_sha256_before_g2": {
+    "raw-model-info-pre-g2.json": "dff6461861e9870502b4b93d1da64002248b7c271c56f08ee5ebd022ecd5440b",
+    "router-settings-pre-g2.json": "8c6c3f445994174f3c2b135b183cab58578afa3e4baf1cf8e0752d1699f2c525"
+  },
+  "router_before_g1": {
+    "content_policy_fallbacks": null,
+    "context_window_fallbacks": null,
+    "fallbacks": null,
+    "model_group_alias_targets": {
+      "claude-haiku": "claude-haiku-5-5",
+      "claude-haiku-4-5": "claude-haiku-5-5",
+      "claude-sonnet": "claude-sonnet-5-5"
+    },
+    "num_retries": 2,
+    "routing_strategy": "latency-based-routing",
+    "timeout": 600
+  },
+  "router_before_g2": {
+    "content_policy_fallbacks": null,
+    "context_window_fallbacks": null,
+    "fallbacks": null,
+    "model_group_alias_targets": {
+      "claude-haiku": "claude-haiku-5-5",
+      "claude-haiku-4-5": "claude-haiku-5-5",
+      "claude-sonnet": "claude-sonnet-5-5"
+    },
+    "num_retries": 2,
+    "routing_strategy": "latency-based-routing",
+    "timeout": 600
+  },
+  "schema_version": 1,
+  "serving_config": {
+    "glm_max_model_len": 262144,
+    "glm_max_num_seqs": 16,
+    "note": "an older unmanaged copy (glm53-tp3/cluster.env) says MAX_MODEL_LEN=1048576; the managed role and the LiteLLM model_info both say 262144. The deployed value was not read from the host (the brief forbids accessing it). max_output_tokens 32768 is a LiteLLM-advertised cap, not established as an engine limit.",
+    "path": "datacenters/30-snowden-place/ansible/roles/spark_glm_engine/defaults/main.yml at the same commit",
+    "tensor_parallel": 3
+  },
+  "spend_log_windows": {
+    "g1_and_probes_2026-10-14T15:10Z_15:40Z": {
+      "by_client": {
+        "Python-urllib": {
+          "attempted_fallbacks_nonzero": 0,
+          "attributed_spend_usd": 0.004805,
+          "completion_tokens": 9483,
+          "other_deployment": 0,
+          "prompt_tokens": 416,
+          "rows": 13,
+          "served_by_spark_glm_deployment": 13
+        },
+        "curl": {
+          "attempted_fallbacks_nonzero": 0,
+          "attributed_spend_usd": 5.2e-05,
+          "completion_tokens": 53,
+          "other_deployment": 0,
+          "prompt_tokens": 168,
+          "rows": 1,
+          "served_by_spark_glm_deployment": 1
+        },
+        "opencode": {
+          "attempted_fallbacks_nonzero": 0,
+          "attributed_spend_usd": 0.01462,
+          "completion_tokens": 238,
+          "other_deployment": 0,
+          "prompt_tokens": 96674,
+          "rows": 2,
+          "served_by_spark_glm_deployment": 2
+        },
+        "python-httpx2": {
+          "attempted_fallbacks_nonzero": 0,
+          "attributed_spend_usd": 0.074743,
+          "completion_tokens": 48946,
+          "other_deployment": 0,
+          "prompt_tokens": 335155,
+          "rows": 110,
+          "served_by_spark_glm_deployment": 110
+        }
+      },
+      "note": "python-httpx2 is nare (this evaluator) and Python-urllib/curl are the pre-freeze probes; opencode and claude-cli are other clients of the same engine on the same master key. attributed_spend_usd is LiteLLM applying its configured rate to a self-hosted model; no provider bills it.",
+      "private_raw_rows_sha256": "2654acd347ff008b8303503a6452d18acc82aaf99cb2905d0e94bb23a3c705ab",
+      "rows": 126
+    },
+    "g2_2026-10-14T18:44Z_20:40Z": {
+      "by_client": {
+        "claude-cli": {
+          "attempted_fallbacks_nonzero": 0,
+          "attributed_spend_usd": 0.387735,
+          "completion_tokens": 23439,
+          "other_deployment": 0,
+          "prompt_tokens": 2506757,
+          "rows": 95,
+          "served_by_spark_glm_deployment": 95
+        },
+        "opencode": {
+          "attempted_fallbacks_nonzero": 0,
+          "attributed_spend_usd": 1.074751,
+          "completion_tokens": 61515,
+          "other_deployment": 0,
+          "prompt_tokens": 6959930,
+          "rows": 113,
+          "served_by_spark_glm_deployment": 113
+        },
+        "other key (non-model admin UI calls)": {
+          "attempted_fallbacks_nonzero": 0,
+          "attributed_spend_usd": 0.0,
+          "completion_tokens": 0,
+          "other_deployment": 0,
+          "prompt_tokens": 0,
+          "rows": 6,
+          "served_by_spark_glm_deployment": 0
+        },
+        "python-httpx2": {
+          "attempted_fallbacks_nonzero": 0,
+          "attributed_spend_usd": 0.482086,
+          "completion_tokens": 471505,
+          "other_deployment": 0,
+          "prompt_tokens": 1642331,
+          "rows": 488,
+          "served_by_spark_glm_deployment": 488
+        }
+      },
+      "note": "python-httpx2 is nare (this evaluator) and Python-urllib/curl are the pre-freeze probes; opencode and claude-cli are other clients of the same engine on the same master key. attributed_spend_usd is LiteLLM applying its configured rate to a self-hosted model; no provider bills it.",
+      "private_raw_rows_sha256": "6e39a28f2b5df51402b62848df07fea21ac29af02a93595e9fd0a3a1b1052944",
+      "rows": 702
+    }
+  },
+  "tool_call_probe": {
+    "at_utc": "2026-10-14T15:15:55Z",
+    "backend_identity": "vLLM tensor-parallel 3 per the response system_fingerprint and the serving role; the model revision behind the alias is not verified",
+    "finish_reason": "tool_calls",
+    "headers": {
+      "via": "1.1 Caddy",
+      "x-litellm-attempted-fallbacks": "0",
+      "x-litellm-attempted-retries": "0",
+      "x-litellm-model-api-base": "http://192.168.3.40:8045/v1",
+      "x-litellm-model-group": "spark/glm-5.3-flash",
+      "x-litellm-model-id": "d31159ac94c6ef5729858bcfe729e216e5b49b6f351c4a236b3189da2e1b4d9f",
+      "x-litellm-model-name": "openai/glm-5.3-flash"
+    },
+    "http": 200,
+    "streamed": true,
+    "system_fingerprint": [
+      "vllm-0.1.dev20051+g487ecf187-tp3-60ac8eb5"
+    ],
+    "usage": {
+      "completion_tokens": 53,
+      "prompt_tokens": 168,
+      "reasoning_tokens": 41
+    }
+  }
+}
