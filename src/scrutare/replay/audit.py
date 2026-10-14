@@ -3,9 +3,12 @@
 import json
 from hashlib import sha256
 from pathlib import Path
+from typing import Any
 
-from scrutare.config import CATEGORIES, ConfigError, _load_yaml, parse_config
-from scrutare.findings.verdict import derive_verdict
+from scrutare.config import CATEGORIES, ConfigError, ReviewConfig, _load_yaml, parse_config
+from scrutare.findings.dedupe import MergedFinding
+from scrutare.findings.models import Finding
+from scrutare.findings.verdict import Degradation, derive_verdict
 from scrutare.replay.artifacts import (
     decode_artifact,
     parse_findings,
@@ -106,6 +109,41 @@ def _context_issues(run_dir: Path, policy: CapturedPolicy) -> tuple[AuditIssue, 
         return (AuditIssue("repository_context_invalid", "repository-context.json", "invalid"),)
 
 
+class _Fallback(Exception):
+    """The validated assessor fallback replaces assessment rows by the candidates."""
+
+
+def _assessment_fallback(run_dir: Path, config: ReviewConfig, assessment: dict[str, Any],
+                         originals: tuple[Finding, ...],
+                         findings: tuple[MergedFinding, ...]) -> Degradation:
+    """Accept a recorded assessor fallback only from a measured, exactly accounted overrun."""
+    from scrutare.engine.discussion import equivalent_groups
+    from scrutare.engine.overrun import phase_degradation
+    from scrutare.findings.dedupe import dedupe_findings
+
+    outcome = assessment.get("outcome")
+    tokens = config.findings.assessment.tokens
+    if (not isinstance(outcome, dict) or outcome.get("allocated_tokens") != tokens
+            or outcome.get("status") != assessment.get("status")):
+        raise ValueError("assessment: fallback needs the admitted assessor outcome")
+    degradation = phase_degradation("assessment", (outcome,), round_number=None,
+                                    allowance=tokens)
+    if degradation is None:
+        raise ValueError("assessment: fallback needs a measured overrun")
+    grouped = (equivalent_groups(originals) if config.findings.discussion.enabled
+               else dedupe_findings(originals))
+    if findings != grouped:
+        raise ValueError("assessment: fallback must keep every anchor-validated finding")
+    if config.findings.discussion.enabled:
+        trace = decode_artifact(read_artifact(run_dir / "debate.json"), artifact="debate.json")
+        if (not isinstance(trace, dict) or trace.get("kind") != "focused_evidence_discussion"
+                or trace.get("status") != "partial" or trace.get("rounds") != []
+                or trace.get("final_assessments") != []
+                or trace.get("degraded") != degradation.to_dict()):
+            raise ValueError("assessment: fallback trace disagrees")
+    return degradation
+
+
 def replay_run(run_dir: Path) -> ReplayResult:
     """Recompute captured findings with captured policy, never executing the review."""
     findings_data = decode_artifact(
@@ -160,6 +198,7 @@ def replay_run(run_dir: Path) -> ReplayResult:
             AuditIssue("exhaustion_config_disagrees", "verdict.exhaustion", "incomplete"),
         ))
     unresolved: tuple[str, ...] = ()
+    degradation = None
     if isinstance(config_data, dict) and "findings" in config_data:
         config = parse_config(json.dumps(config_data))
         if config.findings.assessment.enabled:
@@ -168,10 +207,14 @@ def replay_run(run_dir: Path) -> ReplayResult:
             try:
                 assessment = decode_artifact(read_artifact(run_dir / "assessment.json"),
                                              artifact="assessment.json")
+                # Only the opt-in policy may replace a complete assessment by a fallback.
+                fallback = (isinstance(assessment, dict)
+                            and assessment.get("status") != "complete"
+                            and config.findings.assessment.overrun == "fallback")
                 if (not isinstance(assessment, dict)
                         or assessment.get("schema_version") != 1
                         or assessment.get("kind") != "model_based_not_formal_proof"
-                        or assessment.get("status") != "complete"
+                        or (assessment.get("status") != "complete" and not fallback)
                         or type(assessment.get("attempt_limit")) is not int
                         or assessment["attempt_limit"] != 1
                         or assessment.get("allocation_tokens") != config.findings.assessment.tokens
@@ -180,7 +223,10 @@ def replay_run(run_dir: Path) -> ReplayResult:
                 originals = tuple(finding_from_artifact(item, evidence_version=2)
                                   for item in assessment["candidates"])
                 outcome = assessment.get("outcome")
-                if originals and (not isinstance(outcome, dict)
+                if fallback:
+                    degradation = _assessment_fallback(run_dir, config, assessment, originals,
+                                                       findings)
+                elif originals and (not isinstance(outcome, dict)
                                   or outcome.get("status") != "complete"
                                   or outcome.get("accounting_complete") is not True
                                   or outcome.get("output_available") is not True
@@ -190,6 +236,8 @@ def replay_run(run_dir: Path) -> ReplayResult:
                 for original in originals:
                     if validate_evidence(original, run_dir / "review-inputs") != original:
                         raise ValueError
+                if fallback:
+                    raise _Fallback
                 rows = parse_assessments({"assessments": assessment["assessments"]}, originals,
                                          run_dir / "review-inputs", artifact=True)
                 if config.findings.discussion.enabled:
@@ -204,10 +252,13 @@ def replay_run(run_dir: Path) -> ReplayResult:
                                     for source in group.sources):
                     raise ValueError
                 unresolved = result.unresolved_blocking(config.verdict.blocking_categories)
+            except _Fallback:
+                pass
             except (OSError, ValueError, TypeError, KeyError):
                 raise ReplayError("assessment: captured policy or evidence disagrees") from None
     verdict = derive_verdict(findings, policy.settings, exhaustion=exhaustion,
-                             evidence_version=evidence_version, unresolved_candidates=unresolved)
+                             evidence_version=evidence_version, unresolved_candidates=unresolved,
+                             degradation=degradation)
     candidate_bytes = verdict.to_bytes()
     identical = saved.raw == candidate_bytes
     differences = diff_verdicts(saved.document, verdict.to_dict())

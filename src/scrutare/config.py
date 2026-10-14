@@ -255,6 +255,9 @@ class ReviewConfig:
             if (self.findings.assessment.tokens + (self.findings.discussion.tokens or 0)
                     >= self.budgets.review_max_tokens):
                 raise ConfigError("findings.assessment.tokens: must leave discovery capacity")
+            if self.findings.assessment.overrun != "void" and self.strategy == "iterative":
+                # Iterative re-derives its verdict from assessment state kept across pushes.
+                raise ConfigError("findings.assessment.overrun: requires strategy panel or debate")
         if self.findings.discussion.enabled and (
                 self.strategy != "debate" or not self.findings.assessment.enabled):
             raise ConfigError("findings.discussion: requires assessed v2 debate")

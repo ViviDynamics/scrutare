@@ -11,6 +11,8 @@ from scrutare.findings.models import Citation, Finding, FindingError, _text, par
 
 if TYPE_CHECKING:
     from scrutare.engine.fanout import _ExecutionContext
+    from scrutare.engine.session_models import SessionOutcome
+    from scrutare.findings.verdict import Degradation
 
 AssessmentStatus = Literal["supported", "refuted", "unresolved"]
 
@@ -90,6 +92,7 @@ def assessment_wire(row: Assessment) -> dict[str, Any]:
 class AssessmentResult:
     status: Literal["complete", "partial", "failed"]
     rows: tuple[Assessment, ...]
+    outcome: SessionOutcome | None = None
 
     @property
     def supported(self) -> tuple[Finding, ...]:
@@ -144,7 +147,7 @@ async def assess_candidates(
                     raise FindingError("assessment: invalid captured session")
                 rows = descriptor.assessments(document["output"])
                 status = outcome.status
-    result = AssessmentResult(status, rows)
+    result = AssessmentResult(status, rows, outcome)
     write_owned_json(context.run_dir / ("assessment.json" if attempt_number == 1
         else f"assessment-round-{attempt_number - 1:04d}.json"), {
         "schema_version": 1, "kind": "model_based_not_formal_proof", "status": status,
@@ -154,3 +157,16 @@ async def assess_candidates(
         "outcome": outcome.to_dict() if outcome is not None else None,
     }, prepared_root=context.inputs.root)
     return result
+
+
+def assessment_fallback(context: _ExecutionContext, result: AssessmentResult
+                        ) -> Degradation | None:
+    """The opt-in degraded record for a measured assessor overrun, else None (void)."""
+    from scrutare.engine.overrun import phase_degradation
+
+    settings = context.config.findings.assessment
+    if (settings.overrun != "fallback" or result.outcome is None
+            or not context.ledger.accounting_complete):
+        return None
+    return phase_degradation("assessment", (result.outcome.to_dict(),), round_number=None,
+                             allowance=settings.tokens)

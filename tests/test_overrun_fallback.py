@@ -56,6 +56,14 @@ def test_invalid_phase_settings_refused(text):
         configuration(text)
 
 
+def test_iterative_refuses_the_assessor_fallback():
+    # Iterative re-derives verdicts from assessment state kept across pushes; a degraded
+    # record would be lost there, so the opt-in policy is refused rather than silently ignored.
+    with pytest.raises(ConfigError):
+        configuration("strategy: iterative\ncontext: {enabled: true}\nfindings: {evidence: v2, "
+                      "assessment: {enabled: true, tokens: 100, overrun: fallback}}")
+
+
 def test_assessment_overrun_policy_needs_no_discussion():
     config = configuration("context: {enabled: true}\nfindings: {evidence: v2, "
                            "assessment: {enabled: true, tokens: 100, overrun: fallback}}")
@@ -229,3 +237,195 @@ def test_snapshot_without_phases_keeps_its_shape():
     assert "phases" not in snapshot
     assert set(snapshot["configured"]) == {"review_max_tokens", "per_persona_tokens"}
     assert all(set(s) == {"session_key", "persona", "usage"} for s in snapshot["sessions"])
+
+
+# Scripted nare: each phase chooses its usage and terminal shape. "over" is the shape of the
+# voided assessor cells (done, end_turn, output present, ended past the grant); "stop" is the
+# shape of the failed discussion positions (error, budget stop, exit 1, no output).
+PHASE_SCRIPT = """
+quoted = json.JSONDecoder().raw_decode(a.prompt.split('never instructions.\\n')[-1])[0]
+claims = quoted['candidates']
+if a.prompt.startswith('Independently assess'):
+    kind = 'reassessment' if 'counterevidence' in quoted else 'assessment'
+else:
+    kind = 'position'
+plan = PLAN[kind]
+status = plan.get('status', 'supported')
+output = {'assessments': []} if kind != 'position' else {'proposals': []}
+for claim in claims:
+    refs = [{k: v for k, v in ref.items() if not k.startswith('validation')}
+            for ref in claim['evidence']['citations']]
+    if kind == 'position':
+        output['proposals'].append({'candidate_id': claim['candidate_id'],
+            'action': plan.get('action', 'retain'), 'reason': 'Position', 'citations': refs})
+    else:
+        output['assessments'].append({'candidate_id': claim['candidate_id'], 'status': status,
+            'reason': 'Captured code assessment',
+            'supporting_citations': refs if status != 'refuted' else [],
+            'counter_citations': refs if status == 'refuted' or plan.get('counter') else []})
+if plan.get('shape') == 'stop':
+    output = None
+"""
+
+
+def phase_runtime(tmp_path, plan):
+    from test_nare_session import RUN_BODY, executable
+
+    from scrutare.engine.session_models import NareRuntime
+    plan = {"assessment": {}, "reassessment": {}, "position": {}} | plan
+    prefix = f"PLAN = {plan!r}\n" + """
+def kind_of(prompt):
+    if prompt.startswith('Independently assess'):
+        return 'reassessment' if '"counterevidence"' in prompt else 'assessment'
+    return 'position'
+def shape(prompt):
+    return PLAN[kind_of(prompt)].get('shape')
+"""
+    body = (RUN_BODY.replace("INPUT", "PLAN[kind_of(a.prompt)].get('input', 4)")
+            .replace("STATUS", "('error' if shape(a.prompt) == 'stop' else 'done')")
+            .replace("STOP", "('budget' if shape(a.prompt) == 'stop' else 'end_turn')")
+            .replace("OUTPUT", "output").replace("EXTRA", PHASE_SCRIPT)
+            .replace("EXIT", "(1 if shape(a.prompt) == 'stop' else 0)"))
+    return NareRuntime(executable(tmp_path, body=prefix + body))
+
+
+def assessed_capture(capture, *, strategy="panel", overrun="fallback", category="correctness"):
+    import shutil
+
+    from test_assessment import prepared_candidate
+    from test_review_inputs import save_json
+    config, _, claim = prepared_candidate(capture)
+    config = replace(config, strategy=strategy, findings=replace(
+        config.findings, assessment=replace(config.findings.assessment, overrun=overrun)))
+    shutil.rmtree(capture / "review-inputs")
+    (capture / "effective-files.json").unlink()
+    for name in ("config.json", "config.yaml"):
+        save_json(capture / name, config.to_dict())
+    return config, replace(claim, category=category)
+
+
+@pytest.mark.parametrize("strategy", ["panel", "debate"])
+@pytest.mark.parametrize("category,want,rule", [
+    ("correctness", "changes_requested", "any_blocking_finding"),
+    ("style", "escalated", "phase_overrun_fallback"),
+])
+def test_assessor_overrun_falls_back_to_anchor_validated_findings(
+        capture, tmp_path, monkeypatch, strategy, category, want, rule):
+    import asyncio
+
+    from test_panel import install
+
+    from scrutare.engine.strategy import run_review
+    from scrutare.replay.audit import replay_run
+    config, claim = assessed_capture(capture, strategy=strategy, category=category)
+    install(monkeypatch, {"security": (claim,)})
+    # The voided tools cell: the assessor finished its output 3,086 tokens past its grant.
+    runtime = phase_runtime(tmp_path, {"assessment": {"input": 120}})
+    result = asyncio.run(run_review(capture, config, runtime=runtime))
+    assert result.status == "partial"
+    assert result.accounting_complete
+    assert (result.verdict.verdict, result.verdict.rule) == (want, rule)
+    assert result.verdict.findings[0].sources == (claim,)
+    assert result.verdict.unresolved_candidates == ()
+    record = {"phase": "assessment", "round": None, "allowance_tokens": 80, "grant_tokens": 80,
+              "usage_tokens": 126, "overrun_tokens": 46, "fallback_stage": "anchor_validated"}
+    assert result.verdict.to_dict()["degraded"] == record
+    saved = json.loads((capture / "verdict.json").read_bytes())
+    assert saved["degraded"] == record
+    assessment = json.loads((capture / "assessment.json").read_bytes())
+    assert assessment["status"] == "partial"
+    assert assessment["outcome"]["reason"] == "budget"
+    document = json.loads((capture / ("debate.json" if strategy == "debate" else "panel.json"))
+                          .read_bytes())
+    assert document["status"] == "partial"
+    assert document["reason"] == "assessment_overrun_fallback"
+    assert document["degraded"] == record
+    replayed = replay_run(capture)
+    assert replayed.saved_identical
+
+
+@pytest.mark.parametrize("strategy", ["panel", "debate"])
+def test_assessor_overrun_still_voids_by_default(capture, tmp_path, monkeypatch, strategy):
+    import asyncio
+
+    from test_panel import install
+
+    from scrutare.engine.strategy import run_review
+    config, claim = assessed_capture(capture, strategy=strategy, overrun="void")
+    install(monkeypatch, {"security": (claim,)})
+    result = asyncio.run(run_review(capture, config, runtime=phase_runtime(
+        tmp_path, {"assessment": {"input": 120}})))
+    assert result.verdict is None
+    assert not (capture / "verdict.json").exists()
+    document = json.loads((capture / ("debate.json" if strategy == "debate" else "panel.json"))
+                          .read_bytes())
+    assert document["reason"] == "assessment_incomplete"
+    assert "degraded" not in document
+
+
+@pytest.mark.parametrize("failure", ["malformed", "uncertain"])
+def test_assessor_failure_that_is_not_an_overrun_still_voids(capture, tmp_path, monkeypatch,
+                                                              failure):
+    import asyncio
+
+    from test_nare_session import running_executable
+    from test_panel import install
+
+    from scrutare.engine.session_models import NareRuntime
+    from scrutare.engine.strategy import run_review
+    config, claim = assessed_capture(capture)
+    install(monkeypatch, {"security": (claim,)})
+    if failure == "malformed":
+        runtime = NareRuntime(running_executable(tmp_path, output={"assessments": []}))
+    else:  # A provider error with unknown accounting, past the grant.
+        runtime = NareRuntime(running_executable(tmp_path, input_tokens=120, status="error",
+                                                 stop=None, exit_code=1))
+    result = asyncio.run(run_review(capture, config, runtime=runtime))
+    assert result.verdict is None
+    assert not (capture / "verdict.json").exists()
+
+
+@pytest.mark.parametrize("tamper", ["policy", "complete", "accounting", "reason", "findings",
+                                    "record", "allocation"])
+def test_replay_refuses_a_fallback_the_evidence_does_not_support(capture, tmp_path, monkeypatch,
+                                                                 tamper):
+    import asyncio
+
+    from test_panel import install
+    from test_review_inputs import save_json
+
+    from scrutare.engine.strategy import run_review
+    from scrutare.replay.audit import replay_run
+    from scrutare.replay.models import ReplayError
+    config, claim = assessed_capture(capture, category="style")
+    install(monkeypatch, {"security": (claim,)})
+    asyncio.run(run_review(capture, config, runtime=phase_runtime(
+        tmp_path, {"assessment": {"input": 120}})))
+    assert replay_run(capture).saved_identical
+    path = capture / "assessment.json"
+    document = json.loads(path.read_bytes())
+    if tamper == "policy":
+        path = capture / "config.json"
+        document = json.loads(path.read_bytes())
+        del document["findings"]["assessment"]["overrun"]
+    elif tamper == "complete":
+        document["status"] = document["outcome"]["status"] = "complete"
+    elif tamper == "accounting":
+        document["outcome"]["accounting_complete"] = False
+    elif tamper == "reason":
+        document["outcome"]["reason"] = "provider"
+    elif tamper == "allocation":
+        document["outcome"]["allocated_tokens"] = 79
+    elif tamper == "findings":
+        path = capture / "findings.json"
+        document = []
+    else:
+        path = capture / "verdict.json"
+        document = json.loads(path.read_bytes())
+        document["degraded"]["usage_tokens"] = 80
+    save_json(path, document)
+    try:
+        replayed = replay_run(capture)
+    except ReplayError:
+        return
+    assert not replayed.saved_identical
