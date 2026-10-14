@@ -119,25 +119,63 @@ class InspectionSettings:
     procedures: Literal["baseline", "v1"] = "baseline"
 
 
+OverrunPolicy = Literal["void", "fallback"]
+
+
+def _overrun(value: object, path: str) -> None:
+    if not isinstance(value, str) or value not in ("void", "fallback"):
+        raise ConfigError(f"{path}: expected void or fallback")
+
+
 @dataclass(frozen=True)
 class AssessmentSettings:
     enabled: bool = False
     tokens: int = 2000
+    # What a measured assessor overrun does: void the review (default), or fall back to the
+    # anchor-validated findings as a degraded, never-approving verdict.
+    overrun: OverrunPolicy = "void"
 
     def __post_init__(self) -> None:
         if type(self.enabled) is not bool:
             raise ConfigError("findings.assessment.enabled: expected boolean")
         if type(self.tokens) is not int or self.tokens <= 0:
             raise ConfigError("findings.assessment.tokens: expected positive integer")
+        _overrun(self.overrun, "findings.assessment.overrun")
+        if self.overrun != "void" and not self.enabled:
+            raise ConfigError("findings.assessment.overrun: requires enabled assessment")
+
+    def record(self) -> dict[str, Any]:
+        """Canonical form; the opt-in policy is omitted at its default."""
+        result: dict[str, Any] = {"enabled": self.enabled, "tokens": self.tokens}
+        if self.overrun != "void":
+            result["overrun"] = self.overrun
+        return result
 
 
 @dataclass(frozen=True)
 class DiscussionSettings:
     enabled: bool = False
+    # A separate discussion allowance reserved before discovery. None reuses the remaining
+    # discovery and assessor grants, the original policy.
+    tokens: int | None = None
+    overrun: OverrunPolicy = "void"
 
     def __post_init__(self) -> None:
         if type(self.enabled) is not bool:
             raise ConfigError("findings.discussion.enabled: expected boolean")
+        if self.tokens is not None and (type(self.tokens) is not int or self.tokens <= 0):
+            raise ConfigError("findings.discussion.tokens: expected positive integer")
+        _overrun(self.overrun, "findings.discussion.overrun")
+        if (self.tokens is not None or self.overrun != "void") and not self.enabled:
+            raise ConfigError("findings.discussion: allowance and overrun require enabled")
+
+    def record(self) -> dict[str, Any]:
+        result: dict[str, Any] = {"enabled": self.enabled}
+        if self.tokens is not None:
+            result["tokens"] = self.tokens
+        if self.overrun != "void":
+            result["overrun"] = self.overrun
+        return result
 
 
 @dataclass(frozen=True)
@@ -214,8 +252,12 @@ class ReviewConfig:
         if self.findings.assessment.enabled:
             if self.findings.evidence != "v2":
                 raise ConfigError("findings.assessment: requires evidence v2")
-            if self.findings.assessment.tokens >= self.budgets.review_max_tokens:
+            if (self.findings.assessment.tokens + (self.findings.discussion.tokens or 0)
+                    >= self.budgets.review_max_tokens):
                 raise ConfigError("findings.assessment.tokens: must leave discovery capacity")
+            if self.findings.assessment.overrun != "void" and self.strategy == "iterative":
+                # Iterative re-derives its verdict from assessment state kept across pushes.
+                raise ConfigError("findings.assessment.overrun: requires strategy panel or debate")
         if self.findings.discussion.enabled and (
                 self.strategy != "debate" or not self.findings.assessment.enabled):
             raise ConfigError("findings.discussion: requires assessed v2 debate")
@@ -254,9 +296,9 @@ class ReviewConfig:
         if self.findings != FindingSettings():
             result["findings"] = {"evidence": self.findings.evidence}
             if self.findings.assessment != AssessmentSettings():
-                result["findings"]["assessment"] = asdict(self.findings.assessment)
+                result["findings"]["assessment"] = self.findings.assessment.record()
             if self.findings.discussion != DiscussionSettings():
-                result["findings"]["discussion"] = asdict(self.findings.discussion)
+                result["findings"]["discussion"] = self.findings.discussion.record()
         if self.analysis.enabled:
             result["analysis"] = asdict(self.analysis)
         if self.routing != RoutingSettings():
@@ -278,11 +320,12 @@ class ReviewConfig:
 def _finding_settings(value: object) -> FindingSettings:
     fields = _mapping(value, "findings", ("evidence", "assessment", "discussion"))
     assessment = _mapping(fields.get("assessment", {}), "findings.assessment",
-                          ("enabled", "tokens"))
+                          ("enabled", "tokens", "overrun"))
     return FindingSettings(cast(Literal["legacy", "v2"], _choice(
         fields.get("evidence", "legacy"), "findings.evidence", ("legacy", "v2"))),
         AssessmentSettings(**assessment), DiscussionSettings(**_mapping(
-            fields.get("discussion", {}), "findings.discussion", ("enabled",))))
+            fields.get("discussion", {}), "findings.discussion",
+            ("enabled", "tokens", "overrun"))))
 
 
 def _analysis_settings(value: object, context: ContextSettings) -> AnalysisSettings:

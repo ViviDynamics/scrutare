@@ -32,6 +32,7 @@ from scrutare.engine.session_artifacts import (
 from scrutare.engine.session_models import NareRuntime, ReanchorOutcome, SessionOutcome
 from scrutare.findings import Exhaustion, Finding, dedupe_findings, derive_verdict, parse_diff
 from scrutare.findings.models import artifact_data as asdict
+from scrutare.findings.verdict import Degradation
 from scrutare.findings.verification import check_anchors, finish_reanchor
 from scrutare.personas import PersonaDefinition, load_persona, resolve_personas
 from scrutare.replay.artifacts import decode_artifact, read_artifact
@@ -77,6 +78,7 @@ async def run_debate(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntim
     reason = "initial"
     rounds: list[dict[str, object]] = []
     pool: tuple[Finding, ...] = ()
+    degradation: Degradation | None = None
     try:
         _validate_binding(context, hashes)
         if (context.ledger.accounting_complete and all(_usable(o) for o in initial.outcomes)
@@ -100,11 +102,17 @@ async def run_debate(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntim
                 if not assessment_ready:
                     status, reason = "partial", "discovery_incomplete"
                 if config.findings.assessment.enabled and assessment_ready:
-                    from scrutare.engine.assessment import assess_candidates
+                    from scrutare.engine.assessment import assess_candidates, assessment_fallback
                     assessment = await assess_candidates(context, pool)
                     assessment_ready = assessment.status == "complete"
                     if not assessment_ready:
                         status, reason = assessment.status, "assessment_incomplete"
+                        # Opt-in: a measured overrun keeps the anchor-validated pool, unargued.
+                        degradation = assessment_fallback(context, assessment)
+                        if degradation is not None:
+                            verdict = derive_verdict(dedupe_findings(pool), config.verdict,
+                                                     evidence_version=2, degradation=degradation)
+                            status, reason = "partial", "assessment_overrun_fallback"
                     else:
                         pool = protected = assessment.retained
                         unresolved = assessment.unresolved_blocking(
@@ -270,6 +278,8 @@ async def run_debate(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntim
         "rounds": rounds,
         "ledger": context.ledger.snapshot(),
     }
+    if degradation is not None and verdict is not None:
+        document["degraded"] = degradation.to_dict()
     write_owned_json(context.run_dir / "debate.json", document, prepared_root=context.inputs.root)
     publish_panel(context.run_dir, context.inputs.root, document, verdict)
     return result

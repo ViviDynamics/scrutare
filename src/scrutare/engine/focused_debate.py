@@ -12,8 +12,10 @@ from scrutare.engine.assessment import (
     Assessment,
     AssessmentResult,
     assess_candidates,
+    assessment_fallback,
     assessment_wire,
 )
+from scrutare.engine.budgets import BudgetLease
 from scrutare.engine.discussion import Proposal, disputed_ids, equivalent_groups, proposal_wire
 from scrutare.engine.discussion_inputs import DiscussionInput
 from scrutare.engine.fanout import (
@@ -23,6 +25,7 @@ from scrutare.engine.fanout import (
     _run_initial_wave,
 )
 from scrutare.engine.nare_session import run_persona_session
+from scrutare.engine.overrun import phase_degradation
 from scrutare.engine.panel import (
     PanelResult,
     _correct,
@@ -40,7 +43,7 @@ from scrutare.engine.session_artifacts import (
 from scrutare.engine.session_models import NareRuntime, ReanchorOutcome
 from scrutare.findings import Exhaustion, derive_verdict, parse_diff
 from scrutare.findings.models import FindingError
-from scrutare.findings.verdict import Verdict
+from scrutare.findings.verdict import Degradation, Verdict
 from scrutare.findings.verification import check_anchors, finish_reanchor
 from scrutare.replay.artifacts import decode_artifact, read_artifact
 
@@ -59,6 +62,7 @@ async def run_focused_debate(
     rows: tuple[Assessment, ...] = ()
     rounds: list[dict[str, object]] = []
     bypassed: tuple[str, ...] = ()
+    degradation: Degradation | None = None
     try:
         _validate_binding(context, hashes)
         if (
@@ -83,7 +87,15 @@ async def run_focused_debate(
                 assessment = await assess_candidates(context, verification.accepted)
                 reason = "assessment_incomplete"
                 status = assessment.status
-                if assessment.status == "complete":
+                if assessment.status != "complete":
+                    # Opt-in: a measured overrun keeps the anchor-validated findings.
+                    degradation = assessment_fallback(context, assessment)
+                    if degradation is not None:
+                        verdict = derive_verdict(
+                            equivalent_groups(verification.accepted), config.verdict,
+                            evidence_version=2, degradation=degradation)
+                        status, reason = "partial", "assessment_overrun_fallback"
+                else:
                     rows = assessment.rows
                     disputed = disputed_ids(rows)
                     bypassed = tuple(
@@ -130,6 +142,8 @@ async def run_focused_debate(
         "final_assessments": [assessment_wire(row) for row in rows],
         "ledger": context.ledger.snapshot(),
     }
+    if verdict is not None and verdict.degradation is not None:
+        document["degraded"] = verdict.degradation.to_dict()
     write_owned_json(context.run_dir / "debate.json", document, prepared_root=context.inputs.root)
     publish_panel(context.run_dir, context.inputs.root, document, verdict)
     return result
@@ -146,6 +160,7 @@ async def _discuss(
 ]:
     """Only independently reassessed rows change disposition; peers never count as votes."""
     rounds: list[dict[str, object]] = []
+    allowance = context.config.findings.discussion.tokens is not None
     for number in range(1, context.config.rounds.max + 1):
         _validate_binding(context, hashes)
         identifiers = disputed_ids(rows)
@@ -169,15 +184,28 @@ async def _discuss(
             )
             for d in descriptors
         )
-        leases = tuple(
-            context.ledger.admit(d.persona.name, f"{d.persona.name}/attempt-{number + 2:04d}")
-            for d in descriptors
-        )
+        keys = tuple((d.persona.name, f"{d.persona.name}/attempt-{number + 2:04d}")
+                     for d in descriptors)
+        leases: tuple[BudgetLease | None, ...]
+        if allowance:
+            # A separate discussion allowance: positions never spend discovery grants.
+            admitted = context.ledger.admit_phase("discussion", keys)
+            leases = admitted if admitted is not None else (None,)
+        else:
+            leases = tuple(context.ledger.admit(persona, key) for persona, key in keys)
         if any(lease is None for lease in leases):
             for lease in leases:
                 if lease is not None:
                     context.ledger.settle(lease, lease.baseline, True)
-            return rows, rounds, "failed", "perspective_budget", None
+            degradation = _refused_fallback(context, number)
+            if degradation is None:
+                return rows, rounds, "failed", "perspective_budget", None
+            # The round could not start: its grants are spent. Keep the completed rounds.
+            rounds.append({"round": number, "candidate_ids": list(identifiers),
+                           "admission": "refused", "positions": [], "proposals": [],
+                           "reassessment": None, "disposition_changes": [],
+                           "new_citations": [], "tokens": 0, "latency_seconds": 0.0})
+            return _fall_back(context, rows, rounds, degradation)
         outcomes = await _await_wave(
             [
                 asyncio.create_task(
@@ -212,7 +240,10 @@ async def _discuss(
             for o in outcomes
         ):
             _finish_round(record, context, usage_before, started)
-            return rows, rounds, "failed", "perspectives_incomplete", None
+            degradation = _discussion_fallback(context, number, [o.to_dict() for o in outcomes])
+            if degradation is None:
+                return rows, rounds, "failed", "perspectives_incomplete", None
+            return _fall_back(context, rows, rounds, degradation)
         parsed_proposals: list[Proposal] = []
         for descriptor, attempt in zip(descriptors, attempts):
             session = decode_artifact(
@@ -242,11 +273,22 @@ async def _discuss(
                 pool,
                 attempt_number=number + 1,
                 counterevidence=tuple(proposal_wire(p) for p in proposals),
+                phase="discussion" if allowance else None,
             )
             record["reassessment"] = f"assessment-round-{number:04d}.json"
             if assessment.status != "complete":
                 _finish_round(record, context, usage_before, started)
-                return rows, rounds, assessment.status, "reassessment_incomplete", None
+                if assessment.outcome is None:
+                    # Refused admission: the discussion grants are spent.
+                    degradation = _refused_fallback(context, number)
+                    if degradation is not None:
+                        record["admission"] = "refused"
+                else:
+                    degradation = _discussion_fallback(
+                        context, number, [assessment.outcome.to_dict()])
+                if degradation is None:
+                    return rows, rounds, assessment.status, "reassessment_incomplete", None
+                return _fall_back(context, rows, rounds, degradation)
             updated = {row.candidate.candidate_id: row for row in assessment.rows}
             record["disposition_changes"] = [
                 {
@@ -287,6 +329,38 @@ async def _discuss(
                 verdict,
             )
     raise AssertionError("positive round bound required")
+
+
+def _discussion_fallback(context: _ExecutionContext, number: int,
+                         outcomes: list[dict[str, object]]) -> Degradation | None:
+    """The opt-in degraded record for a measured discussion overrun, else None (void)."""
+    settings = context.config.findings.discussion
+    if settings.overrun != "fallback" or not context.ledger.accounting_complete:
+        return None
+    return phase_degradation("discussion", outcomes, round_number=number,
+                             allowance=settings.tokens)
+
+
+def _refused_fallback(context: _ExecutionContext, number: int) -> Degradation | None:
+    """Opt-in: admission refused for spent discussion grants, with complete accounting."""
+    settings = context.config.findings.discussion
+    if settings.overrun != "fallback" or not context.ledger.accounting_complete:
+        return None
+    return Degradation("discussion", number, settings.tokens, 0, 0, 0, "pre_round_assessment")
+
+
+def _fall_back(
+    context: _ExecutionContext, rows: tuple[Assessment, ...], rounds: list[dict[str, object]],
+    degradation: Degradation,
+) -> tuple[tuple[Assessment, ...], list[dict[str, object]], Literal["partial"], str, Verdict]:
+    """Keep the last complete (pre-round) assessment; uncertainty still escalates."""
+    result = AssessmentResult("complete", rows)
+    verdict = derive_verdict(
+        equivalent_groups(result.retained), context.config.verdict, evidence_version=2,
+        unresolved_candidates=result.unresolved_blocking(
+            context.config.verdict.blocking_categories),
+        degradation=degradation)
+    return rows, rounds, "partial", "discussion_overrun_fallback", verdict
 
 
 def _finish_round(record: dict[str, object], context: _ExecutionContext,

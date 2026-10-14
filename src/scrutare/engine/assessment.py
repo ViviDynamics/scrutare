@@ -11,6 +11,8 @@ from scrutare.findings.models import Citation, Finding, FindingError, _text, par
 
 if TYPE_CHECKING:
     from scrutare.engine.fanout import _ExecutionContext
+    from scrutare.engine.session_models import SessionOutcome
+    from scrutare.findings.verdict import Degradation
 
 AssessmentStatus = Literal["supported", "refuted", "unresolved"]
 
@@ -90,6 +92,7 @@ def assessment_wire(row: Assessment) -> dict[str, Any]:
 class AssessmentResult:
     status: Literal["complete", "partial", "failed"]
     rows: tuple[Assessment, ...]
+    outcome: SessionOutcome | None = None
 
     @property
     def supported(self) -> tuple[Finding, ...]:
@@ -109,8 +112,12 @@ class AssessmentResult:
 async def assess_candidates(
     context: _ExecutionContext, candidates: tuple[Finding, ...], *,
     attempt_number: int = 1, counterevidence: tuple[dict[str, object], ...] = (),
+    phase: str | None = None,
 ) -> AssessmentResult:
-    """Use one independently reserved batch on the caller's live review ledger."""
+    """Use one independently reserved batch on the caller's live review ledger.
+
+    With `phase`, the batch is admitted from that phase allowance instead of the assessor's.
+    """
     from scrutare.engine.assessment_inputs import AssessmentInput, assessor_persona
     from scrutare.engine.nare_session import run_persona_session
     from scrutare.engine.session_artifacts import create_attempt_directory, write_owned_json
@@ -128,7 +135,12 @@ async def assess_candidates(
     if candidates:
         attempt = create_attempt_directory(context.run_dir, name, attempt_number,
                                            prepared_root=context.inputs.root)
-        lease = context.ledger.admit(name, f"{name}/attempt-{attempt_number:04d}")
+        key = f"{name}/attempt-{attempt_number:04d}"
+        if phase is None:
+            lease = context.ledger.admit(name, key)
+        else:
+            admitted = context.ledger.admit_phase(phase, ((name, key),))
+            lease = None if admitted is None else admitted[0]
         if lease is None:
             status = "failed"
         else:
@@ -136,7 +148,14 @@ async def assess_candidates(
                 descriptor, context.config.models.default, lease, ledger=context.ledger,
                 artifact_directory=attempt, runtime=context.runtime, capability=context.capability)
             status = "failed"
-            if (outcome.status in ("complete", "partial") and outcome.output_available
+            policy = (context.config.findings.assessment.overrun if attempt_number == 1
+                      else context.config.findings.discussion.overrun)
+            overrun = (policy == "fallback" and outcome.status == "partial"
+                       and outcome.reason == "budget")
+            if overrun and outcome.output_available:
+                # An overrun batch is never applied under the fallback policy: keep no rows.
+                status = "partial"
+            elif (outcome.status in ("complete", "partial") and outcome.output_available
                     and outcome.accounting_complete and context.ledger.accounting_complete):
                 document = decode_artifact(read_artifact(attempt / "session.json"),
                                            artifact="assessment.session")
@@ -144,13 +163,28 @@ async def assess_candidates(
                     raise FindingError("assessment: invalid captured session")
                 rows = descriptor.assessments(document["output"])
                 status = outcome.status
-    result = AssessmentResult(status, rows)
+    result = AssessmentResult(status, rows, outcome)
     write_owned_json(context.run_dir / ("assessment.json" if attempt_number == 1
         else f"assessment-round-{attempt_number - 1:04d}.json"), {
         "schema_version": 1, "kind": "model_based_not_formal_proof", "status": status,
-        "attempt_limit": 1, "allocation_tokens": context.config.findings.assessment.tokens,
+        "attempt_limit": 1, "allocation_tokens": (
+            context.config.findings.assessment.tokens if phase is None
+            else context.config.findings.discussion.tokens),
         "candidates": artifact_data(candidates),
         "assessments": [assessment_wire(row) for row in rows],
         "outcome": outcome.to_dict() if outcome is not None else None,
     }, prepared_root=context.inputs.root)
     return result
+
+
+def assessment_fallback(context: _ExecutionContext, result: AssessmentResult
+                        ) -> Degradation | None:
+    """The opt-in degraded record for a measured assessor overrun, else None (void)."""
+    from scrutare.engine.overrun import phase_degradation
+
+    settings = context.config.findings.assessment
+    if (settings.overrun != "fallback" or result.outcome is None
+            or not context.ledger.accounting_complete):
+        return None
+    return phase_degradation("assessment", (result.outcome.to_dict(),), round_number=None,
+                             allowance=settings.tokens)

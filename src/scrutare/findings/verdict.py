@@ -32,6 +32,46 @@ class Exhaustion:
             raise FindingError("exhaustion.converged: expected False")
 
 
+_FALLBACK_STAGES = {"assessment": "anchor_validated", "discussion": "pre_round_assessment"}
+
+
+@dataclass(frozen=True)
+class Degradation:
+    """A measured phase overrun answered by the last complete stage, never by approval."""
+
+    phase: Literal["assessment", "discussion"]
+    round: int | None
+    allowance_tokens: int | None
+    grant_tokens: int
+    usage_tokens: int
+    overrun_tokens: int
+    fallback_stage: Literal["anchor_validated", "pre_round_assessment"]
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.phase, str) or self.phase not in _FALLBACK_STAGES:
+            raise FindingError("degraded.phase: expected assessment or discussion")
+        if self.fallback_stage != _FALLBACK_STAGES[self.phase]:
+            raise FindingError("degraded.fallback_stage: expected the phase's last complete stage")
+        if self.phase == "assessment":
+            if self.round is not None:
+                raise FindingError("degraded.round: assessment has no discussion round")
+        elif type(self.round) is not int or self.round <= 0:
+            raise FindingError("degraded.round: expected a positive discussion round")
+        if self.allowance_tokens is not None and (
+                type(self.allowance_tokens) is not int or self.allowance_tokens <= 0):
+            raise FindingError("degraded.allowance_tokens: expected a positive integer or null")
+        for name in ("grant_tokens", "usage_tokens", "overrun_tokens"):
+            value = getattr(self, name)
+            if type(value) is not int or value < 0:
+                raise FindingError(f"degraded.{name}: expected a nonnegative integer")
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"phase": self.phase, "round": self.round,
+                "allowance_tokens": self.allowance_tokens, "grant_tokens": self.grant_tokens,
+                "usage_tokens": self.usage_tokens, "overrun_tokens": self.overrun_tokens,
+                "fallback_stage": self.fallback_stage}
+
+
 @dataclass(frozen=True)
 class Verdict:
     """Immutable evidence and policy, with status determined only by their rule."""
@@ -41,6 +81,7 @@ class Verdict:
     exhaustion: Exhaustion | None = None
     evidence_version: int | None = None
     unresolved_candidates: tuple[str, ...] = ()
+    degradation: Degradation | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.findings, tuple) or any(
@@ -72,6 +113,9 @@ class Verdict:
             raise FindingError("config: expected VerdictSettings")
         if self.exhaustion is not None and not isinstance(self.exhaustion, Exhaustion):
             raise FindingError("exhaustion: expected Exhaustion or None")
+        if self.degradation is not None and (
+                not isinstance(self.degradation, Degradation) or version != 2):
+            raise FindingError("degraded: expected a v2 Degradation or None")
 
     def _blocking_categories(self, finding: MergedFinding) -> tuple[Category, ...]:
         return tuple(
@@ -82,17 +126,22 @@ class Verdict:
 
     @property
     def verdict(self) -> Literal["approve", "changes_requested", "escalated"]:
-        """Escalate exhaustion, otherwise apply the configured blocking categories."""
+        """Escalate exhaustion, otherwise apply the configured blocking categories.
+
+        A degraded fallback is never an approval: without a blocking finding it escalates.
+        """
         if self.exhaustion is not None or self.unresolved_candidates:
             return "escalated"
         if any(self._blocking_categories(finding) for finding in self.findings):
             return "changes_requested"
+        if self.degradation is not None:
+            return "escalated"
         return "approve"
 
     @property
     def rule(self) -> Literal[
         "any_blocking_finding", "no_blocking_findings", "rounds_exhausted_without_convergence",
-        "unresolved_semantic_assessment"
+        "unresolved_semantic_assessment", "phase_overrun_fallback"
     ]:
         """Name the evidence rule that produced this verdict."""
         if self.exhaustion is not None:
@@ -101,6 +150,8 @@ class Verdict:
             return "unresolved_semantic_assessment"
         if self.verdict == "changes_requested":
             return "any_blocking_finding"
+        if self.degradation is not None:
+            return "phase_overrun_fallback"
         return "no_blocking_findings"
 
     def to_dict(self) -> dict[str, Any]:
@@ -136,6 +187,8 @@ class Verdict:
                 "candidate_ids": list(self.unresolved_candidates),
                 "attempts_completed": 1, "attempt_limit": 1,
             }
+        if self.degradation is not None:
+            data["degraded"] = self.degradation.to_dict()
         return data
 
     def to_bytes(self) -> bytes:
@@ -147,9 +200,10 @@ class Verdict:
 def derive_verdict(
     findings: Iterable[MergedFinding], config: VerdictSettings, *,
     exhaustion: Exhaustion | None = None, evidence_version: int | None = None,
-    unresolved_candidates: tuple[str, ...] = (),
+    unresolved_candidates: tuple[str, ...] = (), degradation: Degradation | None = None,
 ) -> Verdict:
     """Snapshot already verified, deduplicated findings and apply the category policy."""
     if not isinstance(findings, Iterable) or isinstance(findings, (str, bytes, Mapping)):
         raise FindingError("findings: expected an iterable of MergedFinding values")
-    return Verdict(tuple(findings), config, exhaustion, evidence_version, unresolved_candidates)
+    return Verdict(tuple(findings), config, exhaustion, evidence_version, unresolved_candidates,
+                   degradation)

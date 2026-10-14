@@ -98,7 +98,8 @@ def _original_targets(payload: ReviewPayload) -> tuple[str, ...]:
     if (payload.event != "COMMENT" or not header.startswith("Scrutare escalation\n\n")
             or "\nVerdict: escalated\n" not in header
             or not any(f"\nRule: {rule}\n" in header for rule in (
-                "rounds_exhausted_without_convergence", "unresolved_semantic_assessment"))
+                "rounds_exhausted_without_convergence", "unresolved_semantic_assessment",
+                "phase_overrun_fallback"))
             or not separator):
         raise ReplayError("escalation: expected original escalation payload")
     targets = header.rsplit("\n\n", 1)[-1]

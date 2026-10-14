@@ -56,7 +56,9 @@ class ReviewBudgetLedger:
     """Fixed fair quotas, with reservations and actual usage across attempts."""
 
     def __init__(self, persona_names: tuple[str, ...], settings: BudgetSettings, *,
-                 reserved_allocations: Mapping[str, int] | None = None) -> None:
+                 reserved_allocations: Mapping[str, int] | None = None,
+                 phase_allowances: Mapping[str, int] | None = None,
+                 protect_reservations: bool = False) -> None:
         if not isinstance(persona_names, tuple) or not persona_names:
             raise ValueError("persona_names: expected a nonempty tuple")
         for persona in persona_names:
@@ -74,8 +76,12 @@ class ReviewBudgetLedger:
             if name not in persona_names:
                 raise ValueError("reservation: expected configured persona")
             _integer(allocation, "reservation", positive=True)
+        phases = dict(phase_allowances or {})
+        for phase, allowance in phases.items():
+            _text(phase, "phase")
+            _integer(allowance, "phase allowance", positive=True)
         ordinary = tuple(name for name in persona_names if name not in reserved)
-        remaining = settings.review_max_tokens - sum(reserved.values())
+        remaining = settings.review_max_tokens - sum(reserved.values()) - sum(phases.values())
         if not ordinary or remaining <= 0:
             raise ValueError("reservation: must leave discovery capacity")
         total = min(remaining, len(ordinary) * settings.per_persona_tokens)
@@ -84,6 +90,13 @@ class ReviewBudgetLedger:
             name: quotient + (index < remainder) for index, name in enumerate(ordinary)
         } | reserved
         self._persona_usage = dict.fromkeys(persona_names, TokenUsage())
+        # Phase allowances are separate pools: their sessions never spend a persona's grant.
+        self._phases = phases
+        self._phase_usage = dict.fromkeys(phases, TokenUsage())
+        self._session_phase: dict[str, str] = {}
+        # Opt-in (implied by a phase allowance): another participant's overshoot past its own
+        # grant cannot shrink a later grant. Every grant stays within its share of the ceiling.
+        self._protected = bool(protect_reservations or phases)
         self._sessions: dict[str, tuple[str, TokenUsage]] = {}
         self._active: dict[str, BudgetLease] = {}
         self._usage = TokenUsage()
@@ -105,6 +118,17 @@ class ReviewBudgetLedger:
     def accounting_complete(self) -> bool:
         return self._accounting_complete
 
+    def _room(self) -> int:
+        """Ceiling capacity left for a new grant, net of live leases."""
+        held = sum(self._remaining(lease) for lease in self._active.values())
+        if not self._protected:
+            return self._settings.review_max_tokens - self.usage.total - held
+        entitled = sum(min(self._persona_usage[name].total, self._allocations[name])
+                       for name in self._names) + sum(
+            min(self._phase_usage[phase].total, allowance)
+            for phase, allowance in self._phases.items())
+        return self._settings.review_max_tokens - entitled - held
+
     def _remaining(self, lease: BudgetLease) -> int:
         return max(0, lease.limit_tokens - self._sessions[lease.session_key][1].total)
 
@@ -123,19 +147,68 @@ class ReviewBudgetLedger:
                 raise ValueError("baseline: a fresh session must start at zero")
         elif previous != (persona, baseline):
             raise ValueError("baseline: expected this persona's exact session high-water vector")
-        if not self.accounting_complete or self.exhausted or persona in self._active:
+        if session_key in self._session_phase:
+            raise ValueError("session_key: a phase session is admitted only from its phase")
+        if (not self.accounting_complete or (self.exhausted and not self._protected)
+                or persona in self._active):
             return None
         available = self._allocations[persona] - self._persona_usage[persona].total
-        reserved = sum(self._remaining(lease) for lease in self._active.values())
-        grant = min(
-            available, max(0, self._settings.review_max_tokens - self.usage.total - reserved)
-        )
+        grant = min(available, max(0, self._room()))
         if grant <= 0:
             return None
         lease = BudgetLease(persona, session_key, baseline, baseline.total + grant, grant)
         self._sessions[session_key] = (persona, baseline)
         self._active[persona] = lease
         return lease
+
+    def admit_phase(
+        self, phase: str, requests: tuple[tuple[str, str], ...]
+    ) -> tuple[BudgetLease, ...] | None:
+        """Admit fresh concurrent sessions from one phase allowance, all or none.
+
+        The unreserved remainder is split evenly in request order (remainder to the earlier
+        request), bounded by the review ceiling. A session past its share is measured, not
+        refunded, so a later admission sees only what is actually left.
+        """
+        if phase not in self._phases:
+            raise ValueError("phase: expected a configured phase allowance")
+        if not isinstance(requests, tuple) or not requests:
+            raise ValueError("requests: expected a nonempty tuple")
+        personas = []
+        for request in requests:
+            if not isinstance(request, tuple) or len(request) != 2:
+                raise ValueError("requests: expected (persona, session_key) pairs")
+            persona, session_key = request
+            _persona(persona)
+            if persona not in self._allocations:
+                raise ValueError("persona: expected a configured persona")
+            _text(session_key, "session_key")
+            if session_key in self._sessions:
+                raise ValueError("session_key: a phase session must be fresh")
+            personas.append(persona)
+        if len(set(personas)) != len(personas):
+            raise ValueError("requests: duplicate persona")
+        if (not self.accounting_complete
+                or any(persona in self._active for persona in personas)):
+            return None
+        in_phase = sum(self._remaining(lease) for lease in self._active.values()
+                       if self._session_phase.get(lease.session_key) == phase)
+        pool = min(self._phases[phase] - self._phase_usage[phase].total - in_phase,
+                   self._room())
+        if pool <= 0:
+            return None
+        quotient, remainder = divmod(pool, len(requests))
+        if quotient <= 0:
+            return None
+        leases = []
+        for index, (persona, session_key) in enumerate(requests):
+            grant = quotient + (index < remainder)
+            lease = BudgetLease(persona, session_key, TokenUsage(), grant, grant)
+            self._sessions[session_key] = (persona, TokenUsage())
+            self._session_phase[session_key] = phase
+            self._active[persona] = lease
+            leases.append(lease)
+        return tuple(leases)
 
     def _validate_lease(self, lease: BudgetLease) -> None:
         if not isinstance(lease, BudgetLease) or self._active.get(lease.persona) is not lease:
@@ -151,7 +224,11 @@ class ReviewBudgetLedger:
         previous = self._sessions[lease.session_key][1]
         delta = _delta(cumulative_usage, previous)
         self._sessions[lease.session_key] = (lease.persona, cumulative_usage)
-        self._persona_usage[lease.persona] = _add(self._persona_usage[lease.persona], delta)
+        phase = self._session_phase.get(lease.session_key)
+        if phase is None:
+            self._persona_usage[lease.persona] = _add(self._persona_usage[lease.persona], delta)
+        else:
+            self._phase_usage[phase] = _add(self._phase_usage[phase], delta)
         self._usage = _add(self._usage, delta)
 
     def settle(
@@ -164,6 +241,30 @@ class ReviewBudgetLedger:
         self._accounting_complete = self._accounting_complete and accounting_complete
 
     def snapshot(self) -> dict[str, object]:
+        document = self._snapshot()
+        if self._phases:
+            # Only a configured phase allowance changes the established snapshot shape.
+            configured = document["configured"]
+            assert isinstance(configured, dict)
+            configured["phase_allowances"] = dict(self._phases)
+            document["phases"] = [
+                {
+                    "phase": phase,
+                    "allocated_tokens": allowance,
+                    "usage": self._phase_usage[phase].to_dict(),
+                    "exhausted": self._phase_usage[phase].total >= allowance,
+                    "overshoot_tokens": max(0, self._phase_usage[phase].total - allowance),
+                }
+                for phase, allowance in self._phases.items()
+            ]
+            sessions = document["sessions"]
+            assert isinstance(sessions, list)
+            for session in sessions:
+                if (phase := self._session_phase.get(session["session_key"])) is not None:
+                    session["phase"] = phase
+        return document
+
+    def _snapshot(self) -> dict[str, object]:
         return {
             "configured": {
                 "review_max_tokens": self._settings.review_max_tokens,

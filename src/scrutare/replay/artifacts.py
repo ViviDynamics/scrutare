@@ -5,12 +5,12 @@ import math
 import os
 import stat
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 from scrutare.config import CATEGORIES, Category, ConfigError, Strategy, VerdictSettings
 from scrutare.findings.dedupe import MergedFinding
 from scrutare.findings.models import Anchor, FindingError, Side, parse_finding
-from scrutare.findings.verdict import Exhaustion
+from scrutare.findings.verdict import Degradation, Exhaustion
 from scrutare.replay.models import AuditIssue, CapturedPolicy, ReplayError, SavedVerdict
 
 _GROUP_FIELDS = ("file", "line", "side", "problem", "categories", "personas", "reasons", "sources")
@@ -236,6 +236,8 @@ def parse_saved_verdict(data: bytes, *, evidence_version: int = 1) -> SavedVerdi
         fields += ("exhaustion",)
     if "assessment_uncertainty" in document:
         fields += ("assessment_uncertainty",)
+    if "degraded" in document:
+        fields += ("degraded",)
     _mapping(document, "verdict", fields)
     if type(document["schema_version"]) is not int or document["schema_version"] not in (1, 2):
         raise ReplayError("verdict.schema_version: expected supported integer version 1")
@@ -245,7 +247,7 @@ def parse_saved_verdict(data: bytes, *, evidence_version: int = 1) -> SavedVerdi
         raise ReplayError("verdict.verdict: expected a known verdict")
     if not isinstance(document["rule"], str) or document["rule"] not in (
         "any_blocking_finding", "no_blocking_findings", "rounds_exhausted_without_convergence",
-        "unresolved_semantic_assessment"
+        "unresolved_semantic_assessment", "phase_overrun_fallback"
     ):
         raise ReplayError("verdict.rule: expected a known rule")
     config = _mapping(document["config"], "verdict.config",
@@ -277,12 +279,29 @@ def parse_saved_verdict(data: bytes, *, evidence_version: int = 1) -> SavedVerdi
                 or type(assertion["attempt_limit"]) is not int
                 or assertion["attempt_limit"] != 1):
             raise ReplayError("assessment: invalid uncertainty bound")
+    degradation = _degradation(document["degraded"]) if "degraded" in document else None
+    if degradation is not None and (evidence_version != 2 or document["verdict"] == "approve"):
+        raise ReplayError("verdict.degraded: a degraded fallback is never an approval")
+    if (document["rule"] == "phase_overrun_fallback") != (
+            degradation is not None and document["verdict"] == "escalated"
+            and exhaustion is None and uncertainty is None):
+        raise ReplayError("verdict.degraded: the fallback rule requires its degraded record")
     if exhaustion is None and (
-        (document["verdict"] == "escalated" and uncertainty is None)
+        (document["verdict"] == "escalated" and uncertainty is None and degradation is None)
         or document["rule"] == "rounds_exhausted_without_convergence"
     ):
         raise ReplayError("verdict.exhaustion: explicit recorded exhaustion is required")
-    return SavedVerdict(data, document, exhaustion)
+    return SavedVerdict(data, document, exhaustion, degradation)
+
+
+def _degradation(value: object) -> Degradation:
+    record = _mapping(value, "verdict.degraded", (
+        "phase", "round", "allowance_tokens", "grant_tokens", "usage_tokens", "overrun_tokens",
+        "fallback_stage"))
+    try:
+        return Degradation(**cast(dict[str, Any], record))
+    except FindingError as error:
+        raise ReplayError(f"verdict.{error}") from None
 
 
 def validate_exhaustion(saved: SavedVerdict, policy: CapturedPolicy) -> Exhaustion | None:
