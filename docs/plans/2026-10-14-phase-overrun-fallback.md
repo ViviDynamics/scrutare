@@ -16,8 +16,9 @@ In:
   `findings.discussion.overrun` (`void`, the default, or `fallback`). With `fallback`, a phase
   whose admitted sessions end past their grant (`partial`, `budget`, accounting complete) falls
   back to the last complete stage instead of voiding the review:
-  - assessor overrun keeps the unassessed anchor-validated findings (panel, debate, focused
-    debate, and iterative through its panel);
+  - assessor overrun keeps the unassessed anchor-validated findings (panel, debate and
+    focused debate; refused at configuration load for iterative, which re-derives verdicts
+    from assessment state kept across pushes);
   - discussion overrun (positions or reassessment) keeps the pre-round assessment.
 - The fallback verdict carries a `degraded` record (phase, round, allowance, grant, actual
   usage, overrun, fallback stage). It is never an approval: blocking findings still request
@@ -52,21 +53,23 @@ Out:
 
 ## Tasks
 
-- [ ] 1. Config keys parse, validate and are omitted from canonical config when default:
+- [x] 1. Config keys parse, validate and are omitted from canonical config when default:
       failing config tests.
-- [ ] 2. `Degradation` on `Verdict`: never approve, rule precedence, canonical bytes unchanged
+- [x] 2. `Degradation` on `Verdict`: never approve, rule precedence, canonical bytes unchanged
       without it, saved-verdict parsing: failing verdict and replay-artifact tests.
-- [ ] 3. Ledger phase allowances: carved before the ordinary split, atomic even split for
+- [x] 3. Ledger phase allowances: carved before the ordinary split, atomic even split for
       concurrent sessions, phase usage separate, snapshot unchanged without phases: failing
       budget tests.
-- [ ] 4. Assessor overrun fallback in panel with replay validation and tamper refusal:
+- [x] 4. Assessor overrun fallback in panel with replay validation and tamper refusal:
       failing panel tests from the voided `tools` cell shape.
-- [ ] 5. Assessor overrun fallback in debate and focused debate: failing tests.
-- [ ] 6. Discussion position overrun fallback with replay: failing tests from the three failed
+- [x] 5. Assessor overrun fallback in debate and focused debate: failing tests.
+- [x] 6. Discussion position overrun fallback with replay: failing tests from the three failed
       focused cells (four reviewers, 17,500 grants, about 11,000 discovery use).
-- [ ] 7. Reassessment overrun fallback with replay: failing test.
-- [ ] 8. Discussion allowance admission and replay: failing tests.
-- [ ] 9. Posting payload and escalation replay for degraded verdicts: failing tests.
-- [ ] 10. Evaluation snapshot mirrors the phase allowance: failing test.
-- [ ] 11. Installed native nare proofs for both fallbacks: failing installed tests.
-- [ ] 12. Byte-identical proof against `origin/main` for default configurations; docs.
+- [x] 7. Reassessment overrun fallback with replay: failing test.
+- [x] 8. Discussion allowance admission and replay: failing tests.
+- [x] 9. Posting payload and escalation replay for degraded verdicts: failing tests.
+- [x] 10. Evaluation snapshot: not needed. Comparison sets always build
+      `DiscussionSettings(True)` without an allowance, so the runner cannot see the
+      new keys; it is unchanged until a measurement adds them.
+- [x] 11. Installed native nare proofs for both fallbacks: failing installed tests.
+- [x] 12. Byte-identical proof against `origin/main` for default configurations; docs.
