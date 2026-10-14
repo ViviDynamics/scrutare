@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import asdict
 from hashlib import sha1, sha256
 from pathlib import Path
 from typing import Any, Protocol
@@ -100,6 +99,11 @@ def _policy_status(candidate: dict[str, Any], config: ReviewConfig) -> str | Non
     return None
 
 
+def captured_line_count(content: bytes) -> int:
+    """Last citeable line number: LF-terminated lines plus an unterminated final line."""
+    return content.count(b"\n") + int(bool(content) and not content.endswith(b"\n"))
+
+
 def _artifact(side: str, path: str) -> str:
     return f"repository-{side}-{sha256(path.encode()).hexdigest()}.txt"
 
@@ -125,6 +129,8 @@ def _capture_repository_context(client: RepositoryObjectClient, run: Path, confi
         entry = {key: value for key, value in candidate.items() if key != "absent"}
         entry.update(repository=repository, revision=revision, blob_sha=None, mode=None,
                      size_bytes=None, retained_bytes=0, sha256=None, artifact=None)
+        if config.context.line_counts:
+            entry["line_count"] = None
         status = _policy_status(candidate, config)
         if status is None and repository is None:
             status = "unavailable"
@@ -178,10 +184,12 @@ def _capture_repository_context(client: RepositoryObjectClient, run: Path, confi
                         used += len(content)
                         entry.update(artifact=artifact, retained_bytes=len(content),
                                      sha256=sha256(content).hexdigest())
+                        if config.context.line_counts:
+                            entry["line_count"] = captured_line_count(content)
                         status = "captured"
         entry["status"] = status
         entries.append(entry)
-    manifest = {"schema_version": 1, "source": source, "settings": asdict(config.context),
+    manifest = {"schema_version": 1, "source": source, "settings": config.context.record(),
                 "revisions": {side: {"repository": repository, "sha": sha,
                                      "tree_sha": roots[side]}
                               for side, (repository, sha) in revisions.items()},
@@ -217,7 +225,7 @@ def _context_contents(run: Path, config: ReviewConfig) -> dict[str, bytes]:
                 "retained_bytes", "tree_requests", "truncated"}
             or type(manifest.get("schema_version")) is not int
             or manifest["schema_version"] != 1
-            or encoded(manifest.get("settings")) != encoded(asdict(config.context))
+            or encoded(manifest.get("settings")) != encoded(config.context.record())
             or not isinstance(manifest.get("entries"), list)
             or len(manifest["entries"]) != len(candidates)):
         raise ValueError("Repository context manifest disagrees with capture configuration.")
@@ -257,10 +265,12 @@ def _context_contents(run: Path, config: ReviewConfig) -> dict[str, bytes]:
                 raise ValueError("Repository context corpus identity disagrees with evidence.")
     contents = {MANIFEST: manifest_bytes}
     used = 0
+    fields = {"side", "path", "changed_path", "reason", "eligible", "repository", "revision",
+              "blob_sha", "mode", "size_bytes", "retained_bytes", "sha256", "artifact", "status"}
+    if config.context.line_counts:
+        fields.add("line_count")
     for candidate, entry in zip(candidates, manifest["entries"]):
-        if not isinstance(entry, dict) or set(entry) != {
-                "side", "path", "changed_path", "reason", "eligible", "repository", "revision",
-                "blob_sha", "mode", "size_bytes", "retained_bytes", "sha256", "artifact", "status"}:
+        if not isinstance(entry, dict) or set(entry) != fields:
             raise ValueError("Repository context manifest entries are invalid.")
         if any(entry[key] != value or type(entry[key]) is not type(value)
                for key, value in candidate.items() if key != "absent"):
@@ -290,10 +300,14 @@ def _context_contents(run: Path, config: ReviewConfig) -> dict[str, bytes]:
                     or entry["size_bytes"] != len(data) or entry["retained_bytes"] != len(data)
                     or len(data) > config.context.max_file_bytes or b"\0" in data):
                 raise ValueError("Repository context content changed or exceeded limits.")
+            if config.context.line_counts and (
+                    type(entry["line_count"]) is not int
+                    or entry["line_count"] != captured_line_count(data)):
+                raise ValueError("Repository context line count disagrees with content.")
             contents[artifact] = data
             used += len(data)
         elif entry["artifact"] is not None or entry["sha256"] is not None or (
-                entry["retained_bytes"] != 0):
+                entry["retained_bytes"] != 0) or entry.get("line_count") is not None:
             raise ValueError("Repository context omission contains exposed content.")
     if (used != manifest["retained_bytes"] or used > config.context.max_total_bytes
             or len(contents) - 1 > config.context.max_files

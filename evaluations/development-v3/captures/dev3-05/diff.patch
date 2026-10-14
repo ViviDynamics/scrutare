@@ -1,0 +1,17 @@
+diff --git a/src/downloads/verify.py b/src/downloads/verify.py
+index f916b4349d52076194427961c2e10533a53508b9..f2dc42074f593deebef85320ccf018499512d023 100644
+--- a/src/downloads/verify.py
++++ b/src/downloads/verify.py
+@@ -1,6 +1,5 @@
+ """Verify a downloaded artifact against the release manifest."""
+ import hashlib
+-import hmac
+ 
+ from manifest import published_sha256
+ 
+@@ -8,4 +7,4 @@ from manifest import published_sha256
+ def verify(name, payload):
+     expected = published_sha256(name)
+     actual = hashlib.sha256(payload).hexdigest()
+-    return hmac.compare_digest(actual, expected)
++    return actual == expected

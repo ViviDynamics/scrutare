@@ -99,6 +99,14 @@ class ContextSettings:
     max_total_bytes: int = 1048576
     max_files: int = 128
     max_tree_requests: int = 256
+    line_counts: bool = False
+
+    def record(self) -> dict[str, Any]:
+        """Settings as persisted; the opt-in line-count key exists only when chosen."""
+        result = asdict(self)
+        if not self.line_counts:
+            del result["line_counts"]
+        return result
 
 
 @dataclass(frozen=True)
@@ -220,7 +228,7 @@ class ReviewConfig:
             },
         }
         if self.context != ContextSettings():
-            result["context"] = asdict(self.context)
+            result["context"] = self.context.record()
             for field in ("include", "exclude", "related_paths"):
                 result["context"][field] = list(result["context"][field])
         if self.inspection.procedures != "baseline":
@@ -285,9 +293,12 @@ def _context_settings(value: object) -> ContextSettings:
         paths[name] = entries
     limits = {name: _positive(fields.get(name, getattr(defaults, name)), f"context.{name}")
               for name in ("max_file_bytes", "max_total_bytes", "max_files", "max_tree_requests")}
+    line_counts = fields.get("line_counts", False)
+    if type(line_counts) is not bool:
+        raise ConfigError("context.line_counts: expected a boolean")
     return ContextSettings(enabled, paths["include"], paths["exclude"], paths["related_paths"],
                            limits["max_file_bytes"], limits["max_total_bytes"],
-                           limits["max_files"], limits["max_tree_requests"])
+                           limits["max_files"], limits["max_tree_requests"], line_counts)
 
 
 

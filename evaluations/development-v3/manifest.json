@@ -1,0 +1,317 @@
+{
+  "cases": [
+    {
+      "capture": "captures/dev3-01",
+      "context_sources": {
+        "base": {
+          "directory": "sources/dev3-01/base",
+          "repository": "development-fixtures/local",
+          "revision": "ae5294d547aee7276fe599f6d3232644829560a2"
+        },
+        "head": {
+          "directory": "sources/dev3-01/head",
+          "repository": "development-fixtures/local",
+          "revision": "c5a2162a31d2c3a2163390d9bdb783d50d69d9ca"
+        }
+      },
+      "domain": "correctness",
+      "id": "dev3-01",
+      "labels": "labels/dev3-01.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written development example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/dev3-02",
+      "context_sources": {
+        "base": {
+          "directory": "sources/dev3-02/base",
+          "repository": "development-fixtures/local",
+          "revision": "36725818e8232b4778f15c0ea376ba056e503ada"
+        },
+        "head": {
+          "directory": "sources/dev3-02/head",
+          "repository": "development-fixtures/local",
+          "revision": "ea07db2cfbd813d9280aa53aace5f682681e01e8"
+        }
+      },
+      "domain": "correctness",
+      "id": "dev3-02",
+      "labels": "labels/dev3-02.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written development example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/dev3-03",
+      "context_sources": {
+        "base": {
+          "directory": "sources/dev3-03/base",
+          "repository": "development-fixtures/local",
+          "revision": "6e9a912bd39a71dd8d2b62508a6773f55e03c69e"
+        },
+        "head": {
+          "directory": "sources/dev3-03/head",
+          "repository": "development-fixtures/local",
+          "revision": "75c0cdcad7c7e8897db8550613a365d7b27f6dcd"
+        }
+      },
+      "domain": "maintainability",
+      "id": "dev3-03",
+      "labels": "labels/dev3-03.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written development example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/dev3-04",
+      "context_sources": {
+        "base": {
+          "directory": "sources/dev3-04/base",
+          "repository": "development-fixtures/local",
+          "revision": "d41972921735c57a27400928f321ed7f1048307a"
+        },
+        "head": {
+          "directory": "sources/dev3-04/head",
+          "repository": "development-fixtures/local",
+          "revision": "a65cabeed8e455da4f2cfb2a145c86df35535469"
+        }
+      },
+      "domain": "correctness",
+      "id": "dev3-04",
+      "labels": "labels/dev3-04.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written development example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/dev3-05",
+      "context_sources": {
+        "base": {
+          "directory": "sources/dev3-05/base",
+          "repository": "development-fixtures/local",
+          "revision": "287370c5c653062000c4a72358bc34976b07e12b"
+        },
+        "head": {
+          "directory": "sources/dev3-05/head",
+          "repository": "development-fixtures/local",
+          "revision": "7be2a81cac87bc66cb01688e6c4d392f75b89385"
+        }
+      },
+      "domain": "security",
+      "id": "dev3-05",
+      "labels": "labels/dev3-05.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written development example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/dev3-06",
+      "context_sources": {
+        "base": {
+          "directory": "sources/dev3-06/base",
+          "repository": "development-fixtures/local",
+          "revision": "3d3edec2327fe9cffbd40e76d957a699fc172c94"
+        },
+        "head": {
+          "directory": "sources/dev3-06/head",
+          "repository": "development-fixtures/local",
+          "revision": "158203fa7b7b7ca2a0a794d38af51662675c1f24"
+        }
+      },
+      "domain": "performance-concurrency",
+      "id": "dev3-06",
+      "labels": "labels/dev3-06.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written development example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/dev3-07",
+      "context_sources": {
+        "base": {
+          "directory": "sources/dev3-07/base",
+          "repository": "development-fixtures/local",
+          "revision": "2155c7e2d75ae967d6ffe870bfdf66e874703811"
+        },
+        "head": {
+          "directory": "sources/dev3-07/head",
+          "repository": "development-fixtures/local",
+          "revision": "ea4da708f2b14a60a1dbdb344984baac53b466ba"
+        }
+      },
+      "domain": "data-integrity",
+      "id": "dev3-07",
+      "labels": "labels/dev3-07.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written development example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/dev3-08",
+      "context_sources": {
+        "base": {
+          "directory": "sources/dev3-08/base",
+          "repository": "development-fixtures/local",
+          "revision": "f97260dac98035512041acf922d56e9bdd406526"
+        },
+        "head": {
+          "directory": "sources/dev3-08/head",
+          "repository": "development-fixtures/local",
+          "revision": "cbc9f7065585a2ba32f5be67b8602dce0e150059"
+        }
+      },
+      "domain": "performance-concurrency",
+      "id": "dev3-08",
+      "labels": "labels/dev3-08.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written development example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/dev3-09",
+      "context_sources": {
+        "base": {
+          "directory": "sources/dev3-09/base",
+          "repository": "development-fixtures/local",
+          "revision": "7767253f963918d7ed9d49493292ad6fe587306a"
+        },
+        "head": {
+          "directory": "sources/dev3-09/head",
+          "repository": "development-fixtures/local",
+          "revision": "e8928e8a890dfbcf14a53bc22e4eb5fe5b334137"
+        }
+      },
+      "domain": "performance-concurrency",
+      "id": "dev3-09",
+      "labels": "labels/dev3-09.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written development example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/dev3-10",
+      "context_sources": {
+        "base": {
+          "directory": "sources/dev3-10/base",
+          "repository": "development-fixtures/local",
+          "revision": "b4d3fdb94ddd5ff133296c5d11ddfdaf4a1e52f2"
+        },
+        "head": {
+          "directory": "sources/dev3-10/head",
+          "repository": "development-fixtures/local",
+          "revision": "f714f9ccfc45fcd2189a279457cd8d4ca3e7c5ae"
+        }
+      },
+      "domain": "data-integrity",
+      "id": "dev3-10",
+      "labels": "labels/dev3-10.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written development example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/dev3-11",
+      "context_sources": {
+        "base": {
+          "directory": "sources/dev3-11/base",
+          "repository": "development-fixtures/local",
+          "revision": "49dc8e93917a582b7688616546f951e4be2466a9"
+        },
+        "head": {
+          "directory": "sources/dev3-11/head",
+          "repository": "development-fixtures/local",
+          "revision": "f9dceaefd0b720a7a40b332645ee19061f9be665"
+        }
+      },
+      "domain": "correctness",
+      "id": "dev3-11",
+      "labels": "labels/dev3-11.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written development example; no external PR or code copied."
+      },
+      "split": "development"
+    },
+    {
+      "capture": "captures/dev3-12",
+      "context_sources": {
+        "base": {
+          "directory": "sources/dev3-12/base",
+          "repository": "development-fixtures/local",
+          "revision": "07028f9a026b543cfab4ffd0b302971ed111341a"
+        },
+        "head": {
+          "directory": "sources/dev3-12/head",
+          "repository": "development-fixtures/local",
+          "revision": "eb86404c5fbf1eb88ca74a63e2e02b55ec88fa3e"
+        }
+      },
+      "domain": "correctness",
+      "id": "dev3-12",
+      "labels": "labels/dev3-12.json",
+      "provenance": {
+        "author": "ViviDynamics Scrutare contributors",
+        "external_material": false,
+        "license": "Elastic-2.0",
+        "origin": "original",
+        "source": "Original purpose-written development example; no external PR or code copied."
+      },
+      "split": "development"
+    }
+  ],
+  "schema_version": 1
+}

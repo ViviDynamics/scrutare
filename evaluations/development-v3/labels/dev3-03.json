@@ -1,0 +1,32 @@
+{
+  "case_id": "dev3-03",
+  "clean_label_requires_context": true,
+  "counterexamples": [
+    "builtin.py imports Plugin and register from api in both revisions; the facade imports are its public surface, and the added function is correct."
+  ],
+  "defects": [],
+  "defensible_observations": [],
+  "evidence_outside_capture": [],
+  "routing_expectation": {
+    "class": "none",
+    "expected_specialists": []
+  },
+  "tempting_allegations": [
+    {
+      "allegation": "Plugin and register are imported in api.py but never used and should be removed.",
+      "evidence": "builtin.py import line; registry.py module docstring; api.py import line in both revisions.",
+      "why_wrong": "api.py is the facade extensions import from: builtin.py does `from api import Plugin, register`, so removing the imports breaks every plugin. The imports also exist unchanged in the base."
+    }
+  ],
+  "tool_expectation": {
+    "relation": "suggests_the_tempting_allegation",
+    "ruff_codes": [
+      "F401",
+      "F401"
+    ]
+  },
+  "unchanged_supporting_paths": [
+    "src/plugins/registry.py",
+    "src/plugins/builtin.py"
+  ]
+}

@@ -1,0 +1,18 @@
+diff --git a/src/mailer/subject.py b/src/mailer/subject.py
+index 75799b203395497d9c2eafe364e811aaf0acb46b..baeca12de4abb933f5cf0702e3672c58a8cd2ec5 100644
+--- a/src/mailer/subject.py
++++ b/src/mailer/subject.py
+@@ -1,6 +1,11 @@
+ """Subject line rendering."""
+ 
+ 
++class _Blank(dict):
++    def __missing__(self, key):
++        return ""
++
++
+ def render_subject(template, values):
+-    """Fill a subject template; a missing value raises KeyError."""
+-    return template.format_map(values)
++    """Fill a subject template; a missing value renders as empty text."""
++    return template.format_map(_Blank(values))

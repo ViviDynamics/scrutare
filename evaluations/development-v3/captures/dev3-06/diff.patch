@@ -1,0 +1,14 @@
+diff --git a/src/concurrency/route_table.py b/src/concurrency/route_table.py
+index 9952dd901305f2b47177d9d7d7a7de717778443e..e4431b722cf41c94ac25a81d84a30e6d93724a78 100644
+--- a/src/concurrency/route_table.py
++++ b/src/concurrency/route_table.py
+@@ -20,8 +20,7 @@ class RouteTable:
+             self._routes = tuple(route for route in self._routes if route[0] != prefix)
+ 
+     def snapshot(self):
+-        with self._lock:
+-            return self._routes
++        return self._routes
+ 
+     def match(self, path):
+         for prefix, handler in self.snapshot():

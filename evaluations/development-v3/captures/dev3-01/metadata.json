@@ -1,0 +1,26 @@
+{
+  "head_sha": "c5a2162a31d2c3a2163390d9bdb783d50d69d9ca",
+  "pr_number": 1,
+  "pull_request": {
+    "base": {
+      "ref": "main",
+      "repo": {
+        "full_name": "development-fixtures/local"
+      },
+      "sha": "ae5294d547aee7276fe599f6d3232644829560a2"
+    },
+    "changed_files": 1,
+    "head": {
+      "repo": {
+        "full_name": "development-fixtures/local"
+      },
+      "sha": "c5a2162a31d2c3a2163390d9bdb783d50d69d9ca"
+    },
+    "merged": false,
+    "number": 1,
+    "state": "open"
+  },
+  "repository": "development-fixtures/local",
+  "schema_version": 1,
+  "status": "ingested"
+}

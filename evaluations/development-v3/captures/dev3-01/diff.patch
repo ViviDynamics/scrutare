@@ -1,0 +1,18 @@
+diff --git a/src/reporting/formatters.py b/src/reporting/formatters.py
+index 171e80a6372dae048bc1eea5c8ce15be223e8c57..ce25bbf1d426686f443e5fccbf2c59ef548f9a1c 100644
+--- a/src/reporting/formatters.py
++++ b/src/reporting/formatters.py
+@@ -111,3 +111,13 @@ def render_statement(title, period, items, tax_ratio, account_number, notes=()):
+     lines.append(render_total(subtotal + tax))
+     lines.extend(render_footer(account_number, notes))
+     return "\n".join(lines)
++
++
++def format_amount(value, currency):
++    """Amount with its currency symbol, for the multi-currency export."""
++    symbol = CURRENCY_SYMBOLS.get(currency, currency + " ")
++    return symbol + f"{value / 100:.2f}"
++
++
++def render_export_row(description, cents, currency):
++    return f"{description},{format_amount(cents, currency)}"

@@ -41,6 +41,14 @@ line-length = 100
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
 
+[tool.ruff.lint.per-file-ignores]
+# Evaluation fixtures that must carry a real Ruff diagnostic for the captured tool
+# evidence comparison. tests/test_development_v3_corpus.py pins this list to the labels.
+"evaluations/development-v3/sources/dev3-01/head/src/reporting/formatters.py" = ["F811"]
+"evaluations/development-v3/sources/dev3-02/head/src/client/http_settings.py" = ["F821"]
+"evaluations/development-v3/sources/dev3-03/base/src/plugins/api.py" = ["F401"]
+"evaluations/development-v3/sources/dev3-03/head/src/plugins/api.py" = ["F401"]
+
 [tool.mypy]
 python_version = "3.10"
 strict = true
