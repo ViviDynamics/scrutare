@@ -1,7 +1,9 @@
 # GitHub App service
 
 The App service admits signed `pull_request` events on `opened`, `synchronize`,
-`reopened`, and `ready_for_review`. Its worker calls the same installed
+`reopened`, and `ready_for_review`, and signed `pull_request_review_comment`
+events on `created` and `edited` that [reply on a review thread](#replies-on-review-threads).
+Its worker calls the same installed
 `scrutare review` CLI used by standalone callers, so the `panel`,
 [iterative](iterative-review.md) and [debate](debate.md) strategies and every
 other [configuration](config.md) field behave as they do there. Reviews are
@@ -73,7 +75,9 @@ before any model call and names the missing file or invalid field. Three current
   the configuration or archive that history before requesting another review.
 
 The App requires Contents read, Issues read, Pull requests write, and Metadata
-read permissions, with the Pull request webhook subscription. Each job obtains
+read permissions, with the Pull request webhook subscription. Answering replies
+additionally needs the **Pull request review comment** subscription and no
+further permission. Each job obtains
 a fresh installation token narrowed to exactly its repository and these
 permissions. That token lasts one hour, so the worker interrupts a review at
 `SCRUTARE_APP_JOB_TIMEOUT` and records the job as `interrupted`.
@@ -90,6 +94,7 @@ describes.
 | --- | --- |
 | `queued`, `running` | Admitted; one job runs at a time. |
 | `posted` | The CLI exited 0 and its stdout is byte-identical to the installed `result.json`. Approval, changes requested and escalation are all posted results. |
+| `unchanged` | A reply job that posted no review: replies are not enabled for the repository, or the head was already reviewed and no trusted reply contested a finding. |
 | `failed` | Configuration, model origin, token, capture, execution or posting was refused or failed, and the posting journal shows the review was either never sent or was confirmed. |
 | `interrupted` | The CLI was interrupted (exit 130 or a signal), reached the job deadline, was running when the service restarted, or ended with a review POST whose outcome is unknown. |
 | `superseded` | A webhook job that needed no review of its own. Its `result` names the job that covers it. |
@@ -103,7 +108,10 @@ posting journal rather than inferred from the exit code:
   retained run before resubmitting.
 
 Performers must decide from `delivery`, never from the status alone. The CLI
-exits 1 both for a refusal and for a failure after delivery.
+exits 1 both for a refusal and for a failure after delivery. `delivery` also
+covers threaded responses, read from the run's `reply-posting.json`: an uncertain
+response POST makes the job `uncertain`, and a confirmed response with no review
+makes it `confirmed`.
 
 A review captures the pull request head current when it runs, so two rules keep
 one head from being reviewed twice by webhook jobs. At admission, a new push
@@ -161,12 +169,54 @@ GitHub does not redeliver a failed webhook on its own. A delivery that arrives
 while the service is down, restarting, unreachable or at its admission cap (503)
 would otherwise be lost. At startup and every `SCRUTARE_APP_RECONCILE_SECONDS`
 the service lists the App's recent deliveries and asks GitHub to redeliver
-reviewable `pull_request` events from its allowlisted installations that failed
+reviewable `pull_request` and reply `pull_request_review_comment` events from its
+allowlisted installations that failed
 in transport or with a 5xx status. Redelivered events pass the same signed
 admission. The bounds are the 100 most recent delivery records, the last 24
 hours, and three accepted requests per delivery. A failed check is reported on
 stderr and tried again at the next interval. A longer outage needs a manual
 redelivery from the App's Advanced settings or a performer API request.
+
+## Replies on review threads
+
+A person who disagrees with a finding replies in its thread. With the **Pull
+request review comment** event subscribed, the service admits that reply and
+queues a reassessment at the current head, without a push. The repository opts
+in with `replies.enabled` in its default-branch `scrutare.yaml`; see
+[replies on Scrutare threads](iterative-review.md#replies-on-scrutare-threads-opt-in)
+for the trust policy, dispositions and the threaded response. Without the
+subscription the feature still works on the next push, because every review
+reads the replies it captures.
+
+Admission authenticates the exact body first, like every event. It then ignores
+what can never contest: a comment that starts a thread, a deleted comment, a
+closed pull request, and any comment whose author or sender GitHub types as
+anything but `User`, which covers Scrutare's own responses and other bots.
+Admission has no network access and does not know the repository's policy, so
+the engine decides trust from what it captures.
+
+- **Idempotency.** A reply is keyed on signed content: repository, pull request,
+  comment ID and the SHA-256 of its text. A redelivery, a replay under a new
+  delivery ID and an edit that leaves the text unchanged return the job already
+  admitted. An edit that changes the text is admitted once more.
+- **Coalescing.** Each pull request still holds at most one queued webhook job.
+  A reply that arrives while a job of its pull request is queued returns that
+  job, which will capture the reply. A reply never displaces a queued push. A
+  new push supersedes a queued reply job. Several replies before a job runs are
+  one job, one reassessment and one response per thread.
+- **Worker.** A reply job skips the reviewed-head guard, since the head is
+  unchanged by design, and runs `scrutare review --replies-only`. It posts a
+  review only for a head not yet reviewed or a trusted reply that contests a
+  finding; otherwise it ends `unchanged`. When the repository has not enabled
+  replies, the job ends `unchanged` before any model origin check or CLI run.
+- **Budget.** Reassessments spend the same `rounds.max` as pushes. Once the
+  bound is reached no session starts and the review escalates.
+- **Redelivery.** Missed `pull_request_review_comment` deliveries are requested
+  again under the same bounds as pushes.
+
+A response whose POST outcome is unknown is never sent again; a later capture
+that shows it records it as delivered. Pending responses go out with the next
+job for that pull request.
 
 ## Listener
 
@@ -228,3 +278,17 @@ Acceptance requires opening a fixture PR and pushing a fix through the installed
 App, verifying the review author's App login, the captured head SHAs and saved
 artifacts, then calling the performer API for the same engine result. Keep #18
 open until that evidence and the rollout are recorded.
+
+Replies need one change to the GitHub App's settings, which only its owner can
+make: under **Permissions & events**, **Subscribe to events**, tick **Pull
+request review comment**. No permission changes: the event is available with the
+Pull requests permission the App already holds, replies are written with Pull
+requests write, and the collaborator permission lookup needs only Metadata read.
+Live acceptance for replies then requires, on a repository with
+`replies.enabled`: a maintainer's reply with no push producing exactly one
+threaded response and no duplicate inline threads; a redelivery from the App's
+Advanced settings producing nothing further; a reply from an account without
+write access ending `unchanged`; and confirmation that
+`GET /repos/{owner}/{repo}/collaborators/{login}/permission` succeeds with the
+narrowed installation token. If that lookup is refused, every account is
+untrusted and no reply triggers a reassessment.

@@ -37,21 +37,21 @@ maintainer adding the review-comment event subscription to the GitHub App.
   appears.
 
 ## Tasks
-- [ ] 1. Config: `replies.enabled` and `replies.trust`, iterative only, omitted
+- [x] 1. Config: `replies.enabled` and `replies.trust`, iterative only, omitted
   from canonical configuration when default: `tests/test_config.py`.
-- [ ] 2. Capture: permission lookups retained as `reply-permissions.json` when
+- [x] 2. Capture: permission lookups retained as `reply-permissions.json` when
   the policy needs them: `tests/test_github.py`, `tests/test_ingestion.py`.
-- [ ] 3. Engine: trust policy, thread mapping, contests, dispositions, bounded
+- [x] 3. Engine: trust policy, thread mapping, contests, dispositions, bounded
   discussion evidence, `replies.json`, byte-identical when off:
   `tests/test_iterative_replies.py`.
-- [ ] 4. Poster: threaded response rendering, exactly-once journal, no duplicate
+- [x] 4. Poster: threaded response rendering, exactly-once journal, no duplicate
   inline threads at an already reviewed head: `tests/test_post_replies.py`.
-- [ ] 5. Review run and CLI: responses delivered after the review, the
+- [x] 5. Review run and CLI: responses delivered after the review, the
   `--replies-only` no-op, result document: `tests/test_review_run.py`,
   `tests/test_cli.py`.
-- [ ] 6. App: signed admission, idempotency on signed content, per-PR
+- [x] 6. App: signed admission, idempotency on signed content, per-PR
   coalescing, worker gate, delivery field, redelivery: `tests/test_app.py`,
   `tests/test_app_worker.py`.
-- [ ] 7. Installed acceptance: a reply with no new push through the installed
+- [x] 7. Installed acceptance: a reply with no new push through the installed
   wheel and nare: `tests/test_installed_iterative.py`.
-- [ ] 8. Documentation and threat model.
+- [x] 8. Documentation and threat model.

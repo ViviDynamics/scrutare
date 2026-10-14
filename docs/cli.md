@@ -26,6 +26,11 @@ and protocol inspection remain engine checks. Built-in personas and custom
 systems receive the filtered read-only root described in
 [session fan-out](session-fanout.md).
 
+`--replies-only` is for callers triggered by a reply on a review thread rather
+than a push. It requires `replies.enabled` and is refused otherwise before any
+GitHub access. See
+[replies on Scrutare threads](iterative-review.md#replies-on-scrutare-threads-opt-in).
+
 ## Output and exits
 
 | Exit | Meaning |
@@ -40,7 +45,10 @@ includes schema/application versions, `status: posted`, absolute `run_dir`,
 captured `head_sha`, code-derived `verdict` and `rule`, `panel_status`, reported
 `usage`, `accounting_complete`, and the validated review receipt. An applicable
 reviewer-request receipt is included separately. Success is emitted only after
-the result and manifest are installed.
+the result and manifest are installed. With `replies.enabled` the document also
+has `replies`, one entry per threaded response this run delivered. A
+`--replies-only` run that found no new head and no trusted contest posts no
+review: it exits 0 with `status: unchanged` and no `review` field.
 
 Failures leave stdout empty and explain the failure on stderr. Once capture has
 completed, the diagnostic identifies its retained run. A later persistence

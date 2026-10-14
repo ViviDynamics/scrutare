@@ -127,3 +127,42 @@ targets and delivers only the COMMENT review. Use
 [`post_escalation`](escalation.md) to confirm both the review and human reviewer
 request stages. Both entrypoints validate existing escalation artifacts before
 network access, so the lower-level API cannot bypass conflicting request intent.
+
+## Threaded responses
+
+With `replies.enabled`, `post_replies(run_dir: Path, config: ReviewConfig, *,
+client: ReviewClient | None = None) -> tuple[PostedReply, ...]` delivers the
+responses the [iterative engine](iterative-review.md#replies-on-scrutare-threads-opt-in)
+recorded for this pull request. `scrutare review` calls it after the review is
+confirmed. It returns the responses this run posted or found already posted, and
+does nothing when the setting is off.
+
+A response is recorded as `pending` in the pull request's private history in the
+same atomic save that consumes the replies it answers. Delivery then follows the
+review poster's discipline:
+
+- `sending` is persisted in the history and in the run's `reply-posting.json`
+  before the POST to `pulls/{number}/comments/{root}/replies`.
+- A validated 201 receipt records `posted` with the comment ID and URL.
+- An explicit 4xx is `rejected` and final. Throttling and a launch proven unsent
+  return the response to `pending` for the next invocation, within three attempts.
+- A timeout, 5xx, malformed success or an interrupted process leaves `unknown`.
+  That response is never sent again. A later capture that shows exactly one
+  reply in the thread carrying its marker, written by the login of a confirmed
+  Scrutare review, records it as `observed`. Absence from a capture proves
+  nothing. The run in which a response becomes uncertain fails; later runs are
+  not failed by it.
+- The pull request is rechecked as open and unmerged before the first write.
+
+Each response ends with `<!-- scrutare-reply:<key> -->`. The key is derived from
+the thread and the exact replies answered, so the same contest always has the
+same key. Pending responses of earlier runs are delivered by the next invocation
+for that pull request; nothing retries on its own.
+
+No `/user` call is involved, so this works with an installation token. It does
+depend on an earlier confirmed review to know Scrutare's login.
+
+When `replies.json` lists inline threads already posted at the captured head,
+`post_review` omits a finding's inline comment if its body would be byte-identical
+to that thread. The summary still counts every finding. The saved
+`review-payload.json` is the payload actually sent.
