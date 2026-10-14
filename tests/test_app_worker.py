@@ -593,3 +593,181 @@ def test_github_transport_maps_missing_resources_lists_and_refuses_redirects(tmp
     with pytest.raises(AppError, match="redirects are refused"):
         NoRedirect().redirect_request(Request("https://api.github.com/x"), None, 302, "Found",
                                       {}, "https://example.com/x")
+
+
+REPLY_CONFIG = (b"strategy: iterative\nmodels:\n  default:\n    provider: openai\n"
+                b"    base_url: https://models.example/v1\n    model: example\n"
+                b"replies:\n  enabled: true\n")
+
+
+class ReplyingClient(TrustedClient):
+    def __init__(self, raw=REPLY_CONFIG):
+        self.raw, self.heads = raw, 0
+
+    def head(self, *args):
+        self.heads += 1
+        return "a" * 40
+
+    def configuration(self, *args):
+        return self.raw
+
+
+def reply_job(store, name="one"):
+    store.enqueue("webhook:reply:" + name, "owner/repo", 12, 456, "a" * 40)
+    return store.claim()
+
+
+def unchanged(root, **changes):
+    """The CLI's document for a replies-only run that posted no review."""
+    document = {"schema_version": 1, "scrutare_version": "2026.10.2", "status": "unchanged",
+                "run_dir": str(root), "head_sha": "a" * 40, "verdict": "changes_requested",
+                "rule": "any_blocking_finding", "panel_status": "complete", "usage": {},
+                "accounting_complete": True, "replies": []} | changes
+    raw = (json.dumps(document, sort_keys=True, indent=2) + "\n").encode()
+    (root / "result.json").write_bytes(raw)
+    return raw
+
+
+def test_reply_job_runs_a_replies_only_review_of_a_head_already_reviewed(tmp_path):
+    store = JobStore(tmp_path / "jobs.sqlite")
+    calls = []
+    def runner(argv, **kwargs):
+        calls.append(argv)
+        root = kwargs["cwd"] / ".scrutare" / "runs" / f"run-{len(calls)}"
+        root.mkdir(parents=True)
+        return subprocess.CompletedProcess(argv, 0, cli_result(root), b"")
+    pushed = store.enqueue("webhook:push", "owner/repo", 12, 456, "a" * 40)
+    client = ReplyingClient()
+    run_job(settings(tmp_path), store, store.claim(), client=client, runner=runner)
+    assert store.get(pushed["id"])["reviewed"] == "a" * 40
+    assert "--replies-only" not in calls[0]
+    # The head is unchanged: that is the point of a reply, so the head guard is skipped.
+    job = reply_job(store)
+    run_job(settings(tmp_path), store, job, client=client, runner=runner)
+    saved = store.get(job["id"])
+    assert saved["status"] == "posted" and saved["reviewed"] == "a" * 40
+    assert calls[1][-1] == "--replies-only" and len(calls[1]) == len(calls[0]) + 1
+    assert calls[1][1:4] == ["-m", "scrutare", "review"] and client.heads == 1
+    # A later push event for that head is still reviewed at most once.
+    late = store.enqueue("webhook:late", "owner/repo", 12, 456, "a" * 40)
+    run_job(settings(tmp_path), store, store.claim(), client=client,
+            runner=lambda *a, **k: pytest.fail("must not review the same head again"))
+    assert store.get(late["id"])["status"] == "superseded"
+
+
+def test_reply_job_with_nothing_to_reassess_ends_unchanged(tmp_path):
+    store = JobStore(tmp_path / "jobs.sqlite")
+    job = reply_job(store)
+    def runner(argv, **kwargs):
+        root = kwargs["cwd"] / ".scrutare" / "runs" / "run-1"
+        root.mkdir(parents=True)
+        return subprocess.CompletedProcess(argv, 0, unchanged(root), b"")
+    run_job(settings(tmp_path), store, job, client=ReplyingClient(), runner=runner)
+    saved = store.get(job["id"])
+    assert saved["status"] == "unchanged" and saved["reviewed"] is None
+    assert saved["result"]["status"] == "unchanged" and saved["result"]["replies"] == []
+
+
+@pytest.mark.parametrize("raw", [
+    b"strategy: iterative\nmodels:\n  default:\n    model: example\n",
+    b"models:\n  default:\n    model: example\n",
+    # Not even an unapproved model origin matters when nothing will run.
+    b"strategy: iterative\nmodels:\n  default:\n    provider: openai\n"
+    b"    base_url: https://attacker.example/v1\n    model: example\n",
+])
+def test_reply_job_never_starts_the_cli_when_replies_are_not_enabled(tmp_path, raw):
+    store = JobStore(tmp_path / "jobs.sqlite")
+    job = reply_job(store)
+    run_job(settings(tmp_path), store, job, client=ReplyingClient(raw),
+            runner=lambda *a, **k: pytest.fail("must not start the CLI"))
+    saved = store.get(job["id"])
+    assert saved["status"] == "unchanged"
+    assert saved["result"] == {"reason": "replies are not enabled for this repository"}
+
+
+def test_reply_job_keeps_origin_and_configuration_checks(tmp_path):
+    store = JobStore(tmp_path / "jobs.sqlite")
+    job = reply_job(store)
+    hostile = REPLY_CONFIG.replace(b"models.example", b"attacker.example")
+    run_job(settings(tmp_path), store, job, client=ReplyingClient(hostile),
+            runner=lambda *a, **k: pytest.fail("must reject config before execution"))
+    assert store.get(job["id"])["status"] == "failed"
+    assert "origin" in store.get(job["id"])["result"]["error"]
+    job = reply_job(store, "two")
+    run_job(settings(tmp_path), store, job, client=ReplyingClient(b"replies: {enabled: maybe}\n"),
+            runner=lambda *a, **k: pytest.fail("must reject config before execution"))
+    assert store.get(job["id"])["status"] == "failed"
+    assert store.get(job["id"])["result"]["delivery"] == "not_sent"
+
+
+@pytest.mark.parametrize("corrupt", [
+    {"status": "skipped"}, {"head_sha": "main"}, {"schema_version": 2},
+    {"review": {"id": 1}, "status": "unchanged", "verdict": "bogus"},
+])
+def test_unchanged_requires_the_installed_result_contract(tmp_path, corrupt):
+    store = JobStore(tmp_path / "jobs.sqlite")
+    job = reply_job(store)
+    def runner(argv, **kwargs):
+        root = kwargs["cwd"] / ".scrutare" / "runs" / "run-1"
+        root.mkdir(parents=True)
+        return subprocess.CompletedProcess(argv, 0, unchanged(root, **corrupt), b"")
+    run_job(settings(tmp_path), store, job, client=ReplyingClient(), runner=runner)
+    saved = store.get(job["id"])
+    assert saved["status"] == "interrupted" and saved["result"]["delivery"] == "uncertain"
+
+
+def test_push_job_cannot_report_unchanged(tmp_path):
+    store, job = claimed(tmp_path)
+    def runner(argv, **kwargs):
+        root = kwargs["cwd"] / ".scrutare" / "runs" / "run-1"
+        root.mkdir(parents=True)
+        return subprocess.CompletedProcess(argv, 0, unchanged(root), b"")
+    run_job(settings(tmp_path), store, job, client=TrustedClient(), runner=runner)
+    assert store.get(job["id"])["status"] == "interrupted"
+
+
+@pytest.mark.parametrize(("review", "replies", "status", "delivery", "reviewed"), [
+    (None, None, "failed", "not_sent", None),
+    (None, ["pending"], "failed", "not_sent", None),
+    (None, ["rejected"], "failed", "not_sent", None),
+    (None, ["posted"], "failed", "confirmed", None),
+    (None, ["observed"], "failed", "not_sent", None),
+    (None, ["sending"], "interrupted", "uncertain", None),
+    (None, ["posted", "unknown"], "interrupted", "uncertain", None),
+    ("posted", ["pending"], "failed", "confirmed", "c" * 40),
+    ("posted", ["unknown"], "interrupted", "uncertain", "c" * 40),
+    ("sending", ["posted"], "interrupted", "uncertain", "c" * 40),
+    ("posted", "corrupt", "interrupted", "uncertain", "c" * 40),
+])
+def test_delivery_field_covers_threaded_responses(tmp_path, review, replies, status, delivery,
+                                                  reviewed):
+    store = JobStore(tmp_path / "jobs.sqlite")
+    job = reply_job(store)
+    def runner(argv, **kwargs):
+        run = journal(kwargs, review)
+        if replies == "corrupt":
+            (run / "reply-posting.json").write_text("{")
+        elif replies is not None:
+            (run / "reply-posting.json").write_text(json.dumps(
+                {"responses": [{"status": state} for state in replies]}))
+        return subprocess.CompletedProcess(argv, 1, b"", b"")
+    run_job(settings(tmp_path), store, job, client=ReplyingClient(), runner=runner)
+    saved = store.get(job["id"])
+    assert (saved["status"], saved["result"]["delivery"], saved["reviewed"]) == (
+        status, delivery, reviewed)
+
+
+def test_missed_reply_deliveries_are_redelivery_candidates(tmp_path):
+    reply = DELIVERY | {"event": "pull_request_review_comment", "action": "created"}
+    items = [
+        reply | {"id": 20, "guid": "g-reply", "status_code": 503},
+        reply | {"id": 21, "guid": "g-edit", "action": "edited", "status_code": 0},
+        reply | {"id": 22, "guid": "g-deleted", "action": "deleted", "status_code": 503},
+        reply | {"id": 23, "guid": "g-refused", "status_code": 400},
+        DELIVERY | {"id": 24, "guid": "g-mixed", "action": "created", "status_code": 503},
+        reply | {"id": 25, "guid": "g-opened", "action": "opened", "status_code": 503},
+        DELIVERY | {"id": 26, "guid": "g-review", "event": "pull_request_review",
+                    "action": "submitted", "status_code": 503},
+    ]
+    client, _ = deliveries(tmp_path, items)
+    assert client.failed_deliveries(NOW) == [(20, "g-reply"), (21, "g-edit")]
