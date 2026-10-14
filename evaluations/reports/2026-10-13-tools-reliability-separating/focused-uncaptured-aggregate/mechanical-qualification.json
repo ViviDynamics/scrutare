@@ -1,1 +1,528 @@
-{"actual_human_judgments":0,"cells":[{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":26.93167448695749,"status":"complete","tokens":45035,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":26.93167448695749,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-11/aggregate/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11082},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11781},{"persona":"security","reason":"done","status":"complete","tokens":11079},{"persona":"devops","reason":"done","status":"complete","tokens":11093}],"status":"complete","tokens":45035,"usage":{"cache_read":43341,"cache_write":0,"input":36,"output":1658,"total":45035}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":24.54956234805286,"status":"complete","tokens":45014,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":24.54956234805286,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-11/aggregate/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11076},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11748},{"persona":"security","reason":"done","status":"complete","tokens":11088},{"persona":"devops","reason":"done","status":"complete","tokens":11102}],"status":"complete","tokens":45014,"usage":{"cache_read":43341,"cache_write":0,"input":36,"output":1637,"total":45014}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":26.568526739953086,"status":"complete","tokens":45008,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":26.568526739953086,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-11/aggregate/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11083},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11756},{"persona":"security","reason":"done","status":"complete","tokens":11078},{"persona":"devops","reason":"done","status":"complete","tokens":11091}],"status":"complete","tokens":45008,"usage":{"cache_read":43341,"cache_write":0,"input":36,"output":1631,"total":45008}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":28.18091150606051,"status":"complete","tokens":49960,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":28.18091150606051,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-12/aggregate/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11021},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11762},{"persona":"security","reason":"done","status":"complete","tokens":16186},{"persona":"devops","reason":"done","status":"complete","tokens":10991}],"status":"complete","tokens":49960,"usage":{"cache_read":47759,"cache_write":0,"input":429,"output":1772,"total":49960}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":27.094582138815895,"status":"complete","tokens":49805,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":27.094582138815895,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-12/aggregate/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11031},{"persona":"junior-dev","reason":"done","status":"complete","tokens":16792},{"persona":"security","reason":"done","status":"complete","tokens":10989},{"persona":"devops","reason":"done","status":"complete","tokens":10993}],"status":"complete","tokens":49805,"usage":{"cache_read":47775,"cache_write":0,"input":429,"output":1601,"total":49805}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":19.485871242824942,"status":"complete","tokens":44233,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":0,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":0,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":19.485871242824942,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-12/aggregate/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":10988},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11250},{"persona":"security","reason":"done","status":"complete","tokens":10990},{"persona":"devops","reason":"done","status":"complete","tokens":11005}],"status":"complete","tokens":44233,"usage":{"cache_read":43001,"cache_write":0,"input":36,"output":1196,"total":44233}}],"cells_needing_rerun":0,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"experiment_sha256":"985268067c7a418436cbbf477a2d04714551872a8f2e3e8db7724c0aa806a424","experiment_status":"complete","first_attempt_status_counts":{"complete":6},"gate_sha256":"f6a8a1f802f13bb8e5c7572b0198b2fb8c4fc4a3905d603942b1dbeef309e52f","holdout_used":false,"qualification":"pass","rerun_attempts":0,"schema_version":2,"semantic_qualification":false,"status_counts":{"complete":6},"tests":{"all_attempts_within_ceiling":true,"all_runs_complete_and_accounted":true,"experiment_terminal":true,"matrix_exact":true,"retries_within_declared_policy":true},"transient_http_statuses":{}}
+{
+ "actual_human_judgments": 0,
+ "cells": [
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 26.93167448695749,
+     "status": "complete",
+     "tokens": 45035,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 26.93167448695749,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-11/aggregate/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11082
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11781
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11079
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11093
+    }
+   ],
+   "status": "complete",
+   "tokens": 45035,
+   "usage": {
+    "cache_read": 43341,
+    "cache_write": 0,
+    "input": 36,
+    "output": 1658,
+    "total": 45035
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 24.54956234805286,
+     "status": "complete",
+     "tokens": 45014,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 24.54956234805286,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-11/aggregate/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11076
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11748
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11088
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11102
+    }
+   ],
+   "status": "complete",
+   "tokens": 45014,
+   "usage": {
+    "cache_read": 43341,
+    "cache_write": 0,
+    "input": 36,
+    "output": 1637,
+    "total": 45014
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 26.568526739953086,
+     "status": "complete",
+     "tokens": 45008,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 26.568526739953086,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-11/aggregate/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11083
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11756
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11078
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11091
+    }
+   ],
+   "status": "complete",
+   "tokens": 45008,
+   "usage": {
+    "cache_read": 43341,
+    "cache_write": 0,
+    "input": 36,
+    "output": 1631,
+    "total": 45008
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 28.18091150606051,
+     "status": "complete",
+     "tokens": 49960,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 28.18091150606051,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-12/aggregate/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11021
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11762
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 16186
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10991
+    }
+   ],
+   "status": "complete",
+   "tokens": 49960,
+   "usage": {
+    "cache_read": 47759,
+    "cache_write": 0,
+    "input": 429,
+    "output": 1772,
+    "total": 49960
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 27.094582138815895,
+     "status": "complete",
+     "tokens": 49805,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 27.094582138815895,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-12/aggregate/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11031
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 16792
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10989
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10993
+    }
+   ],
+   "status": "complete",
+   "tokens": 49805,
+   "usage": {
+    "cache_read": 47775,
+    "cache_write": 0,
+    "input": 429,
+    "output": 1601,
+    "total": 49805
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 19.485871242824942,
+     "status": "complete",
+     "tokens": 44233,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 19.485871242824942,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-12/aggregate/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10988
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11250
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10990
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11005
+    }
+   ],
+   "status": "complete",
+   "tokens": 44233,
+   "usage": {
+    "cache_read": 43001,
+    "cache_write": 0,
+    "input": 36,
+    "output": 1196,
+    "total": 44233
+   }
+  }
+ ],
+ "cells_needing_rerun": 0,
+ "discussion_attempted_rounds": 0,
+ "discussion_completed_rounds": 0,
+ "experiment_sha256": "985268067c7a418436cbbf477a2d04714551872a8f2e3e8db7724c0aa806a424",
+ "experiment_status": "complete",
+ "first_attempt_status_counts": {
+  "complete": 6
+ },
+ "gate_sha256": "f6a8a1f802f13bb8e5c7572b0198b2fb8c4fc4a3905d603942b1dbeef309e52f",
+ "holdout_used": false,
+ "qualification": "pass",
+ "rerun_attempts": 0,
+ "schema_version": 2,
+ "semantic_qualification": false,
+ "status_counts": {
+  "complete": 6
+ },
+ "tests": {
+  "all_attempts_within_ceiling": true,
+  "all_runs_complete_and_accounted": true,
+  "experiment_terminal": true,
+  "matrix_exact": true,
+  "retries_within_declared_policy": true
+ },
+ "transient_http_statuses": {}
+}

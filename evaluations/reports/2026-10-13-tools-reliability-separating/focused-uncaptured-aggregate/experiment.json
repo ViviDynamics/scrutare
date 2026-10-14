@@ -1,1 +1,331 @@
-{"evidence_kind":"model","runs":[{"accounting_complete":true,"case_id":"dev3-11","error":null,"findings":[{"candidate_id":"721006f0773757db8666eda3ceeed64869f396138804df19b1b5e34572760ddb","category":"regression","evidence":{"citations":[{"end_line":14,"path":"src/inventory/stock.py","revision":"49dc8e93917a582b7688616546f951e4be2466a9","sha256":"d095948cc031eeff82f65abdab43947adec44a30b0b61f5538411b0e18b481f3","side":"base","start_line":8,"validation":"valid","validation_reason":null},{"end_line":13,"path":"src/inventory/stock.py","revision":"f9dceaefd0b720a7a40b332645ee19061f9be665","sha256":"6d788e84c49cfbbd284ea0d2f697fb837865eb5909606091a0c770182ae6225c","side":"head","start_line":8,"validation":"valid","validation_reason":null}],"expected":"Raise OutOfStock('item') and leave stock['item'] equal to 2, as documented and implemented in the base revision.","impact":"Existing consumers using OutOfStock to detect shortages no longer receive that signal, and a failed full-quantity request consumes inventory. Consumers that do not check the newly partial return value can treat an underfilled reservation as successful; no captured caller establishes whether that downstream outcome currently occurs.","observed":"The head implementation computes granted = 2, sets stock['item'] to 0, and returns 2 without raising OutOfStock.","preconditions":["The requested quantity exceeds the available stock.","The consumer relies on the previously documented all-or-nothing reservation contract."],"trigger":"Call reserve(stock, 'item', 5) when stock is {'item': 2}.","version":2},"file":"src/inventory/stock.py","line":10,"persona":"junior-dev","problem":"Insufficient stock now silently produces a partial reservation instead of raising OutOfStock.","reason":"The existing public contract explicitly promised OutOfStock when fewer than the requested units remained, without changing stock. For example, reserve({'item': 2}, 'item', 5) now returns 2 and consumes the remaining stock rather than raising. Updating the docstring does not preserve compatibility for consumers relying on the exception to distinguish a successful full reservation from a shortage. Preserve the existing behavior or expose partial reservation through a separate opt-in API.","side":"RIGHT"}],"latency_seconds":26.93167448695749,"repeat":1,"run_dir":"dev3-11/aggregate/1","run_id":"dev3-11/aggregate/1","status":"complete","usage":{"cache_read":43341,"cache_write":0,"input":36,"output":1658,"total":45035},"variant":"aggregate"},{"accounting_complete":true,"case_id":"dev3-11","error":null,"findings":[{"candidate_id":"16ceae0b636886385055fcf7cf977b64a1adbb421e11777525694f14a2a7fefc","category":"regression","evidence":{"citations":[{"end_line":14,"path":"src/inventory/stock.py","revision":"49dc8e93917a582b7688616546f951e4be2466a9","sha256":"d095948cc031eeff82f65abdab43947adec44a30b0b61f5538411b0e18b481f3","side":"base","start_line":8,"validation":"valid","validation_reason":null},{"end_line":13,"path":"src/inventory/stock.py","revision":"f9dceaefd0b720a7a40b332645ee19061f9be665","sha256":"6d788e84c49cfbbd284ea0d2f697fb837865eb5909606091a0c770182ae6225c","side":"head","start_line":8,"validation":"valid","validation_reason":null}],"expected":"Raise OutOfStock('item') and leave stock['item'] equal to 2, preserving the existing API contract.","impact":"Consumers using the documented exception as their failure signal can proceed with an incompletely fulfilled reservation, while stock has already been depleted. Actual downstream callers were not captured, so their specific consequences are unknown.","observed":"By inspection, min(2, 3) grants 2, stock['item'] becomes 0, and the function returns 2 without raising. No compatibility path exists in the captured implementation.","preconditions":["The requested quantity exceeds the available nonnegative stock.","The consumer relies on the previous documented all-or-nothing behavior and handles OutOfStock as reservation failure."],"trigger":"Call reserve(stock, 'item', 3) with stock equal to {'item': 2}.","version":2},"file":"src/inventory/stock.py","line":11,"persona":"junior-dev","problem":"Preserve the documented all-or-nothing reservation contract","reason":"The previous API explicitly promised to raise OutOfStock when the requested quantity was unavailable, without modifying stock. The new implementation instead consumes the remaining stock and returns normally. For example, reserve({'item': 2}, 'item', 3) now returns 2 and leaves zero stock rather than raising. Existing consumers relying on the documented exception to abort an unfulfillable reservation will no longer enter that failure path. The revised docstring describes partial fulfillment, but does not provide compatibility for the previous contract.","side":"RIGHT"}],"latency_seconds":24.54956234805286,"repeat":2,"run_dir":"dev3-11/aggregate/2","run_id":"dev3-11/aggregate/2","status":"complete","usage":{"cache_read":43341,"cache_write":0,"input":36,"output":1637,"total":45014},"variant":"aggregate"},{"accounting_complete":true,"case_id":"dev3-11","error":null,"findings":[{"candidate_id":"4b4179029fb2c7ead5d658887f8936fef6caa2246111b72a8356f7c68ef61d6b","category":"regression","evidence":{"citations":[{"end_line":14,"path":"src/inventory/stock.py","revision":"49dc8e93917a582b7688616546f951e4be2466a9","sha256":"d095948cc031eeff82f65abdab43947adec44a30b0b61f5538411b0e18b481f3","side":"base","start_line":8,"validation":"valid","validation_reason":null},{"end_line":13,"path":"src/inventory/stock.py","revision":"f9dceaefd0b720a7a40b332645ee19061f9be665","sha256":"6d788e84c49cfbbd284ea0d2f697fb837865eb5909606091a0c770182ae6225c","side":"head","start_line":8,"validation":"valid","validation_reason":null}],"expected":"Raise OutOfStock without modifying stock, leaving stock[\"sku\"] equal to 2.","impact":"The insufficient-stock failure path no longer runs for existing consumers, and an unsuccessful full-quantity request consumes the remaining inventory. Related caller behavior is unknown because no callers were captured.","observed":"The head implementation computes granted = 2, changes stock[\"sku\"] to 0, and returns 2 without raising. This follows directly from the captured code; no execution was performed.","preconditions":["A consumer relies on the previously documented reserve contract: reserve the requested quantity or raise OutOfStock.","The requested positive quantity exceeds the available nonnegative stock."],"trigger":"Call reserve(stock, \"sku\", 5) with stock = {\"sku\": 2}.","version":2},"file":"src/inventory/stock.py","line":11,"persona":"junior-dev","problem":"Insufficient-stock requests now consume inventory instead of raising OutOfStock","reason":"The previous documented contract was all-or-nothing: insufficient stock raised OutOfStock before modifying inventory. Replacing that check with min() breaks consumers following that contract. For example, reserving 5 units from a stock of 2 now returns 2 and empties the stock instead of raising and preserving those units. The updated docstring describes partial reservations, but no compatibility mechanism is present in the captured implementation. Existing consumers relying on the exception can therefore proceed without their full reservation or lose stock on a request they expected to fail.","side":"RIGHT"}],"latency_seconds":26.568526739953086,"repeat":3,"run_dir":"dev3-11/aggregate/3","run_id":"dev3-11/aggregate/3","status":"complete","usage":{"cache_read":43341,"cache_write":0,"input":36,"output":1631,"total":45008},"variant":"aggregate"},{"accounting_complete":true,"case_id":"dev3-12","error":null,"findings":[{"candidate_id":"3d1d4f3babdc2b61399b8c2b3efb79495f5f85a65be61ed293cfe4da25b8fe5b","category":"regression","evidence":{"citations":[{"end_line":6,"path":"src/mailer/subject.py","revision":"07028f9a026b543cfab4ffd0b302971ed111341a","sha256":"1632fab9a6b05a0877aa359d9c8fba593b5147a09705c2bbdc1b5929672611e9","side":"base","start_line":4,"validation":"valid","validation_reason":null},{"end_line":11,"path":"src/mailer/subject.py","revision":"eb86404c5fbf1eb88ca74a63e2e02b55ec88fa3e","sha256":"e8169292cc7136f62a5b014098a1f7efaabb79e7c7897fcd0ac214fabe8052db","side":"head","start_line":4,"validation":"valid","validation_reason":null}],"expected":"The subject remains 'Hello Guest', honoring the supplied mapping's successful lookup; empty text is used only for unresolved values.","impact":"Consumers using fallback-providing mappings lose their configured subject values even though those lookups previously succeeded.","observed":"By inspection, _Blank(values) copies the empty mapping without its default factory. format_map then invokes _Blank.__missing__('name'), returning an empty string and producing 'Hello '. This example was not executed.","preconditions":["The supplied mapping has no stored 'name' entry.","The mapping resolves absent keys to a nonempty fallback through its own __missing__ implementation."],"trigger":"Call render_subject('Hello {name}', defaultdict(lambda: 'Guest')) using collections.defaultdict.","version":2},"file":"src/mailer/subject.py","line":11,"persona":"junior-dev","problem":"Copying values into _Blank discards the supplied mapping's fallback behavior.","reason":"The previous implementation passed values directly to format_map, so mappings such as defaultdict could resolve placeholders through their own lookup behavior. For example, render_subject('Hello {name}', defaultdict(lambda: 'Guest')) previously returned 'Hello Guest'; the new implementation returns 'Hello '. Copying the mapping preserves only its stored entries and replaces its missing-key behavior with _Blank.__missing__. Preserve lookup through the supplied mapping and substitute empty text only when that lookup raises KeyError.","side":"RIGHT"}],"latency_seconds":28.18091150606051,"repeat":1,"run_dir":"dev3-12/aggregate/1","run_id":"dev3-12/aggregate/1","status":"complete","usage":{"cache_read":47759,"cache_write":0,"input":429,"output":1772,"total":49960},"variant":"aggregate"},{"accounting_complete":true,"case_id":"dev3-12","error":null,"findings":[{"candidate_id":"ac32aac8a376d91394eb6dcacf450c7cbeb9f22b992e9dcc72f633a14e723a8c","category":"correctness","evidence":{"citations":[{"end_line":11,"path":"src/mailer/subject.py","revision":"eb86404c5fbf1eb88ca74a63e2e02b55ec88fa3e","sha256":"e8169292cc7136f62a5b014098a1f7efaabb79e7c7897fcd0ac214fabe8052db","side":"head","start_line":4,"validation":"valid","validation_reason":null}],"expected":"Under the new documented missing-value behavior, return 'Count: ' with the missing field rendered as empty text.","impact":"Consumers using numeric subject fields cannot rely on the advertised missing-value fallback; rendering aborts instead of producing a subject.","observed":"By inspection of Python formatting semantics, _Blank.__missing__ returns '', after which format_map applies the 'd' specification to that string and raises ValueError. This was not runtime-tested.","preconditions":["The template contains a valid numeric format specification.","The values mapping does not contain the corresponding field."],"trigger":"Call render_subject('Count: {count:d}', {}).","version":2},"file":"src/mailer/subject.py","line":6,"persona":"junior-dev","problem":"Missing values still fail when the template uses a numeric format specifier.","reason":"The new docstring promises that missing values render as empty text, but returning an empty string from __missing__ does not bypass the field's format specification. For example, render_subject('Count: {count:d}', {}) attempts to format '' with 'd', which raises ValueError rather than returning 'Count: '. The captured implementation contains no validation restricting templates to unformatted fields or adapter handling this case.","side":"RIGHT"}],"latency_seconds":27.094582138815895,"repeat":2,"run_dir":"dev3-12/aggregate/2","run_id":"dev3-12/aggregate/2","status":"complete","usage":{"cache_read":47775,"cache_write":0,"input":429,"output":1601,"total":49805},"variant":"aggregate"},{"accounting_complete":true,"case_id":"dev3-12","error":null,"findings":[],"latency_seconds":19.485871242824942,"repeat":3,"run_dir":"dev3-12/aggregate/3","run_id":"dev3-12/aggregate/3","status":"complete","usage":{"cache_read":43001,"cache_write":0,"input":36,"output":1196,"total":44233},"variant":"aggregate"}],"schema_version":1,"status":"complete"}
+{
+ "evidence_kind": "model",
+ "runs": [
+  {
+   "accounting_complete": true,
+   "case_id": "dev3-11",
+   "error": null,
+   "findings": [
+    {
+     "candidate_id": "721006f0773757db8666eda3ceeed64869f396138804df19b1b5e34572760ddb",
+     "category": "regression",
+     "evidence": {
+      "citations": [
+       {
+        "end_line": 14,
+        "path": "src/inventory/stock.py",
+        "revision": "49dc8e93917a582b7688616546f951e4be2466a9",
+        "sha256": "d095948cc031eeff82f65abdab43947adec44a30b0b61f5538411b0e18b481f3",
+        "side": "base",
+        "start_line": 8,
+        "validation": "valid",
+        "validation_reason": null
+       },
+       {
+        "end_line": 13,
+        "path": "src/inventory/stock.py",
+        "revision": "f9dceaefd0b720a7a40b332645ee19061f9be665",
+        "sha256": "6d788e84c49cfbbd284ea0d2f697fb837865eb5909606091a0c770182ae6225c",
+        "side": "head",
+        "start_line": 8,
+        "validation": "valid",
+        "validation_reason": null
+       }
+      ],
+      "expected": "Raise OutOfStock('item') and leave stock['item'] equal to 2, as documented and implemented in the base revision.",
+      "impact": "Existing consumers using OutOfStock to detect shortages no longer receive that signal, and a failed full-quantity request consumes inventory. Consumers that do not check the newly partial return value can treat an underfilled reservation as successful; no captured caller establishes whether that downstream outcome currently occurs.",
+      "observed": "The head implementation computes granted = 2, sets stock['item'] to 0, and returns 2 without raising OutOfStock.",
+      "preconditions": [
+       "The requested quantity exceeds the available stock.",
+       "The consumer relies on the previously documented all-or-nothing reservation contract."
+      ],
+      "trigger": "Call reserve(stock, 'item', 5) when stock is {'item': 2}.",
+      "version": 2
+     },
+     "file": "src/inventory/stock.py",
+     "line": 10,
+     "persona": "junior-dev",
+     "problem": "Insufficient stock now silently produces a partial reservation instead of raising OutOfStock.",
+     "reason": "The existing public contract explicitly promised OutOfStock when fewer than the requested units remained, without changing stock. For example, reserve({'item': 2}, 'item', 5) now returns 2 and consumes the remaining stock rather than raising. Updating the docstring does not preserve compatibility for consumers relying on the exception to distinguish a successful full reservation from a shortage. Preserve the existing behavior or expose partial reservation through a separate opt-in API.",
+     "side": "RIGHT"
+    }
+   ],
+   "latency_seconds": 26.93167448695749,
+   "repeat": 1,
+   "run_dir": "dev3-11/aggregate/1",
+   "run_id": "dev3-11/aggregate/1",
+   "status": "complete",
+   "usage": {
+    "cache_read": 43341,
+    "cache_write": 0,
+    "input": 36,
+    "output": 1658,
+    "total": 45035
+   },
+   "variant": "aggregate"
+  },
+  {
+   "accounting_complete": true,
+   "case_id": "dev3-11",
+   "error": null,
+   "findings": [
+    {
+     "candidate_id": "16ceae0b636886385055fcf7cf977b64a1adbb421e11777525694f14a2a7fefc",
+     "category": "regression",
+     "evidence": {
+      "citations": [
+       {
+        "end_line": 14,
+        "path": "src/inventory/stock.py",
+        "revision": "49dc8e93917a582b7688616546f951e4be2466a9",
+        "sha256": "d095948cc031eeff82f65abdab43947adec44a30b0b61f5538411b0e18b481f3",
+        "side": "base",
+        "start_line": 8,
+        "validation": "valid",
+        "validation_reason": null
+       },
+       {
+        "end_line": 13,
+        "path": "src/inventory/stock.py",
+        "revision": "f9dceaefd0b720a7a40b332645ee19061f9be665",
+        "sha256": "6d788e84c49cfbbd284ea0d2f697fb837865eb5909606091a0c770182ae6225c",
+        "side": "head",
+        "start_line": 8,
+        "validation": "valid",
+        "validation_reason": null
+       }
+      ],
+      "expected": "Raise OutOfStock('item') and leave stock['item'] equal to 2, preserving the existing API contract.",
+      "impact": "Consumers using the documented exception as their failure signal can proceed with an incompletely fulfilled reservation, while stock has already been depleted. Actual downstream callers were not captured, so their specific consequences are unknown.",
+      "observed": "By inspection, min(2, 3) grants 2, stock['item'] becomes 0, and the function returns 2 without raising. No compatibility path exists in the captured implementation.",
+      "preconditions": [
+       "The requested quantity exceeds the available nonnegative stock.",
+       "The consumer relies on the previous documented all-or-nothing behavior and handles OutOfStock as reservation failure."
+      ],
+      "trigger": "Call reserve(stock, 'item', 3) with stock equal to {'item': 2}.",
+      "version": 2
+     },
+     "file": "src/inventory/stock.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Preserve the documented all-or-nothing reservation contract",
+     "reason": "The previous API explicitly promised to raise OutOfStock when the requested quantity was unavailable, without modifying stock. The new implementation instead consumes the remaining stock and returns normally. For example, reserve({'item': 2}, 'item', 3) now returns 2 and leaves zero stock rather than raising. Existing consumers relying on the documented exception to abort an unfulfillable reservation will no longer enter that failure path. The revised docstring describes partial fulfillment, but does not provide compatibility for the previous contract.",
+     "side": "RIGHT"
+    }
+   ],
+   "latency_seconds": 24.54956234805286,
+   "repeat": 2,
+   "run_dir": "dev3-11/aggregate/2",
+   "run_id": "dev3-11/aggregate/2",
+   "status": "complete",
+   "usage": {
+    "cache_read": 43341,
+    "cache_write": 0,
+    "input": 36,
+    "output": 1637,
+    "total": 45014
+   },
+   "variant": "aggregate"
+  },
+  {
+   "accounting_complete": true,
+   "case_id": "dev3-11",
+   "error": null,
+   "findings": [
+    {
+     "candidate_id": "4b4179029fb2c7ead5d658887f8936fef6caa2246111b72a8356f7c68ef61d6b",
+     "category": "regression",
+     "evidence": {
+      "citations": [
+       {
+        "end_line": 14,
+        "path": "src/inventory/stock.py",
+        "revision": "49dc8e93917a582b7688616546f951e4be2466a9",
+        "sha256": "d095948cc031eeff82f65abdab43947adec44a30b0b61f5538411b0e18b481f3",
+        "side": "base",
+        "start_line": 8,
+        "validation": "valid",
+        "validation_reason": null
+       },
+       {
+        "end_line": 13,
+        "path": "src/inventory/stock.py",
+        "revision": "f9dceaefd0b720a7a40b332645ee19061f9be665",
+        "sha256": "6d788e84c49cfbbd284ea0d2f697fb837865eb5909606091a0c770182ae6225c",
+        "side": "head",
+        "start_line": 8,
+        "validation": "valid",
+        "validation_reason": null
+       }
+      ],
+      "expected": "Raise OutOfStock without modifying stock, leaving stock[\"sku\"] equal to 2.",
+      "impact": "The insufficient-stock failure path no longer runs for existing consumers, and an unsuccessful full-quantity request consumes the remaining inventory. Related caller behavior is unknown because no callers were captured.",
+      "observed": "The head implementation computes granted = 2, changes stock[\"sku\"] to 0, and returns 2 without raising. This follows directly from the captured code; no execution was performed.",
+      "preconditions": [
+       "A consumer relies on the previously documented reserve contract: reserve the requested quantity or raise OutOfStock.",
+       "The requested positive quantity exceeds the available nonnegative stock."
+      ],
+      "trigger": "Call reserve(stock, \"sku\", 5) with stock = {\"sku\": 2}.",
+      "version": 2
+     },
+     "file": "src/inventory/stock.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Insufficient-stock requests now consume inventory instead of raising OutOfStock",
+     "reason": "The previous documented contract was all-or-nothing: insufficient stock raised OutOfStock before modifying inventory. Replacing that check with min() breaks consumers following that contract. For example, reserving 5 units from a stock of 2 now returns 2 and empties the stock instead of raising and preserving those units. The updated docstring describes partial reservations, but no compatibility mechanism is present in the captured implementation. Existing consumers relying on the exception can therefore proceed without their full reservation or lose stock on a request they expected to fail.",
+     "side": "RIGHT"
+    }
+   ],
+   "latency_seconds": 26.568526739953086,
+   "repeat": 3,
+   "run_dir": "dev3-11/aggregate/3",
+   "run_id": "dev3-11/aggregate/3",
+   "status": "complete",
+   "usage": {
+    "cache_read": 43341,
+    "cache_write": 0,
+    "input": 36,
+    "output": 1631,
+    "total": 45008
+   },
+   "variant": "aggregate"
+  },
+  {
+   "accounting_complete": true,
+   "case_id": "dev3-12",
+   "error": null,
+   "findings": [
+    {
+     "candidate_id": "3d1d4f3babdc2b61399b8c2b3efb79495f5f85a65be61ed293cfe4da25b8fe5b",
+     "category": "regression",
+     "evidence": {
+      "citations": [
+       {
+        "end_line": 6,
+        "path": "src/mailer/subject.py",
+        "revision": "07028f9a026b543cfab4ffd0b302971ed111341a",
+        "sha256": "1632fab9a6b05a0877aa359d9c8fba593b5147a09705c2bbdc1b5929672611e9",
+        "side": "base",
+        "start_line": 4,
+        "validation": "valid",
+        "validation_reason": null
+       },
+       {
+        "end_line": 11,
+        "path": "src/mailer/subject.py",
+        "revision": "eb86404c5fbf1eb88ca74a63e2e02b55ec88fa3e",
+        "sha256": "e8169292cc7136f62a5b014098a1f7efaabb79e7c7897fcd0ac214fabe8052db",
+        "side": "head",
+        "start_line": 4,
+        "validation": "valid",
+        "validation_reason": null
+       }
+      ],
+      "expected": "The subject remains 'Hello Guest', honoring the supplied mapping's successful lookup; empty text is used only for unresolved values.",
+      "impact": "Consumers using fallback-providing mappings lose their configured subject values even though those lookups previously succeeded.",
+      "observed": "By inspection, _Blank(values) copies the empty mapping without its default factory. format_map then invokes _Blank.__missing__('name'), returning an empty string and producing 'Hello '. This example was not executed.",
+      "preconditions": [
+       "The supplied mapping has no stored 'name' entry.",
+       "The mapping resolves absent keys to a nonempty fallback through its own __missing__ implementation."
+      ],
+      "trigger": "Call render_subject('Hello {name}', defaultdict(lambda: 'Guest')) using collections.defaultdict.",
+      "version": 2
+     },
+     "file": "src/mailer/subject.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Copying values into _Blank discards the supplied mapping's fallback behavior.",
+     "reason": "The previous implementation passed values directly to format_map, so mappings such as defaultdict could resolve placeholders through their own lookup behavior. For example, render_subject('Hello {name}', defaultdict(lambda: 'Guest')) previously returned 'Hello Guest'; the new implementation returns 'Hello '. Copying the mapping preserves only its stored entries and replaces its missing-key behavior with _Blank.__missing__. Preserve lookup through the supplied mapping and substitute empty text only when that lookup raises KeyError.",
+     "side": "RIGHT"
+    }
+   ],
+   "latency_seconds": 28.18091150606051,
+   "repeat": 1,
+   "run_dir": "dev3-12/aggregate/1",
+   "run_id": "dev3-12/aggregate/1",
+   "status": "complete",
+   "usage": {
+    "cache_read": 47759,
+    "cache_write": 0,
+    "input": 429,
+    "output": 1772,
+    "total": 49960
+   },
+   "variant": "aggregate"
+  },
+  {
+   "accounting_complete": true,
+   "case_id": "dev3-12",
+   "error": null,
+   "findings": [
+    {
+     "candidate_id": "ac32aac8a376d91394eb6dcacf450c7cbeb9f22b992e9dcc72f633a14e723a8c",
+     "category": "correctness",
+     "evidence": {
+      "citations": [
+       {
+        "end_line": 11,
+        "path": "src/mailer/subject.py",
+        "revision": "eb86404c5fbf1eb88ca74a63e2e02b55ec88fa3e",
+        "sha256": "e8169292cc7136f62a5b014098a1f7efaabb79e7c7897fcd0ac214fabe8052db",
+        "side": "head",
+        "start_line": 4,
+        "validation": "valid",
+        "validation_reason": null
+       }
+      ],
+      "expected": "Under the new documented missing-value behavior, return 'Count: ' with the missing field rendered as empty text.",
+      "impact": "Consumers using numeric subject fields cannot rely on the advertised missing-value fallback; rendering aborts instead of producing a subject.",
+      "observed": "By inspection of Python formatting semantics, _Blank.__missing__ returns '', after which format_map applies the 'd' specification to that string and raises ValueError. This was not runtime-tested.",
+      "preconditions": [
+       "The template contains a valid numeric format specification.",
+       "The values mapping does not contain the corresponding field."
+      ],
+      "trigger": "Call render_subject('Count: {count:d}', {}).",
+      "version": 2
+     },
+     "file": "src/mailer/subject.py",
+     "line": 6,
+     "persona": "junior-dev",
+     "problem": "Missing values still fail when the template uses a numeric format specifier.",
+     "reason": "The new docstring promises that missing values render as empty text, but returning an empty string from __missing__ does not bypass the field's format specification. For example, render_subject('Count: {count:d}', {}) attempts to format '' with 'd', which raises ValueError rather than returning 'Count: '. The captured implementation contains no validation restricting templates to unformatted fields or adapter handling this case.",
+     "side": "RIGHT"
+    }
+   ],
+   "latency_seconds": 27.094582138815895,
+   "repeat": 2,
+   "run_dir": "dev3-12/aggregate/2",
+   "run_id": "dev3-12/aggregate/2",
+   "status": "complete",
+   "usage": {
+    "cache_read": 47775,
+    "cache_write": 0,
+    "input": 429,
+    "output": 1601,
+    "total": 49805
+   },
+   "variant": "aggregate"
+  },
+  {
+   "accounting_complete": true,
+   "case_id": "dev3-12",
+   "error": null,
+   "findings": [],
+   "latency_seconds": 19.485871242824942,
+   "repeat": 3,
+   "run_dir": "dev3-12/aggregate/3",
+   "run_id": "dev3-12/aggregate/3",
+   "status": "complete",
+   "usage": {
+    "cache_read": 43001,
+    "cache_write": 0,
+    "input": 36,
+    "output": 1196,
+    "total": 44233
+   },
+   "variant": "aggregate"
+  }
+ ],
+ "schema_version": 1,
+ "status": "complete"
+}

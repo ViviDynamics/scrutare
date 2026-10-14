@@ -1,1 +1,2655 @@
-{"actual_human_judgments":0,"cells":[{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":11.623359026852995,"status":"complete","tokens":46421,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":0,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":0,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":11.623359026852995,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-06/evidence/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11587},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11644},{"persona":"security","reason":"done","status":"complete","tokens":11597},{"persona":"devops","reason":"done","status":"complete","tokens":11593}],"status":"complete","tokens":46421,"usage":{"cache_read":24446,"cache_write":0,"input":21003,"output":972,"total":46421}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":13.189173865132034,"status":"complete","tokens":46419,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":0,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":0,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":13.189173865132034,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-06/evidence/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11592},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11644},{"persona":"security","reason":"done","status":"complete","tokens":11586},{"persona":"devops","reason":"done","status":"complete","tokens":11597}],"status":"complete","tokens":46419,"usage":{"cache_read":45413,"cache_write":0,"input":36,"output":970,"total":46419}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":12.870190914953128,"status":"complete","tokens":46419,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":0,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":0,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":12.870190914953128,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-06/evidence/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11593},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11654},{"persona":"security","reason":"done","status":"complete","tokens":11580},{"persona":"devops","reason":"done","status":"complete","tokens":11592}],"status":"complete","tokens":46419,"usage":{"cache_read":44909,"cache_write":0,"input":540,"output":970,"total":46419}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":11.857022502925247,"status":"complete","tokens":64427,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":0,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops","performance-concurrency"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":0,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":11.857022502925247,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":["performance-concurrency"],"run_id":"dev3-06/routing/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12928},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12988},{"persona":"security","reason":"done","status":"complete","tokens":12922},{"persona":"devops","reason":"done","status":"complete","tokens":12936},{"persona":"performance-concurrency","reason":"done","status":"complete","tokens":12653}],"status":"complete","tokens":64427,"usage":{"cache_read":31918,"cache_write":0,"input":31218,"output":1291,"total":64427}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":12.368726061889902,"status":"complete","tokens":64438,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":0,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops","performance-concurrency"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":0,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":12.368726061889902,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":["performance-concurrency"],"run_id":"dev3-06/routing/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12925},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12976},{"persona":"security","reason":"done","status":"complete","tokens":12949},{"persona":"devops","reason":"done","status":"complete","tokens":12935},{"persona":"performance-concurrency","reason":"done","status":"complete","tokens":12653}],"status":"complete","tokens":64438,"usage":{"cache_read":61417,"cache_write":0,"input":1719,"output":1302,"total":64438}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":12.330926905851811,"status":"complete","tokens":64434,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":0,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops","performance-concurrency"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":0,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":12.330926905851811,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":["performance-concurrency"],"run_id":"dev3-06/routing/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12934},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12981},{"persona":"security","reason":"done","status":"complete","tokens":12927},{"persona":"devops","reason":"done","status":"complete","tokens":12939},{"persona":"performance-concurrency","reason":"done","status":"complete","tokens":12653}],"status":"complete","tokens":64434,"usage":{"cache_read":63091,"cache_write":0,"input":45,"output":1298,"total":64434}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":24.221146716969088,"status":"complete","tokens":49756,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":0,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":0,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":24.221146716969088,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-07/evidence/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12380},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12620},{"persona":"security","reason":"done","status":"complete","tokens":12425},{"persona":"devops","reason":"done","status":"complete","tokens":12331}],"status":"complete","tokens":49756,"usage":{"cache_read":29477,"cache_write":0,"input":18372,"output":1907,"total":49756}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":35.24675335595384,"status":"complete","tokens":50266,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":35.24675335595384,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-07/evidence/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12357},{"persona":"junior-dev","reason":"done","status":"complete","tokens":13198},{"persona":"security","reason":"done","status":"complete","tokens":12376},{"persona":"devops","reason":"done","status":"complete","tokens":12335}],"status":"complete","tokens":50266,"usage":{"cache_read":47813,"cache_write":0,"input":36,"output":2417,"total":50266}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":19.57952638110146,"status":"complete","tokens":49558,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":0,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":0,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":19.57952638110146,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-07/evidence/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12327},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12524},{"persona":"security","reason":"done","status":"complete","tokens":12374},{"persona":"devops","reason":"done","status":"complete","tokens":12333}],"status":"complete","tokens":49558,"usage":{"cache_read":47813,"cache_write":0,"input":36,"output":1709,"total":49558}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":28.70617464184761,"status":"complete","tokens":69007,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops","data-integrity-migrations"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":28.70617464184761,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":["data-integrity-migrations"],"run_id":"dev3-07/routing/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":13733},{"persona":"junior-dev","reason":"done","status":"complete","tokens":14440},{"persona":"security","reason":"done","status":"complete","tokens":13731},{"persona":"devops","reason":"done","status":"complete","tokens":13685},{"persona":"data-integrity-migrations","reason":"done","status":"complete","tokens":13418}],"status":"complete","tokens":69007,"usage":{"cache_read":36233,"cache_write":0,"input":30040,"output":2734,"total":69007}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":31.115739790024236,"status":"complete","tokens":69971,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":2,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops","data-integrity-migrations"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":2,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":31.115739790024236,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":["data-integrity-migrations"],"run_id":"dev3-07/routing/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":14539},{"persona":"junior-dev","reason":"done","status":"complete","tokens":14523},{"persona":"security","reason":"done","status":"complete","tokens":13770},{"persona":"devops","reason":"done","status":"complete","tokens":13716},{"persona":"data-integrity-migrations","reason":"done","status":"complete","tokens":13423}],"status":"complete","tokens":69971,"usage":{"cache_read":66228,"cache_write":0,"input":45,"output":3698,"total":69971}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":29.862664086045697,"status":"complete","tokens":69092,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops","data-integrity-migrations"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":29.862664086045697,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":["data-integrity-migrations"],"run_id":"dev3-07/routing/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":13759},{"persona":"junior-dev","reason":"done","status":"complete","tokens":14455},{"persona":"security","reason":"done","status":"complete","tokens":13719},{"persona":"devops","reason":"done","status":"complete","tokens":13733},{"persona":"data-integrity-migrations","reason":"done","status":"complete","tokens":13426}],"status":"complete","tokens":69092,"usage":{"cache_read":66228,"cache_write":0,"input":45,"output":2819,"total":69092}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":25.269244969123974,"status":"complete","tokens":51336,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":25.269244969123974,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-08/evidence/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12815},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12870},{"persona":"security","reason":"done","status":"complete","tokens":12808},{"persona":"devops","reason":"done","status":"complete","tokens":12843}],"status":"complete","tokens":51336,"usage":{"cache_read":28969,"cache_write":0,"input":18376,"output":3991,"total":51336}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":25.548836379079148,"status":"complete","tokens":51366,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":25.548836379079148,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-08/evidence/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12801},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12857},{"persona":"security","reason":"done","status":"complete","tokens":12840},{"persona":"devops","reason":"done","status":"complete","tokens":12868}],"status":"complete","tokens":51366,"usage":{"cache_read":47309,"cache_write":0,"input":36,"output":4021,"total":51366}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":23.98738750303164,"status":"complete","tokens":51343,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":23.98738750303164,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-08/evidence/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12813},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12865},{"persona":"security","reason":"done","status":"complete","tokens":12818},{"persona":"devops","reason":"done","status":"complete","tokens":12847}],"status":"complete","tokens":51343,"usage":{"cache_read":47309,"cache_write":0,"input":36,"output":3998,"total":51343}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":25.731690554181114,"status":"complete","tokens":70528,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":5,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops","performance-concurrency"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":5,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":25.731690554181114,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":["performance-concurrency"],"run_id":"dev3-08/routing/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":14108},{"persona":"junior-dev","reason":"done","status":"complete","tokens":14197},{"persona":"security","reason":"done","status":"complete","tokens":14184},{"persona":"devops","reason":"done","status":"complete","tokens":14171},{"persona":"performance-concurrency","reason":"done","status":"complete","tokens":13868}],"status":"complete","tokens":70528,"usage":{"cache_read":36686,"cache_write":0,"input":28770,"output":5072,"total":70528}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":25.405274426797405,"status":"complete","tokens":70533,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":5,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops","performance-concurrency"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":5,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":25.405274426797405,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":["performance-concurrency"],"run_id":"dev3-08/routing/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":14130},{"persona":"junior-dev","reason":"done","status":"complete","tokens":14180},{"persona":"security","reason":"done","status":"complete","tokens":14220},{"persona":"devops","reason":"done","status":"complete","tokens":14170},{"persona":"performance-concurrency","reason":"done","status":"complete","tokens":13833}],"status":"complete","tokens":70533,"usage":{"cache_read":65411,"cache_write":0,"input":45,"output":5077,"total":70533}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":26.132630337961018,"status":"complete","tokens":70545,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":5,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops","performance-concurrency"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":5,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":26.132630337961018,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":["performance-concurrency"],"run_id":"dev3-08/routing/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":14117},{"persona":"junior-dev","reason":"done","status":"complete","tokens":14210},{"persona":"security","reason":"done","status":"complete","tokens":14171},{"persona":"devops","reason":"done","status":"complete","tokens":14189},{"persona":"performance-concurrency","reason":"done","status":"complete","tokens":13858}],"status":"complete","tokens":70545,"usage":{"cache_read":65411,"cache_write":0,"input":45,"output":5089,"total":70545}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":24.951529315905645,"status":"complete","tokens":48296,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":24.951529315905645,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-09/evidence/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12041},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12129},{"persona":"security","reason":"done","status":"complete","tokens":12037},{"persona":"devops","reason":"done","status":"complete","tokens":12089}],"status":"complete","tokens":48296,"usage":{"cache_read":28617,"cache_write":0,"input":16292,"output":3387,"total":48296}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":24.51453566690907,"status":"complete","tokens":48243,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":24.51453566690907,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-09/evidence/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12052},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12116},{"persona":"security","reason":"done","status":"complete","tokens":12068},{"persona":"devops","reason":"done","status":"complete","tokens":12007}],"status":"complete","tokens":48243,"usage":{"cache_read":44873,"cache_write":0,"input":36,"output":3334,"total":48243}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":24.126303856959566,"status":"complete","tokens":48242,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":24.126303856959566,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-09/evidence/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12084},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12097},{"persona":"security","reason":"done","status":"complete","tokens":12047},{"persona":"devops","reason":"done","status":"complete","tokens":12014}],"status":"complete","tokens":48242,"usage":{"cache_read":44873,"cache_write":0,"input":36,"output":3333,"total":48242}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":22.240941853960976,"status":"complete","tokens":67901,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":5,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops","performance-concurrency"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":5,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":22.240941853960976,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":["performance-concurrency"],"run_id":"dev3-09/routing/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":13407},{"persona":"junior-dev","reason":"done","status":"complete","tokens":14564},{"persona":"security","reason":"done","status":"complete","tokens":13384},{"persona":"devops","reason":"done","status":"complete","tokens":13414},{"persona":"performance-concurrency","reason":"done","status":"complete","tokens":13132}],"status":"complete","tokens":67901,"usage":{"cache_read":37417,"cache_write":0,"input":26220,"output":4264,"total":67901}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":23.079869996989146,"status":"complete","tokens":66583,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":5,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops","performance-concurrency"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":5,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":23.079869996989146,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":["performance-concurrency"],"run_id":"dev3-09/routing/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":13398},{"persona":"junior-dev","reason":"done","status":"complete","tokens":13378},{"persona":"security","reason":"done","status":"complete","tokens":13396},{"persona":"devops","reason":"done","status":"complete","tokens":13367},{"persona":"performance-concurrency","reason":"done","status":"complete","tokens":13044}],"status":"complete","tokens":66583,"usage":{"cache_read":57186,"cache_write":0,"input":5280,"output":4117,"total":66583}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":23.858353056944907,"status":"complete","tokens":66512,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":5,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops","performance-concurrency"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":5,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":23.858353056944907,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":["performance-concurrency"],"run_id":"dev3-09/routing/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":13332},{"persona":"junior-dev","reason":"done","status":"complete","tokens":13367},{"persona":"security","reason":"done","status":"complete","tokens":13390},{"persona":"devops","reason":"done","status":"complete","tokens":13353},{"persona":"performance-concurrency","reason":"done","status":"complete","tokens":13070}],"status":"complete","tokens":66512,"usage":{"cache_read":62421,"cache_write":0,"input":45,"output":4046,"total":66512}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":25.091427721083164,"status":"complete","tokens":52554,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":25.091427721083164,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-10/evidence/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":13130},{"persona":"junior-dev","reason":"done","status":"complete","tokens":13148},{"persona":"security","reason":"done","status":"complete","tokens":13132},{"persona":"devops","reason":"done","status":"complete","tokens":13144}],"status":"complete","tokens":52554,"usage":{"cache_read":29757,"cache_write":0,"input":18684,"output":4113,"total":52554}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":24.821970087941736,"status":"complete","tokens":52454,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":24.821970087941736,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-10/evidence/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":13094},{"persona":"junior-dev","reason":"done","status":"complete","tokens":13146},{"persona":"security","reason":"done","status":"complete","tokens":13094},{"persona":"devops","reason":"done","status":"complete","tokens":13120}],"status":"complete","tokens":52454,"usage":{"cache_read":48405,"cache_write":0,"input":36,"output":4013,"total":52454}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":25.47253690403886,"status":"complete","tokens":52598,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":25.47253690403886,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-10/evidence/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":13153},{"persona":"junior-dev","reason":"done","status":"complete","tokens":13175},{"persona":"security","reason":"done","status":"complete","tokens":13132},{"persona":"devops","reason":"done","status":"complete","tokens":13138}],"status":"complete","tokens":52598,"usage":{"cache_read":48405,"cache_write":0,"input":36,"output":4157,"total":52598}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":25.3483573528938,"status":"complete","tokens":72346,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":5,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops","data-integrity-migrations"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":5,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":25.3483573528938,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":["data-integrity-migrations"],"run_id":"dev3-10/routing/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":14566},{"persona":"junior-dev","reason":"done","status":"complete","tokens":14526},{"persona":"security","reason":"done","status":"complete","tokens":14526},{"persona":"devops","reason":"done","status":"complete","tokens":14557},{"persona":"data-integrity-migrations","reason":"done","status":"complete","tokens":14171}],"status":"complete","tokens":72346,"usage":{"cache_read":37653,"cache_write":0,"input":29330,"output":5363,"total":72346}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":25.00007191998884,"status":"complete","tokens":72374,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":5,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops","data-integrity-migrations"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":5,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":25.00007191998884,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":["data-integrity-migrations"],"run_id":"dev3-10/routing/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":14567},{"persona":"junior-dev","reason":"done","status":"complete","tokens":14511},{"persona":"security","reason":"done","status":"complete","tokens":14500},{"persona":"devops","reason":"done","status":"complete","tokens":14541},{"persona":"data-integrity-migrations","reason":"done","status":"complete","tokens":14255}],"status":"complete","tokens":72374,"usage":{"cache_read":65155,"cache_write":0,"input":1828,"output":5391,"total":72374}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":26.48183199390769,"status":"complete","tokens":72439,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":5,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops","data-integrity-migrations"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":5,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":26.48183199390769,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":["data-integrity-migrations"],"run_id":"dev3-10/routing/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":14556},{"persona":"junior-dev","reason":"done","status":"complete","tokens":14517},{"persona":"security","reason":"done","status":"complete","tokens":14512},{"persona":"devops","reason":"done","status":"complete","tokens":14587},{"persona":"data-integrity-migrations","reason":"done","status":"complete","tokens":14267}],"status":"complete","tokens":72439,"usage":{"cache_read":66938,"cache_write":0,"input":45,"output":5456,"total":72439}}],"cells_needing_rerun":0,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"experiment_sha256":"b3acbc607752cf54409e8dca1a7f7df2947ea4f099eef5195e20535b9f74b06b","experiment_status":"complete","first_attempt_status_counts":{"complete":30},"gate_sha256":"24bf2cef0186bd18478086965788b24733efead5e6fce286476298700a74644a","holdout_used":false,"qualification":"pass","rerun_attempts":0,"schema_version":2,"semantic_qualification":false,"status_counts":{"complete":30},"tests":{"all_attempts_within_ceiling":true,"all_runs_complete_and_accounted":true,"experiment_terminal":true,"matrix_exact":true,"retries_within_declared_policy":true},"transient_http_statuses":{}}
+{
+ "actual_human_judgments": 0,
+ "cells": [
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 11.623359026852995,
+     "status": "complete",
+     "tokens": 46421,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 11.623359026852995,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-06/evidence/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11587
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11644
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11597
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11593
+    }
+   ],
+   "status": "complete",
+   "tokens": 46421,
+   "usage": {
+    "cache_read": 24446,
+    "cache_write": 0,
+    "input": 21003,
+    "output": 972,
+    "total": 46421
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 13.189173865132034,
+     "status": "complete",
+     "tokens": 46419,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 13.189173865132034,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-06/evidence/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11592
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11644
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11586
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11597
+    }
+   ],
+   "status": "complete",
+   "tokens": 46419,
+   "usage": {
+    "cache_read": 45413,
+    "cache_write": 0,
+    "input": 36,
+    "output": 970,
+    "total": 46419
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 12.870190914953128,
+     "status": "complete",
+     "tokens": 46419,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 12.870190914953128,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-06/evidence/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11593
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11654
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11580
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11592
+    }
+   ],
+   "status": "complete",
+   "tokens": 46419,
+   "usage": {
+    "cache_read": 44909,
+    "cache_write": 0,
+    "input": 540,
+    "output": 970,
+    "total": 46419
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 11.857022502925247,
+     "status": "complete",
+     "tokens": 64427,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops",
+    "performance-concurrency"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 11.857022502925247,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [
+    "performance-concurrency"
+   ],
+   "run_id": "dev3-06/routing/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12928
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12988
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12922
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12936
+    },
+    {
+     "persona": "performance-concurrency",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12653
+    }
+   ],
+   "status": "complete",
+   "tokens": 64427,
+   "usage": {
+    "cache_read": 31918,
+    "cache_write": 0,
+    "input": 31218,
+    "output": 1291,
+    "total": 64427
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 12.368726061889902,
+     "status": "complete",
+     "tokens": 64438,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops",
+    "performance-concurrency"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 12.368726061889902,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [
+    "performance-concurrency"
+   ],
+   "run_id": "dev3-06/routing/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12925
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12976
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12949
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12935
+    },
+    {
+     "persona": "performance-concurrency",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12653
+    }
+   ],
+   "status": "complete",
+   "tokens": 64438,
+   "usage": {
+    "cache_read": 61417,
+    "cache_write": 0,
+    "input": 1719,
+    "output": 1302,
+    "total": 64438
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 12.330926905851811,
+     "status": "complete",
+     "tokens": 64434,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops",
+    "performance-concurrency"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 12.330926905851811,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [
+    "performance-concurrency"
+   ],
+   "run_id": "dev3-06/routing/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12934
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12981
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12927
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12939
+    },
+    {
+     "persona": "performance-concurrency",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12653
+    }
+   ],
+   "status": "complete",
+   "tokens": 64434,
+   "usage": {
+    "cache_read": 63091,
+    "cache_write": 0,
+    "input": 45,
+    "output": 1298,
+    "total": 64434
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 24.221146716969088,
+     "status": "complete",
+     "tokens": 49756,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 24.221146716969088,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-07/evidence/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12380
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12620
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12425
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12331
+    }
+   ],
+   "status": "complete",
+   "tokens": 49756,
+   "usage": {
+    "cache_read": 29477,
+    "cache_write": 0,
+    "input": 18372,
+    "output": 1907,
+    "total": 49756
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 35.24675335595384,
+     "status": "complete",
+     "tokens": 50266,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 35.24675335595384,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-07/evidence/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12357
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13198
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12376
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12335
+    }
+   ],
+   "status": "complete",
+   "tokens": 50266,
+   "usage": {
+    "cache_read": 47813,
+    "cache_write": 0,
+    "input": 36,
+    "output": 2417,
+    "total": 50266
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 19.57952638110146,
+     "status": "complete",
+     "tokens": 49558,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 19.57952638110146,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-07/evidence/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12327
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12524
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12374
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12333
+    }
+   ],
+   "status": "complete",
+   "tokens": 49558,
+   "usage": {
+    "cache_read": 47813,
+    "cache_write": 0,
+    "input": 36,
+    "output": 1709,
+    "total": 49558
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 28.70617464184761,
+     "status": "complete",
+     "tokens": 69007,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops",
+    "data-integrity-migrations"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 28.70617464184761,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [
+    "data-integrity-migrations"
+   ],
+   "run_id": "dev3-07/routing/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13733
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14440
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13731
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13685
+    },
+    {
+     "persona": "data-integrity-migrations",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13418
+    }
+   ],
+   "status": "complete",
+   "tokens": 69007,
+   "usage": {
+    "cache_read": 36233,
+    "cache_write": 0,
+    "input": 30040,
+    "output": 2734,
+    "total": 69007
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 31.115739790024236,
+     "status": "complete",
+     "tokens": 69971,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 2,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops",
+    "data-integrity-migrations"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 2,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 31.115739790024236,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [
+    "data-integrity-migrations"
+   ],
+   "run_id": "dev3-07/routing/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14539
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14523
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13770
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13716
+    },
+    {
+     "persona": "data-integrity-migrations",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13423
+    }
+   ],
+   "status": "complete",
+   "tokens": 69971,
+   "usage": {
+    "cache_read": 66228,
+    "cache_write": 0,
+    "input": 45,
+    "output": 3698,
+    "total": 69971
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 29.862664086045697,
+     "status": "complete",
+     "tokens": 69092,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops",
+    "data-integrity-migrations"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 29.862664086045697,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [
+    "data-integrity-migrations"
+   ],
+   "run_id": "dev3-07/routing/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13759
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14455
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13719
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13733
+    },
+    {
+     "persona": "data-integrity-migrations",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13426
+    }
+   ],
+   "status": "complete",
+   "tokens": 69092,
+   "usage": {
+    "cache_read": 66228,
+    "cache_write": 0,
+    "input": 45,
+    "output": 2819,
+    "total": 69092
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 25.269244969123974,
+     "status": "complete",
+     "tokens": 51336,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 25.269244969123974,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-08/evidence/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12815
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12870
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12808
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12843
+    }
+   ],
+   "status": "complete",
+   "tokens": 51336,
+   "usage": {
+    "cache_read": 28969,
+    "cache_write": 0,
+    "input": 18376,
+    "output": 3991,
+    "total": 51336
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 25.548836379079148,
+     "status": "complete",
+     "tokens": 51366,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 25.548836379079148,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-08/evidence/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12801
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12857
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12840
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12868
+    }
+   ],
+   "status": "complete",
+   "tokens": 51366,
+   "usage": {
+    "cache_read": 47309,
+    "cache_write": 0,
+    "input": 36,
+    "output": 4021,
+    "total": 51366
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 23.98738750303164,
+     "status": "complete",
+     "tokens": 51343,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 23.98738750303164,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-08/evidence/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12813
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12865
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12818
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12847
+    }
+   ],
+   "status": "complete",
+   "tokens": 51343,
+   "usage": {
+    "cache_read": 47309,
+    "cache_write": 0,
+    "input": 36,
+    "output": 3998,
+    "total": 51343
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 25.731690554181114,
+     "status": "complete",
+     "tokens": 70528,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 5,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops",
+    "performance-concurrency"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 5,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 25.731690554181114,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [
+    "performance-concurrency"
+   ],
+   "run_id": "dev3-08/routing/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14108
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14197
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14184
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14171
+    },
+    {
+     "persona": "performance-concurrency",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13868
+    }
+   ],
+   "status": "complete",
+   "tokens": 70528,
+   "usage": {
+    "cache_read": 36686,
+    "cache_write": 0,
+    "input": 28770,
+    "output": 5072,
+    "total": 70528
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 25.405274426797405,
+     "status": "complete",
+     "tokens": 70533,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 5,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops",
+    "performance-concurrency"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 5,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 25.405274426797405,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [
+    "performance-concurrency"
+   ],
+   "run_id": "dev3-08/routing/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14130
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14180
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14220
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14170
+    },
+    {
+     "persona": "performance-concurrency",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13833
+    }
+   ],
+   "status": "complete",
+   "tokens": 70533,
+   "usage": {
+    "cache_read": 65411,
+    "cache_write": 0,
+    "input": 45,
+    "output": 5077,
+    "total": 70533
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 26.132630337961018,
+     "status": "complete",
+     "tokens": 70545,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 5,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops",
+    "performance-concurrency"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 5,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 26.132630337961018,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [
+    "performance-concurrency"
+   ],
+   "run_id": "dev3-08/routing/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14117
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14210
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14171
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14189
+    },
+    {
+     "persona": "performance-concurrency",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13858
+    }
+   ],
+   "status": "complete",
+   "tokens": 70545,
+   "usage": {
+    "cache_read": 65411,
+    "cache_write": 0,
+    "input": 45,
+    "output": 5089,
+    "total": 70545
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 24.951529315905645,
+     "status": "complete",
+     "tokens": 48296,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 24.951529315905645,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-09/evidence/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12041
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12129
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12037
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12089
+    }
+   ],
+   "status": "complete",
+   "tokens": 48296,
+   "usage": {
+    "cache_read": 28617,
+    "cache_write": 0,
+    "input": 16292,
+    "output": 3387,
+    "total": 48296
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 24.51453566690907,
+     "status": "complete",
+     "tokens": 48243,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 24.51453566690907,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-09/evidence/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12052
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12116
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12068
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12007
+    }
+   ],
+   "status": "complete",
+   "tokens": 48243,
+   "usage": {
+    "cache_read": 44873,
+    "cache_write": 0,
+    "input": 36,
+    "output": 3334,
+    "total": 48243
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 24.126303856959566,
+     "status": "complete",
+     "tokens": 48242,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 24.126303856959566,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-09/evidence/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12084
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12097
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12047
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12014
+    }
+   ],
+   "status": "complete",
+   "tokens": 48242,
+   "usage": {
+    "cache_read": 44873,
+    "cache_write": 0,
+    "input": 36,
+    "output": 3333,
+    "total": 48242
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 22.240941853960976,
+     "status": "complete",
+     "tokens": 67901,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 5,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops",
+    "performance-concurrency"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 5,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 22.240941853960976,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [
+    "performance-concurrency"
+   ],
+   "run_id": "dev3-09/routing/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13407
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14564
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13384
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13414
+    },
+    {
+     "persona": "performance-concurrency",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13132
+    }
+   ],
+   "status": "complete",
+   "tokens": 67901,
+   "usage": {
+    "cache_read": 37417,
+    "cache_write": 0,
+    "input": 26220,
+    "output": 4264,
+    "total": 67901
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 23.079869996989146,
+     "status": "complete",
+     "tokens": 66583,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 5,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops",
+    "performance-concurrency"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 5,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 23.079869996989146,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [
+    "performance-concurrency"
+   ],
+   "run_id": "dev3-09/routing/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13398
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13378
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13396
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13367
+    },
+    {
+     "persona": "performance-concurrency",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13044
+    }
+   ],
+   "status": "complete",
+   "tokens": 66583,
+   "usage": {
+    "cache_read": 57186,
+    "cache_write": 0,
+    "input": 5280,
+    "output": 4117,
+    "total": 66583
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 23.858353056944907,
+     "status": "complete",
+     "tokens": 66512,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 5,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops",
+    "performance-concurrency"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 5,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 23.858353056944907,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [
+    "performance-concurrency"
+   ],
+   "run_id": "dev3-09/routing/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13332
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13367
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13390
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13353
+    },
+    {
+     "persona": "performance-concurrency",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13070
+    }
+   ],
+   "status": "complete",
+   "tokens": 66512,
+   "usage": {
+    "cache_read": 62421,
+    "cache_write": 0,
+    "input": 45,
+    "output": 4046,
+    "total": 66512
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 25.091427721083164,
+     "status": "complete",
+     "tokens": 52554,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 25.091427721083164,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-10/evidence/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13130
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13148
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13132
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13144
+    }
+   ],
+   "status": "complete",
+   "tokens": 52554,
+   "usage": {
+    "cache_read": 29757,
+    "cache_write": 0,
+    "input": 18684,
+    "output": 4113,
+    "total": 52554
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 24.821970087941736,
+     "status": "complete",
+     "tokens": 52454,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 24.821970087941736,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-10/evidence/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13094
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13146
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13094
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13120
+    }
+   ],
+   "status": "complete",
+   "tokens": 52454,
+   "usage": {
+    "cache_read": 48405,
+    "cache_write": 0,
+    "input": 36,
+    "output": 4013,
+    "total": 52454
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 25.47253690403886,
+     "status": "complete",
+     "tokens": 52598,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 25.47253690403886,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-10/evidence/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13153
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13175
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13132
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 13138
+    }
+   ],
+   "status": "complete",
+   "tokens": 52598,
+   "usage": {
+    "cache_read": 48405,
+    "cache_write": 0,
+    "input": 36,
+    "output": 4157,
+    "total": 52598
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 25.3483573528938,
+     "status": "complete",
+     "tokens": 72346,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 5,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops",
+    "data-integrity-migrations"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 5,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 25.3483573528938,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [
+    "data-integrity-migrations"
+   ],
+   "run_id": "dev3-10/routing/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14566
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14526
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14526
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14557
+    },
+    {
+     "persona": "data-integrity-migrations",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14171
+    }
+   ],
+   "status": "complete",
+   "tokens": 72346,
+   "usage": {
+    "cache_read": 37653,
+    "cache_write": 0,
+    "input": 29330,
+    "output": 5363,
+    "total": 72346
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 25.00007191998884,
+     "status": "complete",
+     "tokens": 72374,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 5,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops",
+    "data-integrity-migrations"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 5,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 25.00007191998884,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [
+    "data-integrity-migrations"
+   ],
+   "run_id": "dev3-10/routing/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14567
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14511
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14500
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14541
+    },
+    {
+     "persona": "data-integrity-migrations",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14255
+    }
+   ],
+   "status": "complete",
+   "tokens": 72374,
+   "usage": {
+    "cache_read": 65155,
+    "cache_write": 0,
+    "input": 1828,
+    "output": 5391,
+    "total": 72374
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 26.48183199390769,
+     "status": "complete",
+     "tokens": 72439,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 5,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops",
+    "data-integrity-migrations"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 5,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 26.48183199390769,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [
+    "data-integrity-migrations"
+   ],
+   "run_id": "dev3-10/routing/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14556
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14517
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14512
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14587
+    },
+    {
+     "persona": "data-integrity-migrations",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 14267
+    }
+   ],
+   "status": "complete",
+   "tokens": 72439,
+   "usage": {
+    "cache_read": 66938,
+    "cache_write": 0,
+    "input": 45,
+    "output": 5456,
+    "total": 72439
+   }
+  }
+ ],
+ "cells_needing_rerun": 0,
+ "discussion_attempted_rounds": 0,
+ "discussion_completed_rounds": 0,
+ "experiment_sha256": "b3acbc607752cf54409e8dca1a7f7df2947ea4f099eef5195e20535b9f74b06b",
+ "experiment_status": "complete",
+ "first_attempt_status_counts": {
+  "complete": 30
+ },
+ "gate_sha256": "24bf2cef0186bd18478086965788b24733efead5e6fce286476298700a74644a",
+ "holdout_used": false,
+ "qualification": "pass",
+ "rerun_attempts": 0,
+ "schema_version": 2,
+ "semantic_qualification": false,
+ "status_counts": {
+  "complete": 30
+ },
+ "tests": {
+  "all_attempts_within_ceiling": true,
+  "all_runs_complete_and_accounted": true,
+  "experiment_terminal": true,
+  "matrix_exact": true,
+  "retries_within_declared_policy": true
+ },
+ "transient_http_statuses": {}
+}

@@ -1,1 +1,1832 @@
-{"actual_human_judgments":0,"cells":[{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":1},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":11356,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":40.725686570163816,"status":"complete","tokens":56364,"transient_provider_failures":null}],"candidates":[{"candidate_id":"2eb222a86c7828f05921c258fe42560fec82701cefaf5505df56da11c0aececb","category":"regression","file":"src/inventory/stock.py","line":11,"persona":"junior-dev","problem":"Insufficient-stock reservations no longer preserve the documented all-or-nothing contract.","reason":"The previous API explicitly promised to raise OutOfStock when the requested quantity was unavailable, before modifying stock. For stock={'item': 2}, reserve(stock, 'item', 3) now returns 2 and consumes the remaining stock instead. Existing consumers relying on the exception to detect an unfulfilled reservation will no longer enter that handling path. Updating the docstring describes the new behavior but does not preserve compatibility with the previous contract; no compatibility adapter is present in the captured implementation.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{"2eb222a86c7828f05921c258fe42560fec82701cefaf5505df56da11c0aececb":"supported"},"latency_seconds":40.725686570163816,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-11/assessed/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11091},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11749},{"persona":"security","reason":"done","status":"complete","tokens":11080},{"persona":"devops","reason":"done","status":"complete","tokens":11088}],"status":"complete","tokens":56364,"usage":{"cache_read":45422,"cache_write":0,"input":8725,"output":2217,"total":56364}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":1},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":11363,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":42.445648551918566,"status":"complete","tokens":56388,"transient_provider_failures":null}],"candidates":[{"candidate_id":"abd1196464a4b0ac3a5a4e151f29e7d66102a607a80d936babdf242328235fc1","category":"regression","file":"src/inventory/stock.py","line":11,"persona":"junior-dev","problem":"Insufficient-stock requests now partially reserve instead of raising OutOfStock.","reason":"The previous documented contract was all-or-nothing: reserve the requested quantity or raise OutOfStock without changing stock. For stock={'item': 2}, reserve(stock, 'item', 3) now returns 2 and depletes stock rather than raising. Existing consumers following that contract and handling shortages through OutOfStock will bypass their shortage handling. Updating the docstring does not preserve compatibility; retain the existing behavior or expose partial reservation through a separate API or opt-in.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{"abd1196464a4b0ac3a5a4e151f29e7d66102a607a80d936babdf242328235fc1":"supported"},"latency_seconds":42.445648551918566,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-11/assessed/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11089},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11745},{"persona":"security","reason":"done","status":"complete","tokens":11099},{"persona":"devops","reason":"done","status":"complete","tokens":11092}],"status":"complete","tokens":56388,"usage":{"cache_read":49078,"cache_write":0,"input":5072,"output":2238,"total":56388}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":1},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":11418,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":42.20004488178529,"status":"complete","tokens":56459,"transient_provider_failures":null}],"candidates":[{"candidate_id":"08d566342b72e4cc7ac229f706815512801ecf64786564db25c6fb0ebe50e405","category":"regression","file":"src/inventory/stock.py","line":11,"persona":"junior-dev","problem":"Insufficient-stock reservations no longer honor the documented all-or-nothing contract.","reason":"Previously, reserve(stock, sku, quantity) documented and implemented raising OutOfStock without modifying stock when the requested quantity was unavailable. Replacing that check with min silently changes the existing API to partial fulfillment. For example, reserving 3 units from {'item': 2} now returns 2 and consumes the stock instead of raising. Existing consumers relying on the documented exception to detect an unsuccessful reservation will no longer enter their failure path. The revised docstring describes the new behavior, but the captured implementation provides no compatibility option for the previous contract.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{"08d566342b72e4cc7ac229f706815512801ecf64786564db25c6fb0ebe50e405":"supported"},"latency_seconds":42.20004488178529,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-11/assessed/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11086},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11760},{"persona":"security","reason":"done","status":"complete","tokens":11093},{"persona":"devops","reason":"done","status":"complete","tokens":11102}],"status":"complete","tokens":56459,"usage":{"cache_read":36972,"cache_write":0,"input":17226,"output":2261,"total":56459}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":1},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":11405,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":40.63540125405416,"status":"complete","tokens":56430,"transient_provider_failures":null}],"candidates":[{"candidate_id":"0514c2e95e9a700b926d245cdd3f12e4f1feba75fbceb7830c6137acce616890","category":"regression","file":"src/inventory/stock.py","line":11,"persona":"junior-dev","problem":"Insufficient-stock requests now silently consume stock instead of raising OutOfStock.","reason":"The previous public contract explicitly promised to reserve the requested quantity or raise OutOfStock. For stock={'sku': 2}, reserve(stock, 'sku', 3) now returns 2 and empties the stock rather than raising and leaving it unchanged. Consumers relying on the documented exception to reject an unfulfillable request will no longer enter that failure path. Updating the docstring describes the new behavior but does not preserve compatibility with that usage.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":"undisputed","discussion_rounds":[],"discussion_trace_available":true,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{"0514c2e95e9a700b926d245cdd3f12e4f1feba75fbceb7830c6137acce616890":"supported"},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{"0514c2e95e9a700b926d245cdd3f12e4f1feba75fbceb7830c6137acce616890":"supported"},"latency_seconds":40.63540125405416,"panel_reason":"undisputed","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-11/focused1/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11077},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11756},{"persona":"security","reason":"done","status":"complete","tokens":11099},{"persona":"devops","reason":"done","status":"complete","tokens":11093}],"status":"complete","tokens":56430,"usage":{"cache_read":49100,"cache_write":0,"input":5083,"output":2247,"total":56430}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":1},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":11502,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":43.9876568778418,"status":"complete","tokens":56560,"transient_provider_failures":null}],"candidates":[{"candidate_id":"95bb542eb40996c5177d7a3262e39f23e1eb10890dedbddf77b25d9ef34c6e8d","category":"regression","file":"src/inventory/stock.py","line":10,"persona":"junior-dev","problem":"Insufficient-stock reservations no longer raise OutOfStock or preserve inventory","reason":"The existing API explicitly documented all-or-nothing reservation with OutOfStock on shortage. For stock={'sku': 2}, reserve(stock, 'sku', 3) now returns 2 and sets the remaining stock to 0, instead of raising and leaving stock unchanged. Consumers following the previous contract and using the exception to detect failed reservations will now proceed without that failure signal. The updated docstring describes partial fulfillment, but does not provide compatibility for existing exception-based usage.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":"undisputed","discussion_rounds":[],"discussion_trace_available":true,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{"95bb542eb40996c5177d7a3262e39f23e1eb10890dedbddf77b25d9ef34c6e8d":"supported"},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{"95bb542eb40996c5177d7a3262e39f23e1eb10890dedbddf77b25d9ef34c6e8d":"supported"},"latency_seconds":43.9876568778418,"panel_reason":"undisputed","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-11/focused1/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11076},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11732},{"persona":"security","reason":"done","status":"complete","tokens":11130},{"persona":"devops","reason":"done","status":"complete","tokens":11120}],"status":"complete","tokens":56560,"usage":{"cache_read":49076,"cache_write":0,"input":5071,"output":2413,"total":56560}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":1},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":11437,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":52.16593330795877,"status":"failed","tokens":84335,"transient_provider_failures":null}],"candidates":[{"candidate_id":"9ab31c6bdebfcebc321aa09b60f80ad5575d234534a95ca94964e434ad502683","category":"regression","file":"src/inventory/stock.py","line":11,"persona":"junior-dev","problem":"Insufficient-stock reservations silently succeed instead of raising OutOfStock.","reason":"The previous documented contract guaranteed the requested quantity or raised OutOfStock without changing stock. Replacing that check with min() changes existing calls to partial reservations without an opt-in. Consumers relying on the exception to detect failure can now proceed with an unfulfilled request, while the remaining inventory has already been consumed. Updating the docstring describes the new behavior but does not preserve compatibility for those consumers.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":1,"discussion_completed_rounds":0,"discussion_reason":"perspectives_incomplete","discussion_rounds":[{"positions":4,"proposals":{},"tokens":27902}],"discussion_trace_available":true,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{"9ab31c6bdebfcebc321aa09b60f80ad5575d234534a95ca94964e434ad502683":"supported"},"finding_validation_errors":[],"findings":0,"first_attempt_status":"failed","initial_dispositions":{"9ab31c6bdebfcebc321aa09b60f80ad5575d234534a95ca94964e434ad502683":"supported"},"latency_seconds":52.16593330795877,"panel_reason":"perspectives_incomplete","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-11/focused1/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11077},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11744},{"persona":"security","reason":"done","status":"complete","tokens":11075},{"persona":"devops","reason":"done","status":"complete","tokens":11100}],"status":"failed","tokens":84335,"usage":{"cache_read":56175,"cache_write":0,"input":25212,"output":2948,"total":84335}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":1},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":11323,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":40.69633795483969,"status":"complete","tokens":56346,"transient_provider_failures":null}],"candidates":[{"candidate_id":"05ce5031d64aa5e0e02107456d84d5ad95747d0c7a40c9e4dca944725dffcfdb","category":"regression","file":"src/inventory/stock.py","line":11,"persona":"junior-dev","problem":"Insufficient stock now silently produces a partial reservation instead of raising OutOfStock.","reason":"The previous documented contract guaranteed the requested quantity or an OutOfStock exception without changing inventory. For reserve({'widget': 2}, 'widget', 3), this change instead returns 2 and consumes the remaining stock. Existing consumers following that contract and handling shortages through OutOfStock will no longer enter their failure path. Updating the docstring describes the new behavior but does not preserve compatibility for those consumers.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":"undisputed","discussion_rounds":[],"discussion_trace_available":true,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{"05ce5031d64aa5e0e02107456d84d5ad95747d0c7a40c9e4dca944725dffcfdb":"supported"},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{"05ce5031d64aa5e0e02107456d84d5ad95747d0c7a40c9e4dca944725dffcfdb":"supported"},"latency_seconds":40.69633795483969,"panel_reason":"undisputed","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-11/focused3/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11074},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11737},{"persona":"security","reason":"done","status":"complete","tokens":11106},{"persona":"devops","reason":"done","status":"complete","tokens":11106}],"status":"complete","tokens":56346,"usage":{"cache_read":49052,"cache_write":0,"input":5059,"output":2235,"total":56346}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":1},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":11440,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":41.38897297112271,"status":"complete","tokens":56491,"transient_provider_failures":null}],"candidates":[{"candidate_id":"759fef07752f7f7406d471705abd81468380d2856b77f1b77ee6da2f276811e5","category":"regression","file":"src/inventory/stock.py","line":11,"persona":"junior-dev","problem":"Insufficient stock now silently produces a partial reservation instead of raising OutOfStock.","reason":"The previous public contract explicitly promised either the requested quantity or OutOfStock. Replacing that check with min() changes existing calls without requiring callers to opt into partial fulfillment. For example, reserve({'item': 2}, 'item', 3) now returns 2 and consumes the remaining stock instead of raising and leaving it unchanged. Consumers using the documented exception to detect an unfulfillable request can therefore continue without having reserved the requested quantity. Updating the docstring describes the new behavior but does not preserve compatibility for those consumers.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":"undisputed","discussion_rounds":[],"discussion_trace_available":true,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{"759fef07752f7f7406d471705abd81468380d2856b77f1b77ee6da2f276811e5":"supported"},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{"759fef07752f7f7406d471705abd81468380d2856b77f1b77ee6da2f276811e5":"supported"},"latency_seconds":41.38897297112271,"panel_reason":"undisputed","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-11/focused3/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11095},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11770},{"persona":"security","reason":"done","status":"complete","tokens":11082},{"persona":"devops","reason":"done","status":"complete","tokens":11104}],"status":"complete","tokens":56491,"usage":{"cache_read":49114,"cache_write":0,"input":5090,"output":2287,"total":56491}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":1},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":11530,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":50.96854648506269,"status":"failed","tokens":84846,"transient_provider_failures":null}],"candidates":[{"candidate_id":"e9b80057d69d412dbd3c52ccc5fd21c1f14008c8594383fa45495096d1ea5e33","category":"regression","file":"src/inventory/stock.py","line":10,"persona":"junior-dev","problem":"Insufficient-stock reservations no longer raise OutOfStock and now consume the remaining stock.","reason":"The previous public docstring promised a full reservation or OutOfStock. For example, reserve({'widget': 2}, 'widget', 3) previously raised without modifying stock; it now returns 2 and reduces stock to zero. Consumers following that contract and handling shortages through OutOfStock will bypass their failure handling and may treat an incomplete reservation as successful. Although the new docstring describes partial fulfillment, the captured implementation provides no compatibility mode preserving the existing contract.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":1,"discussion_completed_rounds":0,"discussion_reason":"perspectives_incomplete","discussion_rounds":[{"positions":4,"proposals":{},"tokens":28278}],"discussion_trace_available":true,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{"e9b80057d69d412dbd3c52ccc5fd21c1f14008c8594383fa45495096d1ea5e33":"supported"},"finding_validation_errors":[],"findings":0,"first_attempt_status":"failed","initial_dispositions":{"e9b80057d69d412dbd3c52ccc5fd21c1f14008c8594383fa45495096d1ea5e33":"supported"},"latency_seconds":50.96854648506269,"panel_reason":"perspectives_incomplete","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-11/focused3/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11064},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11774},{"persona":"security","reason":"done","status":"complete","tokens":11090},{"persona":"devops","reason":"done","status":"complete","tokens":11110}],"status":"failed","tokens":84846,"usage":{"cache_read":56409,"cache_write":0,"input":25423,"output":3014,"total":84846}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":1},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":10933,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":45.18583649187349,"status":"complete","tokens":60846,"transient_provider_failures":null}],"candidates":[{"candidate_id":"7f21a52df3bd4c4ca3d87333ddef6e0e5d6e497a90082ac9110ec76de57508f2","category":"correctness","file":"src/mailer/subject.py","line":6,"persona":"junior-dev","problem":"Missing values still raise errors when placeholders use numeric format specifications","reason":"Returning an empty string does not implement the documented empty-text fallback for formatted placeholders. For example, render_subject(\"Invoice {number:04d}\", {}) attempts to format \"\" with the integer format code 'd', raising ValueError instead of producing \"Invoice \". The fallback needs to accommodate format specifications, or the supported template syntax must be explicitly restricted.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{"7f21a52df3bd4c4ca3d87333ddef6e0e5d6e497a90082ac9110ec76de57508f2":"supported"},"latency_seconds":45.18583649187349,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-12/assessed/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11019},{"persona":"junior-dev","reason":"done","status":"complete","tokens":16896},{"persona":"security","reason":"done","status":"complete","tokens":10999},{"persona":"devops","reason":"done","status":"complete","tokens":10999}],"status":"complete","tokens":60846,"usage":{"cache_read":38022,"cache_write":0,"input":20528,"output":2296,"total":60846}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":1},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":10819,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":43.5604689931497,"status":"complete","tokens":55541,"transient_provider_failures":null}],"candidates":[{"candidate_id":"cea9765f168336c2645c352ed3327f2cfc56326b41d8c171b6226d513324efc2","category":"correctness","file":"src/mailer/subject.py","line":11,"persona":"junior-dev","problem":"Missing values still fail when a placeholder uses a numeric format specifier.","reason":"The new docstring promises that a missing value renders as empty text, but `_Blank.__missing__` supplies an empty string to the existing format specifier. For example, `render_subject(\"Total: {count:d}\", {})` raises ValueError because `d` cannot format a string. Thus the new missing-value behavior only works for placeholders whose formatting accepts strings; a valid numeric subject template still fails instead of rendering a blank field.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{"cea9765f168336c2645c352ed3327f2cfc56326b41d8c171b6226d513324efc2":"supported"},"latency_seconds":43.5604689931497,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-12/assessed/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":10999},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11745},{"persona":"security","reason":"done","status":"complete","tokens":10986},{"persona":"devops","reason":"done","status":"complete","tokens":10992}],"status":"complete","tokens":55541,"usage":{"cache_read":48281,"cache_write":0,"input":5100,"output":2160,"total":55541}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":1},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":11217,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":46.10392292914912,"status":"complete","tokens":56021,"transient_provider_failures":null}],"candidates":[{"candidate_id":"8830c4efd4f48f5220735a3f9552a67b3e6b668330a8a7d3c6cbeeaf65490fdf","category":"correctness","file":"src/mailer/subject.py","line":6,"persona":"junior-dev","problem":"Missing values still fail for numeric format specifications","reason":"Returning an empty string does not bypass the placeholder's format specification. For example, render_subject(\"Total: {total:.2f}\", {}) applies `.2f` to \"\" and raises ValueError instead of rendering \"Total: \", contrary to the new missing-value contract. Templates using numeric formatting therefore cannot reliably use the advertised blank fallback.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{"8830c4efd4f48f5220735a3f9552a67b3e6b668330a8a7d3c6cbeeaf65490fdf":"supported"},"latency_seconds":46.10392292914912,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-12/assessed/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11015},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11806},{"persona":"security","reason":"done","status":"complete","tokens":10990},{"persona":"devops","reason":"done","status":"complete","tokens":10993}],"status":"complete","tokens":56021,"usage":{"cache_read":48684,"cache_write":0,"input":4958,"output":2379,"total":56021}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":1},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":11244,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":43.175117150880396,"status":"complete","tokens":55944,"transient_provider_failures":null}],"candidates":[{"candidate_id":"e5a88ac2bd85032d7db64663b9d29ba0fab1fb37ced336e9a3849247c6eefabb","category":"regression","file":"src/mailer/subject.py","line":11,"persona":"junior-dev","problem":"Copying values into _Blank discards mapping-provided defaults","reason":"Previously, format_map consulted the supplied mapping directly. Wrapping it in _Blank copies only its stored entries and discards its lookup behavior. For example, render_subject('Hello {name}', defaultdict(lambda: 'friend')) previously returned 'Hello friend' but now returns 'Hello '. The blank fallback should apply to genuinely unresolved values, without replacing defaults supplied by the consumer's mapping.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":"undisputed","discussion_rounds":[],"discussion_trace_available":true,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{"e5a88ac2bd85032d7db64663b9d29ba0fab1fb37ced336e9a3849247c6eefabb":"supported"},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{"e5a88ac2bd85032d7db64663b9d29ba0fab1fb37ced336e9a3849247c6eefabb":"supported"},"latency_seconds":43.175117150880396,"panel_reason":"undisputed","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-12/focused1/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11007},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11716},{"persona":"security","reason":"done","status":"complete","tokens":10985},{"persona":"devops","reason":"done","status":"complete","tokens":10992}],"status":"complete","tokens":55944,"usage":{"cache_read":48730,"cache_write":0,"input":4981,"output":2233,"total":55944}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":1},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":11251,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":52.94458602601662,"status":"complete","tokens":56219,"transient_provider_failures":null}],"candidates":[{"candidate_id":"49973ad7d688caa40b837b6367ac8e07c05d8d23fe300b5cbe3cdcb46dbf3391","category":"regression","file":"src/mailer/subject.py","line":11,"persona":"junior-dev","problem":"Copying values into _Blank discards caller-provided mapping defaults.","reason":"Previously, format_map looked up fields directly in the supplied mapping. Wrapping it in _Blank copies only stored entries, so defaults supplied by defaultdict or a custom __missing__ implementation are no longer used. For example, render_subject(\"Hello {name}\", defaultdict(lambda: \"friend\")) previously returned \"Hello friend\" but now returns \"Hello \". Preserve the supplied mapping's lookup behavior and substitute empty text only when that lookup raises KeyError.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":"undisputed","discussion_rounds":[],"discussion_trace_available":true,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{"49973ad7d688caa40b837b6367ac8e07c05d8d23fe300b5cbe3cdcb46dbf3391":"supported"},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{"49973ad7d688caa40b837b6367ac8e07c05d8d23fe300b5cbe3cdcb46dbf3391":"supported"},"latency_seconds":52.94458602601662,"panel_reason":"undisputed","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-12/focused1/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11009},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11966},{"persona":"security","reason":"done","status":"complete","tokens":10994},{"persona":"devops","reason":"done","status":"complete","tokens":10999}],"status":"complete","tokens":56219,"usage":{"cache_read":48716,"cache_write":0,"input":4974,"output":2529,"total":56219}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":1},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":10807,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":43.837731214938685,"status":"complete","tokens":60648,"transient_provider_failures":null}],"candidates":[{"candidate_id":"feeb5a7154c5f04b24d46571150b9cb3916c9b96ea58efa0ab8cf8d22858ff4f","category":"correctness","file":"src/mailer/subject.py","line":6,"persona":"junior-dev","problem":"Missing values still fail for numeric format specifications","reason":"The updated contract says missing values render as empty text, but returning an empty string from __missing__ leaves format_map to apply the field's format specification to that string. For example, render_subject(\"Items: {count:d}\", {}) raises ValueError instead of returning \"Items: \". Handle missing fields independently of their format specifications, or explicitly restrict the supported template syntax.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":"undisputed","discussion_rounds":[],"discussion_trace_available":true,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{"feeb5a7154c5f04b24d46571150b9cb3916c9b96ea58efa0ab8cf8d22858ff4f":"supported"},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{"feeb5a7154c5f04b24d46571150b9cb3916c9b96ea58efa0ab8cf8d22858ff4f":"supported"},"latency_seconds":43.837731214938685,"panel_reason":"undisputed","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-12/focused1/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":10994},{"persona":"junior-dev","reason":"done","status":"complete","tokens":16853},{"persona":"security","reason":"done","status":"complete","tokens":10998},{"persona":"devops","reason":"done","status":"complete","tokens":10996}],"status":"complete","tokens":60648,"usage":{"cache_read":53279,"cache_write":0,"input":5262,"output":2107,"total":60648}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":1},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":10800,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":41.16397723485716,"status":"complete","tokens":55472,"transient_provider_failures":null}],"candidates":[{"candidate_id":"b9ae8e7366559b58284cbc0d09f3820d9755b3cc678dc882707d82872c67d8e1","category":"correctness","file":"src/mailer/subject.py","line":6,"persona":"junior-dev","problem":"Missing values still raise for numeric format specifications","reason":"Returning an empty string does not implement the new missing-value contract for templates with numeric format specifications. For example, render_subject(\"Items: {count:d}\", {}) formats the replacement string with ':d', which raises ValueError rather than rendering empty text. These templates work when the numeric value is supplied, and the captured implementation contains no validation or restriction excluding them.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":"undisputed","discussion_rounds":[],"discussion_trace_available":true,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{"b9ae8e7366559b58284cbc0d09f3820d9755b3cc678dc882707d82872c67d8e1":"supported"},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{"b9ae8e7366559b58284cbc0d09f3820d9755b3cc678dc882707d82872c67d8e1":"supported"},"latency_seconds":41.16397723485716,"panel_reason":"undisputed","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-12/focused3/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11019},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11672},{"persona":"security","reason":"done","status":"complete","tokens":10990},{"persona":"devops","reason":"done","status":"complete","tokens":10991}],"status":"complete","tokens":55472,"usage":{"cache_read":48500,"cache_write":0,"input":4866,"output":2106,"total":55472}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":1},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":10770,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":42.299973072018474,"status":"complete","tokens":55512,"transient_provider_failures":null}],"candidates":[{"candidate_id":"b08e37388a9b57a413098bed89a340764d34af3b729e183786eb605f3122c3da","category":"correctness","file":"src/mailer/subject.py","line":6,"persona":"junior-dev","problem":"Missing values still fail for numeric format specifications.","reason":"Returning an empty string does not make all missing placeholders render as empty text: format_map still applies the placeholder's format specification. For example, render_subject(\"You have {count:d} messages\", {}) raises ValueError because an empty string cannot be formatted with 'd'. The new docstring does not restrict supported templates to unformatted placeholders, so the advertised missing-value behavior fails for an ordinary numeric subject template.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":"undisputed","discussion_rounds":[],"discussion_trace_available":true,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{"b08e37388a9b57a413098bed89a340764d34af3b729e183786eb605f3122c3da":"supported"},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{"b08e37388a9b57a413098bed89a340764d34af3b729e183786eb605f3122c3da":"supported"},"latency_seconds":42.299973072018474,"panel_reason":"undisputed","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-12/focused3/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11069},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11674},{"persona":"security","reason":"done","status":"complete","tokens":10995},{"persona":"devops","reason":"done","status":"complete","tokens":11004}],"status":"complete","tokens":55512,"usage":{"cache_read":48488,"cache_write":0,"input":4860,"output":2164,"total":55512}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":1},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":10860,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":49.71252661780454,"status":"complete","tokens":55685,"transient_provider_failures":null}],"candidates":[{"candidate_id":"96d4949c073a9baaed1d50f2cead0e8beaedc5ba154372fcfe4beaab3c4d6adc","category":"correctness","file":"src/mailer/subject.py","line":6,"persona":"junior-dev","problem":"Missing values still fail for numeric format specifications","reason":"Returning an empty string does not guarantee that a missing placeholder renders as empty text: format_map still applies the placeholder's format specification. For example, render_subject(\"Items: {count:d}\", {}) raises ValueError because the integer format code is applied to a string. Thus a valid subject template using numeric formatting cannot use the newly documented missing-value behavior.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":1,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":"undisputed","discussion_rounds":[],"discussion_trace_available":true,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{"96d4949c073a9baaed1d50f2cead0e8beaedc5ba154372fcfe4beaab3c4d6adc":"supported"},"finding_validation_errors":[],"findings":1,"first_attempt_status":"complete","initial_dispositions":{"96d4949c073a9baaed1d50f2cead0e8beaedc5ba154372fcfe4beaab3c4d6adc":"supported"},"latency_seconds":49.71252661780454,"panel_reason":"undisputed","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-12/focused3/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":11040},{"persona":"junior-dev","reason":"done","status":"complete","tokens":11799},{"persona":"security","reason":"done","status":"complete","tokens":10991},{"persona":"devops","reason":"done","status":"complete","tokens":10995}],"status":"complete","tokens":55685,"usage":{"cache_read":48474,"cache_write":0,"input":4853,"output":2358,"total":55685}}],"cells_needing_rerun":0,"discussion_attempted_rounds":2,"discussion_completed_rounds":0,"experiment_sha256":"22f89ea1b4549cd7d5bfd6cc2b83fe9aa84b3ca3a19d983b703e8c85168ba243","experiment_status":"complete","first_attempt_status_counts":{"complete":16,"failed":2},"gate_sha256":"7a1b00fdd6ddf57d1fe4d41b05a988a553d05fab595e2c53813d026957f1c348","holdout_used":false,"qualification":"not_qualified","rerun_attempts":0,"schema_version":2,"semantic_qualification":false,"status_counts":{"complete":16,"failed":2},"tests":{"all_attempts_within_ceiling":true,"all_runs_complete_and_accounted":false,"experiment_terminal":true,"matrix_exact":true,"retries_within_declared_policy":true},"transient_http_statuses":{}}
+{
+ "actual_human_judgments": 0,
+ "cells": [
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 1
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 11356,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 40.725686570163816,
+     "status": "complete",
+     "tokens": 56364,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "2eb222a86c7828f05921c258fe42560fec82701cefaf5505df56da11c0aececb",
+     "category": "regression",
+     "file": "src/inventory/stock.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Insufficient-stock reservations no longer preserve the documented all-or-nothing contract.",
+     "reason": "The previous API explicitly promised to raise OutOfStock when the requested quantity was unavailable, before modifying stock. For stock={'item': 2}, reserve(stock, 'item', 3) now returns 2 and consumes the remaining stock instead. Existing consumers relying on the exception to detect an unfulfilled reservation will no longer enter that handling path. Updating the docstring describes the new behavior but does not preserve compatibility with the previous contract; no compatibility adapter is present in the captured implementation.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "2eb222a86c7828f05921c258fe42560fec82701cefaf5505df56da11c0aececb": "supported"
+   },
+   "latency_seconds": 40.725686570163816,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-11/assessed/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11091
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11749
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11080
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11088
+    }
+   ],
+   "status": "complete",
+   "tokens": 56364,
+   "usage": {
+    "cache_read": 45422,
+    "cache_write": 0,
+    "input": 8725,
+    "output": 2217,
+    "total": 56364
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 1
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 11363,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 42.445648551918566,
+     "status": "complete",
+     "tokens": 56388,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "abd1196464a4b0ac3a5a4e151f29e7d66102a607a80d936babdf242328235fc1",
+     "category": "regression",
+     "file": "src/inventory/stock.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Insufficient-stock requests now partially reserve instead of raising OutOfStock.",
+     "reason": "The previous documented contract was all-or-nothing: reserve the requested quantity or raise OutOfStock without changing stock. For stock={'item': 2}, reserve(stock, 'item', 3) now returns 2 and depletes stock rather than raising. Existing consumers following that contract and handling shortages through OutOfStock will bypass their shortage handling. Updating the docstring does not preserve compatibility; retain the existing behavior or expose partial reservation through a separate API or opt-in.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "abd1196464a4b0ac3a5a4e151f29e7d66102a607a80d936babdf242328235fc1": "supported"
+   },
+   "latency_seconds": 42.445648551918566,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-11/assessed/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11089
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11745
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11099
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11092
+    }
+   ],
+   "status": "complete",
+   "tokens": 56388,
+   "usage": {
+    "cache_read": 49078,
+    "cache_write": 0,
+    "input": 5072,
+    "output": 2238,
+    "total": 56388
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 1
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 11418,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 42.20004488178529,
+     "status": "complete",
+     "tokens": 56459,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "08d566342b72e4cc7ac229f706815512801ecf64786564db25c6fb0ebe50e405",
+     "category": "regression",
+     "file": "src/inventory/stock.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Insufficient-stock reservations no longer honor the documented all-or-nothing contract.",
+     "reason": "Previously, reserve(stock, sku, quantity) documented and implemented raising OutOfStock without modifying stock when the requested quantity was unavailable. Replacing that check with min silently changes the existing API to partial fulfillment. For example, reserving 3 units from {'item': 2} now returns 2 and consumes the stock instead of raising. Existing consumers relying on the documented exception to detect an unsuccessful reservation will no longer enter their failure path. The revised docstring describes the new behavior, but the captured implementation provides no compatibility option for the previous contract.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "08d566342b72e4cc7ac229f706815512801ecf64786564db25c6fb0ebe50e405": "supported"
+   },
+   "latency_seconds": 42.20004488178529,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-11/assessed/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11086
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11760
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11093
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11102
+    }
+   ],
+   "status": "complete",
+   "tokens": 56459,
+   "usage": {
+    "cache_read": 36972,
+    "cache_write": 0,
+    "input": 17226,
+    "output": 2261,
+    "total": 56459
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 1
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 11405,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 40.63540125405416,
+     "status": "complete",
+     "tokens": 56430,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "0514c2e95e9a700b926d245cdd3f12e4f1feba75fbceb7830c6137acce616890",
+     "category": "regression",
+     "file": "src/inventory/stock.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Insufficient-stock requests now silently consume stock instead of raising OutOfStock.",
+     "reason": "The previous public contract explicitly promised to reserve the requested quantity or raise OutOfStock. For stock={'sku': 2}, reserve(stock, 'sku', 3) now returns 2 and empties the stock rather than raising and leaving it unchanged. Consumers relying on the documented exception to reject an unfulfillable request will no longer enter that failure path. Updating the docstring describes the new behavior but does not preserve compatibility with that usage.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "0514c2e95e9a700b926d245cdd3f12e4f1feba75fbceb7830c6137acce616890": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "0514c2e95e9a700b926d245cdd3f12e4f1feba75fbceb7830c6137acce616890": "supported"
+   },
+   "latency_seconds": 40.63540125405416,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-11/focused1/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11077
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11756
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11099
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11093
+    }
+   ],
+   "status": "complete",
+   "tokens": 56430,
+   "usage": {
+    "cache_read": 49100,
+    "cache_write": 0,
+    "input": 5083,
+    "output": 2247,
+    "total": 56430
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 1
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 11502,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 43.9876568778418,
+     "status": "complete",
+     "tokens": 56560,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "95bb542eb40996c5177d7a3262e39f23e1eb10890dedbddf77b25d9ef34c6e8d",
+     "category": "regression",
+     "file": "src/inventory/stock.py",
+     "line": 10,
+     "persona": "junior-dev",
+     "problem": "Insufficient-stock reservations no longer raise OutOfStock or preserve inventory",
+     "reason": "The existing API explicitly documented all-or-nothing reservation with OutOfStock on shortage. For stock={'sku': 2}, reserve(stock, 'sku', 3) now returns 2 and sets the remaining stock to 0, instead of raising and leaving stock unchanged. Consumers following the previous contract and using the exception to detect failed reservations will now proceed without that failure signal. The updated docstring describes partial fulfillment, but does not provide compatibility for existing exception-based usage.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "95bb542eb40996c5177d7a3262e39f23e1eb10890dedbddf77b25d9ef34c6e8d": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "95bb542eb40996c5177d7a3262e39f23e1eb10890dedbddf77b25d9ef34c6e8d": "supported"
+   },
+   "latency_seconds": 43.9876568778418,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-11/focused1/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11076
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11732
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11130
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11120
+    }
+   ],
+   "status": "complete",
+   "tokens": 56560,
+   "usage": {
+    "cache_read": 49076,
+    "cache_write": 0,
+    "input": 5071,
+    "output": 2413,
+    "total": 56560
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 1
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 11437,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 52.16593330795877,
+     "status": "failed",
+     "tokens": 84335,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "9ab31c6bdebfcebc321aa09b60f80ad5575d234534a95ca94964e434ad502683",
+     "category": "regression",
+     "file": "src/inventory/stock.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Insufficient-stock reservations silently succeed instead of raising OutOfStock.",
+     "reason": "The previous documented contract guaranteed the requested quantity or raised OutOfStock without changing stock. Replacing that check with min() changes existing calls to partial reservations without an opt-in. Consumers relying on the exception to detect failure can now proceed with an unfulfilled request, while the remaining inventory has already been consumed. Updating the docstring describes the new behavior but does not preserve compatibility for those consumers.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 1,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "perspectives_incomplete",
+   "discussion_rounds": [
+    {
+     "positions": 4,
+     "proposals": {},
+     "tokens": 27902
+    }
+   ],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "9ab31c6bdebfcebc321aa09b60f80ad5575d234534a95ca94964e434ad502683": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "failed",
+   "initial_dispositions": {
+    "9ab31c6bdebfcebc321aa09b60f80ad5575d234534a95ca94964e434ad502683": "supported"
+   },
+   "latency_seconds": 52.16593330795877,
+   "panel_reason": "perspectives_incomplete",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-11/focused1/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11077
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11744
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11075
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11100
+    }
+   ],
+   "status": "failed",
+   "tokens": 84335,
+   "usage": {
+    "cache_read": 56175,
+    "cache_write": 0,
+    "input": 25212,
+    "output": 2948,
+    "total": 84335
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 1
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 11323,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 40.69633795483969,
+     "status": "complete",
+     "tokens": 56346,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "05ce5031d64aa5e0e02107456d84d5ad95747d0c7a40c9e4dca944725dffcfdb",
+     "category": "regression",
+     "file": "src/inventory/stock.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Insufficient stock now silently produces a partial reservation instead of raising OutOfStock.",
+     "reason": "The previous documented contract guaranteed the requested quantity or an OutOfStock exception without changing inventory. For reserve({'widget': 2}, 'widget', 3), this change instead returns 2 and consumes the remaining stock. Existing consumers following that contract and handling shortages through OutOfStock will no longer enter their failure path. Updating the docstring describes the new behavior but does not preserve compatibility for those consumers.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "05ce5031d64aa5e0e02107456d84d5ad95747d0c7a40c9e4dca944725dffcfdb": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "05ce5031d64aa5e0e02107456d84d5ad95747d0c7a40c9e4dca944725dffcfdb": "supported"
+   },
+   "latency_seconds": 40.69633795483969,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-11/focused3/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11074
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11737
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11106
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11106
+    }
+   ],
+   "status": "complete",
+   "tokens": 56346,
+   "usage": {
+    "cache_read": 49052,
+    "cache_write": 0,
+    "input": 5059,
+    "output": 2235,
+    "total": 56346
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 1
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 11440,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 41.38897297112271,
+     "status": "complete",
+     "tokens": 56491,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "759fef07752f7f7406d471705abd81468380d2856b77f1b77ee6da2f276811e5",
+     "category": "regression",
+     "file": "src/inventory/stock.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Insufficient stock now silently produces a partial reservation instead of raising OutOfStock.",
+     "reason": "The previous public contract explicitly promised either the requested quantity or OutOfStock. Replacing that check with min() changes existing calls without requiring callers to opt into partial fulfillment. For example, reserve({'item': 2}, 'item', 3) now returns 2 and consumes the remaining stock instead of raising and leaving it unchanged. Consumers using the documented exception to detect an unfulfillable request can therefore continue without having reserved the requested quantity. Updating the docstring describes the new behavior but does not preserve compatibility for those consumers.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "759fef07752f7f7406d471705abd81468380d2856b77f1b77ee6da2f276811e5": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "759fef07752f7f7406d471705abd81468380d2856b77f1b77ee6da2f276811e5": "supported"
+   },
+   "latency_seconds": 41.38897297112271,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-11/focused3/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11095
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11770
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11082
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11104
+    }
+   ],
+   "status": "complete",
+   "tokens": 56491,
+   "usage": {
+    "cache_read": 49114,
+    "cache_write": 0,
+    "input": 5090,
+    "output": 2287,
+    "total": 56491
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 1
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 11530,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 50.96854648506269,
+     "status": "failed",
+     "tokens": 84846,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "e9b80057d69d412dbd3c52ccc5fd21c1f14008c8594383fa45495096d1ea5e33",
+     "category": "regression",
+     "file": "src/inventory/stock.py",
+     "line": 10,
+     "persona": "junior-dev",
+     "problem": "Insufficient-stock reservations no longer raise OutOfStock and now consume the remaining stock.",
+     "reason": "The previous public docstring promised a full reservation or OutOfStock. For example, reserve({'widget': 2}, 'widget', 3) previously raised without modifying stock; it now returns 2 and reduces stock to zero. Consumers following that contract and handling shortages through OutOfStock will bypass their failure handling and may treat an incomplete reservation as successful. Although the new docstring describes partial fulfillment, the captured implementation provides no compatibility mode preserving the existing contract.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 1,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "perspectives_incomplete",
+   "discussion_rounds": [
+    {
+     "positions": 4,
+     "proposals": {},
+     "tokens": 28278
+    }
+   ],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "e9b80057d69d412dbd3c52ccc5fd21c1f14008c8594383fa45495096d1ea5e33": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "failed",
+   "initial_dispositions": {
+    "e9b80057d69d412dbd3c52ccc5fd21c1f14008c8594383fa45495096d1ea5e33": "supported"
+   },
+   "latency_seconds": 50.96854648506269,
+   "panel_reason": "perspectives_incomplete",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-11/focused3/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11064
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11774
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11090
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11110
+    }
+   ],
+   "status": "failed",
+   "tokens": 84846,
+   "usage": {
+    "cache_read": 56409,
+    "cache_write": 0,
+    "input": 25423,
+    "output": 3014,
+    "total": 84846
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 1
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 10933,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 45.18583649187349,
+     "status": "complete",
+     "tokens": 60846,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "7f21a52df3bd4c4ca3d87333ddef6e0e5d6e497a90082ac9110ec76de57508f2",
+     "category": "correctness",
+     "file": "src/mailer/subject.py",
+     "line": 6,
+     "persona": "junior-dev",
+     "problem": "Missing values still raise errors when placeholders use numeric format specifications",
+     "reason": "Returning an empty string does not implement the documented empty-text fallback for formatted placeholders. For example, render_subject(\"Invoice {number:04d}\", {}) attempts to format \"\" with the integer format code 'd', raising ValueError instead of producing \"Invoice \". The fallback needs to accommodate format specifications, or the supported template syntax must be explicitly restricted.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "7f21a52df3bd4c4ca3d87333ddef6e0e5d6e497a90082ac9110ec76de57508f2": "supported"
+   },
+   "latency_seconds": 45.18583649187349,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-12/assessed/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11019
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 16896
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10999
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10999
+    }
+   ],
+   "status": "complete",
+   "tokens": 60846,
+   "usage": {
+    "cache_read": 38022,
+    "cache_write": 0,
+    "input": 20528,
+    "output": 2296,
+    "total": 60846
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 1
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 10819,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 43.5604689931497,
+     "status": "complete",
+     "tokens": 55541,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "cea9765f168336c2645c352ed3327f2cfc56326b41d8c171b6226d513324efc2",
+     "category": "correctness",
+     "file": "src/mailer/subject.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Missing values still fail when a placeholder uses a numeric format specifier.",
+     "reason": "The new docstring promises that a missing value renders as empty text, but `_Blank.__missing__` supplies an empty string to the existing format specifier. For example, `render_subject(\"Total: {count:d}\", {})` raises ValueError because `d` cannot format a string. Thus the new missing-value behavior only works for placeholders whose formatting accepts strings; a valid numeric subject template still fails instead of rendering a blank field.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "cea9765f168336c2645c352ed3327f2cfc56326b41d8c171b6226d513324efc2": "supported"
+   },
+   "latency_seconds": 43.5604689931497,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-12/assessed/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10999
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11745
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10986
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10992
+    }
+   ],
+   "status": "complete",
+   "tokens": 55541,
+   "usage": {
+    "cache_read": 48281,
+    "cache_write": 0,
+    "input": 5100,
+    "output": 2160,
+    "total": 55541
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 1
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 11217,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 46.10392292914912,
+     "status": "complete",
+     "tokens": 56021,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "8830c4efd4f48f5220735a3f9552a67b3e6b668330a8a7d3c6cbeeaf65490fdf",
+     "category": "correctness",
+     "file": "src/mailer/subject.py",
+     "line": 6,
+     "persona": "junior-dev",
+     "problem": "Missing values still fail for numeric format specifications",
+     "reason": "Returning an empty string does not bypass the placeholder's format specification. For example, render_subject(\"Total: {total:.2f}\", {}) applies `.2f` to \"\" and raises ValueError instead of rendering \"Total: \", contrary to the new missing-value contract. Templates using numeric formatting therefore cannot reliably use the advertised blank fallback.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "8830c4efd4f48f5220735a3f9552a67b3e6b668330a8a7d3c6cbeeaf65490fdf": "supported"
+   },
+   "latency_seconds": 46.10392292914912,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-12/assessed/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11015
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11806
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10990
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10993
+    }
+   ],
+   "status": "complete",
+   "tokens": 56021,
+   "usage": {
+    "cache_read": 48684,
+    "cache_write": 0,
+    "input": 4958,
+    "output": 2379,
+    "total": 56021
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 1
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 11244,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 43.175117150880396,
+     "status": "complete",
+     "tokens": 55944,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "e5a88ac2bd85032d7db64663b9d29ba0fab1fb37ced336e9a3849247c6eefabb",
+     "category": "regression",
+     "file": "src/mailer/subject.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Copying values into _Blank discards mapping-provided defaults",
+     "reason": "Previously, format_map consulted the supplied mapping directly. Wrapping it in _Blank copies only its stored entries and discards its lookup behavior. For example, render_subject('Hello {name}', defaultdict(lambda: 'friend')) previously returned 'Hello friend' but now returns 'Hello '. The blank fallback should apply to genuinely unresolved values, without replacing defaults supplied by the consumer's mapping.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "e5a88ac2bd85032d7db64663b9d29ba0fab1fb37ced336e9a3849247c6eefabb": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "e5a88ac2bd85032d7db64663b9d29ba0fab1fb37ced336e9a3849247c6eefabb": "supported"
+   },
+   "latency_seconds": 43.175117150880396,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-12/focused1/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11007
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11716
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10985
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10992
+    }
+   ],
+   "status": "complete",
+   "tokens": 55944,
+   "usage": {
+    "cache_read": 48730,
+    "cache_write": 0,
+    "input": 4981,
+    "output": 2233,
+    "total": 55944
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 1
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 11251,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 52.94458602601662,
+     "status": "complete",
+     "tokens": 56219,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "49973ad7d688caa40b837b6367ac8e07c05d8d23fe300b5cbe3cdcb46dbf3391",
+     "category": "regression",
+     "file": "src/mailer/subject.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Copying values into _Blank discards caller-provided mapping defaults.",
+     "reason": "Previously, format_map looked up fields directly in the supplied mapping. Wrapping it in _Blank copies only stored entries, so defaults supplied by defaultdict or a custom __missing__ implementation are no longer used. For example, render_subject(\"Hello {name}\", defaultdict(lambda: \"friend\")) previously returned \"Hello friend\" but now returns \"Hello \". Preserve the supplied mapping's lookup behavior and substitute empty text only when that lookup raises KeyError.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "49973ad7d688caa40b837b6367ac8e07c05d8d23fe300b5cbe3cdcb46dbf3391": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "49973ad7d688caa40b837b6367ac8e07c05d8d23fe300b5cbe3cdcb46dbf3391": "supported"
+   },
+   "latency_seconds": 52.94458602601662,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-12/focused1/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11009
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11966
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10994
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10999
+    }
+   ],
+   "status": "complete",
+   "tokens": 56219,
+   "usage": {
+    "cache_read": 48716,
+    "cache_write": 0,
+    "input": 4974,
+    "output": 2529,
+    "total": 56219
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 1
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 10807,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 43.837731214938685,
+     "status": "complete",
+     "tokens": 60648,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "feeb5a7154c5f04b24d46571150b9cb3916c9b96ea58efa0ab8cf8d22858ff4f",
+     "category": "correctness",
+     "file": "src/mailer/subject.py",
+     "line": 6,
+     "persona": "junior-dev",
+     "problem": "Missing values still fail for numeric format specifications",
+     "reason": "The updated contract says missing values render as empty text, but returning an empty string from __missing__ leaves format_map to apply the field's format specification to that string. For example, render_subject(\"Items: {count:d}\", {}) raises ValueError instead of returning \"Items: \". Handle missing fields independently of their format specifications, or explicitly restrict the supported template syntax.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "feeb5a7154c5f04b24d46571150b9cb3916c9b96ea58efa0ab8cf8d22858ff4f": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "feeb5a7154c5f04b24d46571150b9cb3916c9b96ea58efa0ab8cf8d22858ff4f": "supported"
+   },
+   "latency_seconds": 43.837731214938685,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-12/focused1/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10994
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 16853
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10998
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10996
+    }
+   ],
+   "status": "complete",
+   "tokens": 60648,
+   "usage": {
+    "cache_read": 53279,
+    "cache_write": 0,
+    "input": 5262,
+    "output": 2107,
+    "total": 60648
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 1
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 10800,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 41.16397723485716,
+     "status": "complete",
+     "tokens": 55472,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "b9ae8e7366559b58284cbc0d09f3820d9755b3cc678dc882707d82872c67d8e1",
+     "category": "correctness",
+     "file": "src/mailer/subject.py",
+     "line": 6,
+     "persona": "junior-dev",
+     "problem": "Missing values still raise for numeric format specifications",
+     "reason": "Returning an empty string does not implement the new missing-value contract for templates with numeric format specifications. For example, render_subject(\"Items: {count:d}\", {}) formats the replacement string with ':d', which raises ValueError rather than rendering empty text. These templates work when the numeric value is supplied, and the captured implementation contains no validation or restriction excluding them.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "b9ae8e7366559b58284cbc0d09f3820d9755b3cc678dc882707d82872c67d8e1": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "b9ae8e7366559b58284cbc0d09f3820d9755b3cc678dc882707d82872c67d8e1": "supported"
+   },
+   "latency_seconds": 41.16397723485716,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-12/focused3/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11019
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11672
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10990
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10991
+    }
+   ],
+   "status": "complete",
+   "tokens": 55472,
+   "usage": {
+    "cache_read": 48500,
+    "cache_write": 0,
+    "input": 4866,
+    "output": 2106,
+    "total": 55472
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 1
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 10770,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 42.299973072018474,
+     "status": "complete",
+     "tokens": 55512,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "b08e37388a9b57a413098bed89a340764d34af3b729e183786eb605f3122c3da",
+     "category": "correctness",
+     "file": "src/mailer/subject.py",
+     "line": 6,
+     "persona": "junior-dev",
+     "problem": "Missing values still fail for numeric format specifications.",
+     "reason": "Returning an empty string does not make all missing placeholders render as empty text: format_map still applies the placeholder's format specification. For example, render_subject(\"You have {count:d} messages\", {}) raises ValueError because an empty string cannot be formatted with 'd'. The new docstring does not restrict supported templates to unformatted placeholders, so the advertised missing-value behavior fails for an ordinary numeric subject template.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "b08e37388a9b57a413098bed89a340764d34af3b729e183786eb605f3122c3da": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "b08e37388a9b57a413098bed89a340764d34af3b729e183786eb605f3122c3da": "supported"
+   },
+   "latency_seconds": 42.299973072018474,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-12/focused3/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11069
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11674
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10995
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11004
+    }
+   ],
+   "status": "complete",
+   "tokens": 55512,
+   "usage": {
+    "cache_read": 48488,
+    "cache_write": 0,
+    "input": 4860,
+    "output": 2164,
+    "total": 55512
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 1
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 10860,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 49.71252661780454,
+     "status": "complete",
+     "tokens": 55685,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "96d4949c073a9baaed1d50f2cead0e8beaedc5ba154372fcfe4beaab3c4d6adc",
+     "category": "correctness",
+     "file": "src/mailer/subject.py",
+     "line": 6,
+     "persona": "junior-dev",
+     "problem": "Missing values still fail for numeric format specifications",
+     "reason": "Returning an empty string does not guarantee that a missing placeholder renders as empty text: format_map still applies the placeholder's format specification. For example, render_subject(\"Items: {count:d}\", {}) raises ValueError because the integer format code is applied to a string. Thus a valid subject template using numeric formatting cannot use the newly documented missing-value behavior.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 1,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "96d4949c073a9baaed1d50f2cead0e8beaedc5ba154372fcfe4beaab3c4d6adc": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 1,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "96d4949c073a9baaed1d50f2cead0e8beaedc5ba154372fcfe4beaab3c4d6adc": "supported"
+   },
+   "latency_seconds": 49.71252661780454,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-12/focused3/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11040
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11799
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10991
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10995
+    }
+   ],
+   "status": "complete",
+   "tokens": 55685,
+   "usage": {
+    "cache_read": 48474,
+    "cache_write": 0,
+    "input": 4853,
+    "output": 2358,
+    "total": 55685
+   }
+  }
+ ],
+ "cells_needing_rerun": 0,
+ "discussion_attempted_rounds": 2,
+ "discussion_completed_rounds": 0,
+ "experiment_sha256": "22f89ea1b4549cd7d5bfd6cc2b83fe9aa84b3ca3a19d983b703e8c85168ba243",
+ "experiment_status": "complete",
+ "first_attempt_status_counts": {
+  "complete": 16,
+  "failed": 2
+ },
+ "gate_sha256": "7a1b00fdd6ddf57d1fe4d41b05a988a553d05fab595e2c53813d026957f1c348",
+ "holdout_used": false,
+ "qualification": "not_qualified",
+ "rerun_attempts": 0,
+ "schema_version": 2,
+ "semantic_qualification": false,
+ "status_counts": {
+  "complete": 16,
+  "failed": 2
+ },
+ "tests": {
+  "all_attempts_within_ceiling": true,
+  "all_runs_complete_and_accounted": false,
+  "experiment_terminal": true,
+  "matrix_exact": true,
+  "retries_within_declared_policy": true
+ },
+ "transient_http_statuses": {}
+}

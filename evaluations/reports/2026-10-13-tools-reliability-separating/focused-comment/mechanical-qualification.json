@@ -1,1 +1,1496 @@
-{"actual_human_judgments":0,"cells":[{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":27.79649139009416,"status":"complete","tokens":49847,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":27.79649139009416,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-08/aggregate/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12436},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12476},{"persona":"security","reason":"done","status":"complete","tokens":12482},{"persona":"devops","reason":"done","status":"complete","tokens":12453}],"status":"complete","tokens":49847,"usage":{"cache_read":44381,"cache_write":0,"input":1452,"output":4014,"total":49847}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":27.920665374025702,"status":"complete","tokens":49851,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":27.920665374025702,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-08/aggregate/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12419},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12473},{"persona":"security","reason":"done","status":"complete","tokens":12499},{"persona":"devops","reason":"done","status":"complete","tokens":12460}],"status":"complete","tokens":49851,"usage":{"cache_read":42043,"cache_write":0,"input":3790,"output":4018,"total":49851}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{},"assessment_status":null,"assessor_actual":false,"assessor_allocation":null,"assessor_complete":false,"assessor_reason":null,"assessor_tokens":null,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":28.30286647309549,"status":"complete","tokens":49785,"transient_provider_failures":null}],"candidates":[],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{},"latency_seconds":28.30286647309549,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-08/aggregate/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12449},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12461},{"persona":"security","reason":"done","status":"complete","tokens":12430},{"persona":"devops","reason":"done","status":"complete","tokens":12445}],"status":"complete","tokens":49785,"usage":{"cache_read":33119,"cache_write":0,"input":12714,"output":3952,"total":49785}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":4},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":19463,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":72.53371931286529,"status":"complete","tokens":69257,"transient_provider_failures":null}],"candidates":[{"candidate_id":"fdfa03152fcb7f7b4e7e5f0a9f4dbb23fa79f59e9b1e319d858c4922e2077214","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"senior-dev","problem":"Removing currency from the cache key returns pricing pages in the wrong billing currency.","reason":"pricing_page explicitly supports an account-selected billing currency independently of locale. After a GBP pricing page is cached for en-GB, an en-GB account selecting USD hits the same entry and receives the GBP page without invoking the renderer with USD. Keep currency in the key to preserve the caller's supported currency override.","side":"RIGHT"},{"candidate_id":"2a2474f1e22000a1eb85f43a94301b944b13b48cdb468ecd07cf3dc31406e5b1","category":"regression","file":"src/render/page_cache.py","line":12,"persona":"junior-dev","problem":"Removing currency from the cache key returns pricing pages in the wrong billing currency.","reason":"The pricing-page caller explicitly supports an account-selected billing currency independently of locale. Requests for the same template and locale but different currencies now share an entry, so the second request receives the first currency's rendered page. Keep currency in the key to preserve this supported behavior.","side":"RIGHT"},{"candidate_id":"9cefbda7afc9d60ab4bde4d6497785fbf68d1c177406d2b454bde59a1247db4a","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"security","problem":"Removing currency from the cache key returns pricing pages in the wrong currency.","reason":"The pricing-page caller explicitly supports a billing currency that differs from the locale default. Two requests with the same template and locale but different billing currencies now share a cache entry, so the second request receives the first request's rendered page without invoking the renderer with its requested currency. Keep currency in the cache key.","side":"RIGHT"},{"candidate_id":"9dc4c22fb39b826f88657f6c98339012dea9b024297d5a043bec5a137ffcd3d7","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"devops","problem":"Removing currency from the cache key returns pricing pages in the wrong billing currency.","reason":"The pricing view explicitly supports an account-selected billing currency independent of locale. After a page is cached, another request with the same template and locale but a different billing currency receives the first rendered page without invoking the renderer. Keep currency in the key so supported account preferences remain distinct.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{"2a2474f1e22000a1eb85f43a94301b944b13b48cdb468ecd07cf3dc31406e5b1":"supported","9cefbda7afc9d60ab4bde4d6497785fbf68d1c177406d2b454bde59a1247db4a":"supported","9dc4c22fb39b826f88657f6c98339012dea9b024297d5a043bec5a137ffcd3d7":"supported","fdfa03152fcb7f7b4e7e5f0a9f4dbb23fa79f59e9b1e319d858c4922e2077214":"supported"},"latency_seconds":72.53371931286529,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-08/assessed/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12410},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12463},{"persona":"security","reason":"done","status":"complete","tokens":12468},{"persona":"devops","reason":"done","status":"complete","tokens":12453}],"status":"complete","tokens":69257,"usage":{"cache_read":55411,"cache_write":0,"input":7470,"output":6376,"total":69257}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":4},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":19568,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":73.9127464320045,"status":"complete","tokens":69416,"transient_provider_failures":null}],"candidates":[{"candidate_id":"14774660164e2a7525d831ed94f9d9aa966527893c32305312048fe5459dc4c8","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"senior-dev","problem":"Removing currency from the cache key returns pages rendered for a different billing currency.","reason":"The pricing-page caller explicitly supports an account-selected billing currency independent of locale. After a page is cached for one currency, a request for the same template and locale with another currency returns the existing page without invoking the renderer. Keep currency in the key so account billing preferences do not collide.","side":"RIGHT"},{"candidate_id":"4bdca3e8a40211e13ad11c061332d808fc4715c75c978dca7206b492b9b45455","category":"regression","file":"src/render/page_cache.py","line":12,"persona":"junior-dev","problem":"Dropping currency from the cache key returns pricing pages in the wrong billing currency.","reason":"The pricing caller explicitly supports an account-selected billing currency, using the locale's currency only as a fallback. For example, requests for en-GB with GBP and then en-GB with USD now share a cache entry, so the second request receives the GBP rendering without invoking the renderer for USD. Keep currency in the key to preserve this supported account setting.","side":"RIGHT"},{"candidate_id":"17d24180dad4c4dde8bdebbf89b35f4d928e4d27c2b3aa96ade23a4323b56180","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"security","problem":"Removing currency from the cache key returns pricing pages in the wrong billing currency.","reason":"The pricing-page caller explicitly supports a billing currency selected independently of locale. For example, after caching an en-GB pricing page in GBP, a request for the same locale with billing_currency=\"USD\" returns the cached GBP page without rendering the USD variant. Keep currency in the key to distinguish these supported requests.","side":"RIGHT"},{"candidate_id":"c3e1d9580ca308c5c820ff9cdfc80ad47837608486b25305a1f95981c31c40fb","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"devops","problem":"Keep billing currency in the rendered-page cache key","reason":"The pricing view explicitly supports an account-selected billing currency independently of locale. Removing currency from the key makes requests for the same template and locale reuse the first currency's rendered page. For example, an en-GB account switching from GBP to USD still receives the cached GBP page. Retain currency in the key so these supported variants remain distinct.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{"14774660164e2a7525d831ed94f9d9aa966527893c32305312048fe5459dc4c8":"supported","17d24180dad4c4dde8bdebbf89b35f4d928e4d27c2b3aa96ade23a4323b56180":"supported","4bdca3e8a40211e13ad11c061332d808fc4715c75c978dca7206b492b9b45455":"supported","c3e1d9580ca308c5c820ff9cdfc80ad47837608486b25305a1f95981c31c40fb":"supported"},"latency_seconds":73.9127464320045,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-08/assessed/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12411},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12476},{"persona":"security","reason":"done","status":"complete","tokens":12489},{"persona":"devops","reason":"done","status":"complete","tokens":12472}],"status":"complete","tokens":69416,"usage":{"cache_read":55501,"cache_write":0,"input":7515,"output":6400,"total":69416}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":4},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":19347,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":68.86062431987375,"status":"complete","tokens":69111,"transient_provider_failures":null}],"candidates":[{"candidate_id":"a92daf585bafa5ea1cd52e0b1d8db2bd876dc0ec7c57793e4e8380fae50c27b4","category":"regression","file":"src/render/page_cache.py","line":12,"persona":"senior-dev","problem":"Removing currency from the key reuses pricing pages across different billing currencies.","reason":"pricing_page explicitly permits an account-selected billing currency independently of locale. After a page is cached for one currency, another request with the same template and locale but a different billing currency returns that cached page without rendering the requested currency. Keep currency in the cache key to preserve this supported behavior.","side":"RIGHT"},{"candidate_id":"9c987da6a899f655b1b40d1fa9710bcd1d58842cc023aa2c828e6dd3e6d4c7d7","category":"regression","file":"src/render/page_cache.py","line":12,"persona":"junior-dev","problem":"Removing currency from the cache key returns pricing pages in the wrong billing currency.","reason":"The pricing-page caller explicitly supports an account-selected billing currency independently of locale. Two requests with the same locale but different billing currencies now share a cache entry, so the second request receives the first request's rendered page without rendering its selected currency. Keep currency in the key to preserve this supported usage.","side":"RIGHT"},{"candidate_id":"790d1d0f6dedaecfaa0d7ec7b5656f509c1560a1e241c056df2d0a31f47d4755","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"security","problem":"Removing currency from the cache key returns pricing pages rendered for a different billing currency.","reason":"The pricing_page caller explicitly allows billing_currency to override the locale's default currency. Two requests with the same locale but different billing currencies now share a cache entry, so the second request receives the first request's rendered page without invoking the renderer with its requested currency. Keep currency in the cache key.","side":"RIGHT"},{"candidate_id":"4b3758bdaa199e53bf8de4ae908ccb29b3a33bd9ce44e264f6d0f3d0e066f6d9","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"devops","problem":"Omitting currency from the cache key returns pricing rendered for another billing currency.","reason":"pricing_page explicitly supports account-selected billing currencies independently of locale. Two requests with the same locale but different billing currencies now share an entry, so the second request receives the first request's rendered page. Preserve currency in the cache key.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":null,"discussion_rounds":[],"discussion_trace_available":false,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{"4b3758bdaa199e53bf8de4ae908ccb29b3a33bd9ce44e264f6d0f3d0e066f6d9":"supported","790d1d0f6dedaecfaa0d7ec7b5656f509c1560a1e241c056df2d0a31f47d4755":"supported","9c987da6a899f655b1b40d1fa9710bcd1d58842cc023aa2c828e6dd3e6d4c7d7":"supported","a92daf585bafa5ea1cd52e0b1d8db2bd876dc0ec7c57793e4e8380fae50c27b4":"supported"},"latency_seconds":68.86062431987375,"panel_reason":"converged","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-08/assessed/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12393},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12461},{"persona":"security","reason":"done","status":"complete","tokens":12468},{"persona":"devops","reason":"done","status":"complete","tokens":12442}],"status":"complete","tokens":69111,"usage":{"cache_read":55409,"cache_write":0,"input":7469,"output":6233,"total":69111}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":4},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":19582,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":69.66453416994773,"status":"complete","tokens":69476,"transient_provider_failures":null}],"candidates":[{"candidate_id":"6736ec5981019883d4df0b81aadde013b3a913a424f8313a02f1d1aaa71348da","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"senior-dev","problem":"Retain currency in the cache key for account-specific pricing pages","reason":"The pricing-page caller explicitly supports a billing currency that overrides the locale default. If an en-GB account first requests GBP pricing, a subsequent en-GB account requesting USD receives the cached GBP page because both requests now share the same key. The cache does not validate that currencies match or invoke the renderer again on this hit. Include currency in the key to preserve the supported account override.","side":"RIGHT"},{"candidate_id":"d5d1ca8107bb8453ffa7c9a97fe196ab63d2abffff482bea33a092b97a030ea4","category":"regression","file":"src/render/page_cache.py","line":12,"persona":"junior-dev","problem":"Removing currency from the cache key returns pricing pages in the wrong billing currency.","reason":"The pricing-page caller explicitly supports an account-selected billing currency independent of locale. With the new key, two requests for the same template and locale but different currencies collide, so the second request receives the first request's rendered page without invoking the renderer for its requested currency. Keep currency in the cache key to preserve this supported usage.","side":"RIGHT"},{"candidate_id":"ea38f95f381f5f2d0f8fc3b68861c5941c9d9be833d1ae79eaaf79811b559701","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"security","problem":"Removing currency from the cache key mixes pricing pages for different billing currencies.","reason":"pricing_page explicitly allows an account's billing_currency to override its locale's default, so locale does not uniquely determine currency. Once one currency populates the cache, a request for another currency with the same template and locale returns that cached page without rendering the requested currency. Keep currency in the key to preserve the supported account override.","side":"RIGHT"},{"candidate_id":"90e7afd8fe8b8340e35943dad520fea47d5111dace8b6f90bedb06e43d3a9255","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"devops","problem":"Keep currency in the cache key for account-specific pricing pages","reason":"The pricing view explicitly supports a billing_currency override independent of locale. When two requests share a cache, template and locale but select different currencies, the second request receives the first request's rendered page. Retain currency in the key so changing an account's billing currency or serving another account does not reuse pricing in the wrong currency.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":"undisputed","discussion_rounds":[],"discussion_trace_available":true,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{"6736ec5981019883d4df0b81aadde013b3a913a424f8313a02f1d1aaa71348da":"supported","90e7afd8fe8b8340e35943dad520fea47d5111dace8b6f90bedb06e43d3a9255":"supported","d5d1ca8107bb8453ffa7c9a97fe196ab63d2abffff482bea33a092b97a030ea4":"supported","ea38f95f381f5f2d0f8fc3b68861c5941c9d9be833d1ae79eaaf79811b559701":"supported"},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{"6736ec5981019883d4df0b81aadde013b3a913a424f8313a02f1d1aaa71348da":"supported","90e7afd8fe8b8340e35943dad520fea47d5111dace8b6f90bedb06e43d3a9255":"supported","d5d1ca8107bb8453ffa7c9a97fe196ab63d2abffff482bea33a092b97a030ea4":"supported","ea38f95f381f5f2d0f8fc3b68861c5941c9d9be833d1ae79eaaf79811b559701":"supported"},"latency_seconds":69.66453416994773,"panel_reason":"undisputed","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-08/focused1/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12442},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12477},{"persona":"security","reason":"done","status":"complete","tokens":12491},{"persona":"devops","reason":"done","status":"complete","tokens":12484}],"status":"complete","tokens":69476,"usage":{"cache_read":55553,"cache_write":0,"input":7541,"output":6382,"total":69476}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":4},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":19437,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":69.85064327786677,"status":"complete","tokens":69238,"transient_provider_failures":null}],"candidates":[{"candidate_id":"fa22a22e675789d4177afee4535be4b632e43a18996e77174339d83356505ff1","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"senior-dev","problem":"Keep billing currency in the cache key","reason":"The pricing-page caller allows an account's billing currency to override its locale's default. Removing currency from the key makes requests for the same template and locale reuse the first rendered currency, even when the caller explicitly requests another currency. Restore currency in the key so these supported requests remain distinct.","side":"RIGHT"},{"candidate_id":"6b116733c99ae676e7af9e98068cdebbffbfd190db70ddd7a3845c26efaabde4","category":"regression","file":"src/render/page_cache.py","line":12,"persona":"junior-dev","problem":"Dropping currency from the cache key returns pricing pages in the wrong billing currency.","reason":"The pricing-page caller explicitly supports an account-selected billing currency independently of locale. For example, after caching the default USD pricing page for en-US, an en-US account selecting EUR receives that same USD page because both requests now share a key. The locale-to-currency mapping is only a fallback, not a restriction on account settings. Retain currency in the key so supported billing-currency overrides remain isolated.","side":"RIGHT"},{"candidate_id":"2dd11133866db59ff561a3cd4d433327d363b1694c4edfc735e30f949fe59aaf","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"security","problem":"Dropping currency from the cache key reuses pages rendered for a different billing currency.","reason":"The pricing-page caller explicitly supports a billing currency that overrides the locale default. For example, requests with locale en-GB and currencies GBP and USD now share one cache entry. The second request returns the first rendered page without invoking the renderer with the requested currency. Keep currency in the key to preserve these distinct render inputs.","side":"RIGHT"},{"candidate_id":"66077c045ac45261eb894e1153606c95ec890f1567a5ef99f356ab1fe2434c85","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"devops","problem":"Removing currency from the cache key returns pricing pages rendered for a different billing currency.","reason":"The pricing view explicitly supports account-selected billing currencies independently of locale. After one page is cached, another request with the same template and locale but a different currency reuses that page without rendering the requested currency. Keep currency in the key; clearing the cache only resets which currency populates the shared entry first.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":"undisputed","discussion_rounds":[],"discussion_trace_available":true,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{"2dd11133866db59ff561a3cd4d433327d363b1694c4edfc735e30f949fe59aaf":"supported","66077c045ac45261eb894e1153606c95ec890f1567a5ef99f356ab1fe2434c85":"supported","6b116733c99ae676e7af9e98068cdebbffbfd190db70ddd7a3845c26efaabde4":"supported","fa22a22e675789d4177afee4535be4b632e43a18996e77174339d83356505ff1":"supported"},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{"2dd11133866db59ff561a3cd4d433327d363b1694c4edfc735e30f949fe59aaf":"supported","66077c045ac45261eb894e1153606c95ec890f1567a5ef99f356ab1fe2434c85":"supported","6b116733c99ae676e7af9e98068cdebbffbfd190db70ddd7a3845c26efaabde4":"supported","fa22a22e675789d4177afee4535be4b632e43a18996e77174339d83356505ff1":"supported"},"latency_seconds":69.85064327786677,"panel_reason":"undisputed","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-08/focused1/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12421},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12484},{"persona":"security","reason":"done","status":"complete","tokens":12433},{"persona":"devops","reason":"done","status":"complete","tokens":12463}],"status":"complete","tokens":69238,"usage":{"cache_read":55487,"cache_write":0,"input":7508,"output":6243,"total":69238}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":4},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":19549,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":73.43064792198129,"status":"complete","tokens":69347,"transient_provider_failures":null}],"candidates":[{"candidate_id":"4967611e0c4ff6ec1ebb1ba049283bd8908a7e3c7058038b93b61f51195f42e0","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"senior-dev","problem":"Removing currency from the cache key reuses pricing pages across billing currencies.","reason":"The pricing_page caller explicitly supports an account-selected billing currency independent of locale. If an en-GB account first caches a GBP pricing page, a subsequent en-GB account requesting USD receives that cached GBP page without invoking the renderer. Keep currency in the key so supported billing-currency overrides do not collide.","side":"RIGHT"},{"candidate_id":"bc0f35328039aed67bd39721132f84f795594443f614467cc8a71364c326e447","category":"regression","file":"src/render/page_cache.py","line":12,"persona":"junior-dev","problem":"Removing currency from the cache key returns pricing pages in the wrong billing currency.","reason":"The pricing-page caller explicitly supports an account-selected billing currency independent of locale. When two requests share a template and locale but use different currencies, the second request now receives the first request's cached rendering. The locale-based default does not prevent this because billing_currency overrides it. Preserve currency in the cache key.","side":"RIGHT"},{"candidate_id":"5f1297c153d11ef8b42bd31a44fcd6d52caee00466a5ec4e9f7e768470ba8607","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"security","problem":"Dropping currency from the cache key returns pages rendered for a different billing currency.","reason":"pricing_page explicitly supports an account-selected billing currency independently of locale. After a page is cached for one currency, a request with the same template and locale but another currency returns that cached page without rendering again. Keep currency in the key to preserve these distinct outputs.","side":"RIGHT"},{"candidate_id":"fc750ce5cb6d0ccd9bd9779a0512d3dd7959a976c2f0d9611a05c833904853f2","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"devops","problem":"Removing currency from the cache key mixes pricing pages for different billing currencies.","reason":"pricing_page explicitly supports an account-selected billing currency independently of locale. When two requests share a cache, template and locale but use different currencies, the second request now receives the first request's rendered page without invoking the renderer. Keep currency in the key so supported billing-currency overrides do not reuse incompatible pricing output. Clearing the cache only resets which currency wins the next cache fill; it does not prevent the collision.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":"undisputed","discussion_rounds":[],"discussion_trace_available":true,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{"4967611e0c4ff6ec1ebb1ba049283bd8908a7e3c7058038b93b61f51195f42e0":"supported","5f1297c153d11ef8b42bd31a44fcd6d52caee00466a5ec4e9f7e768470ba8607":"supported","bc0f35328039aed67bd39721132f84f795594443f614467cc8a71364c326e447":"supported","fc750ce5cb6d0ccd9bd9779a0512d3dd7959a976c2f0d9611a05c833904853f2":"supported"},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{"4967611e0c4ff6ec1ebb1ba049283bd8908a7e3c7058038b93b61f51195f42e0":"supported","5f1297c153d11ef8b42bd31a44fcd6d52caee00466a5ec4e9f7e768470ba8607":"supported","bc0f35328039aed67bd39721132f84f795594443f614467cc8a71364c326e447":"supported","fc750ce5cb6d0ccd9bd9779a0512d3dd7959a976c2f0d9611a05c833904853f2":"supported"},"latency_seconds":73.43064792198129,"panel_reason":"undisputed","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-08/focused1/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12428},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12467},{"persona":"security","reason":"done","status":"complete","tokens":12446},{"persona":"devops","reason":"done","status":"complete","tokens":12457}],"status":"complete","tokens":69347,"usage":{"cache_read":55507,"cache_write":0,"input":7518,"output":6322,"total":69347}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":4},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":19585,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":65.88678808882833,"status":"complete","tokens":69405,"transient_provider_failures":null}],"candidates":[{"candidate_id":"6a15fc65308914f4b351ee6753f898977dadc8602dd96d7ad571e19793c9671f","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"senior-dev","problem":"Keep billing currency in the page cache key","reason":"The pricing-page caller explicitly allows an account's billing currency to override its locale's default currency. After an en-GB pricing request caches a GBP page, an en-GB request with billing_currency='USD' now hits the same entry and receives the GBP render without invoking the renderer for USD. Locale therefore does not uniquely identify the rendered page; retain currency in the key to avoid returning another currency's pricing page.","side":"RIGHT"},{"candidate_id":"1314f5164f3d2b3a7b84048c67295f1832a3c2abb21d964cbeff16e25e3adc0e","category":"regression","file":"src/render/page_cache.py","line":12,"persona":"junior-dev","problem":"Dropping currency from the cache key returns pricing pages in the wrong billing currency.","reason":"The pricing-page caller explicitly supports account-selected billing currencies independently of locale. If two requests share a template and locale but select different currencies, the second now reuses the first rendered page instead of rendering its requested currency. Keep currency in the cache key to preserve this supported usage.","side":"RIGHT"},{"candidate_id":"70cd8b9194aae136718e1a232ca17654fa6507525e38b681ec258aaa88020e37","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"security","problem":"Removing currency from the cache key returns pricing pages rendered for a different billing currency.","reason":"The pricing-page caller explicitly supports an account-selected billing currency independent of locale. When two calls share a template and locale but request different currencies, the second call now returns the first cached rendering without invoking the renderer. Keep currency in the key so account currency preferences remain respected.","side":"RIGHT"},{"candidate_id":"814b4e30aee866a28b2473165ef91f05c3fae9cd8a29879ddc7cc7b535b3c5e2","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"devops","problem":"Keep currency in the cache key for account-specific pricing","reason":"The pricing_page caller supports a billing_currency override, so locale does not uniquely determine currency. When accounts with the same locale but different billing currencies share a cache, the second request receives the page rendered for the first currency. Retain currency in the key so supported account settings cannot collide.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":"undisputed","discussion_rounds":[],"discussion_trace_available":true,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{"1314f5164f3d2b3a7b84048c67295f1832a3c2abb21d964cbeff16e25e3adc0e":"supported","6a15fc65308914f4b351ee6753f898977dadc8602dd96d7ad571e19793c9671f":"supported","70cd8b9194aae136718e1a232ca17654fa6507525e38b681ec258aaa88020e37":"supported","814b4e30aee866a28b2473165ef91f05c3fae9cd8a29879ddc7cc7b535b3c5e2":"supported"},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{"1314f5164f3d2b3a7b84048c67295f1832a3c2abb21d964cbeff16e25e3adc0e":"supported","6a15fc65308914f4b351ee6753f898977dadc8602dd96d7ad571e19793c9671f":"supported","70cd8b9194aae136718e1a232ca17654fa6507525e38b681ec258aaa88020e37":"supported","814b4e30aee866a28b2473165ef91f05c3fae9cd8a29879ddc7cc7b535b3c5e2":"supported"},"latency_seconds":65.88678808882833,"panel_reason":"undisputed","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-08/focused3/1","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12466},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12484},{"persona":"security","reason":"done","status":"complete","tokens":12429},{"persona":"devops","reason":"done","status":"complete","tokens":12441}],"status":"complete","tokens":69405,"usage":{"cache_read":55559,"cache_write":0,"input":7544,"output":6302,"total":69405}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":4},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":20091,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":79.59065973618999,"status":"failed","tokens":91856,"transient_provider_failures":null}],"candidates":[{"candidate_id":"6b011bebfa57e978894bc4c90d30060959b6d4fd77f734d589db349c2b8d46de","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"senior-dev","problem":"Omitting currency from the cache key returns pricing pages rendered for a different billing currency.","reason":"The pricing_page caller explicitly supports an account-selected billing currency independently of locale. If an en-GB request first caches a GBP page, a subsequent en-GB request with billing_currency='USD' hits the same key and receives the GBP rendering without invoking the renderer for USD. Retain currency in the key so these supported requests remain distinct.","side":"RIGHT"},{"candidate_id":"7efe7e0791fe534722ca441fd2f29f4417060e5f53359f8ac4a4078318c01a09","category":"regression","file":"src/render/page_cache.py","line":12,"persona":"junior-dev","problem":"Removing currency from the cache key returns the wrong billing-currency page.","reason":"The pricing view explicitly supports an account-selected billing currency independently of locale. If a shared cache first serves an en-GB account using GBP and then an en-GB account selecting USD, both requests now use the same key. The second request receives the GBP rendering without invoking the renderer for USD. Retain currency in the key to preserve the documented account override.","side":"RIGHT"},{"candidate_id":"05a993a8c7e1d8cbb43a169a47597e21ec46f931166d7f090a56f35129b358d0","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"security","problem":"Removing currency from the cache key reuses pricing pages across different billing currencies.","reason":"The pricing caller explicitly supports an account-selected billing currency independent of locale. Two calls with the same template and locale but different currencies now share an entry, so the second call returns the first currency's rendered page without invoking the renderer. Keep currency in the key to preserve these distinct results.","side":"RIGHT"},{"candidate_id":"71c3b8d233cf6965723d652a4a445f53f67cfb225966db7aa7be45c5ebde6a03","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"devops","problem":"Removing currency from the cache key reuses pricing pages across different billing currencies.","reason":"The pricing-page caller explicitly supports an account-selected billing currency independent of locale. When the same cache receives two pricing requests with the same locale but different currencies, the second request returns the first currency's rendered page without invoking the renderer. Retain currency in the key; clearing the cache only temporarily resets which currency wins.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":1,"discussion_completed_rounds":0,"discussion_reason":"perspectives_incomplete","discussion_rounds":[{"positions":4,"proposals":{},"tokens":21863}],"discussion_trace_available":true,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{"05a993a8c7e1d8cbb43a169a47597e21ec46f931166d7f090a56f35129b358d0":"supported","6b011bebfa57e978894bc4c90d30060959b6d4fd77f734d589db349c2b8d46de":"supported","71c3b8d233cf6965723d652a4a445f53f67cfb225966db7aa7be45c5ebde6a03":"supported","7efe7e0791fe534722ca441fd2f29f4417060e5f53359f8ac4a4078318c01a09":"supported"},"finding_validation_errors":[],"findings":0,"first_attempt_status":"failed","initial_dispositions":{"05a993a8c7e1d8cbb43a169a47597e21ec46f931166d7f090a56f35129b358d0":"supported","6b011bebfa57e978894bc4c90d30060959b6d4fd77f734d589db349c2b8d46de":"supported","71c3b8d233cf6965723d652a4a445f53f67cfb225966db7aa7be45c5ebde6a03":"supported","7efe7e0791fe534722ca441fd2f29f4417060e5f53359f8ac4a4078318c01a09":"supported"},"latency_seconds":79.59065973618999,"panel_reason":"perspectives_incomplete","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-08/focused3/2","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12432},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12478},{"persona":"security","reason":"done","status":"complete","tokens":12503},{"persona":"devops","reason":"done","status":"complete","tokens":12489}],"status":"failed","tokens":91856,"usage":{"cache_read":55559,"cache_write":0,"input":29331,"output":6966,"total":91856}},{"accounting_complete":true,"analysis_rules":null,"analysis_status":null,"assessment_dispositions":{"supported":4},"assessment_status":"complete","assessor_actual":true,"assessor_allocation":30000,"assessor_complete":true,"assessor_reason":"done","assessor_tokens":19649,"attempts":[{"accounting_complete":true,"attempt":1,"latency_seconds":70.36592431087047,"status":"complete","tokens":69570,"transient_provider_failures":null}],"candidates":[{"candidate_id":"0dd97dc6b916317845c6403dbfd5279a0b6b987687f2ab7f5bd49bba9cc9d60b","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"senior-dev","problem":"Dropping currency from the cache key mixes pricing pages for different billing currencies.","reason":"pricing_page explicitly supports an account-selected billing currency independently of locale. After an en-GB pricing page is cached for GBP, an en-GB account selecting USD hits the same cache entry and receives the GBP rendering without invoking the renderer for USD. Retain currency in the key so supported account preferences remain distinct.","side":"RIGHT"},{"candidate_id":"058870a235d271b8a4c156e69d2af84e04fe83c54543686b287ce4dcd558a7dd","category":"regression","file":"src/render/page_cache.py","line":12,"persona":"junior-dev","problem":"Removing currency from the cache key returns pricing pages in the wrong billing currency.","reason":"The pricing-page caller explicitly supports an account-selected billing currency, using the locale currency only as a fallback. Two requests with the same locale can therefore legitimately require different currencies. The new key makes the second request reuse the first rendered page without invoking the renderer with the requested currency. Retain currency in the cache key to preserve this supported behavior.","side":"RIGHT"},{"candidate_id":"68290a587b62e7992729cc8dfaa0c9ef5cc28ce71335078372c2f21de1b56b25","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"security","problem":"Removing currency from the cache key returns the wrong currency-specific pricing page.","reason":"The pricing-page caller allows an account's billing currency to override its locale's default, so locale does not uniquely determine currency. If the same cache handles two en-GB accounts requesting GBP and USD, the second request returns the first request's rendered page without invoking the renderer with the second currency. Keep currency in the cache key to preserve these distinct render inputs.","side":"RIGHT"},{"candidate_id":"23b7f05c858eae0cfec154494ac88f8b5f5a792782008026402463317e65a07b","category":"correctness","file":"src/render/page_cache.py","line":12,"persona":"devops","problem":"Preserve billing currency in the page cache key","reason":"pricing_page explicitly supports an account-selected billing currency independently of locale. When two calls share a cache and locale but request different currencies, the new key returns the first currency's rendered page for both. Keep currency in the key so account overrides cannot collide with locale defaults or other overrides.","side":"RIGHT"}],"citation_refusals":[],"discovery_findings":4,"discussion_attempted_rounds":0,"discussion_completed_rounds":0,"discussion_reason":"undisputed","discussion_rounds":[],"discussion_trace_available":true,"effective_personas":["senior-dev","junior-dev","security","devops"],"error":null,"final_dispositions":{"058870a235d271b8a4c156e69d2af84e04fe83c54543686b287ce4dcd558a7dd":"supported","0dd97dc6b916317845c6403dbfd5279a0b6b987687f2ab7f5bd49bba9cc9d60b":"supported","23b7f05c858eae0cfec154494ac88f8b5f5a792782008026402463317e65a07b":"supported","68290a587b62e7992729cc8dfaa0c9ef5cc28ce71335078372c2f21de1b56b25":"supported"},"finding_validation_errors":[],"findings":4,"first_attempt_status":"complete","initial_dispositions":{"058870a235d271b8a4c156e69d2af84e04fe83c54543686b287ce4dcd558a7dd":"supported","0dd97dc6b916317845c6403dbfd5279a0b6b987687f2ab7f5bd49bba9cc9d60b":"supported","23b7f05c858eae0cfec154494ac88f8b5f5a792782008026402463317e65a07b":"supported","68290a587b62e7992729cc8dfaa0c9ef5cc28ce71335078372c2f21de1b56b25":"supported"},"latency_seconds":70.36592431087047,"panel_reason":"undisputed","retry_denied":null,"retry_tokens":0,"routing_activated":[],"run_id":"dev3-08/focused3/3","session_statuses":[{"persona":"senior-dev","reason":"done","status":"complete","tokens":12422},{"persona":"junior-dev","reason":"done","status":"complete","tokens":12486},{"persona":"security","reason":"done","status":"complete","tokens":12560},{"persona":"devops","reason":"done","status":"complete","tokens":12453}],"status":"complete","tokens":69570,"usage":{"cache_read":55567,"cache_write":0,"input":7548,"output":6455,"total":69570}}],"cells_needing_rerun":0,"discussion_attempted_rounds":1,"discussion_completed_rounds":0,"experiment_sha256":"801eb8e57f87b7fb6de25de399453cfc1b3dd160efadb45fda70b02b154c9078","experiment_status":"complete","first_attempt_status_counts":{"complete":11,"failed":1},"gate_sha256":"02142bed84a87f2901105d1bf447be0a326f98b8e828a92df018a1f7fa1a79b9","holdout_used":false,"qualification":"not_qualified","rerun_attempts":0,"schema_version":2,"semantic_qualification":false,"status_counts":{"complete":11,"failed":1},"tests":{"all_attempts_within_ceiling":true,"all_runs_complete_and_accounted":false,"experiment_terminal":true,"matrix_exact":true,"retries_within_declared_policy":true},"transient_http_statuses":{}}
+{
+ "actual_human_judgments": 0,
+ "cells": [
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 27.79649139009416,
+     "status": "complete",
+     "tokens": 49847,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 27.79649139009416,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-08/aggregate/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12436
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12476
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12482
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12453
+    }
+   ],
+   "status": "complete",
+   "tokens": 49847,
+   "usage": {
+    "cache_read": 44381,
+    "cache_write": 0,
+    "input": 1452,
+    "output": 4014,
+    "total": 49847
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 27.920665374025702,
+     "status": "complete",
+     "tokens": 49851,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 27.920665374025702,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-08/aggregate/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12419
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12473
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12499
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12460
+    }
+   ],
+   "status": "complete",
+   "tokens": 49851,
+   "usage": {
+    "cache_read": 42043,
+    "cache_write": 0,
+    "input": 3790,
+    "output": 4018,
+    "total": 49851
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 28.30286647309549,
+     "status": "complete",
+     "tokens": 49785,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 28.30286647309549,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-08/aggregate/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12449
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12461
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12430
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12445
+    }
+   ],
+   "status": "complete",
+   "tokens": 49785,
+   "usage": {
+    "cache_read": 33119,
+    "cache_write": 0,
+    "input": 12714,
+    "output": 3952,
+    "total": 49785
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 19463,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 72.53371931286529,
+     "status": "complete",
+     "tokens": 69257,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "fdfa03152fcb7f7b4e7e5f0a9f4dbb23fa79f59e9b1e319d858c4922e2077214",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "senior-dev",
+     "problem": "Removing currency from the cache key returns pricing pages in the wrong billing currency.",
+     "reason": "pricing_page explicitly supports an account-selected billing currency independently of locale. After a GBP pricing page is cached for en-GB, an en-GB account selecting USD hits the same entry and receives the GBP page without invoking the renderer with USD. Keep currency in the key to preserve the caller's supported currency override.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "2a2474f1e22000a1eb85f43a94301b944b13b48cdb468ecd07cf3dc31406e5b1",
+     "category": "regression",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "junior-dev",
+     "problem": "Removing currency from the cache key returns pricing pages in the wrong billing currency.",
+     "reason": "The pricing-page caller explicitly supports an account-selected billing currency independently of locale. Requests for the same template and locale but different currencies now share an entry, so the second request receives the first currency's rendered page. Keep currency in the key to preserve this supported behavior.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "9cefbda7afc9d60ab4bde4d6497785fbf68d1c177406d2b454bde59a1247db4a",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "security",
+     "problem": "Removing currency from the cache key returns pricing pages in the wrong currency.",
+     "reason": "The pricing-page caller explicitly supports a billing currency that differs from the locale default. Two requests with the same template and locale but different billing currencies now share a cache entry, so the second request receives the first request's rendered page without invoking the renderer with its requested currency. Keep currency in the cache key.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "9dc4c22fb39b826f88657f6c98339012dea9b024297d5a043bec5a137ffcd3d7",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "devops",
+     "problem": "Removing currency from the cache key returns pricing pages in the wrong billing currency.",
+     "reason": "The pricing view explicitly supports an account-selected billing currency independent of locale. After a page is cached, another request with the same template and locale but a different billing currency receives the first rendered page without invoking the renderer. Keep currency in the key so supported account preferences remain distinct.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "2a2474f1e22000a1eb85f43a94301b944b13b48cdb468ecd07cf3dc31406e5b1": "supported",
+    "9cefbda7afc9d60ab4bde4d6497785fbf68d1c177406d2b454bde59a1247db4a": "supported",
+    "9dc4c22fb39b826f88657f6c98339012dea9b024297d5a043bec5a137ffcd3d7": "supported",
+    "fdfa03152fcb7f7b4e7e5f0a9f4dbb23fa79f59e9b1e319d858c4922e2077214": "supported"
+   },
+   "latency_seconds": 72.53371931286529,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-08/assessed/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12410
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12463
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12468
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12453
+    }
+   ],
+   "status": "complete",
+   "tokens": 69257,
+   "usage": {
+    "cache_read": 55411,
+    "cache_write": 0,
+    "input": 7470,
+    "output": 6376,
+    "total": 69257
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 19568,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 73.9127464320045,
+     "status": "complete",
+     "tokens": 69416,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "14774660164e2a7525d831ed94f9d9aa966527893c32305312048fe5459dc4c8",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "senior-dev",
+     "problem": "Removing currency from the cache key returns pages rendered for a different billing currency.",
+     "reason": "The pricing-page caller explicitly supports an account-selected billing currency independent of locale. After a page is cached for one currency, a request for the same template and locale with another currency returns the existing page without invoking the renderer. Keep currency in the key so account billing preferences do not collide.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "4bdca3e8a40211e13ad11c061332d808fc4715c75c978dca7206b492b9b45455",
+     "category": "regression",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "junior-dev",
+     "problem": "Dropping currency from the cache key returns pricing pages in the wrong billing currency.",
+     "reason": "The pricing caller explicitly supports an account-selected billing currency, using the locale's currency only as a fallback. For example, requests for en-GB with GBP and then en-GB with USD now share a cache entry, so the second request receives the GBP rendering without invoking the renderer for USD. Keep currency in the key to preserve this supported account setting.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "17d24180dad4c4dde8bdebbf89b35f4d928e4d27c2b3aa96ade23a4323b56180",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "security",
+     "problem": "Removing currency from the cache key returns pricing pages in the wrong billing currency.",
+     "reason": "The pricing-page caller explicitly supports a billing currency selected independently of locale. For example, after caching an en-GB pricing page in GBP, a request for the same locale with billing_currency=\"USD\" returns the cached GBP page without rendering the USD variant. Keep currency in the key to distinguish these supported requests.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "c3e1d9580ca308c5c820ff9cdfc80ad47837608486b25305a1f95981c31c40fb",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "devops",
+     "problem": "Keep billing currency in the rendered-page cache key",
+     "reason": "The pricing view explicitly supports an account-selected billing currency independently of locale. Removing currency from the key makes requests for the same template and locale reuse the first currency's rendered page. For example, an en-GB account switching from GBP to USD still receives the cached GBP page. Retain currency in the key so these supported variants remain distinct.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "14774660164e2a7525d831ed94f9d9aa966527893c32305312048fe5459dc4c8": "supported",
+    "17d24180dad4c4dde8bdebbf89b35f4d928e4d27c2b3aa96ade23a4323b56180": "supported",
+    "4bdca3e8a40211e13ad11c061332d808fc4715c75c978dca7206b492b9b45455": "supported",
+    "c3e1d9580ca308c5c820ff9cdfc80ad47837608486b25305a1f95981c31c40fb": "supported"
+   },
+   "latency_seconds": 73.9127464320045,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-08/assessed/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12411
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12476
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12489
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12472
+    }
+   ],
+   "status": "complete",
+   "tokens": 69416,
+   "usage": {
+    "cache_read": 55501,
+    "cache_write": 0,
+    "input": 7515,
+    "output": 6400,
+    "total": 69416
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 19347,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 68.86062431987375,
+     "status": "complete",
+     "tokens": 69111,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "a92daf585bafa5ea1cd52e0b1d8db2bd876dc0ec7c57793e4e8380fae50c27b4",
+     "category": "regression",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "senior-dev",
+     "problem": "Removing currency from the key reuses pricing pages across different billing currencies.",
+     "reason": "pricing_page explicitly permits an account-selected billing currency independently of locale. After a page is cached for one currency, another request with the same template and locale but a different billing currency returns that cached page without rendering the requested currency. Keep currency in the cache key to preserve this supported behavior.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "9c987da6a899f655b1b40d1fa9710bcd1d58842cc023aa2c828e6dd3e6d4c7d7",
+     "category": "regression",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "junior-dev",
+     "problem": "Removing currency from the cache key returns pricing pages in the wrong billing currency.",
+     "reason": "The pricing-page caller explicitly supports an account-selected billing currency independently of locale. Two requests with the same locale but different billing currencies now share a cache entry, so the second request receives the first request's rendered page without rendering its selected currency. Keep currency in the key to preserve this supported usage.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "790d1d0f6dedaecfaa0d7ec7b5656f509c1560a1e241c056df2d0a31f47d4755",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "security",
+     "problem": "Removing currency from the cache key returns pricing pages rendered for a different billing currency.",
+     "reason": "The pricing_page caller explicitly allows billing_currency to override the locale's default currency. Two requests with the same locale but different billing currencies now share a cache entry, so the second request receives the first request's rendered page without invoking the renderer with its requested currency. Keep currency in the cache key.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "4b3758bdaa199e53bf8de4ae908ccb29b3a33bd9ce44e264f6d0f3d0e066f6d9",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "devops",
+     "problem": "Omitting currency from the cache key returns pricing rendered for another billing currency.",
+     "reason": "pricing_page explicitly supports account-selected billing currencies independently of locale. Two requests with the same locale but different billing currencies now share an entry, so the second request receives the first request's rendered page. Preserve currency in the cache key.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "4b3758bdaa199e53bf8de4ae908ccb29b3a33bd9ce44e264f6d0f3d0e066f6d9": "supported",
+    "790d1d0f6dedaecfaa0d7ec7b5656f509c1560a1e241c056df2d0a31f47d4755": "supported",
+    "9c987da6a899f655b1b40d1fa9710bcd1d58842cc023aa2c828e6dd3e6d4c7d7": "supported",
+    "a92daf585bafa5ea1cd52e0b1d8db2bd876dc0ec7c57793e4e8380fae50c27b4": "supported"
+   },
+   "latency_seconds": 68.86062431987375,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-08/assessed/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12393
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12461
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12468
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12442
+    }
+   ],
+   "status": "complete",
+   "tokens": 69111,
+   "usage": {
+    "cache_read": 55409,
+    "cache_write": 0,
+    "input": 7469,
+    "output": 6233,
+    "total": 69111
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 19582,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 69.66453416994773,
+     "status": "complete",
+     "tokens": 69476,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "6736ec5981019883d4df0b81aadde013b3a913a424f8313a02f1d1aaa71348da",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "senior-dev",
+     "problem": "Retain currency in the cache key for account-specific pricing pages",
+     "reason": "The pricing-page caller explicitly supports a billing currency that overrides the locale default. If an en-GB account first requests GBP pricing, a subsequent en-GB account requesting USD receives the cached GBP page because both requests now share the same key. The cache does not validate that currencies match or invoke the renderer again on this hit. Include currency in the key to preserve the supported account override.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "d5d1ca8107bb8453ffa7c9a97fe196ab63d2abffff482bea33a092b97a030ea4",
+     "category": "regression",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "junior-dev",
+     "problem": "Removing currency from the cache key returns pricing pages in the wrong billing currency.",
+     "reason": "The pricing-page caller explicitly supports an account-selected billing currency independent of locale. With the new key, two requests for the same template and locale but different currencies collide, so the second request receives the first request's rendered page without invoking the renderer for its requested currency. Keep currency in the cache key to preserve this supported usage.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "ea38f95f381f5f2d0f8fc3b68861c5941c9d9be833d1ae79eaaf79811b559701",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "security",
+     "problem": "Removing currency from the cache key mixes pricing pages for different billing currencies.",
+     "reason": "pricing_page explicitly allows an account's billing_currency to override its locale's default, so locale does not uniquely determine currency. Once one currency populates the cache, a request for another currency with the same template and locale returns that cached page without rendering the requested currency. Keep currency in the key to preserve the supported account override.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "90e7afd8fe8b8340e35943dad520fea47d5111dace8b6f90bedb06e43d3a9255",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "devops",
+     "problem": "Keep currency in the cache key for account-specific pricing pages",
+     "reason": "The pricing view explicitly supports a billing_currency override independent of locale. When two requests share a cache, template and locale but select different currencies, the second request receives the first request's rendered page. Retain currency in the key so changing an account's billing currency or serving another account does not reuse pricing in the wrong currency.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "6736ec5981019883d4df0b81aadde013b3a913a424f8313a02f1d1aaa71348da": "supported",
+    "90e7afd8fe8b8340e35943dad520fea47d5111dace8b6f90bedb06e43d3a9255": "supported",
+    "d5d1ca8107bb8453ffa7c9a97fe196ab63d2abffff482bea33a092b97a030ea4": "supported",
+    "ea38f95f381f5f2d0f8fc3b68861c5941c9d9be833d1ae79eaaf79811b559701": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "6736ec5981019883d4df0b81aadde013b3a913a424f8313a02f1d1aaa71348da": "supported",
+    "90e7afd8fe8b8340e35943dad520fea47d5111dace8b6f90bedb06e43d3a9255": "supported",
+    "d5d1ca8107bb8453ffa7c9a97fe196ab63d2abffff482bea33a092b97a030ea4": "supported",
+    "ea38f95f381f5f2d0f8fc3b68861c5941c9d9be833d1ae79eaaf79811b559701": "supported"
+   },
+   "latency_seconds": 69.66453416994773,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-08/focused1/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12442
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12477
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12491
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12484
+    }
+   ],
+   "status": "complete",
+   "tokens": 69476,
+   "usage": {
+    "cache_read": 55553,
+    "cache_write": 0,
+    "input": 7541,
+    "output": 6382,
+    "total": 69476
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 19437,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 69.85064327786677,
+     "status": "complete",
+     "tokens": 69238,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "fa22a22e675789d4177afee4535be4b632e43a18996e77174339d83356505ff1",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "senior-dev",
+     "problem": "Keep billing currency in the cache key",
+     "reason": "The pricing-page caller allows an account's billing currency to override its locale's default. Removing currency from the key makes requests for the same template and locale reuse the first rendered currency, even when the caller explicitly requests another currency. Restore currency in the key so these supported requests remain distinct.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "6b116733c99ae676e7af9e98068cdebbffbfd190db70ddd7a3845c26efaabde4",
+     "category": "regression",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "junior-dev",
+     "problem": "Dropping currency from the cache key returns pricing pages in the wrong billing currency.",
+     "reason": "The pricing-page caller explicitly supports an account-selected billing currency independently of locale. For example, after caching the default USD pricing page for en-US, an en-US account selecting EUR receives that same USD page because both requests now share a key. The locale-to-currency mapping is only a fallback, not a restriction on account settings. Retain currency in the key so supported billing-currency overrides remain isolated.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "2dd11133866db59ff561a3cd4d433327d363b1694c4edfc735e30f949fe59aaf",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "security",
+     "problem": "Dropping currency from the cache key reuses pages rendered for a different billing currency.",
+     "reason": "The pricing-page caller explicitly supports a billing currency that overrides the locale default. For example, requests with locale en-GB and currencies GBP and USD now share one cache entry. The second request returns the first rendered page without invoking the renderer with the requested currency. Keep currency in the key to preserve these distinct render inputs.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "66077c045ac45261eb894e1153606c95ec890f1567a5ef99f356ab1fe2434c85",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "devops",
+     "problem": "Removing currency from the cache key returns pricing pages rendered for a different billing currency.",
+     "reason": "The pricing view explicitly supports account-selected billing currencies independently of locale. After one page is cached, another request with the same template and locale but a different currency reuses that page without rendering the requested currency. Keep currency in the key; clearing the cache only resets which currency populates the shared entry first.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "2dd11133866db59ff561a3cd4d433327d363b1694c4edfc735e30f949fe59aaf": "supported",
+    "66077c045ac45261eb894e1153606c95ec890f1567a5ef99f356ab1fe2434c85": "supported",
+    "6b116733c99ae676e7af9e98068cdebbffbfd190db70ddd7a3845c26efaabde4": "supported",
+    "fa22a22e675789d4177afee4535be4b632e43a18996e77174339d83356505ff1": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "2dd11133866db59ff561a3cd4d433327d363b1694c4edfc735e30f949fe59aaf": "supported",
+    "66077c045ac45261eb894e1153606c95ec890f1567a5ef99f356ab1fe2434c85": "supported",
+    "6b116733c99ae676e7af9e98068cdebbffbfd190db70ddd7a3845c26efaabde4": "supported",
+    "fa22a22e675789d4177afee4535be4b632e43a18996e77174339d83356505ff1": "supported"
+   },
+   "latency_seconds": 69.85064327786677,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-08/focused1/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12421
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12484
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12433
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12463
+    }
+   ],
+   "status": "complete",
+   "tokens": 69238,
+   "usage": {
+    "cache_read": 55487,
+    "cache_write": 0,
+    "input": 7508,
+    "output": 6243,
+    "total": 69238
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 19549,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 73.43064792198129,
+     "status": "complete",
+     "tokens": 69347,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "4967611e0c4ff6ec1ebb1ba049283bd8908a7e3c7058038b93b61f51195f42e0",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "senior-dev",
+     "problem": "Removing currency from the cache key reuses pricing pages across billing currencies.",
+     "reason": "The pricing_page caller explicitly supports an account-selected billing currency independent of locale. If an en-GB account first caches a GBP pricing page, a subsequent en-GB account requesting USD receives that cached GBP page without invoking the renderer. Keep currency in the key so supported billing-currency overrides do not collide.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "bc0f35328039aed67bd39721132f84f795594443f614467cc8a71364c326e447",
+     "category": "regression",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "junior-dev",
+     "problem": "Removing currency from the cache key returns pricing pages in the wrong billing currency.",
+     "reason": "The pricing-page caller explicitly supports an account-selected billing currency independent of locale. When two requests share a template and locale but use different currencies, the second request now receives the first request's cached rendering. The locale-based default does not prevent this because billing_currency overrides it. Preserve currency in the cache key.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "5f1297c153d11ef8b42bd31a44fcd6d52caee00466a5ec4e9f7e768470ba8607",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "security",
+     "problem": "Dropping currency from the cache key returns pages rendered for a different billing currency.",
+     "reason": "pricing_page explicitly supports an account-selected billing currency independently of locale. After a page is cached for one currency, a request with the same template and locale but another currency returns that cached page without rendering again. Keep currency in the key to preserve these distinct outputs.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "fc750ce5cb6d0ccd9bd9779a0512d3dd7959a976c2f0d9611a05c833904853f2",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "devops",
+     "problem": "Removing currency from the cache key mixes pricing pages for different billing currencies.",
+     "reason": "pricing_page explicitly supports an account-selected billing currency independently of locale. When two requests share a cache, template and locale but use different currencies, the second request now receives the first request's rendered page without invoking the renderer. Keep currency in the key so supported billing-currency overrides do not reuse incompatible pricing output. Clearing the cache only resets which currency wins the next cache fill; it does not prevent the collision.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "4967611e0c4ff6ec1ebb1ba049283bd8908a7e3c7058038b93b61f51195f42e0": "supported",
+    "5f1297c153d11ef8b42bd31a44fcd6d52caee00466a5ec4e9f7e768470ba8607": "supported",
+    "bc0f35328039aed67bd39721132f84f795594443f614467cc8a71364c326e447": "supported",
+    "fc750ce5cb6d0ccd9bd9779a0512d3dd7959a976c2f0d9611a05c833904853f2": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "4967611e0c4ff6ec1ebb1ba049283bd8908a7e3c7058038b93b61f51195f42e0": "supported",
+    "5f1297c153d11ef8b42bd31a44fcd6d52caee00466a5ec4e9f7e768470ba8607": "supported",
+    "bc0f35328039aed67bd39721132f84f795594443f614467cc8a71364c326e447": "supported",
+    "fc750ce5cb6d0ccd9bd9779a0512d3dd7959a976c2f0d9611a05c833904853f2": "supported"
+   },
+   "latency_seconds": 73.43064792198129,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-08/focused1/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12428
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12467
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12446
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12457
+    }
+   ],
+   "status": "complete",
+   "tokens": 69347,
+   "usage": {
+    "cache_read": 55507,
+    "cache_write": 0,
+    "input": 7518,
+    "output": 6322,
+    "total": 69347
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 19585,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 65.88678808882833,
+     "status": "complete",
+     "tokens": 69405,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "6a15fc65308914f4b351ee6753f898977dadc8602dd96d7ad571e19793c9671f",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "senior-dev",
+     "problem": "Keep billing currency in the page cache key",
+     "reason": "The pricing-page caller explicitly allows an account's billing currency to override its locale's default currency. After an en-GB pricing request caches a GBP page, an en-GB request with billing_currency='USD' now hits the same entry and receives the GBP render without invoking the renderer for USD. Locale therefore does not uniquely identify the rendered page; retain currency in the key to avoid returning another currency's pricing page.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "1314f5164f3d2b3a7b84048c67295f1832a3c2abb21d964cbeff16e25e3adc0e",
+     "category": "regression",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "junior-dev",
+     "problem": "Dropping currency from the cache key returns pricing pages in the wrong billing currency.",
+     "reason": "The pricing-page caller explicitly supports account-selected billing currencies independently of locale. If two requests share a template and locale but select different currencies, the second now reuses the first rendered page instead of rendering its requested currency. Keep currency in the cache key to preserve this supported usage.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "70cd8b9194aae136718e1a232ca17654fa6507525e38b681ec258aaa88020e37",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "security",
+     "problem": "Removing currency from the cache key returns pricing pages rendered for a different billing currency.",
+     "reason": "The pricing-page caller explicitly supports an account-selected billing currency independent of locale. When two calls share a template and locale but request different currencies, the second call now returns the first cached rendering without invoking the renderer. Keep currency in the key so account currency preferences remain respected.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "814b4e30aee866a28b2473165ef91f05c3fae9cd8a29879ddc7cc7b535b3c5e2",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "devops",
+     "problem": "Keep currency in the cache key for account-specific pricing",
+     "reason": "The pricing_page caller supports a billing_currency override, so locale does not uniquely determine currency. When accounts with the same locale but different billing currencies share a cache, the second request receives the page rendered for the first currency. Retain currency in the key so supported account settings cannot collide.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "1314f5164f3d2b3a7b84048c67295f1832a3c2abb21d964cbeff16e25e3adc0e": "supported",
+    "6a15fc65308914f4b351ee6753f898977dadc8602dd96d7ad571e19793c9671f": "supported",
+    "70cd8b9194aae136718e1a232ca17654fa6507525e38b681ec258aaa88020e37": "supported",
+    "814b4e30aee866a28b2473165ef91f05c3fae9cd8a29879ddc7cc7b535b3c5e2": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "1314f5164f3d2b3a7b84048c67295f1832a3c2abb21d964cbeff16e25e3adc0e": "supported",
+    "6a15fc65308914f4b351ee6753f898977dadc8602dd96d7ad571e19793c9671f": "supported",
+    "70cd8b9194aae136718e1a232ca17654fa6507525e38b681ec258aaa88020e37": "supported",
+    "814b4e30aee866a28b2473165ef91f05c3fae9cd8a29879ddc7cc7b535b3c5e2": "supported"
+   },
+   "latency_seconds": 65.88678808882833,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-08/focused3/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12466
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12484
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12429
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12441
+    }
+   ],
+   "status": "complete",
+   "tokens": 69405,
+   "usage": {
+    "cache_read": 55559,
+    "cache_write": 0,
+    "input": 7544,
+    "output": 6302,
+    "total": 69405
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 20091,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 79.59065973618999,
+     "status": "failed",
+     "tokens": 91856,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "6b011bebfa57e978894bc4c90d30060959b6d4fd77f734d589db349c2b8d46de",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "senior-dev",
+     "problem": "Omitting currency from the cache key returns pricing pages rendered for a different billing currency.",
+     "reason": "The pricing_page caller explicitly supports an account-selected billing currency independently of locale. If an en-GB request first caches a GBP page, a subsequent en-GB request with billing_currency='USD' hits the same key and receives the GBP rendering without invoking the renderer for USD. Retain currency in the key so these supported requests remain distinct.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "7efe7e0791fe534722ca441fd2f29f4417060e5f53359f8ac4a4078318c01a09",
+     "category": "regression",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "junior-dev",
+     "problem": "Removing currency from the cache key returns the wrong billing-currency page.",
+     "reason": "The pricing view explicitly supports an account-selected billing currency independently of locale. If a shared cache first serves an en-GB account using GBP and then an en-GB account selecting USD, both requests now use the same key. The second request receives the GBP rendering without invoking the renderer for USD. Retain currency in the key to preserve the documented account override.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "05a993a8c7e1d8cbb43a169a47597e21ec46f931166d7f090a56f35129b358d0",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "security",
+     "problem": "Removing currency from the cache key reuses pricing pages across different billing currencies.",
+     "reason": "The pricing caller explicitly supports an account-selected billing currency independent of locale. Two calls with the same template and locale but different currencies now share an entry, so the second call returns the first currency's rendered page without invoking the renderer. Keep currency in the key to preserve these distinct results.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "71c3b8d233cf6965723d652a4a445f53f67cfb225966db7aa7be45c5ebde6a03",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "devops",
+     "problem": "Removing currency from the cache key reuses pricing pages across different billing currencies.",
+     "reason": "The pricing-page caller explicitly supports an account-selected billing currency independent of locale. When the same cache receives two pricing requests with the same locale but different currencies, the second request returns the first currency's rendered page without invoking the renderer. Retain currency in the key; clearing the cache only temporarily resets which currency wins.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 1,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "perspectives_incomplete",
+   "discussion_rounds": [
+    {
+     "positions": 4,
+     "proposals": {},
+     "tokens": 21863
+    }
+   ],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "05a993a8c7e1d8cbb43a169a47597e21ec46f931166d7f090a56f35129b358d0": "supported",
+    "6b011bebfa57e978894bc4c90d30060959b6d4fd77f734d589db349c2b8d46de": "supported",
+    "71c3b8d233cf6965723d652a4a445f53f67cfb225966db7aa7be45c5ebde6a03": "supported",
+    "7efe7e0791fe534722ca441fd2f29f4417060e5f53359f8ac4a4078318c01a09": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "failed",
+   "initial_dispositions": {
+    "05a993a8c7e1d8cbb43a169a47597e21ec46f931166d7f090a56f35129b358d0": "supported",
+    "6b011bebfa57e978894bc4c90d30060959b6d4fd77f734d589db349c2b8d46de": "supported",
+    "71c3b8d233cf6965723d652a4a445f53f67cfb225966db7aa7be45c5ebde6a03": "supported",
+    "7efe7e0791fe534722ca441fd2f29f4417060e5f53359f8ac4a4078318c01a09": "supported"
+   },
+   "latency_seconds": 79.59065973618999,
+   "panel_reason": "perspectives_incomplete",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-08/focused3/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12432
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12478
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12503
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12489
+    }
+   ],
+   "status": "failed",
+   "tokens": 91856,
+   "usage": {
+    "cache_read": 55559,
+    "cache_write": 0,
+    "input": 29331,
+    "output": 6966,
+    "total": 91856
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 30000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 19649,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 70.36592431087047,
+     "status": "complete",
+     "tokens": 69570,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "0dd97dc6b916317845c6403dbfd5279a0b6b987687f2ab7f5bd49bba9cc9d60b",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "senior-dev",
+     "problem": "Dropping currency from the cache key mixes pricing pages for different billing currencies.",
+     "reason": "pricing_page explicitly supports an account-selected billing currency independently of locale. After an en-GB pricing page is cached for GBP, an en-GB account selecting USD hits the same cache entry and receives the GBP rendering without invoking the renderer for USD. Retain currency in the key so supported account preferences remain distinct.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "058870a235d271b8a4c156e69d2af84e04fe83c54543686b287ce4dcd558a7dd",
+     "category": "regression",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "junior-dev",
+     "problem": "Removing currency from the cache key returns pricing pages in the wrong billing currency.",
+     "reason": "The pricing-page caller explicitly supports an account-selected billing currency, using the locale currency only as a fallback. Two requests with the same locale can therefore legitimately require different currencies. The new key makes the second request reuse the first rendered page without invoking the renderer with the requested currency. Retain currency in the cache key to preserve this supported behavior.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "68290a587b62e7992729cc8dfaa0c9ef5cc28ce71335078372c2f21de1b56b25",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "security",
+     "problem": "Removing currency from the cache key returns the wrong currency-specific pricing page.",
+     "reason": "The pricing-page caller allows an account's billing currency to override its locale's default, so locale does not uniquely determine currency. If the same cache handles two en-GB accounts requesting GBP and USD, the second request returns the first request's rendered page without invoking the renderer with the second currency. Keep currency in the cache key to preserve these distinct render inputs.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "23b7f05c858eae0cfec154494ac88f8b5f5a792782008026402463317e65a07b",
+     "category": "correctness",
+     "file": "src/render/page_cache.py",
+     "line": 12,
+     "persona": "devops",
+     "problem": "Preserve billing currency in the page cache key",
+     "reason": "pricing_page explicitly supports an account-selected billing currency independently of locale. When two calls share a cache and locale but request different currencies, the new key returns the first currency's rendered page for both. Keep currency in the key so account overrides cannot collide with locale defaults or other overrides.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "058870a235d271b8a4c156e69d2af84e04fe83c54543686b287ce4dcd558a7dd": "supported",
+    "0dd97dc6b916317845c6403dbfd5279a0b6b987687f2ab7f5bd49bba9cc9d60b": "supported",
+    "23b7f05c858eae0cfec154494ac88f8b5f5a792782008026402463317e65a07b": "supported",
+    "68290a587b62e7992729cc8dfaa0c9ef5cc28ce71335078372c2f21de1b56b25": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "058870a235d271b8a4c156e69d2af84e04fe83c54543686b287ce4dcd558a7dd": "supported",
+    "0dd97dc6b916317845c6403dbfd5279a0b6b987687f2ab7f5bd49bba9cc9d60b": "supported",
+    "23b7f05c858eae0cfec154494ac88f8b5f5a792782008026402463317e65a07b": "supported",
+    "68290a587b62e7992729cc8dfaa0c9ef5cc28ce71335078372c2f21de1b56b25": "supported"
+   },
+   "latency_seconds": 70.36592431087047,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev3-08/focused3/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12422
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12486
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12560
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 12453
+    }
+   ],
+   "status": "complete",
+   "tokens": 69570,
+   "usage": {
+    "cache_read": 55567,
+    "cache_write": 0,
+    "input": 7548,
+    "output": 6455,
+    "total": 69570
+   }
+  }
+ ],
+ "cells_needing_rerun": 0,
+ "discussion_attempted_rounds": 1,
+ "discussion_completed_rounds": 0,
+ "experiment_sha256": "801eb8e57f87b7fb6de25de399453cfc1b3dd160efadb45fda70b02b154c9078",
+ "experiment_status": "complete",
+ "first_attempt_status_counts": {
+  "complete": 11,
+  "failed": 1
+ },
+ "gate_sha256": "02142bed84a87f2901105d1bf447be0a326f98b8e828a92df018a1f7fa1a79b9",
+ "holdout_used": false,
+ "qualification": "not_qualified",
+ "rerun_attempts": 0,
+ "schema_version": 2,
+ "semantic_qualification": false,
+ "status_counts": {
+  "complete": 11,
+  "failed": 1
+ },
+ "tests": {
+  "all_attempts_within_ceiling": true,
+  "all_runs_complete_and_accounted": false,
+  "experiment_terminal": true,
+  "matrix_exact": true,
+  "retries_within_declared_policy": true
+ },
+ "transient_http_statuses": {}
+}
