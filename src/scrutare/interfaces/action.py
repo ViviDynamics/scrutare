@@ -230,7 +230,9 @@ def validate_success(
     # An opt-in phase overrun fallback escalates under its own rule and names its record.
     fallback = (verdict == "escalated" and rule == "phase_overrun_fallback"
                 and isinstance(result.get("degraded"), dict))
-    if rule != rules[verdict] and not fallback:
+    # Independent assessment can also escalate unresolved potentially blocking claims.
+    unresolved = verdict == "escalated" and rule == "unresolved_semantic_assessment"
+    if rule != rules[verdict] and not fallback and not unresolved:
         raise ActionError("invalid recorded verdict rule")
     usage = mapping(result.get("usage"))
     counters: list[int] = []

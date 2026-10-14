@@ -87,6 +87,19 @@ def replay_discussion(
             names = [p.name for p in resolve_personas(
                 config.personas, procedures=config.inspection.procedures
             )]
+        refused = record.get("admission") == "refused"
+        if "admission" in record and not (refused and fallback and number == len(rounds)):
+            raise ValueError("discussion: unexpected admission record")
+        if refused and positions == []:
+            # The round could not start: every reviewer must have been out of grant.
+            if (proposals != [] or record.get("reassessment") is not None
+                    or record.get("disposition_changes") != []
+                    or record.get("new_citations") != [] or record.get("tokens") != 0
+                    or not _spent_positions(trace, names, allowance, discussion_used)):
+                raise ValueError("discussion: refused round disagrees")
+            degradation = Degradation("discussion", number, allowance, 0, 0, 0,
+                                      "pre_round_assessment")
+            break
         if [p.get("persona") for p in positions if isinstance(p, dict)] != names:
             raise ValueError("discussion: perspective coverage disagrees")
         if any(not isinstance(p, dict) for p in positions):
@@ -95,7 +108,7 @@ def replay_discussion(
             grants = [p.get("allocated_tokens") if isinstance(p, dict) else None
                       for p in positions]
             if (any(type(grant) is not int or grant <= 0 for grant in grants)
-                    or sum(cast(list[int], grants)) > allowance - discussion_used
+                    or sum(cast(list[int], grants)) != allowance - discussion_used
                     or grants != _split(sum(cast(list[int], grants)), len(grants))):
                 raise ValueError("discussion: allowance grants disagree")
             discussion_used += sum(_tokens(p) for p in positions)
@@ -161,71 +174,83 @@ def replay_discussion(
             if originals != pool:
                 raise ValueError("discussion: reassessment rewrote candidates")
             outcome = assessment["outcome"]
-            if not isinstance(outcome, dict):
-                raise ValueError
-            if not overran:
-                _complete(outcome)
-            allocation = outcome.get("allocated_tokens")
-            if (
-                type(allocation) is not int
-                or allocation != (config.findings.assessment.tokens - assessor_used
-                                  if allowance is None else allowance - discussion_used)
-                or allocation <= 0
-            ):
-                raise ValueError("discussion: assessor allocation disagrees")
-            if allowance is not None:
-                discussion_used += _tokens(outcome)
-            if overran:
-                # Nothing from an overrun reassessment may change a disposition.
-                degradation = phase_degradation(
-                    "discussion", [outcome], round_number=number,
-                    allowance=config.findings.discussion.tokens)
-                if (degradation is None or assessment.get("status") != artifact_status(outcome)
-                        or not isinstance(initial_outcome, dict)
-                        or outcome.get("persona") != initial_outcome.get("persona")
+            if refused:
+                spent = (allowance - discussion_used if allowance is not None
+                         else config.findings.assessment.tokens - assessor_used)
+                if (outcome is not None or assessment.get("status") != "failed"
+                        or assessment.get("assessments") != [] or spent > 0
                         or record.get("disposition_changes") != []):
-                    raise ValueError("discussion: fallback reassessment disagrees")
-                native_overrun(run_dir / "sessions" / cast(str, outcome["persona"])
-                               / f"attempt-{number + 1:04d}", outcome)
-                total_tokens += _tokens(outcome)
-            else:
-                updated_rows = parse_assessments(
-                    {"assessments": assessment["assessments"]}, pool, root, artifact=True
-                )
-                assessor_name = outcome.get("persona")
-                if not isinstance(assessor_name, str) or (
-                    not isinstance(initial_outcome, dict)
-                    or assessor_name != initial_outcome.get("persona")
+                    raise ValueError("discussion: refused reassessment disagrees")
+                degradation = Degradation("discussion", number, allowance, 0, 0, 0,
+                                          "pre_round_assessment")
+                outcome = None
+            elif not isinstance(outcome, dict):
+                raise ValueError
+            if outcome is not None and not overran:
+                _complete(outcome)
+            if outcome is not None:
+                allocation = outcome.get("allocated_tokens")
+                if (
+                    type(allocation) is not int
+                    or allocation != (config.findings.assessment.tokens - assessor_used
+                                      if allowance is None else allowance - discussion_used)
+                    or allocation <= 0
                 ):
-                    raise ValueError("discussion: reassessment executor disagrees")
-                session = _document(
-                    run_dir / "sessions" / assessor_name / f"attempt-{number + 1:04d}"
-                    / "session.json"
-                )
-                native_rows = parse_assessments(session["output"], pool, root)
-                if native_rows != updated_rows:
-                    raise ValueError("discussion: reassessment disagrees with native output")
-                if allowance is None:
-                    assessor_used += _tokens(outcome)
-                    if assessor_used > config.findings.assessment.tokens:
-                        raise ValueError("discussion: assessor exceeded original reservation")
-                elif discussion_used > allowance:
-                    raise ValueError("discussion: complete sessions exceeded the allowance")
-                updated = {row.candidate.candidate_id: row for row in updated_rows}
-                changes = [
-                    {
-                        "candidate_id": row.candidate.candidate_id,
-                        "before": row.status,
-                        "after": updated[row.candidate.candidate_id].status,
-                        "reason": updated[row.candidate.candidate_id].reason,
-                    }
-                    for row in selected
-                    if row.status != updated[row.candidate.candidate_id].status
-                ]
-                if record.get("disposition_changes") != changes:
-                    raise ValueError("discussion: unauthorized transition")
-                rows = tuple(updated.get(row.candidate.candidate_id, row) for row in rows)
-                total_tokens += _tokens(outcome)
+                    raise ValueError("discussion: assessor allocation disagrees")
+                if allowance is not None:
+                    discussion_used += _tokens(outcome)
+                if overran:
+                    # Nothing from an overrun reassessment may change a disposition.
+                    degradation = phase_degradation(
+                        "discussion", [outcome], round_number=number,
+                        allowance=config.findings.discussion.tokens)
+                    if (degradation is None or assessment.get("status") != artifact_status(outcome)
+                        or assessment.get("assessments") != []
+                            or not isinstance(initial_outcome, dict)
+                            or outcome.get("persona") != initial_outcome.get("persona")
+                            or record.get("disposition_changes") != []):
+                        raise ValueError("discussion: fallback reassessment disagrees")
+                    native_overrun(run_dir / "sessions" / cast(str, outcome["persona"])
+                                   / f"attempt-{number + 1:04d}", outcome)
+                    total_tokens += _tokens(outcome)
+                else:
+                    updated_rows = parse_assessments(
+                        {"assessments": assessment["assessments"]}, pool, root, artifact=True
+                    )
+                    assessor_name = outcome.get("persona")
+                    if not isinstance(assessor_name, str) or (
+                        not isinstance(initial_outcome, dict)
+                        or assessor_name != initial_outcome.get("persona")
+                    ):
+                        raise ValueError("discussion: reassessment executor disagrees")
+                    session = _document(
+                        run_dir / "sessions" / assessor_name / f"attempt-{number + 1:04d}"
+                        / "session.json"
+                    )
+                    native_rows = parse_assessments(session["output"], pool, root)
+                    if native_rows != updated_rows:
+                        raise ValueError("discussion: reassessment disagrees with native output")
+                    if allowance is None:
+                        assessor_used += _tokens(outcome)
+                        if assessor_used > config.findings.assessment.tokens:
+                            raise ValueError("discussion: assessor exceeded original reservation")
+                    elif discussion_used > allowance:
+                        raise ValueError("discussion: complete sessions exceeded the allowance")
+                    updated = {row.candidate.candidate_id: row for row in updated_rows}
+                    changes = [
+                        {
+                            "candidate_id": row.candidate.candidate_id,
+                            "before": row.status,
+                            "after": updated[row.candidate.candidate_id].status,
+                            "reason": updated[row.candidate.candidate_id].reason,
+                        }
+                        for row in selected
+                        if row.status != updated[row.candidate.candidate_id].status
+                    ]
+                    if record.get("disposition_changes") != changes:
+                        raise ValueError("discussion: unauthorized transition")
+                    rows = tuple(updated.get(row.candidate.candidate_id, row) for row in rows)
+                    total_tokens += _tokens(outcome)
         elif record.get("reassessment") is not None or record.get("disposition_changes") != []:
             raise ValueError("discussion: unsupported opposition changed disposition")
         before_refs = {
@@ -254,6 +279,22 @@ def replay_discussion(
     if trace.get("final_assessments") != [assessment_wire(row) for row in rows]:
         raise ValueError("discussion: final states disagree")
     return rows, degradation
+
+
+def _spent_positions(trace: dict[str, object], names: list[str], allowance: int | None,
+                     discussion_used: int) -> bool:
+    """Whether a refused round's positions were refused for spent grants alone."""
+    if allowance is not None:
+        return (allowance - discussion_used) // len(names) <= 0
+    ledger = trace.get("ledger")
+    personas = ledger.get("personas") if isinstance(ledger, dict) else None
+    if not isinstance(personas, list):
+        raise ValueError("discussion: missing ledger personas")
+    spent = {p.get("persona") for p in personas if isinstance(p, dict)
+             and isinstance(p.get("usage"), dict)
+             and type(p.get("allocated_tokens")) is int
+             and p["usage"].get("total", -1) >= p["allocated_tokens"]}
+    return any(name in spent for name in names)
 
 
 def _split(total: int, count: int) -> list[int]:

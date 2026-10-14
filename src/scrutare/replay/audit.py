@@ -109,12 +109,24 @@ def _context_issues(run_dir: Path, policy: CapturedPolicy) -> tuple[AuditIssue, 
         return (AuditIssue("repository_context_invalid", "repository-context.json", "invalid"),)
 
 
-def _ledger_complete(run_dir: Path) -> None:
-    """A fallback is never an accounting failure: the retained ledger must be complete."""
+def _panel_fallback(run_dir: Path, degradation: Degradation, persona: str,
+                    outcome: dict[str, Any]) -> None:
+    """The published record must state this fallback, with complete exact accounting."""
     panel = decode_artifact(read_artifact(run_dir / "panel.json"), artifact="panel.json")
     ledger = panel.get("ledger") if isinstance(panel, dict) else None
-    if not isinstance(ledger, dict) or ledger.get("accounting_complete") is not True:
-        raise ValueError("fallback: accounting must be complete")
+    if (not isinstance(panel, dict) or not isinstance(ledger, dict)
+            or ledger.get("accounting_complete") is not True
+            or panel.get("status") != "partial"
+            or panel.get("reason") != "assessment_overrun_fallback"
+            or panel.get("degraded") != degradation.to_dict()):
+        raise ValueError("fallback: published record disagrees")
+    personas = ledger.get("personas")
+    usage = outcome.get("usage")
+    entry = next((p for p in personas if isinstance(p, dict) and p.get("persona") == persona),
+                 None) if isinstance(personas, list) else None
+    if (not isinstance(entry, dict) or not isinstance(usage, dict)
+            or entry.get("usage") != usage):
+        raise ValueError("fallback: assessor accounting disagrees")
 
 
 class _Fallback(Exception):
@@ -132,9 +144,9 @@ def _assessment_fallback(run_dir: Path, config: ReviewConfig, assessment: dict[s
     outcome = assessment.get("outcome")
     tokens = config.findings.assessment.tokens
     if (not isinstance(outcome, dict) or outcome.get("allocated_tokens") != tokens
-            or assessment.get("status") != artifact_status(outcome)):
+            or assessment.get("status") != artifact_status(outcome)
+            or assessment.get("assessments") != []):
         raise ValueError("assessment: fallback needs the admitted assessor outcome")
-    _ledger_complete(run_dir)
     persona = outcome.get("persona")
     if not isinstance(persona, str) or "/" in persona:
         raise ValueError("assessment: fallback needs the assessor identity")
@@ -147,6 +159,7 @@ def _assessment_fallback(run_dir: Path, config: ReviewConfig, assessment: dict[s
                else dedupe_findings(originals))
     if findings != grouped:
         raise ValueError("assessment: fallback must keep every anchor-validated finding")
+    _panel_fallback(run_dir, degradation, persona, outcome)
     if config.findings.discussion.enabled:
         trace = decode_artifact(read_artifact(run_dir / "debate.json"), artifact="debate.json")
         if (not isinstance(trace, dict) or trace.get("kind") != "focused_evidence_discussion"

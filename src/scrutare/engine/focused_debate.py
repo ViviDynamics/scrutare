@@ -197,7 +197,15 @@ async def _discuss(
             for lease in leases:
                 if lease is not None:
                     context.ledger.settle(lease, lease.baseline, True)
-            return rows, rounds, "failed", "perspective_budget", None
+            degradation = _refused_fallback(context, number)
+            if degradation is None:
+                return rows, rounds, "failed", "perspective_budget", None
+            # The round could not start: its grants are spent. Keep the completed rounds.
+            rounds.append({"round": number, "candidate_ids": list(identifiers),
+                           "admission": "refused", "positions": [], "proposals": [],
+                           "reassessment": None, "disposition_changes": [],
+                           "new_citations": [], "tokens": 0, "latency_seconds": 0.0})
+            return _fall_back(context, rows, rounds, degradation)
         outcomes = await _await_wave(
             [
                 asyncio.create_task(
@@ -270,8 +278,14 @@ async def _discuss(
             record["reassessment"] = f"assessment-round-{number:04d}.json"
             if assessment.status != "complete":
                 _finish_round(record, context, usage_before, started)
-                degradation = (None if assessment.outcome is None else _discussion_fallback(
-                    context, number, [assessment.outcome.to_dict()]))
+                if assessment.outcome is None:
+                    # Refused admission: the discussion grants are spent.
+                    degradation = _refused_fallback(context, number)
+                    if degradation is not None:
+                        record["admission"] = "refused"
+                else:
+                    degradation = _discussion_fallback(
+                        context, number, [assessment.outcome.to_dict()])
                 if degradation is None:
                     return rows, rounds, assessment.status, "reassessment_incomplete", None
                 return _fall_back(context, rows, rounds, degradation)
@@ -325,6 +339,14 @@ def _discussion_fallback(context: _ExecutionContext, number: int,
         return None
     return phase_degradation("discussion", outcomes, round_number=number,
                              allowance=settings.tokens)
+
+
+def _refused_fallback(context: _ExecutionContext, number: int) -> Degradation | None:
+    """Opt-in: admission refused for spent discussion grants, with complete accounting."""
+    settings = context.config.findings.discussion
+    if settings.overrun != "fallback" or not context.ledger.accounting_complete:
+        return None
+    return Degradation("discussion", number, settings.tokens, 0, 0, 0, "pre_round_assessment")
 
 
 def _fall_back(

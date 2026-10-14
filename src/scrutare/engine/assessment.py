@@ -148,7 +148,14 @@ async def assess_candidates(
                 descriptor, context.config.models.default, lease, ledger=context.ledger,
                 artifact_directory=attempt, runtime=context.runtime, capability=context.capability)
             status = "failed"
-            if (outcome.status in ("complete", "partial") and outcome.output_available
+            policy = (context.config.findings.assessment.overrun if attempt_number == 1
+                      else context.config.findings.discussion.overrun)
+            overrun = (policy == "fallback" and outcome.status == "partial"
+                       and outcome.reason == "budget")
+            if overrun and outcome.output_available:
+                # An overrun batch is never applied under the fallback policy: keep no rows.
+                status = "partial"
+            elif (outcome.status in ("complete", "partial") and outcome.output_available
                     and outcome.accounting_complete and context.ledger.accounting_complete):
                 document = decode_artifact(read_artifact(attempt / "session.json"),
                                            artifact="assessment.session")

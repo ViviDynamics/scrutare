@@ -284,7 +284,9 @@ def kind_of(prompt):
 def shape(prompt):
     return PLAN[kind_of(prompt)].get('shape')
 """
-    body = (RUN_BODY.replace("INPUT", "PLAN[kind_of(a.prompt)].get('input', 4)")
+    # "fill" spends exactly the session's grant: complete, and nothing left over.
+    body = (RUN_BODY.replace("INPUT", "(int(a.budget_tokens) - 6 if PLAN[kind_of(a.prompt)]"
+                             ".get('fill') else PLAN[kind_of(a.prompt)].get('input', 4))")
             .replace("STATUS", "('error' if shape(a.prompt) == 'stop' else 'done')")
             .replace("STOP", "('budget' if shape(a.prompt) == 'stop' else 'end_turn')")
             .replace("OUTPUT", "output").replace("EXTRA", PHASE_SCRIPT)
@@ -996,3 +998,156 @@ def test_degraded_result_and_action_accept_the_fallback_rule():
     plain = ReviewRunResult(Path("/run"), "a" * 40, "approve", "no_blocking_findings",
                             "complete", TokenUsage(), True, None)
     assert "degraded" not in plain.to_dict()
+
+
+
+# Review round 2.
+
+def test_reassessment_refused_by_a_spent_allowance_falls_back(capture, tmp_path, monkeypatch):
+    import asyncio
+
+    from test_panel import install
+
+    from scrutare.engine.debate import run_debate
+    from scrutare.replay.audit import replay_run
+    config, claim = discussion_capture(capture, discussion="fallback", tokens=99, rounds=1)
+    install(monkeypatch, {"security": (claim,)})
+    plan = {"assessment": {"status": "unresolved"}, "position": {"fill": True}}
+    result = asyncio.run(run_debate(capture, config, runtime=phase_runtime(tmp_path, plan)))
+    assert (result.verdict.verdict, result.verdict.rule) == (
+        "escalated", "unresolved_semantic_assessment")
+    assert result.verdict.to_dict()["degraded"] == {
+        "phase": "discussion", "round": 1, "allowance_tokens": 99, "grant_tokens": 0,
+        "usage_tokens": 0, "overrun_tokens": 0, "fallback_stage": "pre_round_assessment"}
+    trace = json.loads((capture / "debate.json").read_bytes())
+    assert trace["rounds"][0]["admission"] == "refused"
+    assert trace["reason"] == "discussion_overrun_fallback"
+    assert replay_run(capture).saved_identical
+
+
+def test_reassessment_refused_by_a_spent_allowance_still_voids_by_default(capture, tmp_path,
+                                                                          monkeypatch):
+    import asyncio
+
+    from test_panel import install
+
+    from scrutare.engine.debate import run_debate
+    config, claim = discussion_capture(capture, tokens=99, rounds=1)
+    install(monkeypatch, {"security": (claim,)})
+    plan = {"assessment": {"status": "unresolved"}, "position": {"fill": True}}
+    result = asyncio.run(run_debate(capture, config, runtime=phase_runtime(tmp_path, plan)))
+    assert result.verdict is None
+    trace = json.loads((capture / "debate.json").read_bytes())
+    assert trace["reason"] == "reassessment_incomplete" and "admission" not in trace["rounds"][0]
+
+
+def refused_second_round(capture, tmp_path, monkeypatch):
+    import asyncio
+
+    from test_panel import install
+
+    from scrutare.engine.debate import run_debate
+    config, claim = discussion_capture(capture, discussion="fallback", rounds=2)
+    install(monkeypatch, {"security": (claim,)})
+    # Round-1 positions spend each reviewer's whole remaining grant (reused grants).
+    plan = {"assessment": {"status": "unresolved"}, "reassessment": {"status": "unresolved"},
+            "position": {"fill": True}}
+    return asyncio.run(run_debate(capture, config, runtime=phase_runtime(tmp_path, plan)))
+
+
+def test_a_later_round_refused_for_spent_grants_keeps_the_completed_round(capture, tmp_path,
+                                                                          monkeypatch):
+    from scrutare.replay.audit import replay_run
+    result = refused_second_round(capture, tmp_path, monkeypatch)
+    assert result.verdict.to_dict()["degraded"]["round"] == 2
+    assert result.verdict.exhaustion is None
+    trace = json.loads((capture / "debate.json").read_bytes())
+    assert len(trace["rounds"]) == 2
+    assert trace["rounds"][1]["admission"] == "refused"
+    assert trace["rounds"][1]["positions"] == []
+    assert replay_run(capture).saved_identical
+
+
+def test_replay_refuses_an_unjustified_refusal(capture, tmp_path, monkeypatch):
+    from test_review_inputs import save_json
+
+    from scrutare.replay.audit import replay_run
+    from scrutare.replay.models import ReplayError
+    refused_second_round(capture, tmp_path, monkeypatch)
+    trace = json.loads((capture / "debate.json").read_bytes())
+    for persona in trace["ledger"]["personas"]:
+        persona["usage"]["total"] = 0  # every reviewer still had grant left
+    save_json(capture / "debate.json", trace)
+    with pytest.raises(ReplayError):
+        replay_run(capture)
+
+
+def test_action_accepts_escalations_for_unresolved_claims():
+    from scrutare.interfaces.action import validate_success
+    base = {"accounting_complete": True, "panel_status": "partial",
+            "usage": {"input": 1, "output": 1, "cache_read": 0, "cache_write": 0, "total": 2},
+            "review": {"review_id": 7, "html_url":
+                       "https://github.com/owner/repo/pull/12#pullrequestreview-7",
+                       "commit_id": "a" * 40, "body": "x", "state": "COMMENTED",
+                       "login": "scrutare[bot]"}}
+    validate_success(base | {"rule": "unresolved_semantic_assessment"}, "escalated",
+                     "a" * 40, "owner/repo", 12)
+
+
+def test_replay_requires_the_exact_allowance_split(capture, tmp_path, monkeypatch):
+    import asyncio
+
+    from test_review_inputs import save_json
+
+    from scrutare.engine.debate import run_debate
+    from scrutare.replay.audit import replay_run
+    from scrutare.replay.models import ReplayError
+    config, _ = allowance_capture(capture, monkeypatch)
+    plan = {"assessment": {"counter": True}, "position": {"input": 6960}}
+    asyncio.run(run_debate(capture, config, runtime=phase_runtime(tmp_path, plan)))
+    trace = json.loads((capture / "debate.json").read_bytes())
+    for position in trace["rounds"][0]["positions"]:
+        position["allocated_tokens"] = 7000
+    save_json(capture / "debate.json", trace)
+    with pytest.raises(ReplayError):
+        replay_run(capture)
+
+
+@pytest.mark.parametrize("strategy", ["panel", "debate"])
+@pytest.mark.parametrize("tamper", ["reason", "degraded", "assessor_usage", "rows"])
+def test_replay_checks_the_panel_record_of_an_assessor_fallback(capture, tmp_path, monkeypatch,
+                                                                strategy, tamper):
+    import asyncio
+
+    from test_panel import install
+    from test_review_inputs import save_json
+
+    from scrutare.engine.strategy import run_review
+    from scrutare.replay.audit import replay_run
+    from scrutare.replay.models import ReplayError
+    config, claim = assessed_capture(capture, strategy=strategy, category="style")
+    install(monkeypatch, {"security": (claim,)})
+    asyncio.run(run_review(capture, config, runtime=phase_runtime(
+        tmp_path, {"assessment": {"input": 120}})))
+    assert replay_run(capture).saved_identical
+    assessment = json.loads((capture / "assessment.json").read_bytes())
+    # The overrun assessor's output is never kept as dispositions.
+    assert assessment["assessments"] == []
+    panel = json.loads((capture / "panel.json").read_bytes())
+    if tamper == "reason":
+        panel["reason"] = "converged"
+    elif tamper == "degraded":
+        panel["degraded"]["grant_tokens"] += 1
+    elif tamper == "assessor_usage":
+        assessor = next(p for p in panel["ledger"]["personas"]
+                        if p["persona"] == "evidence-assessor")
+        assessor["usage"]["total"] += 1
+    else:
+        reference = {k: v for k, v in claim.evidence.citations[0].__dict__.items()}
+        assessment["assessments"] = [{"candidate_id": "one", "status": "supported",
+                                      "reason": "r", "supporting_citations": [reference],
+                                      "counter_citations": []}]
+        save_json(capture / "assessment.json", assessment)
+    save_json(capture / "panel.json", panel)
+    with pytest.raises(ReplayError):
+        replay_run(capture)

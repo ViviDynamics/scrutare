@@ -250,12 +250,20 @@ findings:
   the ceiling, not by what others overspent. Every grant still fits the ceiling's
   partition, but total actual usage can exceed `review_max_tokens` by overshoot
   already incurred, as after-turn enforcement always allowed.
-- The discussion allowance is shared by every round. Positions take an even share
-  of what remains and a reassessment takes the rest, so a reassessment or a later
-  round can find nothing left. Admission is then refused, and a refused admission is
-  not a fallback trigger: the review is void. Size the allowance for `rounds.max`.
+- Discussion grants are shared by every round. Positions take an even share of
+  what remains and a reassessment takes the rest, so a reassessment or a later
+  round can find nothing left and is refused admission. With
+  `findings.discussion.overrun: fallback` and complete accounting, that refusal also
+  falls back to the assessment before the refused round; the round is recorded with
+  `admission: refused` and a degraded record with zero grant and usage. Replay
+  checks the refusal against the recorded allowance usage, or, when grants are
+  reused, against the reviewers' and assessor's spent allocations. Without the
+  fallback policy the review is void, as before.
 - `result.json` and the CLI envelope carry the same `degraded` record. The reusable
-  Action accepts an escalation under `phase_overrun_fallback` only with that record.
+  Action accepts an escalation under `phase_overrun_fallback` only with that record,
+  and accepts escalations under `unresolved_semantic_assessment`.
+- Under the fallback policy an overrun assessor's or reassessor's output is never
+  kept: its assessment file records no assessments.
 - `findings.assessment.overrun: fallback` requires `strategy: panel` or `debate`.
   Iterative reviews re-derive verdicts from assessment state kept across pushes,
   so the setting is refused there.
