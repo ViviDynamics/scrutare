@@ -220,7 +220,7 @@ def reply_view(run: Path, config: ReviewConfig, runs: object, comments: object,
                 "pull_request_review_id") in reviews:
             line = comment["line"] if comment["line"] is not None else comment.get("original_line")
             anchor: Anchor | None = None
-            if _identity(line):
+            if type(line) is int and line > 0:
                 try:
                     side = comment.get("side")
                     anchor = Anchor(comment["path"], line, side if side is not None else "RIGHT")
