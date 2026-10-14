@@ -11,9 +11,15 @@ import math
 import re
 from pathlib import Path
 
-JOBS = ('reliability-r2', 'reliability-r3', 'discussion-untried', 'tools-silent', 'tools',
-        'focused-wrong-candidates', 'focused-uncaptured', 'routing-a', 'routing-b',
-        'line-counts')
+# Default profile: 20,000-token assessor reservation (one fifth of the ceiling).
+JOBS_DEFAULT = ('reliability-r2', 'reliability-r3', 'discussion-untried', 'tools-silent',
+                'tools-voided', 'focused-wrong-candidates', 'routing', 'line-counts')
+# Revised profile, frozen after tools-voided: 30,000-token assessor reservation.
+JOBS_REVISED = ('tools', 'focused-uncaptured', 'focused-uncaptured-aggregate',
+                'focused-comment', 'assessment-separating')
+JOBS = JOBS_DEFAULT + JOBS_REVISED
+WITHDRAWN = ('focused-uncaptured-default', 'routing-assessment-a', 'routing-assessment-b',
+             'line-counts-first-freeze')
 # Proxy-advertised gpt-6.1-sol rates retained on 2026-10-13 (per token, US dollars).
 INPUT_RATE, OUTPUT_RATE = 2e-06, 1e-05
 SPEND_LIMIT_USD = 60.0
@@ -130,6 +136,14 @@ def rules_sha256():
     return hashlib.sha256(json.dumps(frozen, sort_keys=True).encode()).hexdigest()
 
 
+def candidate_matches(case, candidate):
+    """The frozen rule applied to a candidate the assessor received (before any void)."""
+    run = {'case_id': case, 'findings': [{
+        'file': candidate['file'], 'side': candidate['side'], 'line': candidate['line'],
+        'problem': candidate['problem'], 'reason': candidate.get('reason', '')}]}
+    return decide(run, 0) is not None
+
+
 def states_allegation(case, finding):
     patterns = ALLEGATIONS.get(case, ())
     return any(re.search(pattern, text_of(finding)) for pattern in patterns)
@@ -232,6 +246,7 @@ def summarize(package, job, matched):
         counts = collections.Counter()
         dispositions = collections.Counter()
         final = collections.Counter()
+        overruns, assessor_usage = [], []
         per_case = {}
         for cell in selected:
             case = cell['run_id'].split('/')[0]
@@ -250,10 +265,20 @@ def summarize(package, job, matched):
                                            for f in run['findings'])
             counts['discovery_findings'] += cell['discovery_findings']
             counts['candidates'] += len(cell['candidates'])
+            raised = any(candidate_matches(case, c) for c in cell['candidates'])
+            over = (cell['assessor_tokens'] - cell['assessor_allocation']
+                    if cell['assessor_reason'] == 'budget' else None)
+            if over is not None:
+                overruns.append(over)
+            counts['voided_by_assessor'] += cell['panel_reason'] == 'assessment_incomplete' or (
+                cell['discussion_reason'] == 'assessment_incomplete')
+            if cell['assessor_tokens'] and cell['candidates']:
+                assessor_usage.append(cell['assessor_tokens'])
             dispositions.update(cell['initial_dispositions'].values())
             final.update(cell['final_dispositions'].values())
             row = per_case.setdefault(case, {
                 'cells': 0, 'complete': 0, 'detected': 0, 'cells_with_findings': 0,
+                'defect_among_assessed_candidates': 0,
                 'findings': 0, 'findings_stating_tempting_allegation': 0,
                 'discovery_findings': 0, 'candidates': 0, 'initial_dispositions': {},
                 'final_dispositions': {}, 'discussion_attempted_rounds': 0,
@@ -263,6 +288,7 @@ def summarize(package, job, matched):
             row['cells'] += 1
             row['complete'] += usable
             row['detected'] += bool(usable and hit)
+            row['defect_among_assessed_candidates'] += raised
             row['cells_with_findings'] += bool(usable and ids)
             row['findings'] += len(ids)
             row['findings_stating_tempting_allegation'] += alleged
@@ -317,6 +343,10 @@ def summarize(package, job, matched):
             'findings_naming_tool_evidence': counts['tool_mentions'],
             'discovery_findings': counts['discovery_findings'],
             'assessed_candidates': counts['candidates'],
+            'cells_voided_by_assessor_reservation': counts['voided_by_assessor'],
+            'assessor_overrun_tokens': sorted(overruns),
+            'assessor_tokens_with_candidates_range': (
+                [min(assessor_usage), max(assessor_usage)] if assessor_usage else None),
             'initial_dispositions': dict(dispositions),
             'final_dispositions': dict(final),
             'defect_cells': counts['defect_cells'],
@@ -350,7 +380,8 @@ def summarize(package, job, matched):
             measured += usd(row['retry_usage'])
     attempts = sum(len(c['attempts']) for c in cells)
     return {
-        'job': job, 'profile': gate['profile'], 'tests': tests,
+        'job': job, 'profile': gate['profile'],
+        'assessment_tokens': gate.get('assessment_tokens'), 'tests': tests,
         'all_gate_tests_pass': all(tests.values()),
         'status_counts': dict(collections.Counter(c['status'] for c in cells)),
         'first_attempt_status_counts': dict(collections.Counter(
@@ -368,27 +399,35 @@ def summarize(package, job, matched):
         'measured_usd': round(measured, 4)}
 
 
-def paired(summary, baseline, candidate):
-    """Case-level differences between two arms of one job; means over three repeats."""
+def paired(summary, baseline, candidate, other=None):
+    """Case-level differences between two arms; means over three repeats.
+
+    `other` names a second job holding the candidate arm when the two arms ran in
+    different jobs; that is recorded, because it is weaker than a same-job pair.
+    """
+    source = summary if other is None else other
     rows = {}
     for case, base in summary['arms'][baseline]['per_case'].items():
-        other = summary['arms'][candidate]['per_case'][case]
+        if case not in source['arms'][candidate]['per_case']:
+            continue
+        cand = source['arms'][candidate]['per_case'][case]
         rows[case] = {
             'detected': {baseline: f"{base['detected']}/{base['cells']}",
-                         candidate: f"{other['detected']}/{other['cells']}"},
+                         candidate: f"{cand['detected']}/{cand['cells']}"},
             'cells_with_findings': {baseline: base['cells_with_findings'],
-                                    candidate: other['cells_with_findings']},
-            'complete': {baseline: base['complete'], candidate: other['complete']},
-            'mean_tokens': {baseline: base['mean_tokens'], candidate: other['mean_tokens']},
-            'token_ratio': round(other['mean_tokens'] / base['mean_tokens'], 3),
+                                    candidate: cand['cells_with_findings']},
+            'complete': {baseline: base['complete'], candidate: cand['complete']},
+            'mean_tokens': {baseline: base['mean_tokens'], candidate: cand['mean_tokens']},
+            'token_ratio': round(cand['mean_tokens'] / base['mean_tokens'], 3),
             'mean_latency_seconds': {baseline: base['mean_latency_seconds'],
-                                     candidate: other['mean_latency_seconds']},
-            'latency_ratio': round(other['mean_latency_seconds']
+                                     candidate: cand['mean_latency_seconds']},
+            'latency_ratio': round(cand['mean_latency_seconds']
                                    / base['mean_latency_seconds'], 3),
-            'specialists': other['specialists']}
+            'specialists': cand['specialists']}
     ratios = [row['token_ratio'] for row in rows.values()]
-    return {'job': summary['job'], 'baseline': baseline, 'candidate': candidate, 'cases': rows,
-            'token_ratio_range': [min(ratios), max(ratios)],
+    return {'baseline_job': summary['job'], 'candidate_job': source['job'],
+            'same_job': other is None, 'baseline': baseline, 'candidate': candidate,
+            'cases': rows, 'token_ratio_range': [min(ratios), max(ratios)],
             'detection_difference_cells': sum(
                 int(r['detected'][candidate].split('/')[0])
                 - int(r['detected'][baseline].split('/')[0]) for r in rows.values())}
@@ -432,7 +471,7 @@ def citations(summaries, jobs):
 
 
 def line_count_comparison(summaries):
-    """Same cases and arms with the setting off (routing-a, routing-b) and on (line-counts)."""
+    """Same cases and arms with the setting off (routing) and on (line-counts)."""
     def side(jobs):
         rows = [summaries[j]['arms'][a] for j in jobs for a in ('evidence', 'routing')]
         sessions = sum(r['sessions'] for r in rows)
@@ -444,7 +483,7 @@ def line_count_comparison(summaries):
                 'sessions_refused_for_citation': refused,
                 'sessions_refused_wilson95': wilson(refused, sessions),
                 'mean_tokens': round(sum(r['total_tokens'] for r in rows) / cells, 1)}
-    return {'off': side(('routing-a', 'routing-b')), 'on': side(('line-counts',))}
+    return {'off': side(('routing',)), 'on': side(('line-counts',))}
 
 
 def build(package):
@@ -456,7 +495,8 @@ def build(package):
     return rows, {
         'schema_version': 1, 'judgments': 'automated keyword filters, provisional',
         'actual_human_judgments': 0, 'holdout_used': False, 'defaults_promoted': False,
-        'automated_decisions': len(rows),
+        'automated_decisions': len(rows), 'frozen_rules_sha256': rules_sha256(),
+        'frozen_rules_amended': False,
         'unmatched_findings': sum(a['unmatched_findings'] for s in summaries.values()
                                   for a in s['arms'].values()),
         'jobs': summaries,
@@ -471,10 +511,23 @@ def build(package):
                                     for a in s['arms'].values()),
             'focused_cells': sum(a['cells'] for s in summaries.values()
                                  for n, a in s['arms'].items() if n.startswith('focused'))},
+        'assessor_reservation': {
+            job: {arm: {k: row[k] for k in (
+                'actual_assessor_calls', 'cells_voided_by_assessor_reservation',
+                'assessor_overrun_tokens', 'assessor_tokens_with_candidates_range')}
+                for arm, row in summaries[job]['arms'].items() if row['actual_assessor_calls']}
+            for job in JOBS},
+        'withdrawn_before_launch': {name: read(package / 'withdrawn' / name
+                                               / 'NEVER-LAUNCHED.json')['reason']
+                                    for name in WITHDRAWN},
         'paired': {
             'tools_vs_assessment': paired(summaries['tools'], 'assessment', 'tools'),
+            'tools_vs_assessment_voided': paired(summaries['tools-voided'], 'assessment',
+                                                 'tools'),
             'tools_vs_assessment_silent': paired(summaries['tools-silent'], 'assessment',
                                                  'tools'),
+            'assessment_vs_aggregate_untried': paired(
+                summaries['discussion-untried'], 'aggregate', 'assessed'),
             'assessment_vs_aggregate_wrong_candidates': paired(
                 summaries['focused-wrong-candidates'], 'aggregate', 'assessed'),
             'one_round_vs_assessment_wrong_candidates': paired(
@@ -482,18 +535,22 @@ def build(package):
             'three_rounds_vs_one_wrong_candidates': paired(
                 summaries['focused-wrong-candidates'], 'focused1', 'focused3'),
             'assessment_vs_aggregate_uncaptured': paired(
-                summaries['focused-uncaptured'], 'aggregate', 'assessed'),
+                summaries['focused-uncaptured-aggregate'], 'aggregate', 'assessed',
+                summaries['focused-uncaptured']),
             'one_round_vs_assessment_uncaptured': paired(
                 summaries['focused-uncaptured'], 'assessed', 'focused1'),
             'three_rounds_vs_one_uncaptured': paired(
                 summaries['focused-uncaptured'], 'focused1', 'focused3'),
-            'assessment_vs_aggregate_untried': paired(
-                summaries['discussion-untried'], 'aggregate', 'assessed'),
-            'routing_vs_fixed_a': paired(summaries['routing-a'], 'evidence', 'routing'),
-            'routing_vs_fixed_b': paired(summaries['routing-b'], 'evidence', 'routing'),
-            'assessment_vs_evidence_a': paired(summaries['routing-a'], 'evidence', 'assessment'),
-            'assessment_vs_evidence_b': paired(summaries['routing-b'], 'evidence',
-                                               'assessment')},
+            'assessment_vs_aggregate_comment': paired(
+                summaries['focused-comment'], 'aggregate', 'assessed'),
+            'one_round_vs_assessment_comment': paired(
+                summaries['focused-comment'], 'assessed', 'focused1'),
+            'three_rounds_vs_one_comment': paired(
+                summaries['focused-comment'], 'focused1', 'focused3'),
+            'routing_vs_fixed': paired(summaries['routing'], 'evidence', 'routing'),
+            'assessment_vs_evidence_separating': paired(
+                summaries['routing'], 'evidence', 'assessment',
+                summaries['assessment-separating'])},
         'spend': {
             'limit_usd': SPEND_LIMIT_USD,
             'measured_method': 'reported tokens of every attempt at the advertised input and '
@@ -517,6 +574,8 @@ def main():
         path = package / name
         if path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
             raise ValueError(f'public artifact hash mismatch: {name}')
+    if read(package / 'frozen-rules.json')['rules_sha256'] != rules_sha256():
+        raise ValueError('matching rules differ from the frozen ones')
     rows, summary = build(package)
     if rows != read(package / 'automated-decisions.json'):
         raise ValueError('recomputed automated decisions differ from the published ones')
