@@ -24,7 +24,8 @@ from scrutare.poster.payload import _field
 _UNCERTAIN = "Reply delivery is uncertain; inspect reply-posting.json before any manual reply."
 _OUTCOMES = {
     "reassessed": "Reassessed with this thread's replies as evidence.",
-    "incomplete": "The reassessment did not cover this finding completely.",
+    "incomplete": "The reassessment did not cover this finding completely, so it stands "
+                  "pending a complete review.",
     "exhausted": "Not reassessed: this pull request has used all {limit} review rounds, and "
                  "the review is escalated to human reviewers.",
     "recorded": "No reassessment was needed.",
@@ -62,8 +63,10 @@ def render_reply(response: dict[str, Any]) -> str:
                 or not 0 <= completed <= limit):
             raise ValueError
         parts = [f"Scrutare reassessment\n\nDisposition: {disposition}\n"
-                 f"Outcome: {_OUTCOMES[outcome].format(limit=limit)} "
-                 f"{_DISPOSITIONS[disposition]}\n"
+                 f"Outcome: {_OUTCOMES[outcome].format(limit=limit)}"
+                 # A partial wave establishes nothing about a finding it did not reach.
+                 + ("" if (outcome, disposition) == ("incomplete", "upheld")
+                    else f" {_DISPOSITIONS[disposition]}") + "\n"
                  f"Head SHA: {head}\nRound: {completed} of {limit}"]
         for finding in response["findings"]:
             for label in ("problem", "persona", "category", "reason"):
@@ -104,6 +107,11 @@ def post_replies(run_dir: Path, config: ReviewConfig, *,
                 journal = {entry["key"]: entry for entry in read_json(journal_path)["responses"]}
             bodies: dict[str, str] = {}
             for response in responses:
+                if (not isinstance(response, dict) or not isinstance(response["key"], str)
+                        or not isinstance(response["status"], str)
+                        or type(response["thread"]) is not int or response["thread"] <= 0
+                        or not isinstance(response["disposition"], str)):
+                    raise ValueError
                 if response["status"] in _FINAL:
                     continue
                 try:

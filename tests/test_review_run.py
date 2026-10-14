@@ -499,3 +499,46 @@ def test_reply_failure_after_the_review_reports_confirmed_delivery(tmp_path, mon
     later = discuss(tmp_path, poster, capture, replies_only=True)
     assert later.to_dict()["status"] == "unchanged" and later.to_dict()["replies"] == []
     assert len(poster.replies) == 1 and len(poster.creates) == 2
+
+
+def test_withdrawal_whose_review_failed_is_posted_by_the_next_replies_only_run(
+        tmp_path, monkeypatch):
+    module = service()
+    install(monkeypatch, {"security": (finding(file="example.py"),)})
+    poster = ThreadPoster()
+    discuss(tmp_path, poster)
+    install(monkeypatch, {"security": ()})
+    capture = Discussion(thread(poster, human(51, "Intentional.")), {"lead": "write"})
+    poster.outcomes.append(PostingRejected("Review rejected.", status=422))
+    with pytest.raises(module.ReviewRunError):
+        discuss(tmp_path, poster, capture, replies_only=True)
+    # The finding is withdrawn in the pool, but GitHub still shows changes requested,
+    # and nothing has told the thread otherwise.
+    assert poster.replies == [] and len(poster.creates) == 2
+    result = discuss(tmp_path, poster, capture, replies_only=True)
+    assert result.to_dict()["status"] == "posted" and result.verdict == "approve"
+    assert poster.creates[2].event == "APPROVE"
+    assert len(poster.replies) == 1 and "Disposition: withdrawn" in poster.replies[0][1]
+    again = discuss(tmp_path, poster, capture, replies_only=True)
+    assert again.to_dict()["status"] == "unchanged" and len(poster.creates) == 3
+
+
+def test_replies_past_the_bound_are_answered_without_another_escalation(tmp_path, monkeypatch):
+    raw = REPLIES + b"rounds: {max: 1}\n"
+    install(monkeypatch, {"security": (finding(file="example.py"),)})
+    poster = ThreadPoster()
+
+    def go(capture, **options):
+        return asyncio.run(service().review_pr(
+            REF, parse_config(raw), config_bytes=raw, runs_root=tmp_path,
+            runtime=NareRuntime(Path(sys.executable)), capture_client=capture,
+            review_client=poster, **options))
+
+    assert go(Discussion()).verdict == "escalated"
+    comments = thread(poster, human(51, "Please reconsider."))
+    first = go(Discussion(comments, {"lead": "write"}), replies_only=True)
+    comments.append(human(52, "Again, please."))
+    second = go(Discussion(comments, {"lead": "write"}), replies_only=True)
+    assert [first.to_dict()["status"], second.to_dict()["status"]] == ["unchanged"] * 2
+    assert len(poster.creates) == 1 and len(poster.replies) == 2
+    assert all("Not reassessed" in body for _, body in poster.replies)

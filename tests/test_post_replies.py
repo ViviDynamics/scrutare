@@ -340,3 +340,26 @@ def test_an_unrenderable_response_is_set_aside_without_blocking_the_rest(capture
     statuses = {r["thread"]: r["status"] for r in state_of(second)["responses"]}
     assert statuses == {40: "rejected", 50: "posted"}
     assert post_replies(second, config, client=client) == (posted,)
+
+
+def test_incomplete_reassessment_does_not_claim_the_finding_is_supported():
+    body = render_reply({
+        "key": "d" * 32, "thread": 50, "replies": [51], "disposition": "upheld",
+        "outcome": "incomplete", "head_sha": "abc123", "round": 2, "round_limit": 3,
+        "findings": [], "original": []})
+    assert "still supported" not in body and "pending a complete review" in body
+
+
+@pytest.mark.parametrize("damage", [
+    lambda record: record.pop("thread"), lambda record: record.update(thread="50"),
+    lambda record: record.pop("status"), lambda record: record.update(key=7)])
+def test_damaged_history_records_fail_safely_before_any_write(capture, monkeypatch, damage):
+    config, second, _ = contested(capture, monkeypatch, findings=(finding(),))
+    path, = (second.parent / ".iterative").glob("*/state.json")
+    state = json.loads(path.read_bytes())
+    damage(state["responses"][0])
+    path.write_text(json.dumps(state))
+    client = Threads()
+    with pytest.raises(PostingError, match="Reply evidence is invalid"):
+        post_replies(second, config, client=client)
+    assert client.created == []
