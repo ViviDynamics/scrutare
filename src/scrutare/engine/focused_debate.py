@@ -262,7 +262,11 @@ async def _discuss(
             record["reassessment"] = f"assessment-round-{number:04d}.json"
             if assessment.status != "complete":
                 _finish_round(record, context, usage_before, started)
-                return rows, rounds, assessment.status, "reassessment_incomplete", None
+                degradation = (None if assessment.outcome is None else _discussion_fallback(
+                    context, number, [assessment.outcome.to_dict()]))
+                if degradation is None:
+                    return rows, rounds, assessment.status, "reassessment_incomplete", None
+                return _fall_back(context, rows, rounds, degradation)
             updated = {row.candidate.candidate_id: row for row in assessment.rows}
             record["disposition_changes"] = [
                 {

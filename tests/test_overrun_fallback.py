@@ -248,14 +248,14 @@ claims = quoted['candidates']
 if a.prompt.startswith('Independently assess'):
     kind = 'reassessment' if 'counterevidence' in quoted else 'assessment'
 else:
-    kind = 'position'
+    kind = kind_of(a.prompt)
 plan = PLAN[kind]
 status = plan.get('status', 'supported')
-output = {'assessments': []} if kind != 'position' else {'proposals': []}
+output = {'assessments': []} if 'position' not in kind else {'proposals': []}
 for claim in claims:
     refs = [{k: v for k, v in ref.items() if not k.startswith('validation')}
             for ref in claim['evidence']['citations']]
-    if kind == 'position':
+    if 'position' in kind:
         output['proposals'].append({'candidate_id': claim['candidate_id'],
             'action': plan.get('action', 'retain'), 'reason': 'Position', 'citations': refs})
     else:
@@ -277,7 +277,9 @@ def phase_runtime(tmp_path, plan):
 def kind_of(prompt):
     if prompt.startswith('Independently assess'):
         return 'reassessment' if '"counterevidence"' in prompt else 'assessment'
-    return 'position'
+    # Later discussion rounds may follow a separate plan.
+    later = 'position2' in PLAN and 'attempt-0003' not in sys.argv[sys.argv.index('--session') + 1]
+    return 'position2' if later else 'position'
 def shape(prompt):
     return PLAN[kind_of(prompt)].get('shape')
 """
@@ -607,3 +609,82 @@ def test_only_measured_overruns_qualify_for_fallback(outcomes, want):
              "overshoot_tokens": 2, "usage": {"total": 12}} | outcome for outcome in outcomes]
     record = phase_degradation("discussion", full, round_number=1, allowance=None)
     assert (record is not None) == want
+
+
+def test_reassessment_overrun_falls_back_to_the_pre_round_assessment(capture, tmp_path,
+                                                                     monkeypatch):
+    import asyncio
+
+    from test_panel import install
+
+    from scrutare.engine.debate import run_debate
+    from scrutare.replay.audit import replay_run
+    config, claim = discussion_capture(capture, discussion="fallback")
+    install(monkeypatch, {"security": (claim,)})
+    plan = {"assessment": {"status": "unresolved"},
+            "reassessment": {"status": "refuted", "input": 200}}
+    result = asyncio.run(run_debate(capture, config, runtime=phase_runtime(tmp_path, plan)))
+    # The overrun reassessment's refutation is not trusted; the unresolved blocking claim
+    # still escalates under the existing rule.
+    assert result.status == "partial"
+    assert (result.verdict.verdict, result.verdict.rule) == (
+        "escalated", "unresolved_semantic_assessment")
+    assert result.verdict.unresolved_candidates == ("one",)
+    reassessment = json.loads((capture / "assessment-round-0001.json").read_bytes())
+    outcome = reassessment["outcome"]
+    assert (outcome["status"], outcome["reason"]) == ("partial", "budget")
+    assert result.verdict.to_dict()["degraded"] == {
+        "phase": "discussion", "round": 1, "allowance_tokens": None,
+        "grant_tokens": outcome["allocated_tokens"], "usage_tokens": 206,
+        "overrun_tokens": 206 - outcome["allocated_tokens"],
+        "fallback_stage": "pre_round_assessment"}
+    trace = json.loads((capture / "debate.json").read_bytes())
+    assert trace["reason"] == "discussion_overrun_fallback"
+    assert trace["rounds"][0]["disposition_changes"] == []
+    assert [row["status"] for row in trace["final_assessments"]] == ["unresolved"]
+    assert replay_run(capture).saved_identical
+
+
+def test_later_round_overrun_keeps_the_completed_rounds(capture, tmp_path, monkeypatch):
+    import asyncio
+
+    from test_panel import install
+
+    from scrutare.engine.debate import run_debate
+    from scrutare.replay.audit import replay_run
+    config, claim = discussion_capture(capture, discussion="fallback", category="style")
+    install(monkeypatch, {"security": (claim,)})
+    plan = {"assessment": {"status": "unresolved"}, "reassessment": {"status": "unresolved"},
+            "position2": {"input": 200, "shape": "stop"}}
+    result = asyncio.run(run_debate(capture, config, runtime=phase_runtime(tmp_path, plan)))
+    assert result.status == "partial"
+    assert result.verdict.to_dict()["degraded"]["round"] == 2
+    assert result.verdict.exhaustion is None
+    trace = json.loads((capture / "debate.json").read_bytes())
+    assert len(trace["rounds"]) == 2
+    assert trace["rounds"][0]["reassessment"] == "assessment-round-0001.json"
+    assert replay_run(capture).saved_identical
+
+
+@pytest.mark.parametrize("tamper", ["reason", "changes", "allocation"])
+def test_replay_refuses_an_unsupported_reassessment_fallback(capture, tmp_path, monkeypatch,
+                                                             tamper):
+    from test_review_inputs import save_json
+
+    from scrutare.replay.audit import replay_run
+    from scrutare.replay.models import ReplayError
+    test_reassessment_overrun_falls_back_to_the_pre_round_assessment(capture, tmp_path,
+                                                                     monkeypatch)
+    path = capture / "assessment-round-0001.json"
+    document = json.loads(path.read_bytes())
+    if tamper == "reason":
+        document["outcome"]["reason"] = "provider"
+    elif tamper == "allocation":
+        document["outcome"]["allocated_tokens"] += 1
+    else:
+        path = capture / "debate.json"
+        document = json.loads(path.read_bytes())
+        document["rounds"][0]["disposition_changes"] = [{"candidate_id": "one"}]
+    save_json(path, document)
+    with pytest.raises(ReplayError):
+        replay_run(capture)
