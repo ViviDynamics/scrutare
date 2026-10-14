@@ -175,8 +175,8 @@ without it.
 The [tools, reliability and separating-case measurements](../evaluations/reports/2026-10-13-tools-reliability-separating/README.md)
 retain 321 cells in thirteen jobs and four withdrawn freezes. The unchanged profile
 passed 3 of the 4 qualification schedules run; captured Ruff evidence changed no
-outcome; the assessor supported an allegation it could not check on every assessed
-cell of one clean case; and three discussion rounds started and none completed.
+outcome; the assessor rejected nothing because no wrong candidate reached it; and
+three discussion rounds started and none completed.
 Judgments are automated and provisional; no default changed.
 
 Ordinary CI uses `--evidence-kind offline` and deterministic provider substitutions

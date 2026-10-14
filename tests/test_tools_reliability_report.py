@@ -40,7 +40,8 @@ def test_public_package_reproduces_hashes_gates_decisions_and_summary(tmp_path, 
     assert summary['jobs']['tools-voided']['status_counts'] == {'complete': 11, 'invalid': 13}
     voided = summary['assessor_reservation']['tools-voided']
     assert sum(arm['cells_voided_by_assessor_reservation'] for arm in voided.values()) == 12
-    # The negative assessment result on the clean twin whose caller is not captured.
+    # dev3-12: the over-broad frozen filter flags all assessed findings; on reading they
+    # state two other claims (see README). The assessor supported every one.
     for arm in ('assessed', 'focused1', 'focused3'):
         row = summary['jobs']['focused-uncaptured']['arms'][arm]['per_case']['dev3-12']
         assert row['initial_dispositions'] == {'supported': 3}

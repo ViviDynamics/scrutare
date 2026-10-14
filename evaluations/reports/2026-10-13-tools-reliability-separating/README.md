@@ -14,11 +14,13 @@ Headline:
   first attempt (95.8%, interval 91.2% to 98.1%). No upstream 5xx occurred in this
   increment, so the evaluator's rerun path still has never run live.
 - Captured Ruff evidence changed nothing measurable. Both arms found every labeled
-  defect, no finding cited the tool, and the tools arm cost 4 to 6% more tokens.
-- **The independent assessor supported a wrong allegation it could not check.** On
-  `dev3-12`, a clean change whose deciding caller is outside the capture, reviewers
-  alleged a defect in every assessed cell and the assessor marked it `supported` in
-  all 9. Assessment did not filter it.
+  defect and no finding cited the tool. The tools arm cost 4 to 6% more tokens in
+  the revised-profile job (0.94 to 1.04 times in the silent-tool job).
+- Assessment filtered nothing, because nothing reached it that it should have
+  rejected. On `dev3-12`, the clean case whose caller is not captured, reviewers in
+  every assessed cell reported two other behaviours of the changed function. Both are
+  true from the captured file, though not reachable from that caller. The assessor
+  supported them in all 9 cells. They are pending for a person.
 - Discussion was attempted for the first time: three rounds started and none
   completed. Each failed because the reviewers' reused grants ran out, which voided
   the whole review ([#74](https://github.com/ViviDynamics/scrutare/issues/74)).
@@ -42,7 +44,10 @@ After the first tools job voided half its cells, a revised profile was frozen
 2026-10-14T00:37:47Z). It is identical except that the assessor reserves 30,000
 tokens and the four reviewers of an assessed arm share the remaining 70,000. **It was
 chosen after seeing those overruns**: 30,000 is about 27% above the largest assessor
-use observed, and 17,500 per reviewer about 22% above the largest reviewer session.
+use observed in `tools-voided`, and 17,500 per reviewer about 22% above that job's
+largest reviewer session (14,341). Across all jobs before the freeze the largest
+reviewer session was 15,412 tokens (`routing`), 13.5% below 17,500, and a later
+`focused-uncaptured` session reached 16,896.
 No voided cell is reused under it. **The revised profile is not qualified.** The
 qualification schedules ran with the 20,000 reservation, and a schedule on the
 revised profile did not fit the remaining spend.
@@ -100,10 +105,10 @@ finding matched the label under the frozen rules (below). Intervals are 95% Wils
 | --- | --- | --- | --- | --- |
 | Tools vs assessment, revised (#48) | `dev3-01`, `-02`, `-04` defects; `-03` clean | 9/9 vs 9/9; clean 0/3 vs 0/3 with findings | 1.04 to 1.06 | 52.7 s vs 58.0 s |
 | Tools vs assessment, silent tool (#48) | `dev2-01`, `-06`; `dev2-07` clean | 6/6 vs 5/6 | 0.94 to 1.04 | |
-| Assessment vs aggregation, separating (#47) | `dev3-06` to `-10` | 9/9 vs 9/9; clean 1/6 vs 2/5 with findings | 1.00 to 1.40 | about 2.5x on defects |
+| Assessment vs aggregation, separating (#47) | `dev3-06` to `-10` | 9/9 vs 9/9; clean 1/6 vs 2/6 cells with findings | 1.00 to 1.40 | 2.7 to 3.0x on defects |
 | Routed vs fixed (#50) | `dev3-06` to `-10` | 9/9 vs 9/9; clean 1/6 vs 2/6 with findings | 1.38 to 1.42 | |
 | Assessment vs aggregation, reassuring comment (#47) | `dev3-08` | 3/3 vs 3/3 | 1.39 | 28.0 s vs 71.8 s |
-| Assessment vs aggregation, uncaptured caller (#47) | `dev3-11`; `dev3-12` | 3/3 vs 3/3; clean twin 2/3 vs 3/3 cells with the allegation | 1.20 to 1.25 | |
+| Assessment vs aggregation, uncaptured caller (#47) | `dev3-11`; `dev3-12` | 3/3 vs 3/3; clean twin 2/3 vs 3/3 cells with findings | 1.20 to 1.25 | |
 | One round vs assessment, three vs one (#49) | `dev3-05` to `-08`, `-11`, `-12`; `dev2-03`, `-08`, `-12` | no difference except cells failed by attempted rounds | about 1.00 | |
 
 **Tools (#48).** Pinned Ruff 0.16.10 reported what the labels predicted: `F811` on
@@ -116,17 +121,24 @@ defect that reviewers miss and the tool names is still needed. The one silent-to
 loss (`dev2-06/tools/3`) was an out-of-range citation, not a detection difference.
 
 **Assessment (#47).** On every defect case the assessor supported every candidate.
-On the clean cases it saw only two kinds of candidate: the unlabeled zero-batch-size
-edge on `dev3-07` (below), which it supported, and the allegation on `dev3-12`. **On
-`dev3-12` it supported the wrong allegation in all 9 assessed cells.** The change
-there stops a function raising `KeyError`; reviewers inferred that callers relying on
-the exception would now send a blank subject. The only caller, deliberately outside
-the capture, never relied on it. The claim was a reasonable inference that the
-captured evidence could neither confirm nor refute; the assessor nonetheless
-returned `supported` rather than `unresolved`. Assessment did not filter the one
-wrong candidate this increment produced, and it cost up to 40% more tokens and two to
-three times the latency on defect cases. Because the label rests on uncaptured code,
-`dev3-12` is not used for any precision figure, and none is published.
+On the clean cases it saw two kinds of candidate. One was the unlabeled zero-batch-size
+edge on `dev3-07` (below), which it supported. The other was on `dev3-12`, where the
+change makes `render_subject` render a missing value as empty text. The labeled
+tempting allegation (callers that relied on `KeyError` now send blank subjects) was
+never raised. The frozen allegation filter flagged all 11 `dev3-12` findings, but on
+reading, none states that allegation; the filter's patterns (`blank`, `missing
+value`) are too broad. Instead, 8 findings say that a missing value with a numeric
+format specification such as `{count:d}` still raises, contradicting the new
+docstring. The other 3 say that copying the mapping into the helper dict discards a
+caller's own default mapping. Both are true from the captured `subject.py`, and the
+assessor supported them in all 9 assessed cells. The only caller, deliberately not
+captured, resolves every placeholder first, so neither is reachable there. Whether
+they are defects is a person's decision; they stay pending. Assessment therefore had
+no wrong candidate to reject in this increment. It cost up to 40% more tokens and
+2.7 to 3.0 times the latency on defect cases. `dev3-12` is not used for any precision
+figure, and none is published. Its label says `clean_label_requires_context: false`,
+although its clean label also depends on code outside the capture; the
+`evidence_outside_capture` field records that instead.
 
 The assessor's fixed reservation is a second #47 finding. When it ends past its
 reservation, even by 131 tokens, the engine yields no verdict for the whole review
@@ -155,8 +167,9 @@ clean controls neither arm raised the labeled allegation; the zero-batch-size ed
 was reported in 2 of 6 routed and 1 of 6 fixed-panel cells. Routing cost
 about 40% more tokens.
 
-**Citations.** Across every job without `context.line_counts`, 7 of 1,179 sessions
-(0.6%, interval 0.3% to 1.2%) and 7 of 291 cells (2.4%, 1.2% to 4.9%) were refused for
+**Citations.** Across every job without `context.line_counts`, 7 of 1,179 reviewer
+discovery sessions (0.6%, interval 0.3% to 1.2%; 7 of all 1,316 sessions including
+assessor and position sessions, 0.5%, 0.3% to 1.1%, none of which was refused) and 7 of 291 cells (2.4%, 1.2% to 4.9%) were refused for
 `line_range_outside_capture`. In every refusal, each of the 8 out-of-range citations
 ended exactly one line past the end of the file. In the paired `routing` / `line-counts`
 jobs (same cases, arms and source; only the setting differs) the counts were 2 of
@@ -169,13 +182,20 @@ against zero is suggestive, not established.
 `automated-decisions.json` holds 578 matches made by the rules in `reproduce.py`; 32
 findings match no rule and are pending for a person, never scored false. The
 development-v3 rules (`FROZEN_RULES` and `ALLEGATIONS`) were written from the labels
-and fixture sources alone and committed as `c4e092a`, pushed at
-2026-10-14T00:22:09Z. That was while `tools-voided` was still running and before any
-finding, candidate or session text of a development-v3 job had been read.
+and fixture sources alone and committed as `c4e092a` at 2026-10-14T00:22:09Z (pushed
+at 00:22:11Z). At that moment `tools-voided` was the only development-v3 job
+launched (00:20:39Z) and no development-v3 job had finished. It already had 3
+completed cells on disk, the first written 22 seconds before the commit. That no
+finding, candidate or session text of a development-v3 job had been read is the
+operator's assertion; the artifacts cannot demonstrate it.
 `frozen-rules.json` records their hash
 (`f722d27708cb20461ad6074f2c1ae4a267321c28dce3c69c35ac44d382b4e683`), and
 `reproduce.py` refuses to run if the rules differ. They were not amended: they matched
-every development-v3 defect finding and assessed candidate.
+every development-v3 defect finding and assessed candidate. Two corrections to
+`frozen-rules.json`, which is hashed and therefore left as written. Its
+`state_of_jobs_when_frozen` says six development-v3 jobs "had been launched and some
+had finished"; in fact six were frozen, one (`tools-voided`) had launched, and none
+had finished. Its allegation filter for `dev3-12` turned out to be over-broad (above).
 
 The rules for the pilot and development-v2 cases are copied unchanged from the
 previous package, where they were written after that package's outputs existed.
@@ -185,7 +205,8 @@ post hoc.**
 
 The 32 pending findings are: 19 reports on `dev3-07` that a zero batch size silently
 skips the backfill, which is a real edge of that change, neither the labeled
-allegation nor scored; 11 statements of the tempting allegation on `dev3-12`; and 2
+allegation nor scored; 11 findings on `dev3-12` that the over-broad filter flags but
+that state the two other claims described above; and 2
 pilot findings worded outside the old filter. These, and every automated match, need
 human adjudication. All matches are keyword filters, not a semantic judge.
 
@@ -194,6 +215,9 @@ human adjudication. All matches are keyword filters, not a semantic judge.
 The limit for this increment was US$60 of measured spend. A job launched only if
 measured spend so far, plus the worst case of every job in flight and of the next
 job (attempts times ceiling times the advertised output rate), stayed within it.
+
+The ledger has no launch event for `reliability-r2`, the first job; the bound
+trivially held there (nothing spent, worst case 42).
 
 Measured spend was **US$43.34** for 17,312,889 tokens, at the proxy-advertised rates
 ($2 per million input tokens, cached input charged as uncached, $10 per million
@@ -208,13 +232,14 @@ rounds (rerunning them at the same profile would fail the same way).
 ## Reproduce
 
 ```sh
-python reproduce.py --package . --output recomputed-summary.json
+python reproduce.py --package . --output ../recomputed-summary.json
 ```
 
 Python 3.10 or newer, standard library only, no network. It checks every published
 hash and the frozen-rule hash, the exact cell matrices, agreement between the public
 experiment rows and the normalized cells, recomputes each gate, the automated
-decisions and `summary.json`, and fails on any difference. It does not rerun a model
+decisions and `summary.json`, and fails on any difference. Write the output outside the package: the script does
+not itself reject unlisted extra files there (the repository test does). It does not rerun a model
 or authenticate normalized evidence against native sessions; that needs the retained
 private captures. Whether an assessor ran, its token use, citation refusals and the
 evidence validation are read from `mechanical-qualification.json`, produced from the
