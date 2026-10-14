@@ -1,0 +1,33 @@
+{
+  "case_id": "dev3-09",
+  "clean_label_requires_context": false,
+  "counterexamples": [
+    "A single transfer, or transfers that all acquire locks in one consistent order, complete."
+  ],
+  "defects": [
+    {
+      "evidence": "account_locks.py no longer acquires the two locks in account-number order; it takes the source lock first and the target lock second.",
+      "fix_or_counterexample": "Keep the sorted acquisition order and check the balance once both locks are held.",
+      "id": "dev3-09-defect",
+      "impact": "Each thread holds one lock and waits for the other; both transfers deadlock.",
+      "match_criteria": "Identify the lost consistent lock ordering or the resulting deadlock between opposite transfers.",
+      "trigger": "One thread moves from account A to B while another moves from B to A."
+    }
+  ],
+  "defensible_observations": [
+    "move(account, account) acquires the same lock twice and blocks on a non-reentrant lock in both revisions. This is pre-existing, not the labeled defect, and needs a human decision rather than a false-positive score."
+  ],
+  "evidence_outside_capture": [],
+  "routing_expectation": {
+    "class": "covered",
+    "expected_specialists": [
+      "performance-concurrency"
+    ]
+  },
+  "tempting_allegations": [],
+  "tool_expectation": {
+    "relation": "not_a_tools_case",
+    "ruff_codes": []
+  },
+  "unchanged_supporting_paths": []
+}

@@ -15,6 +15,21 @@ context:
   max_tree_requests: 256
 ```
 
+`context.line_counts: true` (default `false`) is an opt-in aid for cited line ranges.
+Reviewers read captured files as plain unnumbered text and must count lines to cite a
+range, and a reviewer that cites one line past the end of a file has its whole
+session refused (`line_range_outside_capture`). With the setting on, every manifest
+entry carries `line_count` (the last citeable line of a captured file, `null` for an
+omission) and the reviewer, assessor and discussion prompts state that `end_line`
+may never exceed it. A final newline starts no further line, and only LF separates
+lines. The citation validator is unchanged and still refuses any out-of-range
+citation; preparation refuses a manifest whose `line_count` disagrees with the
+captured bytes or with the setting. The setting does nothing while `context.enabled`
+is false, although it is still saved with the configuration. The prompts mention
+the bound only with `findings.evidence: v2`, the only mode in which reviewers
+cite line ranges; with legacy evidence the manifest alone carries it. With the setting off, manifests, prompts and
+saved configuration are byte-identical to earlier releases.
+
 Changed file identities precede sorted explicit related paths. Each candidate is
 considered at the captured base then head revision. Includes match repository-relative
 paths; excludes win. Related paths are explicit files, not patterns or shell commands.

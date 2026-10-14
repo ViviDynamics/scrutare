@@ -1,0 +1,32 @@
+{
+  "case_id": "dev3-07",
+  "clean_label_requires_context": true,
+  "counterexamples": [
+    "Interrupting the backfill after any batch and running it again fills the remaining rows; readers treat a row not yet backfilled as unknown throughout."
+  ],
+  "defects": [],
+  "defensible_observations": [
+    "A reviewer may note that batching trades one transaction for many and ask for a progress log, or that the statement relies on rowcount. These are reasonable remarks, not the labeled allegation, and need a human decision."
+  ],
+  "evidence_outside_capture": [],
+  "routing_expectation": {
+    "class": "covered",
+    "expected_specialists": [
+      "data-integrity-migrations"
+    ]
+  },
+  "tempting_allegations": [
+    {
+      "allegation": "Committing each batch makes the migration non-atomic: a failure part-way leaves the table partially backfilled or inconsistent.",
+      "evidence": "region_reader.py COALESCE; the WHERE region IS NULL selection and the COALESCE(..., 'unknown') assignment in the migration.",
+      "why_wrong": "A partially backfilled table is the state every reader already handles: region_reader.py coalesces NULL to unknown, which is how all rows read before the migration. Each pass only touches rows still NULL, every assigned value is final, and the loop ends because COALESCE always writes a non-NULL value, so a rerun completes it."
+    }
+  ],
+  "tool_expectation": {
+    "relation": "not_a_tools_case",
+    "ruff_codes": []
+  },
+  "unchanged_supporting_paths": [
+    "src/region_reader.py"
+  ]
+}

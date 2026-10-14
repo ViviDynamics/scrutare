@@ -1,0 +1,15 @@
+diff --git a/src/render/page_cache.py b/src/render/page_cache.py
+index 0ceb0179461301b3605fa2312a6eac3be07c402a..64821164cb7a514b58c05a4ab34814663c4bf084 100644
+--- a/src/render/page_cache.py
++++ b/src/render/page_cache.py
+@@ -7,7 +7,9 @@ class PageCache:
+         self._pages = {}
+ 
+     def get(self, template_id, locale, currency):
+-        key = (template_id, locale, currency)
++        # A locale has one display currency, so the locale already identifies the
++        # page. Leaving currency out of the key stops duplicate entries.
++        key = (template_id, locale)
+         if key not in self._pages:
+             self._pages[key] = self._render(template_id, locale, currency)
+         return self._pages[key]

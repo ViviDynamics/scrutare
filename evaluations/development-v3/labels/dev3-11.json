@@ -1,0 +1,31 @@
+{
+  "case_id": "dev3-11",
+  "clean_label_requires_context": false,
+  "counterexamples": [
+    "A caller that reads the returned count is unaffected."
+  ],
+  "defects": [
+    {
+      "evidence": "stock.py reserve no longer raises OutOfStock and returns a possibly smaller count; checkout.py ignores the return value and relied on the exception. checkout.py is deliberately not captured.",
+      "fix_or_counterexample": "Keep raising, or make every caller use the returned count.",
+      "id": "dev3-11-defect",
+      "impact": "The order is confirmed for the full quantity although fewer units were reserved, so stock is oversold.",
+      "match_criteria": "Identify that reserve no longer raises when stock is short, so a caller that relied on OutOfStock or ignores the returned count proceeds as if the full quantity were reserved.",
+      "trigger": "Check out an order for more units than remain in stock."
+    }
+  ],
+  "defensible_observations": [],
+  "evidence_outside_capture": [
+    "src/inventory/checkout.py"
+  ],
+  "routing_expectation": {
+    "class": "none",
+    "expected_specialists": []
+  },
+  "tempting_allegations": [],
+  "tool_expectation": {
+    "relation": "not_a_tools_case",
+    "ruff_codes": []
+  },
+  "unchanged_supporting_paths": []
+}

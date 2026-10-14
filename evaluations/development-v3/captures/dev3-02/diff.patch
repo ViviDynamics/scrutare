@@ -1,0 +1,21 @@
+diff --git a/src/client/http_settings.py b/src/client/http_settings.py
+index a0ae206616a37e22afe980ffe12baaf082feda0d..719351adc007656ea4b5d6efdba848cd10983773 100644
+--- a/src/client/http_settings.py
++++ b/src/client/http_settings.py
+@@ -1,6 +1,6 @@
+ """Connection settings for the partner API client."""
+ 
+-DEFAULT_TIMEOUT = 10
++DEFAULT_TIMEOUT_SECONDS = 10
+ MAX_RETRIES = 3
+ BACKOFF_BASE = 0.5
+ BACKOFF_CAP = 8.0
+@@ -10,7 +10,7 @@ USER_AGENT = "partner-sync/3"
+ 
+ def connect_options(overrides=None):
+     """Options for an ordinary request; explicit overrides win."""
+-    options = {"timeout": DEFAULT_TIMEOUT, "retries": MAX_RETRIES,
++    options = {"timeout": DEFAULT_TIMEOUT_SECONDS, "retries": MAX_RETRIES,
+                "headers": {"User-Agent": USER_AGENT}}
+     if overrides:
+         options.update(overrides)
