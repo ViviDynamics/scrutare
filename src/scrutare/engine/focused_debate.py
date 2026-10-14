@@ -12,6 +12,7 @@ from scrutare.engine.assessment import (
     Assessment,
     AssessmentResult,
     assess_candidates,
+    assessment_fallback,
     assessment_wire,
 )
 from scrutare.engine.discussion import Proposal, disputed_ids, equivalent_groups, proposal_wire
@@ -40,7 +41,7 @@ from scrutare.engine.session_artifacts import (
 from scrutare.engine.session_models import NareRuntime, ReanchorOutcome
 from scrutare.findings import Exhaustion, derive_verdict, parse_diff
 from scrutare.findings.models import FindingError
-from scrutare.findings.verdict import Verdict
+from scrutare.findings.verdict import Degradation, Verdict
 from scrutare.findings.verification import check_anchors, finish_reanchor
 from scrutare.replay.artifacts import decode_artifact, read_artifact
 
@@ -59,6 +60,7 @@ async def run_focused_debate(
     rows: tuple[Assessment, ...] = ()
     rounds: list[dict[str, object]] = []
     bypassed: tuple[str, ...] = ()
+    degradation: Degradation | None = None
     try:
         _validate_binding(context, hashes)
         if (
@@ -83,7 +85,15 @@ async def run_focused_debate(
                 assessment = await assess_candidates(context, verification.accepted)
                 reason = "assessment_incomplete"
                 status = assessment.status
-                if assessment.status == "complete":
+                if assessment.status != "complete":
+                    # Opt-in: a measured overrun keeps the anchor-validated findings.
+                    degradation = assessment_fallback(context, assessment)
+                    if degradation is not None:
+                        verdict = derive_verdict(
+                            equivalent_groups(verification.accepted), config.verdict,
+                            evidence_version=2, degradation=degradation)
+                        status, reason = "partial", "assessment_overrun_fallback"
+                else:
                     rows = assessment.rows
                     disputed = disputed_ids(rows)
                     bypassed = tuple(
@@ -130,6 +140,8 @@ async def run_focused_debate(
         "final_assessments": [assessment_wire(row) for row in rows],
         "ledger": context.ledger.snapshot(),
     }
+    if degradation is not None and verdict is not None:
+        document["degraded"] = degradation.to_dict()
     write_owned_json(context.run_dir / "debate.json", document, prepared_root=context.inputs.root)
     publish_panel(context.run_dir, context.inputs.root, document, verdict)
     return result

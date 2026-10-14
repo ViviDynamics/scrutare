@@ -429,3 +429,47 @@ def test_replay_refuses_a_fallback_the_evidence_does_not_support(capture, tmp_pa
     except ReplayError:
         return
     assert not replayed.saved_identical
+
+
+def discussion_capture(capture, *, assessment="void", discussion="void", tokens=None,
+                       budgets=None, personas=None, rounds=2, category="correctness"):
+    from test_focused_debate_runtime import focused_capture
+    from test_review_inputs import save_json
+
+    from scrutare.config import DiscussionSettings
+    config, claim = focused_capture(capture)
+    findings = replace(config.findings,
+                       assessment=replace(config.findings.assessment, overrun=assessment),
+                       discussion=DiscussionSettings(True, tokens, discussion))
+    config = replace(config, findings=findings, rounds=replace(config.rounds, max=rounds))
+    if budgets is not None:
+        config = replace(config, budgets=replace(config.budgets, **budgets))
+    if personas is not None:
+        config = replace(config, personas=personas)
+    for name in ("config.json", "config.yaml"):
+        save_json(capture / name, config.to_dict())
+    return config, replace(claim, category=category)
+
+
+def test_focused_assessor_overrun_falls_back_before_any_discussion(capture, tmp_path,
+                                                                   monkeypatch):
+    import asyncio
+
+    from test_panel import install
+
+    from scrutare.engine.debate import run_debate
+    from scrutare.replay.audit import replay_run
+    config, claim = discussion_capture(capture, assessment="fallback", category="style")
+    install(monkeypatch, {"security": (claim,)})
+    result = asyncio.run(run_debate(capture, config, runtime=phase_runtime(
+        tmp_path, {"assessment": {"input": 120, "status": "unresolved"}})))
+    assert result.status == "partial"
+    assert (result.verdict.verdict, result.verdict.rule) == ("escalated", "phase_overrun_fallback")
+    # The overrun assessor's unresolved rows are not trusted; the candidate is kept unassessed.
+    assert result.verdict.unresolved_candidates == ()
+    assert result.verdict.findings[0].sources == (claim,)
+    trace = json.loads((capture / "debate.json").read_bytes())
+    assert (trace["status"], trace["reason"]) == ("partial", "assessment_overrun_fallback")
+    assert trace["rounds"] == [] and trace["final_assessments"] == []
+    assert trace["degraded"]["phase"] == "assessment"
+    assert replay_run(capture).saved_identical
