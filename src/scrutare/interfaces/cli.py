@@ -15,6 +15,7 @@ from scrutare.engine.github import GitHubError, resolve_pr
 from scrutare.engine.review import (
     ReviewInterruptedError,
     ReviewRunError,
+    preflight_replies_only,
     preflight_review,
     review_pr,
 )
@@ -85,7 +86,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         runtime = NareRuntime(args.nare_executable)
-        preflight_review(review_config, runtime, replies_only=args.replies_only)
+        preflight_replies_only(review_config, args.replies_only)
+        preflight_review(review_config, runtime)
         ref = resolve_pr(args.pr)
         result = asyncio.run(review_pr(
             ref, review_config, config_bytes=config_bytes,

@@ -93,13 +93,16 @@ class ReviewRunResult:
                            indent=2, allow_nan=False) + "\n").encode("utf-8")
 
 
-def preflight_review(config: ReviewConfig, runtime: NareRuntime, *,
-                     replies_only: bool = False) -> None:
+def preflight_replies_only(config: ReviewConfig, replies_only: bool) -> None:
+    """Refuse a replies-only run the configuration has not opted into."""
+    if replies_only and not config.replies.enabled:
+        raise ReviewRunError("--replies-only requires replies.enabled in the configuration.")
+
+
+def preflight_review(config: ReviewConfig, runtime: NareRuntime) -> None:
     """Reject unsupported strategies or absent executables before any GitHub access."""
     if config.strategy not in ("panel", "iterative", "debate"):
         raise ReviewRunError(f"Strategy {config.strategy!r} is not yet implemented.")
-    if replies_only and not config.replies.enabled:
-        raise ReviewRunError("--replies-only requires replies.enabled in the configuration.")
     if not isinstance(runtime, NareRuntime) or shutil.which(str(runtime.executable)) is None:
         raise ReviewRunError("executable: cannot locate an executable nare runtime")
     # Version and protocol inspection remain authoritative in the engine.
@@ -136,7 +139,8 @@ async def review_pr(
     With `replies_only`, a run that finds no new head and no trusted contest posts no
     review. Pending threaded responses are still delivered.
     """
-    preflight_review(config, runtime, replies_only=replies_only)
+    preflight_replies_only(config, replies_only)
+    preflight_review(config, runtime)
     run_dir: Path | None = None
     confirmed = False
     manifest_attempted = False
