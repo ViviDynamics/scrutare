@@ -23,24 +23,17 @@ from scrutare.poster.payload import _field
 
 _UNCERTAIN = "Reply delivery is uncertain; inspect reply-posting.json before any manual reply."
 _OUTCOMES = {
-    ("reassessed", "upheld"): "Reassessed with this thread's replies as evidence. "
-                              "The finding is still supported.",
-    ("reassessed", "withdrawn"): "Reassessed with this thread's replies as evidence. The "
-                                 "unchanged code no longer yields the finding, so it is "
-                                 "withdrawn and no longer counts toward the verdict.",
-    ("reassessed", "fixed"): "Reassessed with this thread's replies as evidence. The changed "
-                             "code no longer yields the finding.",
-    ("incomplete", "upheld"): "The reassessment did not cover this finding completely, so it "
-                              "stands.",
-    ("exhausted", "upheld"): "Not reassessed: this pull request has used all {limit} review "
-                             "rounds. The finding stands and the review is escalated to human "
-                             "reviewers.",
-    ("recorded", "upheld"): "No reassessment was needed: a finding at this location is "
-                            "currently upheld.",
-    ("recorded", "withdrawn"): "No reassessment was needed: an earlier review already "
-                               "withdrew this finding.",
-    ("recorded", "fixed"): "No reassessment was needed: an earlier review already recorded "
-                           "this finding as fixed.",
+    "reassessed": "Reassessed with this thread's replies as evidence.",
+    "incomplete": "The reassessment did not cover this finding completely.",
+    "exhausted": "Not reassessed: this pull request has used all {limit} review rounds, and "
+                 "the review is escalated to human reviewers.",
+    "recorded": "No reassessment was needed.",
+}
+_DISPOSITIONS = {
+    "upheld": "The finding is still supported and stands.",
+    "withdrawn": "The unchanged code no longer yields the finding, so it is withdrawn and no "
+                 "longer counts toward the verdict.",
+    "fixed": "The changed code no longer yields the finding.",
 }
 _FINAL = ("posted", "observed", "rejected")
 
@@ -63,13 +56,14 @@ def render_reply(response: dict[str, Any]) -> str:
         key, disposition, outcome = response["key"], response["disposition"], response["outcome"]
         head, completed, limit = response["head_sha"], response["round"], response["round_limit"]
         if (not isinstance(key, str) or re.fullmatch(r"[0-9a-f]{32}", key) is None
-                or (outcome, disposition) not in _OUTCOMES
+                or outcome not in _OUTCOMES or disposition not in _DISPOSITIONS
                 or not isinstance(head, str) or re.fullmatch(r"[0-9a-f]{4,64}", head) is None
                 or type(completed) is not int or type(limit) is not int
                 or not 0 <= completed <= limit):
             raise ValueError
         parts = [f"Scrutare reassessment\n\nDisposition: {disposition}\n"
-                 f"Outcome: {_OUTCOMES[outcome, disposition].format(limit=limit)}\n"
+                 f"Outcome: {_OUTCOMES[outcome].format(limit=limit)} "
+                 f"{_DISPOSITIONS[disposition]}\n"
                  f"Head SHA: {head}\nRound: {completed} of {limit}"]
         for finding in response["findings"]:
             for label in ("problem", "persona", "category", "reason"):
@@ -108,8 +102,16 @@ def post_replies(run_dir: Path, config: ReviewConfig, *,
             journal: dict[str, dict[str, Any]] = {}
             if journal_path.exists():
                 journal = {entry["key"]: entry for entry in read_json(journal_path)["responses"]}
-            bodies = {response["key"]: render_reply(response) for response in responses
-                      if response["status"] not in _FINAL}
+            bodies: dict[str, str] = {}
+            for response in responses:
+                if response["status"] in _FINAL:
+                    continue
+                try:
+                    bodies[response["key"]] = render_reply(response)
+                except PostingError:
+                    # Set aside, so one bad record cannot hold back every other thread.
+                    response["status"] = "rejected"
+                    _save(path, state)
         except (KeyError, TypeError, ValueError, GitHubError) as error:
             if isinstance(error, PostingError):
                 raise

@@ -315,3 +315,28 @@ def test_disabled_reviews_ignore_a_stray_reply_document(tmp_path):
     existing(run_dir, client.creates[0].comments[0].body)
     post_review(run_dir, verdict, client=client)
     assert client.creates[1].comments == client.creates[0].comments
+
+
+@pytest.mark.parametrize("outcome", ["reassessed", "incomplete", "exhausted", "recorded"])
+@pytest.mark.parametrize("disposition", ["upheld", "withdrawn", "fixed"])
+def test_every_outcome_the_engine_can_record_renders(outcome, disposition):
+    body = render_reply({
+        "key": "d" * 32, "thread": 50, "replies": [51], "disposition": disposition,
+        "outcome": outcome, "head_sha": "abc123", "round": 3, "round_limit": 3,
+        "findings": [], "original": []})
+    assert f"Disposition: {disposition}\n" in body and "Outcome: " in body
+
+
+def test_an_unrenderable_response_is_set_aside_without_blocking_the_rest(capture, monkeypatch):
+    config, second, _ = contested(capture, monkeypatch, findings=(finding(),))
+    path, = (second.parent / ".iterative").glob("*/state.json")
+    state = json.loads(path.read_bytes())
+    broken = dict(state["responses"][0], key="e" * 32, thread=40, outcome="approved")
+    state["responses"].insert(0, broken)
+    path.write_text(json.dumps(state))
+    client = Threads()
+    posted, = post_replies(second, config, client=client)
+    assert posted.thread == 50 and [thread for thread, _ in client.created] == [50]
+    statuses = {r["thread"]: r["status"] for r in state_of(second)["responses"]}
+    assert statuses == {40: "rejected", 50: "posted"}
+    assert post_replies(second, config, client=client) == (posted,)
