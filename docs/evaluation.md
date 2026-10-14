@@ -283,6 +283,19 @@ The four fixed reviewers are senior-dev, junior-dev, security and devops. At a
 four discovery reviewers receive 8,000 each. Unassessed fixed panels receive
 10,000 each. Routing uses the production planner and shared ledger: five effective
 reviewers receive 8,000 each; six share the same 40,000 rather than increase it.
+`run --assessment-tokens N` replaces the one-fifth assessor reservation in every
+assessed arm of the `architectures` and `focused` sets. `N` is an integer from 1 to
+the total ceiling minus four, so each of the four reviewers keeps a grant. The
+option is refused for the `baseline` and `procedures` sets and when no selected arm
+has an assessor. The total ceiling does not change: the reviewers of an assessed
+arm share what remains, and unassessed arms are untouched. A review whose assessor
+exhausts its reservation before finishing yields no verdict, so the default fifth
+can be too small; the measurement reports under `evaluations/reports` record where
+that happened. Size the reservation from observed assessor usage with headroom,
+freeze it before the job, and say so beside the results. The value is recorded in
+`snapshot.json`. Comparing arms run with different reservations is not a paired
+comparison.
+
 Case-level snapshots record ordered effective reviewers, exact system prompts and
 hashes, executor prompt identity, actual quota allocations, routing activation and
 omission reasons, and prepared input hashes **before runtime inspection**. Capture

@@ -34,6 +34,9 @@ def main() -> None:
     run.add_argument('--transient-retry-delay-seconds', type=float, default=0.0)
     run.add_argument('--transient-retry-budget', type=int,
                      help='most reruns the whole job may spend; unset leaves the per-cell bound')
+    run.add_argument('--assessment-tokens', type=int,
+                     help='assessor reservation for assessed arms; unset keeps one fifth of '
+                          'the total ceiling, which itself never changes')
     run.add_argument('--max-turns', type=int, default=50)
     run.add_argument('--evidence-kind', choices=('model', 'offline'), default='model')
     packet = sub.add_parser('adjudicate', help='export blinded finding packet for human matching')
@@ -57,7 +60,8 @@ def main() -> None:
             variant_names=tuple(args.variants.split(',')) if args.variants is not None else None,
             transient_retries=args.transient_retries,
             transient_retry_delay_seconds=args.transient_retry_delay_seconds,
-            transient_retry_budget=args.transient_retry_budget))
+            transient_retry_budget=args.transient_retry_budget,
+            assessment_tokens=args.assessment_tokens))
     elif args.command == 'adjudicate':
         write_json(args.output, adjudication_packet(read_json(args.experiment)['runs']))
     elif args.command == 'gate':
