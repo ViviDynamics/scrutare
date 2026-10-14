@@ -1,0 +1,71 @@
+{
+  "label": "g1",
+  "source_commit": "f52a4e101def83b51216995baeb072cc19360187",
+  "source_is_ancestor_of_origin_main": true,
+  "model_alias": "gpt-6.1-sol",
+  "backend_revision_verified": false,
+  "corpus": "evaluations/development-v3",
+  "cases": [
+    "dev3-11",
+    "dev3-12"
+  ],
+  "split": "development",
+  "comparison_set": "focused",
+  "variants": [
+    "assessed",
+    "focused1",
+    "focused3"
+  ],
+  "repeats": 3,
+  "expected_runs": 18,
+  "configured_max_tokens": 100000,
+  "concurrency": 3,
+  "max_turns": 6,
+  "timeout_seconds": 120,
+  "transient_retries_per_cell": 0,
+  "transient_retry_delay_seconds": 0.0,
+  "transient_retry_budget_job": 0,
+  "nominal_estimate_usd": {
+    "method": "attempts x configured ceiling x proxy-advertised output rate",
+    "output_rate_per_token": 1e-05,
+    "first_attempts": 18.0,
+    "worst_case_with_all_budgeted_reruns": 18.0,
+    "not_a_billing_cap": true
+  },
+  "assessment_tokens": 30000,
+  "tool_capture": null,
+  "context_line_counts": false,
+  "related_paths": [
+    "src/downloads/manifest.py",
+    "src/listing/views.py",
+    "src/plugins/builtin.py",
+    "src/plugins/registry.py",
+    "src/region_reader.py",
+    "src/render/pricing_page.py",
+    "src/signup.py"
+  ],
+  "holdout_used": false,
+  "frozen_before_this_job_calls": true,
+  "input_sha256": {
+    "corpus/captures/dev3-11/diff.patch": "fa32116b09c3de43cedd360758d8296bc66e5e85d959dca91404d9a578dc6d8e",
+    "corpus/captures/dev3-11/files.json": "d2dcd45490a409259137e28650480314ed73bb99570ec5b3d648e3b068cd4862",
+    "corpus/captures/dev3-11/metadata.json": "34479a731ec636c7636e5d8bad926dd977d764426aca12523441a1a56439acaa",
+    "corpus/captures/dev3-12/diff.patch": "efb2ae8f213abf62736fab95cda621762706b948247b70a7575deb40335482f8",
+    "corpus/captures/dev3-12/files.json": "24426c2df608e6e8a89f430d9ae136e23e4dd4ee4c2341bebc17ccf11dcd98b5",
+    "corpus/captures/dev3-12/metadata.json": "4d88e40901cf5742b674f1a60bd20f6b6db78db1373d765b33ad82364520dc9a",
+    "corpus/labels/dev3-11.json": "2b7adbb39990c4bf062013081d4118a3c14b2c1083c33911c6b1c181eb5fe06d",
+    "corpus/labels/dev3-12.json": "587194363af03517e7c93ac596a70e37fe529cf0d36b751ba39b6bcb71d886b5",
+    "corpus/manifest.json": "7cfdd6571ffb81ed493eb33b6b9ec5c1f06e2426370a0bdf7aaf6a317d099c4d",
+    "corpus/sources/dev3-11/base/src/inventory/checkout.py": "b875bbc2f2813b924b27cec4a1ec71d9e1852c13a8e3c3905a0eab9b0550e9bc",
+    "corpus/sources/dev3-11/base/src/inventory/stock.py": "d095948cc031eeff82f65abdab43947adec44a30b0b61f5538411b0e18b481f3",
+    "corpus/sources/dev3-11/head/src/inventory/checkout.py": "b875bbc2f2813b924b27cec4a1ec71d9e1852c13a8e3c3905a0eab9b0550e9bc",
+    "corpus/sources/dev3-11/head/src/inventory/stock.py": "6d788e84c49cfbbd284ea0d2f697fb837865eb5909606091a0c770182ae6225c",
+    "corpus/sources/dev3-12/base/src/mailer/send.py": "d2dbd838c28515aae8b736fed21ea0a84045c6d8bb8063adc64569faa3cb937f",
+    "corpus/sources/dev3-12/base/src/mailer/subject.py": "1632fab9a6b05a0877aa359d9c8fba593b5147a09705c2bbdc1b5929672611e9",
+    "corpus/sources/dev3-12/head/src/mailer/send.py": "d2dbd838c28515aae8b736fed21ea0a84045c6d8bb8063adc64569faa3cb937f",
+    "corpus/sources/dev3-12/head/src/mailer/subject.py": "e8169292cc7136f62a5b014098a1f7efaabb79e7c7897fcd0ac214fabe8052db",
+    "evaluation.json": "6918e3b93bd450cde895a0e372c1414526b160971d268378ae905c39768b1bef",
+    "gate.json": "7a1b00fdd6ddf57d1fe4d41b05a988a553d05fab595e2c53813d026957f1c348",
+    "scrutare-2026.10.2-py3-none-any.whl": "34eae93f7224f57294350295e7dd16acda2d0d68b68ecfb43c494026aff93291"
+  }
+}
