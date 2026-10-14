@@ -1,0 +1,7843 @@
+{
+ "actual_human_judgments": 0,
+ "assessor_reservation": {
+  "assessment-separating": {
+   "assessment": {
+    "actual_assessor_calls": 11,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     12043,
+     20414
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   }
+  },
+  "discussion-untried": {},
+  "focused-comment": {
+   "assessed": {
+    "actual_assessor_calls": 3,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     19347,
+     19568
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   },
+   "focused1": {
+    "actual_assessor_calls": 3,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     19437,
+     19582
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   },
+   "focused3": {
+    "actual_assessor_calls": 3,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     19585,
+     20091
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   }
+  },
+  "focused-uncaptured": {
+   "assessed": {
+    "actual_assessor_calls": 6,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     10819,
+     11418
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   },
+   "focused1": {
+    "actual_assessor_calls": 6,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     10807,
+     11502
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   },
+   "focused3": {
+    "actual_assessor_calls": 6,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     10770,
+     11530
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   }
+  },
+  "focused-uncaptured-aggregate": {},
+  "focused-wrong-candidates": {
+   "assessed": {
+    "actual_assessor_calls": 1,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     11843,
+     11843
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   },
+   "focused1": {
+    "actual_assessor_calls": 3,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     12437,
+     12503
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   },
+   "focused3": {
+    "actual_assessor_calls": 1,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     12485,
+     12485
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   }
+  },
+  "line-counts": {},
+  "reliability-r2": {
+   "assessed": {
+    "actual_assessor_calls": 6,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     15096,
+     16666
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   },
+   "focused1": {
+    "actual_assessor_calls": 6,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     15163,
+     16567
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   },
+   "focused3": {
+    "actual_assessor_calls": 6,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     15161,
+     16717
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   }
+  },
+  "reliability-r3": {
+   "assessed": {
+    "actual_assessor_calls": 6,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     15204,
+     16764
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   },
+   "focused1": {
+    "actual_assessor_calls": 6,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     14961,
+     16684
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   },
+   "focused3": {
+    "actual_assessor_calls": 6,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     15312,
+     16726
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   }
+  },
+  "routing": {},
+  "tools": {
+   "assessment": {
+    "actual_assessor_calls": 9,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     19121,
+     21794
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   },
+   "tools": {
+    "actual_assessor_calls": 9,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     20237,
+     23866
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   }
+  },
+  "tools-silent": {
+   "assessment": {
+    "actual_assessor_calls": 6,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     15850,
+     16714
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   },
+   "tools": {
+    "actual_assessor_calls": 5,
+    "assessor_overrun_tokens": [],
+    "assessor_tokens_with_candidates_range": [
+     16627,
+     17166
+    ],
+    "cells_voided_by_assessor_reservation": 0
+   }
+  },
+  "tools-voided": {
+   "assessment": {
+    "actual_assessor_calls": 9,
+    "assessor_overrun_tokens": [
+     531,
+     1510,
+     1842,
+     2813
+    ],
+    "assessor_tokens_with_candidates_range": [
+     19478,
+     22813
+    ],
+    "cells_voided_by_assessor_reservation": 4
+   },
+   "tools": {
+    "actual_assessor_calls": 8,
+    "assessor_overrun_tokens": [
+     131,
+     363,
+     416,
+     460,
+     1056,
+     1207,
+     3086,
+     3650
+    ],
+    "assessor_tokens_with_candidates_range": [
+     20131,
+     23650
+    ],
+    "cells_voided_by_assessor_reservation": 8
+   }
+  }
+ },
+ "automated_decisions": 578,
+ "citation_refusals": {
+  "paired": {
+   "off": {
+    "cells": 30,
+    "cells_lost_to_citation": 2,
+    "cells_lost_wilson95": [
+     0.0185,
+     0.2132
+    ],
+    "mean_tokens": 57721.9,
+    "sessions": 135,
+    "sessions_refused_for_citation": 2,
+    "sessions_refused_wilson95": [
+     0.0041,
+     0.0524
+    ]
+   },
+   "on": {
+    "cells": 30,
+    "cells_lost_to_citation": 0,
+    "cells_lost_wilson95": [
+     0.0,
+     0.1135
+    ],
+    "mean_tokens": 59213.4,
+    "sessions": 135,
+    "sessions_refused_for_citation": 0,
+    "sessions_refused_wilson95": [
+     0.0,
+     0.0277
+    ]
+   }
+  },
+  "setting_off": {
+   "cells": 291,
+   "cells_lost": 7,
+   "cells_lost_wilson95": [
+    0.0117,
+    0.0488
+   ],
+   "jobs": [
+    "reliability-r2",
+    "reliability-r3",
+    "discussion-untried",
+    "tools-silent",
+    "tools-voided",
+    "focused-wrong-candidates",
+    "routing",
+    "tools",
+    "focused-uncaptured",
+    "focused-uncaptured-aggregate",
+    "focused-comment",
+    "assessment-separating"
+   ],
+   "sessions": 1179,
+   "sessions_refused": 7,
+   "sessions_refused_wilson95": [
+    0.0029,
+    0.0122
+   ]
+  },
+  "setting_on": {
+   "cells": 30,
+   "cells_lost": 0,
+   "cells_lost_wilson95": [
+    0.0,
+    0.1135
+   ],
+   "jobs": [
+    "line-counts"
+   ],
+   "sessions": 135,
+   "sessions_refused": 0,
+   "sessions_refused_wilson95": [
+    0.0,
+    0.0277
+   ]
+  }
+ },
+ "defaults_promoted": false,
+ "discussion": {
+  "attempted_rounds": 3,
+  "completed_rounds": 0,
+  "focused_cells": 90
+ },
+ "frozen_rules_amended": false,
+ "frozen_rules_sha256": "f722d27708cb20461ad6074f2c1ae4a267321c28dce3c69c35ac44d382b4e683",
+ "holdout_used": false,
+ "jobs": {
+  "assessment-separating": {
+   "all_gate_tests_pass": false,
+   "arms": {
+    "assessment": {
+     "actual_assessor_calls": 11,
+     "assessed_candidates": 38,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      12043,
+      20414
+     ],
+     "automated_matched_findings": 36,
+     "cells": 15,
+     "cells_lost_to_citation": 1,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 6,
+     "clean_cells_with_findings": 2,
+     "clean_cells_with_findings_wilson95": [
+      0.1176,
+      0.7693
+     ],
+     "complete_and_accounted": 14,
+     "complete_assessor_calls": 11,
+     "defect_cells": 9,
+     "defect_cells_detected": 9,
+     "discovery_findings": 38,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 38,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 38
+     },
+     "max_attempt_tokens": 71637,
+     "mean_latency_seconds": 51.0,
+     "mean_tokens": 61382.3,
+     "not_complete": 1,
+     "not_complete_rate_wilson95": [
+      0.0119,
+      0.2982
+     ],
+     "not_complete_reasons": {
+      "citation_validation": 1
+     },
+     "p95_latency_seconds_nearest_rank": 74.59,
+     "per_case": {
+      "dev3-06": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        12.202,
+        11.444,
+        12.292
+       ],
+       "mean_latency_seconds": 11.98,
+       "mean_tokens": 44925.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        44923,
+        44913,
+        44939
+       ]
+      },
+      "dev3-07": {
+       "analysis_rules": null,
+       "candidates": 2,
+       "cells": 3,
+       "cells_with_findings": 2,
+       "complete": 2,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 2,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 2,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 2
+       },
+       "latency_seconds": [
+        32.907,
+        44.535,
+        50.458
+       ],
+       "mean_latency_seconds": 42.63,
+       "mean_tokens": 56855.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 1,
+       "specialists": [],
+       "tokens": [
+        48849,
+        60611,
+        61106
+       ]
+      },
+      "dev3-08": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        69.708,
+        71.883,
+        67.628
+       ],
+       "mean_latency_seconds": 69.74,
+       "mean_tokens": 69427.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        69372,
+        69534,
+        69375
+       ]
+      },
+      "dev3-09": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        59.114,
+        59.702,
+        56.006
+       ],
+       "mean_latency_seconds": 58.27,
+       "mean_tokens": 64221.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        64203,
+        64416,
+        64044
+       ]
+      },
+      "dev3-10": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        74.586,
+        72.251,
+        70.342
+       ],
+       "mean_latency_seconds": 72.39,
+       "mean_tokens": 71483.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        71637,
+        71473,
+        71339
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.7009,
+      1.0
+     ],
+     "sessions": 60,
+     "sessions_refused_for_citation": 1,
+     "total_tokens": 920734,
+     "unmatched_findings": 2,
+     "usage_final_attempts": {
+      "cache_read": 709616,
+      "cache_write": 0,
+      "input": 145676,
+      "output": 65442
+     }
+    }
+   },
+   "assessment_tokens": 30000,
+   "attempts": 15,
+   "cells": 15,
+   "first_attempt_complete_and_accounted": 14,
+   "first_attempt_status_counts": {
+    "complete": 14,
+    "invalid": 1
+   },
+   "job": "assessment-separating",
+   "measured_usd": 2.365,
+   "nominal_usd": 15.0,
+   "profile": "assessment-arm-separating",
+   "rerun_attempts": 0,
+   "status_counts": {
+    "complete": 14,
+    "invalid": 1
+   },
+   "tests": {
+    "all_attempts_within_ceiling": true,
+    "all_runs_complete_and_accounted": false,
+    "experiment_terminal": true,
+    "matrix_exact": true,
+    "retries_within_declared_policy": true
+   },
+   "total_tokens": 920734,
+   "transient_http_statuses": {}
+  },
+  "discussion-untried": {
+   "all_gate_tests_pass": true,
+   "arms": {
+    "aggregate": {
+     "actual_assessor_calls": 0,
+     "assessed_candidates": 0,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": null,
+     "automated_matched_findings": 0,
+     "cells": 9,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 9,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 0,
+     "defect_cells": 0,
+     "defect_cells_detected": 0,
+     "discovery_findings": 0,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 0,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {},
+     "max_attempt_tokens": 43310,
+     "mean_latency_seconds": 12.22,
+     "mean_tokens": 42707.1,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 14.72,
+     "per_case": {
+      "dev2-03": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        11.749,
+        11.185,
+        11.852
+       ],
+       "mean_latency_seconds": 11.6,
+       "mean_tokens": 43057.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        43065,
+        43037,
+        43071
+       ]
+      },
+      "dev2-08": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        12.384,
+        12.522,
+        12.815
+       ],
+       "mean_latency_seconds": 12.57,
+       "mean_tokens": 43275.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        43310,
+        43246,
+        43271
+       ]
+      },
+      "dev2-12": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        14.721,
+        11.549,
+        11.202
+       ],
+       "mean_latency_seconds": 12.49,
+       "mean_tokens": 41788.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        41800,
+        41782,
+        41782
+       ]
+      }
+     },
+     "provisional_defect_recall": null,
+     "provisional_defect_recall_wilson95": null,
+     "sessions": 36,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 384364,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 325453,
+      "cache_write": 0,
+      "input": 46568,
+      "output": 12343
+     }
+    },
+    "assessed": {
+     "actual_assessor_calls": 0,
+     "assessed_candidates": 0,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": null,
+     "automated_matched_findings": 0,
+     "cells": 9,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 9,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 0,
+     "defect_cells": 0,
+     "defect_cells_detected": 0,
+     "discovery_findings": 0,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 0,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {},
+     "max_attempt_tokens": 43306,
+     "mean_latency_seconds": 11.99,
+     "mean_tokens": 42700.6,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 16.94,
+     "per_case": {
+      "dev2-03": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        11.433,
+        10.689,
+        11.186
+       ],
+       "mean_latency_seconds": 11.1,
+       "mean_tokens": 43028.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        43035,
+        43032,
+        43017
+       ]
+      },
+      "dev2-08": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        12.274,
+        12.159,
+        16.941
+       ],
+       "mean_latency_seconds": 13.79,
+       "mean_tokens": 43284.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        43266,
+        43280,
+        43306
+       ]
+      },
+      "dev2-12": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        10.507,
+        11.647,
+        11.115
+       ],
+       "mean_latency_seconds": 11.09,
+       "mean_tokens": 41789.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        41789,
+        41781,
+        41799
+       ]
+      }
+     },
+     "provisional_defect_recall": null,
+     "provisional_defect_recall_wilson95": null,
+     "sessions": 36,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 384305,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 371697,
+      "cache_write": 0,
+      "input": 324,
+      "output": 12284
+     }
+    },
+    "focused1": {
+     "actual_assessor_calls": 0,
+     "assessed_candidates": 0,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": null,
+     "automated_matched_findings": 0,
+     "cells": 9,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 9,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 0,
+     "defect_cells": 0,
+     "defect_cells_detected": 0,
+     "discovery_findings": 0,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 0,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {},
+     "max_attempt_tokens": 43318,
+     "mean_latency_seconds": 12.15,
+     "mean_tokens": 42715.1,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 13.52,
+     "per_case": {
+      "dev2-03": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        12.554,
+        12.548,
+        11.587
+       ],
+       "mean_latency_seconds": 12.23,
+       "mean_tokens": 43066.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        43067,
+        43062,
+        43070
+       ]
+      },
+      "dev2-08": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        13.518,
+        12.557,
+        12.831
+       ],
+       "mean_latency_seconds": 12.97,
+       "mean_tokens": 43293.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        43283,
+        43279,
+        43318
+       ]
+      },
+      "dev2-12": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        12.081,
+        11.022,
+        10.642
+       ],
+       "mean_latency_seconds": 11.25,
+       "mean_tokens": 41785.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        41794,
+        41782,
+        41781
+       ]
+      }
+     },
+     "provisional_defect_recall": null,
+     "provisional_defect_recall_wilson95": null,
+     "sessions": 36,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 384436,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 371697,
+      "cache_write": 0,
+      "input": 324,
+      "output": 12415
+     }
+    },
+    "focused3": {
+     "actual_assessor_calls": 0,
+     "assessed_candidates": 0,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": null,
+     "automated_matched_findings": 0,
+     "cells": 9,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 9,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 0,
+     "defect_cells": 0,
+     "defect_cells_detected": 0,
+     "discovery_findings": 0,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 0,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {},
+     "max_attempt_tokens": 43299,
+     "mean_latency_seconds": 11.63,
+     "mean_tokens": 42711.0,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 13.3,
+     "per_case": {
+      "dev2-03": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        11.832,
+        10.997,
+        10.999
+       ],
+       "mean_latency_seconds": 11.28,
+       "mean_tokens": 43057.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        43078,
+        43053,
+        43042
+       ]
+      },
+      "dev2-08": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        13.303,
+        12.375,
+        12.859
+       ],
+       "mean_latency_seconds": 12.85,
+       "mean_tokens": 43288.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        43298,
+        43267,
+        43299
+       ]
+      },
+      "dev2-12": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        10.877,
+        10.577,
+        10.872
+       ],
+       "mean_latency_seconds": 10.78,
+       "mean_tokens": 41787.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        41781,
+        41782,
+        41799
+       ]
+      }
+     },
+     "provisional_defect_recall": null,
+     "provisional_defect_recall_wilson95": null,
+     "sessions": 36,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 384399,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 371697,
+      "cache_write": 0,
+      "input": 324,
+      "output": 12378
+     }
+    }
+   },
+   "assessment_tokens": null,
+   "attempts": 36,
+   "cells": 36,
+   "first_attempt_complete_and_accounted": 36,
+   "first_attempt_status_counts": {
+    "complete": 36
+   },
+   "job": "discussion-untried",
+   "measured_usd": 3.4704,
+   "nominal_usd": 36.0,
+   "profile": "tempting-allegations-focused",
+   "rerun_attempts": 0,
+   "status_counts": {
+    "complete": 36
+   },
+   "tests": {
+    "all_attempts_within_ceiling": true,
+    "all_runs_complete_and_accounted": true,
+    "experiment_terminal": true,
+    "matrix_exact": true,
+    "retries_within_declared_policy": true
+   },
+   "total_tokens": 1537504,
+   "transient_http_statuses": {}
+  },
+  "focused-comment": {
+   "all_gate_tests_pass": false,
+   "arms": {
+    "aggregate": {
+     "actual_assessor_calls": 0,
+     "assessed_candidates": 0,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": null,
+     "automated_matched_findings": 12,
+     "cells": 3,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 0,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": null,
+     "complete_and_accounted": 3,
+     "complete_assessor_calls": 0,
+     "defect_cells": 3,
+     "defect_cells_detected": 3,
+     "discovery_findings": 12,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 12,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {},
+     "max_attempt_tokens": 49851,
+     "mean_latency_seconds": 28.01,
+     "mean_tokens": 49827.7,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 28.3,
+     "per_case": {
+      "dev3-08": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        27.796,
+        27.921,
+        28.303
+       ],
+       "mean_latency_seconds": 28.01,
+       "mean_tokens": 49827.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        49847,
+        49851,
+        49785
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.4385,
+      1.0
+     ],
+     "sessions": 12,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 149483,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 119543,
+      "cache_write": 0,
+      "input": 17956,
+      "output": 11984
+     }
+    },
+    "assessed": {
+     "actual_assessor_calls": 3,
+     "assessed_candidates": 12,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      19347,
+      19568
+     ],
+     "automated_matched_findings": 12,
+     "cells": 3,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 0,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": null,
+     "complete_and_accounted": 3,
+     "complete_assessor_calls": 3,
+     "defect_cells": 3,
+     "defect_cells_detected": 3,
+     "discovery_findings": 12,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 12,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 12
+     },
+     "max_attempt_tokens": 69416,
+     "mean_latency_seconds": 71.77,
+     "mean_tokens": 69261.3,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 73.91,
+     "per_case": {
+      "dev3-08": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        72.534,
+        73.913,
+        68.861
+       ],
+       "mean_latency_seconds": 71.77,
+       "mean_tokens": 69261.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        69257,
+        69416,
+        69111
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.4385,
+      1.0
+     ],
+     "sessions": 12,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 207784,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 166321,
+      "cache_write": 0,
+      "input": 22454,
+      "output": 19009
+     }
+    },
+    "focused1": {
+     "actual_assessor_calls": 3,
+     "assessed_candidates": 12,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      19437,
+      19582
+     ],
+     "automated_matched_findings": 12,
+     "cells": 3,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 0,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": null,
+     "complete_and_accounted": 3,
+     "complete_assessor_calls": 3,
+     "defect_cells": 3,
+     "defect_cells_detected": 3,
+     "discovery_findings": 12,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {
+      "supported": 12
+     },
+     "findings": 12,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 12
+     },
+     "max_attempt_tokens": 69476,
+     "mean_latency_seconds": 70.98,
+     "mean_tokens": 69353.7,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 73.43,
+     "per_case": {
+      "dev3-08": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {
+        "supported": 12
+       },
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        69.665,
+        69.851,
+        73.431
+       ],
+       "mean_latency_seconds": 70.98,
+       "mean_tokens": 69353.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        69476,
+        69238,
+        69347
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.4385,
+      1.0
+     ],
+     "sessions": 12,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 208061,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 166547,
+      "cache_write": 0,
+      "input": 22567,
+      "output": 18947
+     }
+    },
+    "focused3": {
+     "actual_assessor_calls": 3,
+     "assessed_candidates": 12,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      19585,
+      20091
+     ],
+     "automated_matched_findings": 8,
+     "cells": 3,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 0,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": null,
+     "complete_and_accounted": 2,
+     "complete_assessor_calls": 3,
+     "defect_cells": 3,
+     "defect_cells_detected": 2,
+     "discovery_findings": 12,
+     "discussion_attempted_rounds": 1,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {
+      "supported": 12
+     },
+     "findings": 8,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 12
+     },
+     "max_attempt_tokens": 91856,
+     "mean_latency_seconds": 71.95,
+     "mean_tokens": 76943.7,
+     "not_complete": 1,
+     "not_complete_rate_wilson95": [
+      0.0615,
+      0.7923
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 79.59,
+     "per_case": {
+      "dev3-08": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 2,
+       "complete": 2,
+       "defect_among_assessed_candidates": 3,
+       "detected": 2,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 1,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {
+        "supported": 12
+       },
+       "findings": 8,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        65.887,
+        79.591,
+        70.366
+       ],
+       "mean_latency_seconds": 71.95,
+       "mean_tokens": 76943.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        69405,
+        91856,
+        69570
+       ]
+      }
+     },
+     "provisional_defect_recall": 0.6667,
+     "provisional_defect_recall_wilson95": [
+      0.2077,
+      0.9385
+     ],
+     "sessions": 12,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 230831,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 166685,
+      "cache_write": 0,
+      "input": 44423,
+      "output": 19723
+     }
+    }
+   },
+   "assessment_tokens": 30000,
+   "attempts": 12,
+   "cells": 12,
+   "first_attempt_complete_and_accounted": 11,
+   "first_attempt_status_counts": {
+    "complete": 11,
+    "failed": 1
+   },
+   "job": "focused-comment",
+   "measured_usd": 2.1496,
+   "nominal_usd": 12.0,
+   "profile": "focused-reassuring-comment",
+   "rerun_attempts": 0,
+   "status_counts": {
+    "complete": 11,
+    "failed": 1
+   },
+   "tests": {
+    "all_attempts_within_ceiling": true,
+    "all_runs_complete_and_accounted": false,
+    "experiment_terminal": true,
+    "matrix_exact": true,
+    "retries_within_declared_policy": true
+   },
+   "total_tokens": 796159,
+   "transient_http_statuses": {}
+  },
+  "focused-uncaptured": {
+   "all_gate_tests_pass": false,
+   "arms": {
+    "assessed": {
+     "actual_assessor_calls": 6,
+     "assessed_candidates": 6,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      10819,
+      11418
+     ],
+     "automated_matched_findings": 3,
+     "cells": 6,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 3,
+     "clean_cells_with_findings_wilson95": [
+      0.4385,
+      1.0
+     ],
+     "complete_and_accounted": 6,
+     "complete_assessor_calls": 6,
+     "defect_cells": 3,
+     "defect_cells_detected": 3,
+     "discovery_findings": 6,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 6,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 6
+     },
+     "max_attempt_tokens": 60846,
+     "mean_latency_seconds": 43.37,
+     "mean_tokens": 56936.5,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.3903
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 46.1,
+     "per_case": {
+      "dev3-11": {
+       "analysis_rules": null,
+       "candidates": 3,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 3,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 3,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 3
+       },
+       "latency_seconds": [
+        40.726,
+        42.446,
+        42.2
+       ],
+       "mean_latency_seconds": 41.79,
+       "mean_tokens": 56403.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        56364,
+        56388,
+        56459
+       ]
+      },
+      "dev3-12": {
+       "analysis_rules": null,
+       "candidates": 3,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 3,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 3,
+       "findings_stating_tempting_allegation": 3,
+       "initial_dispositions": {
+        "supported": 3
+       },
+       "latency_seconds": [
+        45.186,
+        43.56,
+        46.104
+       ],
+       "mean_latency_seconds": 44.95,
+       "mean_tokens": 57469.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        60846,
+        55541,
+        56021
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.4385,
+      1.0
+     ],
+     "sessions": 24,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 341619,
+     "unmatched_findings": 3,
+     "usage_final_attempts": {
+      "cache_read": 266459,
+      "cache_write": 0,
+      "input": 61609,
+      "output": 13551
+     }
+    },
+    "focused1": {
+     "actual_assessor_calls": 6,
+     "assessed_candidates": 6,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      10807,
+      11502
+     ],
+     "automated_matched_findings": 2,
+     "cells": 6,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 3,
+     "clean_cells_with_findings_wilson95": [
+      0.4385,
+      1.0
+     ],
+     "complete_and_accounted": 5,
+     "complete_assessor_calls": 6,
+     "defect_cells": 3,
+     "defect_cells_detected": 2,
+     "discovery_findings": 6,
+     "discussion_attempted_rounds": 1,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {
+      "supported": 6
+     },
+     "findings": 5,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 6
+     },
+     "max_attempt_tokens": 84335,
+     "mean_latency_seconds": 46.12,
+     "mean_tokens": 61689.3,
+     "not_complete": 1,
+     "not_complete_rate_wilson95": [
+      0.0301,
+      0.5635
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 52.94,
+     "per_case": {
+      "dev3-11": {
+       "analysis_rules": null,
+       "candidates": 3,
+       "cells": 3,
+       "cells_with_findings": 2,
+       "complete": 2,
+       "defect_among_assessed_candidates": 3,
+       "detected": 2,
+       "discovery_findings": 3,
+       "discussion_attempted_rounds": 1,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {
+        "supported": 3
+       },
+       "findings": 2,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 3
+       },
+       "latency_seconds": [
+        40.635,
+        43.988,
+        52.166
+       ],
+       "mean_latency_seconds": 45.6,
+       "mean_tokens": 65775.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        56430,
+        56560,
+        84335
+       ]
+      },
+      "dev3-12": {
+       "analysis_rules": null,
+       "candidates": 3,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 3,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {
+        "supported": 3
+       },
+       "findings": 3,
+       "findings_stating_tempting_allegation": 3,
+       "initial_dispositions": {
+        "supported": 3
+       },
+       "latency_seconds": [
+        43.175,
+        52.945,
+        43.838
+       ],
+       "mean_latency_seconds": 46.65,
+       "mean_tokens": 57603.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        55944,
+        56219,
+        60648
+       ]
+      }
+     },
+     "provisional_defect_recall": 0.6667,
+     "provisional_defect_recall_wilson95": [
+      0.2077,
+      0.9385
+     ],
+     "sessions": 24,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 370136,
+     "unmatched_findings": 3,
+     "usage_final_attempts": {
+      "cache_read": 305076,
+      "cache_write": 0,
+      "input": 50583,
+      "output": 14477
+     }
+    },
+    "focused3": {
+     "actual_assessor_calls": 6,
+     "assessed_candidates": 6,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      10770,
+      11530
+     ],
+     "automated_matched_findings": 2,
+     "cells": 6,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 3,
+     "clean_cells_with_findings_wilson95": [
+      0.4385,
+      1.0
+     ],
+     "complete_and_accounted": 5,
+     "complete_assessor_calls": 6,
+     "defect_cells": 3,
+     "defect_cells_detected": 2,
+     "discovery_findings": 6,
+     "discussion_attempted_rounds": 1,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {
+      "supported": 6
+     },
+     "findings": 5,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 6
+     },
+     "max_attempt_tokens": 84846,
+     "mean_latency_seconds": 44.37,
+     "mean_tokens": 60725.3,
+     "not_complete": 1,
+     "not_complete_rate_wilson95": [
+      0.0301,
+      0.5635
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 50.97,
+     "per_case": {
+      "dev3-11": {
+       "analysis_rules": null,
+       "candidates": 3,
+       "cells": 3,
+       "cells_with_findings": 2,
+       "complete": 2,
+       "defect_among_assessed_candidates": 3,
+       "detected": 2,
+       "discovery_findings": 3,
+       "discussion_attempted_rounds": 1,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {
+        "supported": 3
+       },
+       "findings": 2,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 3
+       },
+       "latency_seconds": [
+        40.696,
+        41.389,
+        50.969
+       ],
+       "mean_latency_seconds": 44.35,
+       "mean_tokens": 65894.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        56346,
+        56491,
+        84846
+       ]
+      },
+      "dev3-12": {
+       "analysis_rules": null,
+       "candidates": 3,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 3,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {
+        "supported": 3
+       },
+       "findings": 3,
+       "findings_stating_tempting_allegation": 3,
+       "initial_dispositions": {
+        "supported": 3
+       },
+       "latency_seconds": [
+        41.164,
+        42.3,
+        49.713
+       ],
+       "mean_latency_seconds": 44.39,
+       "mean_tokens": 55556.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        55472,
+        55512,
+        55685
+       ]
+      }
+     },
+     "provisional_defect_recall": 0.6667,
+     "provisional_defect_recall_wilson95": [
+      0.2077,
+      0.9385
+     ],
+     "sessions": 24,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 364352,
+     "unmatched_findings": 3,
+     "usage_final_attempts": {
+      "cache_read": 300037,
+      "cache_write": 0,
+      "input": 50151,
+      "output": 14164
+     }
+    }
+   },
+   "assessment_tokens": 30000,
+   "attempts": 18,
+   "cells": 18,
+   "first_attempt_complete_and_accounted": 16,
+   "first_attempt_status_counts": {
+    "complete": 16,
+    "failed": 2
+   },
+   "job": "focused-uncaptured",
+   "measured_usd": 2.4897,
+   "nominal_usd": 18.0,
+   "profile": "focused-uncaptured-evidence-assessed-arms",
+   "rerun_attempts": 0,
+   "status_counts": {
+    "complete": 16,
+    "failed": 2
+   },
+   "tests": {
+    "all_attempts_within_ceiling": true,
+    "all_runs_complete_and_accounted": false,
+    "experiment_terminal": true,
+    "matrix_exact": true,
+    "retries_within_declared_policy": true
+   },
+   "total_tokens": 1076107,
+   "transient_http_statuses": {}
+  },
+  "focused-uncaptured-aggregate": {
+   "all_gate_tests_pass": true,
+   "arms": {
+    "aggregate": {
+     "actual_assessor_calls": 0,
+     "assessed_candidates": 0,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": null,
+     "automated_matched_findings": 3,
+     "cells": 6,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 2,
+     "clean_cells_with_findings_wilson95": [
+      0.2077,
+      0.9385
+     ],
+     "complete_and_accounted": 6,
+     "complete_assessor_calls": 0,
+     "defect_cells": 3,
+     "defect_cells_detected": 3,
+     "discovery_findings": 5,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 5,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {},
+     "max_attempt_tokens": 49960,
+     "mean_latency_seconds": 25.47,
+     "mean_tokens": 46509.2,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.3903
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 28.18,
+     "per_case": {
+      "dev3-11": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 3,
+       "discovery_findings": 3,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 3,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        26.932,
+        24.55,
+        26.569
+       ],
+       "mean_latency_seconds": 26.02,
+       "mean_tokens": 45019.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        45035,
+        45014,
+        45008
+       ]
+      },
+      "dev3-12": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 2,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 2,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 2,
+       "findings_stating_tempting_allegation": 2,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        28.181,
+        27.095,
+        19.486
+       ],
+       "mean_latency_seconds": 24.92,
+       "mean_tokens": 47999.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        49960,
+        49805,
+        44233
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.4385,
+      1.0
+     ],
+     "sessions": 24,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 279055,
+     "unmatched_findings": 2,
+     "usage_final_attempts": {
+      "cache_read": 268558,
+      "cache_write": 0,
+      "input": 1002,
+      "output": 9495
+     }
+    }
+   },
+   "assessment_tokens": null,
+   "attempts": 6,
+   "cells": 6,
+   "first_attempt_complete_and_accounted": 6,
+   "first_attempt_status_counts": {
+    "complete": 6
+   },
+   "job": "focused-uncaptured-aggregate",
+   "measured_usd": 0.6341,
+   "nominal_usd": 6.0,
+   "profile": "focused-uncaptured-evidence-aggregate-arm",
+   "rerun_attempts": 0,
+   "status_counts": {
+    "complete": 6
+   },
+   "tests": {
+    "all_attempts_within_ceiling": true,
+    "all_runs_complete_and_accounted": true,
+    "experiment_terminal": true,
+    "matrix_exact": true,
+    "retries_within_declared_policy": true
+   },
+   "total_tokens": 279055,
+   "transient_http_statuses": {}
+  },
+  "focused-wrong-candidates": {
+   "all_gate_tests_pass": false,
+   "arms": {
+    "aggregate": {
+     "actual_assessor_calls": 0,
+     "assessed_candidates": 0,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": null,
+     "automated_matched_findings": 0,
+     "cells": 9,
+     "cells_lost_to_citation": 1,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 9,
+     "clean_cells_with_findings": 2,
+     "clean_cells_with_findings_wilson95": [
+      0.0715,
+      0.5907
+     ],
+     "complete_and_accounted": 8,
+     "complete_assessor_calls": 0,
+     "defect_cells": 0,
+     "defect_cells_detected": 0,
+     "discovery_findings": 3,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 3,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {},
+     "max_attempt_tokens": 49364,
+     "mean_latency_seconds": 18.32,
+     "mean_tokens": 47097.1,
+     "not_complete": 1,
+     "not_complete_rate_wilson95": [
+      0.0199,
+      0.435
+     ],
+     "not_complete_reasons": {
+      "citation_validation": 1
+     },
+     "p95_latency_seconds_nearest_rank": 33.1,
+     "per_case": {
+      "dev3-05": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        13.102,
+        13.554,
+        13.724
+       ],
+       "mean_latency_seconds": 13.46,
+       "mean_tokens": 47411.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        47418,
+        47409,
+        47408
+       ]
+      },
+      "dev3-06": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        11.114,
+        11.313,
+        11.645
+       ],
+       "mean_latency_seconds": 11.36,
+       "mean_tokens": 44926.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        44922,
+        44915,
+        44943
+       ]
+      },
+      "dev3-07": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 2,
+       "complete": 2,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 3,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 3,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        29.934,
+        27.417,
+        33.099
+       ],
+       "mean_latency_seconds": 30.15,
+       "mean_tokens": 48953.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 1,
+       "specialists": [],
+       "tokens": [
+        49364,
+        48688,
+        48807
+       ]
+      }
+     },
+     "provisional_defect_recall": null,
+     "provisional_defect_recall_wilson95": null,
+     "sessions": 36,
+     "sessions_refused_for_citation": 1,
+     "total_tokens": 423874,
+     "unmatched_findings": 3,
+     "usage_final_attempts": {
+      "cache_read": 356525,
+      "cache_write": 0,
+      "input": 52600,
+      "output": 14749
+     }
+    },
+    "assessed": {
+     "actual_assessor_calls": 1,
+     "assessed_candidates": 1,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      11843,
+      11843
+     ],
+     "automated_matched_findings": 0,
+     "cells": 9,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 9,
+     "clean_cells_with_findings": 1,
+     "clean_cells_with_findings_wilson95": [
+      0.0199,
+      0.435
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 1,
+     "defect_cells": 0,
+     "defect_cells_detected": 0,
+     "discovery_findings": 1,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 1,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 1
+     },
+     "max_attempt_tokens": 60310,
+     "mean_latency_seconds": 15.45,
+     "mean_tokens": 48128.1,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 37.84,
+     "per_case": {
+      "dev3-05": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        12.225,
+        12.004,
+        12.382
+       ],
+       "mean_latency_seconds": 12.2,
+       "mean_tokens": 47394.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        47389,
+        47395,
+        47398
+       ]
+      },
+      "dev3-06": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        10.906,
+        11.685,
+        10.867
+       ],
+       "mean_latency_seconds": 11.15,
+       "mean_tokens": 44913.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        44907,
+        44924,
+        44910
+       ]
+      },
+      "dev3-07": {
+       "analysis_rules": null,
+       "candidates": 1,
+       "cells": 3,
+       "cells_with_findings": 1,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 1,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 1,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 1
+       },
+       "latency_seconds": [
+        15.997,
+        15.109,
+        37.839
+       ],
+       "mean_latency_seconds": 22.98,
+       "mean_tokens": 52076.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        47988,
+        47932,
+        60310
+       ]
+      }
+     },
+     "provisional_defect_recall": null,
+     "provisional_defect_recall_wilson95": null,
+     "sessions": 36,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 433153,
+     "unmatched_findings": 1,
+     "usage_final_attempts": {
+      "cache_read": 414593,
+      "cache_write": 0,
+      "input": 5826,
+      "output": 12734
+     }
+    },
+    "focused1": {
+     "actual_assessor_calls": 3,
+     "assessed_candidates": 3,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      12437,
+      12503
+     ],
+     "automated_matched_findings": 0,
+     "cells": 9,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 9,
+     "clean_cells_with_findings": 3,
+     "clean_cells_with_findings_wilson95": [
+      0.1206,
+      0.6458
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 3,
+     "defect_cells": 0,
+     "defect_cells_detected": 0,
+     "discovery_findings": 3,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {
+      "supported": 3
+     },
+     "findings": 3,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 3
+     },
+     "max_attempt_tokens": 61272,
+     "mean_latency_seconds": 23.46,
+     "mean_tokens": 51165.2,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 48.62,
+     "per_case": {
+      "dev3-05": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        13.281,
+        13.137,
+        12.115
+       ],
+       "mean_latency_seconds": 12.84,
+       "mean_tokens": 47406.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        47391,
+        47416,
+        47411
+       ]
+      },
+      "dev3-06": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        11.017,
+        11.732,
+        11.735
+       ],
+       "mean_latency_seconds": 11.49,
+       "mean_tokens": 44928.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        44933,
+        44925,
+        44926
+       ]
+      },
+      "dev3-07": {
+       "analysis_rules": null,
+       "candidates": 3,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 3,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {
+        "supported": 3
+       },
+       "findings": 3,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 3
+       },
+       "latency_seconds": [
+        43.693,
+        45.823,
+        48.616
+       ],
+       "mean_latency_seconds": 46.04,
+       "mean_tokens": 61161.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        61084,
+        61129,
+        61272
+       ]
+      }
+     },
+     "provisional_defect_recall": null,
+     "provisional_defect_recall_wilson95": null,
+     "sessions": 36,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 460487,
+     "unmatched_findings": 3,
+     "usage_final_attempts": {
+      "cache_read": 426931,
+      "cache_write": 0,
+      "input": 17207,
+      "output": 16349
+     }
+    },
+    "focused3": {
+     "actual_assessor_calls": 1,
+     "assessed_candidates": 1,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      12485,
+      12485
+     ],
+     "automated_matched_findings": 0,
+     "cells": 9,
+     "cells_lost_to_citation": 1,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 9,
+     "clean_cells_with_findings": 1,
+     "clean_cells_with_findings_wilson95": [
+      0.0224,
+      0.4709
+     ],
+     "complete_and_accounted": 8,
+     "complete_assessor_calls": 1,
+     "defect_cells": 0,
+     "defect_cells_detected": 0,
+     "discovery_findings": 1,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {
+      "supported": 1
+     },
+     "findings": 1,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 1
+     },
+     "max_attempt_tokens": 61104,
+     "mean_latency_seconds": 23.64,
+     "mean_tokens": 48293.3,
+     "not_complete": 1,
+     "not_complete_rate_wilson95": [
+      0.0199,
+      0.435
+     ],
+     "not_complete_reasons": {
+      "citation_validation": 1
+     },
+     "p95_latency_seconds_nearest_rank": 71.11,
+     "per_case": {
+      "dev3-05": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        11.658,
+        12.535,
+        12.224
+       ],
+       "mean_latency_seconds": 12.14,
+       "mean_tokens": 47406.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        47409,
+        47401,
+        47409
+       ]
+      },
+      "dev3-06": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        10.658,
+        11.323,
+        11.302
+       ],
+       "mean_latency_seconds": 11.09,
+       "mean_tokens": 44919.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        44919,
+        44914,
+        44926
+       ]
+      },
+      "dev3-07": {
+       "analysis_rules": null,
+       "candidates": 1,
+       "cells": 3,
+       "cells_with_findings": 1,
+       "complete": 2,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 1,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {
+        "supported": 1
+       },
+       "findings": 1,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 1
+       },
+       "latency_seconds": [
+        44.371,
+        27.593,
+        71.108
+       ],
+       "mean_latency_seconds": 47.69,
+       "mean_tokens": 52554.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 1,
+       "specialists": [],
+       "tokens": [
+        61104,
+        48543,
+        48015
+       ]
+      }
+     },
+     "provisional_defect_recall": null,
+     "provisional_defect_recall_wilson95": null,
+     "sessions": 36,
+     "sessions_refused_for_citation": 1,
+     "total_tokens": 434640,
+     "unmatched_findings": 1,
+     "usage_final_attempts": {
+      "cache_read": 414853,
+      "cache_write": 0,
+      "input": 5956,
+      "output": 13831
+     }
+    }
+   },
+   "assessment_tokens": null,
+   "attempts": 36,
+   "cells": 36,
+   "first_attempt_complete_and_accounted": 34,
+   "first_attempt_status_counts": {
+    "complete": 34,
+    "failed": 2
+   },
+   "job": "focused-wrong-candidates",
+   "measured_usd": 3.9656,
+   "nominal_usd": 36.0,
+   "profile": "focused-wrong-candidates",
+   "rerun_attempts": 0,
+   "status_counts": {
+    "complete": 34,
+    "failed": 2
+   },
+   "tests": {
+    "all_attempts_within_ceiling": true,
+    "all_runs_complete_and_accounted": false,
+    "experiment_terminal": true,
+    "matrix_exact": true,
+    "retries_within_declared_policy": true
+   },
+   "total_tokens": 1752154,
+   "transient_http_statuses": {}
+  },
+  "line-counts": {
+   "all_gate_tests_pass": true,
+   "arms": {
+    "evidence": {
+     "actual_assessor_calls": 0,
+     "assessed_candidates": 0,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": null,
+     "automated_matched_findings": 36,
+     "cells": 15,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 6,
+     "clean_cells_with_findings": 1,
+     "clean_cells_with_findings_wilson95": [
+      0.0301,
+      0.5635
+     ],
+     "complete_and_accounted": 15,
+     "complete_assessor_calls": 0,
+     "defect_cells": 9,
+     "defect_cells_detected": 9,
+     "discovery_findings": 37,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 37,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {},
+     "max_attempt_tokens": 52598,
+     "mean_latency_seconds": 22.7,
+     "mean_tokens": 49684.7,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2039
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 35.25,
+     "per_case": {
+      "dev3-06": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        11.623,
+        13.189,
+        12.87
+       ],
+       "mean_latency_seconds": 12.56,
+       "mean_tokens": 46419.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        46421,
+        46419,
+        46419
+       ]
+      },
+      "dev3-07": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 1,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 1,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 1,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        24.221,
+        35.247,
+        19.58
+       ],
+       "mean_latency_seconds": 26.35,
+       "mean_tokens": 49860.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        49756,
+        50266,
+        49558
+       ]
+      },
+      "dev3-08": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        25.269,
+        25.549,
+        23.987
+       ],
+       "mean_latency_seconds": 24.93,
+       "mean_tokens": 51348.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        51336,
+        51366,
+        51343
+       ]
+      },
+      "dev3-09": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        24.952,
+        24.515,
+        24.126
+       ],
+       "mean_latency_seconds": 24.53,
+       "mean_tokens": 48260.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        48296,
+        48243,
+        48242
+       ]
+      },
+      "dev3-10": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        25.091,
+        24.822,
+        25.473
+       ],
+       "mean_latency_seconds": 25.13,
+       "mean_tokens": 52535.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        52554,
+        52454,
+        52598
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.7009,
+      1.0
+     ],
+     "sessions": 60,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 745271,
+     "unmatched_findings": 1,
+     "usage_final_attempts": {
+      "cache_read": 608388,
+      "cache_write": 0,
+      "input": 93591,
+      "output": 43292
+     }
+    },
+    "routing": {
+     "actual_assessor_calls": 0,
+     "assessed_candidates": 0,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": null,
+     "automated_matched_findings": 45,
+     "cells": 15,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 15,
+     "clean_cells": 6,
+     "clean_cells_with_findings": 3,
+     "clean_cells_with_findings_wilson95": [
+      0.1876,
+      0.8124
+     ],
+     "complete_and_accounted": 15,
+     "complete_assessor_calls": 0,
+     "defect_cells": 9,
+     "defect_cells_detected": 9,
+     "discovery_findings": 49,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 49,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {},
+     "max_attempt_tokens": 72439,
+     "mean_latency_seconds": 23.3,
+     "mean_tokens": 68742.0,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2039
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 31.12,
+     "per_case": {
+      "dev3-06": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        11.857,
+        12.369,
+        12.331
+       ],
+       "mean_latency_seconds": 12.19,
+       "mean_tokens": 64433.0,
+       "reviewers": [
+        5
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [
+        "performance-concurrency"
+       ],
+       "tokens": [
+        64427,
+        64438,
+        64434
+       ]
+      },
+      "dev3-07": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 4,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 4,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        28.706,
+        31.116,
+        29.863
+       ],
+       "mean_latency_seconds": 29.89,
+       "mean_tokens": 69356.7,
+       "reviewers": [
+        5
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [
+        "data-integrity-migrations"
+       ],
+       "tokens": [
+        69007,
+        69971,
+        69092
+       ]
+      },
+      "dev3-08": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 3,
+       "discovery_findings": 15,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 15,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        25.732,
+        25.405,
+        26.133
+       ],
+       "mean_latency_seconds": 25.76,
+       "mean_tokens": 70535.3,
+       "reviewers": [
+        5
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [
+        "performance-concurrency"
+       ],
+       "tokens": [
+        70528,
+        70533,
+        70545
+       ]
+      },
+      "dev3-09": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 3,
+       "discovery_findings": 15,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 15,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        22.241,
+        23.08,
+        23.858
+       ],
+       "mean_latency_seconds": 23.06,
+       "mean_tokens": 66998.7,
+       "reviewers": [
+        5
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [
+        "performance-concurrency"
+       ],
+       "tokens": [
+        67901,
+        66583,
+        66512
+       ]
+      },
+      "dev3-10": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 3,
+       "discovery_findings": 15,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 15,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        25.348,
+        25.0,
+        26.482
+       ],
+       "mean_latency_seconds": 25.61,
+       "mean_tokens": 72386.3,
+       "reviewers": [
+        5
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [
+        "data-integrity-migrations"
+       ],
+       "tokens": [
+        72346,
+        72374,
+        72439
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.7009,
+      1.0
+     ],
+     "sessions": 75,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 1031130,
+     "unmatched_findings": 4,
+     "usage_final_attempts": {
+      "cache_read": 819393,
+      "cache_write": 0,
+      "input": 154720,
+      "output": 57017
+     }
+    }
+   },
+   "assessment_tokens": null,
+   "attempts": 30,
+   "cells": 30,
+   "first_attempt_complete_and_accounted": 30,
+   "first_attempt_status_counts": {
+    "complete": 30
+   },
+   "job": "line-counts",
+   "measured_usd": 4.3553,
+   "nominal_usd": 30.0,
+   "profile": "line-counts-on",
+   "rerun_attempts": 0,
+   "status_counts": {
+    "complete": 30
+   },
+   "tests": {
+    "all_attempts_within_ceiling": true,
+    "all_runs_complete_and_accounted": true,
+    "experiment_terminal": true,
+    "matrix_exact": true,
+    "retries_within_declared_policy": true
+   },
+   "total_tokens": 1776401,
+   "transient_http_statuses": {}
+  },
+  "reliability-r2": {
+   "all_gate_tests_pass": true,
+   "arms": {
+    "aggregate": {
+     "actual_assessor_calls": 0,
+     "assessed_candidates": 0,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": null,
+     "automated_matched_findings": 24,
+     "cells": 9,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 0,
+     "defect_cells": 6,
+     "defect_cells_detected": 6,
+     "discovery_findings": 24,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 24,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {},
+     "max_attempt_tokens": 40423,
+     "mean_latency_seconds": 17.62,
+     "mean_tokens": 37628.8,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 21.56,
+     "per_case": {
+      "contract-explicit-default-clean": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        11.791,
+        11.28,
+        12.109
+       ],
+       "mean_latency_seconds": 11.73,
+       "mean_tokens": 34848.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        34844,
+        34840,
+        34860
+       ]
+      },
+      "security-auth-order": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        20.39,
+        20.703,
+        20.501
+       ],
+       "mean_latency_seconds": 20.53,
+       "mean_tokens": 40394.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        40385,
+        40376,
+        40423
+       ]
+      },
+      "tests-consumer-fixture": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        21.558,
+        20.867,
+        19.407
+       ],
+       "mean_latency_seconds": 20.61,
+       "mean_tokens": 37643.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        37696,
+        37558,
+        37677
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.6097,
+      1.0
+     ],
+     "sessions": 36,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 338659,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 274045,
+      "cache_write": 0,
+      "input": 40352,
+      "output": 24262
+     }
+    },
+    "assessed": {
+     "actual_assessor_calls": 6,
+     "assessed_candidates": 24,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      15096,
+      16666
+     ],
+     "automated_matched_findings": 24,
+     "cells": 9,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 6,
+     "defect_cells": 6,
+     "defect_cells_detected": 6,
+     "discovery_findings": 24,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 24,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 24
+     },
+     "max_attempt_tokens": 57093,
+     "mean_latency_seconds": 41.31,
+     "mean_tokens": 48286.1,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 58.5,
+     "per_case": {
+      "contract-explicit-default-clean": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        10.683,
+        10.002,
+        11.669
+       ],
+       "mean_latency_seconds": 10.78,
+       "mean_tokens": 34838.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        34838,
+        34840,
+        34838
+       ]
+      },
+      "security-auth-order": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        57.452,
+        57.113,
+        57.713
+       ],
+       "mean_latency_seconds": 57.43,
+       "mean_tokens": 57004.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        57093,
+        56952,
+        56968
+       ]
+      },
+      "tests-consumer-fixture": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        58.504,
+        51.595,
+        57.056
+       ],
+       "mean_latency_seconds": 55.72,
+       "mean_tokens": 53015.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        53120,
+        52672,
+        53254
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.6097,
+      1.0
+     ],
+     "sessions": 36,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 434575,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 362475,
+      "cache_write": 0,
+      "input": 34248,
+      "output": 37852
+     }
+    },
+    "focused1": {
+     "actual_assessor_calls": 6,
+     "assessed_candidates": 24,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      15163,
+      16567
+     ],
+     "automated_matched_findings": 24,
+     "cells": 9,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 6,
+     "defect_cells": 6,
+     "defect_cells_detected": 6,
+     "discovery_findings": 24,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {
+      "supported": 24
+     },
+     "findings": 24,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 24
+     },
+     "max_attempt_tokens": 56983,
+     "mean_latency_seconds": 39.33,
+     "mean_tokens": 48273.3,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 57.23,
+     "per_case": {
+      "contract-explicit-default-clean": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        10.124,
+        10.549,
+        10.759
+       ],
+       "mean_latency_seconds": 10.48,
+       "mean_tokens": 34846.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        34839,
+        34841,
+        34860
+       ]
+      },
+      "security-auth-order": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {
+        "supported": 12
+       },
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        57.235,
+        55.661,
+        53.285
+       ],
+       "mean_latency_seconds": 55.39,
+       "mean_tokens": 56951.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        56938,
+        56983,
+        56933
+       ]
+      },
+      "tests-consumer-fixture": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {
+        "supported": 12
+       },
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        52.8,
+        51.681,
+        51.901
+       ],
+       "mean_latency_seconds": 52.13,
+       "mean_tokens": 53022.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        53284,
+        53069,
+        52713
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.6097,
+      1.0
+     ],
+     "sessions": 36,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 434460,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 362651,
+      "cache_write": 0,
+      "input": 34336,
+      "output": 37473
+     }
+    },
+    "focused3": {
+     "actual_assessor_calls": 6,
+     "assessed_candidates": 24,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      15161,
+      16717
+     ],
+     "automated_matched_findings": 22,
+     "cells": 9,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 6,
+     "defect_cells": 6,
+     "defect_cells_detected": 6,
+     "discovery_findings": 24,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {
+      "supported": 24
+     },
+     "findings": 24,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 24
+     },
+     "max_attempt_tokens": 57168,
+     "mean_latency_seconds": 39.65,
+     "mean_tokens": 48236.8,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 56.89,
+     "per_case": {
+      "contract-explicit-default-clean": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        9.922,
+        10.666,
+        10.0
+       ],
+       "mean_latency_seconds": 10.2,
+       "mean_tokens": 34845.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        34839,
+        34855,
+        34842
+       ]
+      },
+      "security-auth-order": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {
+        "supported": 12
+       },
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        52.412,
+        56.889,
+        55.027
+       ],
+       "mean_latency_seconds": 54.78,
+       "mean_tokens": 56984.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        57168,
+        56805,
+        56981
+       ]
+      },
+      "tests-consumer-fixture": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {
+        "supported": 12
+       },
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        53.88,
+        52.152,
+        55.919
+       ],
+       "mean_latency_seconds": 53.98,
+       "mean_tokens": 52880.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        52754,
+        52714,
+        53173
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.6097,
+      1.0
+     ],
+     "sessions": 36,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 434131,
+     "unmatched_findings": 2,
+     "usage_final_attempts": {
+      "cache_read": 362525,
+      "cache_write": 0,
+      "input": 34273,
+      "output": 37333
+     }
+    }
+   },
+   "assessment_tokens": null,
+   "attempts": 36,
+   "cells": 36,
+   "first_attempt_complete_and_accounted": 36,
+   "first_attempt_status_counts": {
+    "complete": 36
+   },
+   "job": "reliability-r2",
+   "measured_usd": 4.379,
+   "nominal_usd": 36.0,
+   "profile": "sol100-reliability-draw",
+   "rerun_attempts": 0,
+   "status_counts": {
+    "complete": 36
+   },
+   "tests": {
+    "aggregate_bug_cells_nonempty_valid_v2": true,
+    "all_attempts_within_ceiling": true,
+    "all_runs_complete_and_accounted": true,
+    "assessed_bug_cells_actual_complete_assessor": true,
+    "experiment_terminal": true,
+    "matrix_exact": true,
+    "retries_within_declared_policy": true
+   },
+   "total_tokens": 1641825,
+   "transient_http_statuses": {}
+  },
+  "reliability-r3": {
+   "all_gate_tests_pass": true,
+   "arms": {
+    "aggregate": {
+     "actual_assessor_calls": 0,
+     "assessed_candidates": 0,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": null,
+     "automated_matched_findings": 24,
+     "cells": 9,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 0,
+     "defect_cells": 6,
+     "defect_cells_detected": 6,
+     "discovery_findings": 24,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 24,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {},
+     "max_attempt_tokens": 40408,
+     "mean_latency_seconds": 17.19,
+     "mean_tokens": 37627.2,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 21.61,
+     "per_case": {
+      "contract-explicit-default-clean": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        11.824,
+        10.719,
+        9.279
+       ],
+       "mean_latency_seconds": 10.61,
+       "mean_tokens": 34839.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        34840,
+        34840,
+        34839
+       ]
+      },
+      "security-auth-order": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        21.112,
+        20.14,
+        21.606
+       ],
+       "mean_latency_seconds": 20.95,
+       "mean_tokens": 40400.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        40408,
+        40398,
+        40395
+       ]
+      },
+      "tests-consumer-fixture": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        20.381,
+        20.051,
+        19.569
+       ],
+       "mean_latency_seconds": 20.0,
+       "mean_tokens": 37641.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        37665,
+        37711,
+        37549
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.6097,
+      1.0
+     ],
+     "sessions": 36,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 338645,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 314073,
+      "cache_write": 0,
+      "input": 324,
+      "output": 24248
+     }
+    },
+    "assessed": {
+     "actual_assessor_calls": 6,
+     "assessed_candidates": 24,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      15204,
+      16764
+     ],
+     "automated_matched_findings": 24,
+     "cells": 9,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 6,
+     "defect_cells": 6,
+     "defect_cells_detected": 6,
+     "discovery_findings": 24,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 24,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 24
+     },
+     "max_attempt_tokens": 57192,
+     "mean_latency_seconds": 41.39,
+     "mean_tokens": 48331.6,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 61.84,
+     "per_case": {
+      "contract-explicit-default-clean": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        10.043,
+        11.234,
+        10.631
+       ],
+       "mean_latency_seconds": 10.64,
+       "mean_tokens": 34847.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        34864,
+        34839,
+        34840
+       ]
+      },
+      "security-auth-order": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        59.501,
+        61.839,
+        56.087
+       ],
+       "mean_latency_seconds": 59.14,
+       "mean_tokens": 57090.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        57192,
+        57104,
+        56976
+       ]
+      },
+      "tests-consumer-fixture": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        56.237,
+        53.481,
+        53.501
+       ],
+       "mean_latency_seconds": 54.41,
+       "mean_tokens": 53056.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        53541,
+        52777,
+        52851
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.6097,
+      1.0
+     ],
+     "sessions": 36,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 434984,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 362769,
+      "cache_write": 0,
+      "input": 34395,
+      "output": 37820
+     }
+    },
+    "focused1": {
+     "actual_assessor_calls": 6,
+     "assessed_candidates": 24,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      14961,
+      16684
+     ],
+     "automated_matched_findings": 24,
+     "cells": 9,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 6,
+     "defect_cells": 6,
+     "defect_cells_detected": 6,
+     "discovery_findings": 24,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {
+      "supported": 24
+     },
+     "findings": 24,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 24
+     },
+     "max_attempt_tokens": 57108,
+     "mean_latency_seconds": 40.66,
+     "mean_tokens": 48261.3,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 60.23,
+     "per_case": {
+      "contract-explicit-default-clean": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        9.583,
+        10.184,
+        10.771
+       ],
+       "mean_latency_seconds": 10.18,
+       "mean_tokens": 34843.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        34854,
+        34839,
+        34838
+       ]
+      },
+      "security-auth-order": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {
+        "supported": 12
+       },
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        56.019,
+        55.144,
+        53.109
+       ],
+       "mean_latency_seconds": 54.76,
+       "mean_tokens": 57004.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        57108,
+        56940,
+        56964
+       ]
+      },
+      "tests-consumer-fixture": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {
+        "supported": 12
+       },
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        58.818,
+        52.044,
+        60.234
+       ],
+       "mean_latency_seconds": 57.03,
+       "mean_tokens": 52936.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        52825,
+        52449,
+        53535
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.6097,
+      1.0
+     ],
+     "sessions": 36,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 434352,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 362415,
+      "cache_write": 0,
+      "input": 34218,
+      "output": 37719
+     }
+    },
+    "focused3": {
+     "actual_assessor_calls": 6,
+     "assessed_candidates": 24,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      15312,
+      16726
+     ],
+     "automated_matched_findings": 24,
+     "cells": 9,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 6,
+     "defect_cells": 6,
+     "defect_cells_detected": 6,
+     "discovery_findings": 24,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {
+      "supported": 24
+     },
+     "findings": 24,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 24
+     },
+     "max_attempt_tokens": 57184,
+     "mean_latency_seconds": 39.42,
+     "mean_tokens": 48301.2,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 58.44,
+     "per_case": {
+      "contract-explicit-default-clean": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        9.859,
+        9.71,
+        9.651
+       ],
+       "mean_latency_seconds": 9.74,
+       "mean_tokens": 34840.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        34839,
+        34842,
+        34840
+       ]
+      },
+      "security-auth-order": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {
+        "supported": 12
+       },
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        54.598,
+        58.436,
+        55.522
+       ],
+       "mean_latency_seconds": 56.19,
+       "mean_tokens": 57046.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        57004,
+        57184,
+        56952
+       ]
+      },
+      "tests-consumer-fixture": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {
+        "supported": 12
+       },
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        51.615,
+        52.061,
+        53.35
+       ],
+       "mean_latency_seconds": 52.34,
+       "mean_tokens": 53016.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        52915,
+        53162,
+        52973
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.6097,
+      1.0
+     ],
+     "sessions": 36,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 434711,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 362823,
+      "cache_write": 0,
+      "input": 34422,
+      "output": 37466
+     }
+    }
+   },
+   "assessment_tokens": null,
+   "attempts": 36,
+   "cells": 36,
+   "first_attempt_complete_and_accounted": 36,
+   "first_attempt_status_counts": {
+    "complete": 36
+   },
+   "job": "reliability-r3",
+   "measured_usd": 4.3834,
+   "nominal_usd": 36.0,
+   "profile": "sol100-reliability-draw",
+   "rerun_attempts": 0,
+   "status_counts": {
+    "complete": 36
+   },
+   "tests": {
+    "aggregate_bug_cells_nonempty_valid_v2": true,
+    "all_attempts_within_ceiling": true,
+    "all_runs_complete_and_accounted": true,
+    "assessed_bug_cells_actual_complete_assessor": true,
+    "experiment_terminal": true,
+    "matrix_exact": true,
+    "retries_within_declared_policy": true
+   },
+   "total_tokens": 1642692,
+   "transient_http_statuses": {}
+  },
+  "routing": {
+   "all_gate_tests_pass": false,
+   "arms": {
+    "evidence": {
+     "actual_assessor_calls": 0,
+     "assessed_candidates": 0,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": null,
+     "automated_matched_findings": 36,
+     "cells": 15,
+     "cells_lost_to_citation": 1,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 6,
+     "clean_cells_with_findings": 1,
+     "clean_cells_with_findings_wilson95": [
+      0.0362,
+      0.6245
+     ],
+     "complete_and_accounted": 14,
+     "complete_assessor_calls": 0,
+     "defect_cells": 9,
+     "defect_cells_detected": 9,
+     "discovery_findings": 37,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 37,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {},
+     "max_attempt_tokens": 51165,
+     "mean_latency_seconds": 21.45,
+     "mean_tokens": 48230.9,
+     "not_complete": 1,
+     "not_complete_rate_wilson95": [
+      0.0119,
+      0.2982
+     ],
+     "not_complete_reasons": {
+      "citation_validation": 1
+     },
+     "p95_latency_seconds_nearest_rank": 32.13,
+     "per_case": {
+      "dev3-06": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        12.301,
+        11.988,
+        11.15
+       ],
+       "mean_latency_seconds": 11.81,
+       "mean_tokens": 44914.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        44913,
+        44924,
+        44905
+       ]
+      },
+      "dev3-07": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 1,
+       "complete": 2,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 1,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 1,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        29.295,
+        32.135,
+        16.043
+       ],
+       "mean_latency_seconds": 25.82,
+       "mean_tokens": 48522.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 1,
+       "specialists": [],
+       "tokens": [
+        48851,
+        48730,
+        47985
+       ]
+      },
+      "dev3-08": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        25.2,
+        22.548,
+        22.843
+       ],
+       "mean_latency_seconds": 23.53,
+       "mean_tokens": 49830.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        49858,
+        49833,
+        49800
+       ]
+      },
+      "dev3-09": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        21.057,
+        20.435,
+        23.59
+       ],
+       "mean_latency_seconds": 21.69,
+       "mean_tokens": 46759.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        46715,
+        46766,
+        46797
+       ]
+      },
+      "dev3-10": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        24.64,
+        24.874,
+        23.603
+       ],
+       "mean_latency_seconds": 24.37,
+       "mean_tokens": 51128.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        51097,
+        51165,
+        51124
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.7009,
+      1.0
+     ],
+     "sessions": 60,
+     "sessions_refused_for_citation": 1,
+     "total_tokens": 723463,
+     "unmatched_findings": 1,
+     "usage_final_attempts": {
+      "cache_read": 627079,
+      "cache_write": 0,
+      "input": 52316,
+      "output": 44068
+     }
+    },
+    "routing": {
+     "actual_assessor_calls": 0,
+     "assessed_candidates": 0,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": null,
+     "automated_matched_findings": 45,
+     "cells": 15,
+     "cells_lost_to_citation": 1,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 15,
+     "clean_cells": 6,
+     "clean_cells_with_findings": 2,
+     "clean_cells_with_findings_wilson95": [
+      0.1176,
+      0.7693
+     ],
+     "complete_and_accounted": 14,
+     "complete_assessor_calls": 0,
+     "defect_cells": 9,
+     "defect_cells_detected": 9,
+     "discovery_findings": 48,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 48,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {},
+     "max_attempt_tokens": 70517,
+     "mean_latency_seconds": 23.03,
+     "mean_tokens": 67212.9,
+     "not_complete": 1,
+     "not_complete_rate_wilson95": [
+      0.0119,
+      0.2982
+     ],
+     "not_complete_reasons": {
+      "citation_validation": 1
+     },
+     "p95_latency_seconds_nearest_rank": 32.62,
+     "per_case": {
+      "dev3-06": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        11.2,
+        10.895,
+        12.014
+       ],
+       "mean_latency_seconds": 11.37,
+       "mean_tokens": 62964.0,
+       "reviewers": [
+        5
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [
+        "performance-concurrency"
+       ],
+       "tokens": [
+        62597,
+        62565,
+        63730
+       ]
+      },
+      "dev3-07": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 2,
+       "complete": 2,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 3,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 3,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        32.624,
+        30.184,
+        30.4
+       ],
+       "mean_latency_seconds": 31.07,
+       "mean_tokens": 68749.7,
+       "reviewers": [
+        5
+       ],
+       "sessions_refused_for_citation": 1,
+       "specialists": [
+        "data-integrity-migrations"
+       ],
+       "tokens": [
+        67275,
+        70441,
+        68533
+       ]
+      },
+      "dev3-08": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 3,
+       "discovery_findings": 15,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 15,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        24.474,
+        24.198,
+        23.525
+       ],
+       "mean_latency_seconds": 24.07,
+       "mean_tokens": 69027.0,
+       "reviewers": [
+        5
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [
+        "performance-concurrency"
+       ],
+       "tokens": [
+        68698,
+        69787,
+        68596
+       ]
+      },
+      "dev3-09": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 3,
+       "discovery_findings": 15,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 15,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        23.214,
+        23.036,
+        22.043
+       ],
+       "mean_latency_seconds": 22.76,
+       "mean_tokens": 64881.0,
+       "reviewers": [
+        5
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [
+        "performance-concurrency"
+       ],
+       "tokens": [
+        64838,
+        64899,
+        64906
+       ]
+      },
+      "dev3-10": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 3,
+       "discovery_findings": 15,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 15,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        26.309,
+        25.531,
+        25.766
+       ],
+       "mean_latency_seconds": 25.87,
+       "mean_tokens": 70442.7,
+       "reviewers": [
+        5
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [
+        "data-integrity-migrations"
+       ],
+       "tokens": [
+        70408,
+        70403,
+        70517
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.7009,
+      1.0
+     ],
+     "sessions": 75,
+     "sessions_refused_for_citation": 1,
+     "total_tokens": 1008193,
+     "unmatched_findings": 3,
+     "usage_final_attempts": {
+      "cache_read": 780792,
+      "cache_write": 0,
+      "input": 169853,
+      "output": 57548
+     }
+    }
+   },
+   "assessment_tokens": null,
+   "attempts": 30,
+   "cells": 30,
+   "first_attempt_complete_and_accounted": 28,
+   "first_attempt_status_counts": {
+    "complete": 28,
+    "failed": 2
+   },
+   "job": "routing",
+   "measured_usd": 4.2762,
+   "nominal_usd": 30.0,
+   "profile": "routing-vs-fixed-separating",
+   "rerun_attempts": 0,
+   "status_counts": {
+    "complete": 28,
+    "failed": 2
+   },
+   "tests": {
+    "all_attempts_within_ceiling": true,
+    "all_runs_complete_and_accounted": false,
+    "experiment_terminal": true,
+    "matrix_exact": true,
+    "retries_within_declared_policy": true
+   },
+   "total_tokens": 1731656,
+   "transient_http_statuses": {}
+  },
+  "tools": {
+   "all_gate_tests_pass": true,
+   "arms": {
+    "assessment": {
+     "actual_assessor_calls": 9,
+     "assessed_candidates": 36,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      19121,
+      21794
+     ],
+     "automated_matched_findings": 36,
+     "cells": 12,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 12,
+     "complete_assessor_calls": 9,
+     "defect_cells": 9,
+     "defect_cells_detected": 9,
+     "discovery_findings": 36,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 36,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 36
+     },
+     "max_attempt_tokens": 76365,
+     "mean_latency_seconds": 52.69,
+     "mean_tokens": 65952.6,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2425
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 74.33,
+     "per_case": {
+      "dev3-01": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        74.329,
+        66.847,
+        67.848
+       ],
+       "mean_latency_seconds": 69.67,
+       "mean_tokens": 75965.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        76365,
+        75590,
+        75940
+       ]
+      },
+      "dev3-02": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        64.253,
+        64.115,
+        59.728
+       ],
+       "mean_latency_seconds": 62.7,
+       "mean_tokens": 69233.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        68820,
+        70068,
+        68811
+       ]
+      },
+      "dev3-03": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        14.499,
+        14.842,
+        14.667
+       ],
+       "mean_latency_seconds": 14.67,
+       "mean_tokens": 49312.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        49306,
+        49299,
+        49333
+       ]
+      },
+      "dev3-04": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        64.118,
+        64.327,
+        62.681
+       ],
+       "mean_latency_seconds": 63.71,
+       "mean_tokens": 69299.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        69328,
+        69358,
+        69213
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.7009,
+      1.0
+     ],
+     "sessions": 48,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 791431,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 573754,
+      "cache_write": 0,
+      "input": 154805,
+      "output": 62872
+     }
+    },
+    "tools": {
+     "actual_assessor_calls": 9,
+     "assessed_candidates": 36,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      20237,
+      23866
+     ],
+     "automated_matched_findings": 36,
+     "cells": 12,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 12,
+     "complete_assessor_calls": 9,
+     "defect_cells": 9,
+     "defect_cells_detected": 9,
+     "discovery_findings": 36,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 36,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 36
+     },
+     "max_attempt_tokens": 80758,
+     "mean_latency_seconds": 58.04,
+     "mean_tokens": 69046.9,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2425
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 81.67,
+     "per_case": {
+      "dev3-01": {
+       "analysis_rules": [
+        "F811"
+       ],
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        72.54,
+        76.866,
+        80.92
+       ],
+       "mean_latency_seconds": 76.78,
+       "mean_tokens": 79803.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        80758,
+        78609,
+        80043
+       ]
+      },
+      "dev3-02": {
+       "analysis_rules": [
+        "F821"
+       ],
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        68.776,
+        66.378,
+        64.381
+       ],
+       "mean_latency_seconds": 66.51,
+       "mean_tokens": 72580.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        72700,
+        71950,
+        73092
+       ]
+      },
+      "dev3-03": {
+       "analysis_rules": [
+        "F401",
+        "F401"
+       ],
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        15.792,
+        15.436,
+        14.348
+       ],
+       "mean_latency_seconds": 15.19,
+       "mean_tokens": 52078.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        52080,
+        52073,
+        52082
+       ]
+      },
+      "dev3-04": {
+       "analysis_rules": [],
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        81.669,
+        68.443,
+        70.921
+       ],
+       "mean_latency_seconds": 73.68,
+       "mean_tokens": 71725.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        71617,
+        71820,
+        71739
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.7009,
+      1.0
+     ],
+     "sessions": 48,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 828563,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 601241,
+      "cache_write": 0,
+      "input": 163104,
+      "output": 64218
+     }
+    }
+   },
+   "assessment_tokens": 30000,
+   "attempts": 24,
+   "cells": 24,
+   "first_attempt_complete_and_accounted": 24,
+   "first_attempt_status_counts": {
+    "complete": 24
+   },
+   "job": "tools",
+   "measured_usd": 4.2567,
+   "nominal_usd": 24.0,
+   "profile": "tools-vs-assessment-revised",
+   "rerun_attempts": 0,
+   "status_counts": {
+    "complete": 24
+   },
+   "tests": {
+    "all_attempts_within_ceiling": true,
+    "all_runs_complete_and_accounted": true,
+    "experiment_terminal": true,
+    "matrix_exact": true,
+    "retries_within_declared_policy": true
+   },
+   "total_tokens": 1619994,
+   "transient_http_statuses": {}
+  },
+  "tools-silent": {
+   "all_gate_tests_pass": false,
+   "arms": {
+    "assessment": {
+     "actual_assessor_calls": 6,
+     "assessed_candidates": 24,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      15850,
+      16714
+     ],
+     "automated_matched_findings": 24,
+     "cells": 9,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 9,
+     "complete_assessor_calls": 6,
+     "defect_cells": 6,
+     "defect_cells_detected": 6,
+     "discovery_findings": 24,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 24,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 24
+     },
+     "max_attempt_tokens": 59208,
+     "mean_latency_seconds": 37.21,
+     "mean_tokens": 52094.6,
+     "not_complete": 0,
+     "not_complete_rate_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 55.53,
+     "per_case": {
+      "dev2-01": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        47.967,
+        49.286,
+        49.671
+       ],
+       "mean_latency_seconds": 48.97,
+       "mean_tokens": 58073.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        58144,
+        57951,
+        58126
+       ]
+      },
+      "dev2-06": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        49.809,
+        49.637,
+        55.533
+       ],
+       "mean_latency_seconds": 51.66,
+       "mean_tokens": 58555.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        58118,
+        58340,
+        59208
+       ]
+      },
+      "dev2-07": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        9.938,
+        13.307,
+        9.719
+       ],
+       "mean_latency_seconds": 10.99,
+       "mean_tokens": 39654.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        39650,
+        39651,
+        39663
+       ]
+      }
+     },
+     "provisional_defect_recall": 1.0,
+     "provisional_defect_recall_wilson95": [
+      0.6097,
+      1.0
+     ],
+     "sessions": 36,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 468851,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 357508,
+      "cache_write": 0,
+      "input": 77681,
+      "output": 33662
+     }
+    },
+    "tools": {
+     "actual_assessor_calls": 5,
+     "assessed_candidates": 20,
+     "assessor_overrun_tokens": [],
+     "assessor_tokens_with_candidates_range": [
+      16627,
+      17166
+     ],
+     "automated_matched_findings": 20,
+     "cells": 9,
+     "cells_lost_to_citation": 1,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 0,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 8,
+     "complete_assessor_calls": 5,
+     "defect_cells": 6,
+     "defect_cells_detected": 5,
+     "discovery_findings": 23,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 20,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 20
+     },
+     "max_attempt_tokens": 60477,
+     "mean_latency_seconds": 33.93,
+     "mean_tokens": 52130.0,
+     "not_complete": 1,
+     "not_complete_rate_wilson95": [
+      0.0199,
+      0.435
+     ],
+     "not_complete_reasons": {
+      "citation_validation": 1
+     },
+     "p95_latency_seconds_nearest_rank": 51.9,
+     "per_case": {
+      "dev2-01": {
+       "analysis_rules": [],
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        50.787,
+        50.278,
+        51.895
+       ],
+       "mean_latency_seconds": 50.99,
+       "mean_tokens": 60378.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        60397,
+        60477,
+        60261
+       ]
+      },
+      "dev2-06": {
+       "analysis_rules": [],
+       "candidates": 8,
+       "cells": 3,
+       "cells_with_findings": 2,
+       "complete": 2,
+       "defect_among_assessed_candidates": 2,
+       "detected": 2,
+       "discovery_findings": 11,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 8,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 8
+       },
+       "latency_seconds": [
+        49.633,
+        49.565,
+        21.789
+       ],
+       "mean_latency_seconds": 40.33,
+       "mean_tokens": 54872.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 1,
+       "specialists": [],
+       "tokens": [
+        60420,
+        60278,
+        43919
+       ]
+      },
+      "dev2-07": {
+       "analysis_rules": [],
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        10.845,
+        9.689,
+        10.865
+       ],
+       "mean_latency_seconds": 10.47,
+       "mean_tokens": 41139.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        41154,
+        41141,
+        41123
+       ]
+      }
+     },
+     "provisional_defect_recall": 0.8333,
+     "provisional_defect_recall_wilson95": [
+      0.4365,
+      0.9699
+     ],
+     "sessions": 36,
+     "sessions_refused_for_citation": 1,
+     "total_tokens": 469170,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 357442,
+      "cache_write": 0,
+      "input": 79661,
+      "output": 32067
+     }
+    }
+   },
+   "assessment_tokens": null,
+   "attempts": 18,
+   "cells": 18,
+   "first_attempt_complete_and_accounted": 17,
+   "first_attempt_status_counts": {
+    "complete": 17,
+    "invalid": 1
+   },
+   "job": "tools-silent",
+   "measured_usd": 2.4019,
+   "nominal_usd": 18.0,
+   "profile": "tools-vs-assessment-silent",
+   "rerun_attempts": 0,
+   "status_counts": {
+    "complete": 17,
+    "invalid": 1
+   },
+   "tests": {
+    "all_attempts_within_ceiling": true,
+    "all_runs_complete_and_accounted": false,
+    "experiment_terminal": true,
+    "matrix_exact": true,
+    "retries_within_declared_policy": true
+   },
+   "total_tokens": 938021,
+   "transient_http_statuses": {}
+  },
+  "tools-voided": {
+   "all_gate_tests_pass": false,
+   "arms": {
+    "assessment": {
+     "actual_assessor_calls": 9,
+     "assessed_candidates": 36,
+     "assessor_overrun_tokens": [
+      531,
+      1510,
+      1842,
+      2813
+     ],
+     "assessor_tokens_with_candidates_range": [
+      19478,
+      22813
+     ],
+     "automated_matched_findings": 20,
+     "cells": 12,
+     "cells_lost_to_citation": 0,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 4,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 8,
+     "complete_assessor_calls": 5,
+     "defect_cells": 9,
+     "defect_cells_detected": 5,
+     "discovery_findings": 36,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 20,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 36
+     },
+     "max_attempt_tokens": 77522,
+     "mean_latency_seconds": 56.46,
+     "mean_tokens": 66250.2,
+     "not_complete": 4,
+     "not_complete_rate_wilson95": [
+      0.1381,
+      0.6094
+     ],
+     "not_complete_reasons": {},
+     "p95_latency_seconds_nearest_rank": 119.92,
+     "per_case": {
+      "dev3-01": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 0,
+       "defect_among_assessed_candidates": 3,
+       "detected": 0,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        71.328,
+        65.811,
+        77.933
+       ],
+       "mean_latency_seconds": 71.69,
+       "mean_tokens": 76592.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        75949,
+        76305,
+        77522
+       ]
+      },
+      "dev3-02": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 2,
+       "complete": 2,
+       "defect_among_assessed_candidates": 3,
+       "detected": 2,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 8,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        62.857,
+        61.345,
+        57.567
+       ],
+       "mean_latency_seconds": 60.59,
+       "mean_tokens": 69716.0,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        70454,
+        69396,
+        69298
+       ]
+      },
+      "dev3-03": {
+       "analysis_rules": null,
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        13.797,
+        14.848,
+        13.984
+       ],
+       "mean_latency_seconds": 14.21,
+       "mean_tokens": 49320.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        49317,
+        49327,
+        49318
+       ]
+      },
+      "dev3-04": {
+       "analysis_rules": null,
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 3,
+       "complete": 3,
+       "defect_among_assessed_candidates": 3,
+       "detected": 3,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 12,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        59.536,
+        58.579,
+        119.915
+       ],
+       "mean_latency_seconds": 79.34,
+       "mean_tokens": 69372.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        69269,
+        69378,
+        69470
+       ]
+      }
+     },
+     "provisional_defect_recall": 0.5556,
+     "provisional_defect_recall_wilson95": [
+      0.2667,
+      0.8112
+     ],
+     "sessions": 48,
+     "sessions_refused_for_citation": 0,
+     "total_tokens": 795003,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 576459,
+      "cache_write": 0,
+      "input": 153348,
+      "output": 65196
+     }
+    },
+    "tools": {
+     "actual_assessor_calls": 8,
+     "assessed_candidates": 32,
+     "assessor_overrun_tokens": [
+      131,
+      363,
+      416,
+      460,
+      1056,
+      1207,
+      3086,
+      3650
+     ],
+     "assessor_tokens_with_candidates_range": [
+      20131,
+      23650
+     ],
+     "automated_matched_findings": 0,
+     "cells": 12,
+     "cells_lost_to_citation": 1,
+     "cells_needing_rerun": 0,
+     "cells_voided_by_assessor_reservation": 8,
+     "cells_with_specialist": 0,
+     "clean_cells": 3,
+     "clean_cells_with_findings": 0,
+     "clean_cells_with_findings_wilson95": [
+      0.0,
+      0.5615
+     ],
+     "complete_and_accounted": 3,
+     "complete_assessor_calls": 0,
+     "defect_cells": 9,
+     "defect_cells_detected": 0,
+     "discovery_findings": 35,
+     "discussion_attempted_rounds": 0,
+     "discussion_completed_rounds": 0,
+     "final_dispositions": {},
+     "findings": 0,
+     "findings_naming_tool_evidence": 0,
+     "initial_dispositions": {
+      "supported": 32
+     },
+     "max_attempt_tokens": 80531,
+     "mean_latency_seconds": 47.81,
+     "mean_tokens": 67132.0,
+     "not_complete": 9,
+     "not_complete_rate_wilson95": [
+      0.4677,
+      0.9111
+     ],
+     "not_complete_reasons": {
+      "citation_validation": 1
+     },
+     "p95_latency_seconds_nearest_rank": 73.58,
+     "per_case": {
+      "dev3-01": {
+       "analysis_rules": [
+        "F811"
+       ],
+       "candidates": 8,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 0,
+       "defect_among_assessed_candidates": 2,
+       "detected": 0,
+       "discovery_findings": 11,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 8
+       },
+       "latency_seconds": [
+        65.44,
+        73.58,
+        30.306
+       ],
+       "mean_latency_seconds": 56.44,
+       "mean_tokens": 72378.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 1,
+       "specialists": [],
+       "tokens": [
+        79956,
+        80531,
+        56648
+       ]
+      },
+      "dev3-02": {
+       "analysis_rules": [
+        "F821"
+       ],
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 0,
+       "defect_among_assessed_candidates": 3,
+       "detected": 0,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        60.001,
+        57.698,
+        60.183
+       ],
+       "mean_latency_seconds": 59.29,
+       "mean_tokens": 72479.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        71693,
+        72745,
+        73001
+       ]
+      },
+      "dev3-03": {
+       "analysis_rules": [
+        "F401",
+        "F401"
+       ],
+       "candidates": 0,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 3,
+       "defect_among_assessed_candidates": 0,
+       "detected": 0,
+       "discovery_findings": 0,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {},
+       "latency_seconds": [
+        14.027,
+        14.531,
+        14.567
+       ],
+       "mean_latency_seconds": 14.38,
+       "mean_tokens": 52090.7,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        52091,
+        52076,
+        52105
+       ]
+      },
+      "dev3-04": {
+       "analysis_rules": [],
+       "candidates": 12,
+       "cells": 3,
+       "cells_with_findings": 0,
+       "complete": 0,
+       "defect_among_assessed_candidates": 3,
+       "detected": 0,
+       "discovery_findings": 12,
+       "discussion_attempted_rounds": 0,
+       "discussion_completed_rounds": 0,
+       "final_dispositions": {},
+       "findings": 0,
+       "findings_stating_tempting_allegation": 0,
+       "initial_dispositions": {
+        "supported": 12
+       },
+       "latency_seconds": [
+        62.439,
+        62.03,
+        58.925
+       ],
+       "mean_latency_seconds": 61.13,
+       "mean_tokens": 71579.3,
+       "reviewers": [
+        4
+       ],
+       "sessions_refused_for_citation": 0,
+       "specialists": [],
+       "tokens": [
+        71582,
+        71518,
+        71638
+       ]
+      }
+     },
+     "provisional_defect_recall": 0.0,
+     "provisional_defect_recall_wilson95": [
+      0.0,
+      0.2991
+     ],
+     "sessions": 48,
+     "sessions_refused_for_citation": 1,
+     "total_tokens": 805584,
+     "unmatched_findings": 0,
+     "usage_final_attempts": {
+      "cache_read": 590453,
+      "cache_write": 0,
+      "input": 153835,
+      "output": 61296
+     }
+    }
+   },
+   "assessment_tokens": null,
+   "attempts": 24,
+   "cells": 24,
+   "first_attempt_complete_and_accounted": 11,
+   "first_attempt_status_counts": {
+    "complete": 11,
+    "invalid": 13
+   },
+   "job": "tools-voided",
+   "measured_usd": 4.2131,
+   "nominal_usd": 24.0,
+   "profile": "tools-vs-assessment",
+   "rerun_attempts": 0,
+   "status_counts": {
+    "complete": 11,
+    "invalid": 13
+   },
+   "tests": {
+    "all_attempts_within_ceiling": true,
+    "all_runs_complete_and_accounted": false,
+    "experiment_terminal": true,
+    "matrix_exact": true,
+    "retries_within_declared_policy": true
+   },
+   "total_tokens": 1600587,
+   "transient_http_statuses": {}
+  }
+ },
+ "judgments": "automated keyword filters, provisional",
+ "paired": {
+  "assessment_vs_aggregate_comment": {
+   "baseline": "aggregate",
+   "baseline_job": "focused-comment",
+   "candidate": "assessed",
+   "candidate_job": "focused-comment",
+   "cases": {
+    "dev3-08": {
+     "cells_with_findings": {
+      "aggregate": 3,
+      "assessed": 3
+     },
+     "complete": {
+      "aggregate": 3,
+      "assessed": 3
+     },
+     "detected": {
+      "aggregate": "3/3",
+      "assessed": "3/3"
+     },
+     "latency_ratio": 2.562,
+     "mean_latency_seconds": {
+      "aggregate": 28.01,
+      "assessed": 71.77
+     },
+     "mean_tokens": {
+      "aggregate": 49827.7,
+      "assessed": 69261.3
+     },
+     "specialists": [],
+     "token_ratio": 1.39
+    }
+   },
+   "detection_difference_cells": 0,
+   "same_job": true,
+   "token_ratio_range": [
+    1.39,
+    1.39
+   ]
+  },
+  "assessment_vs_aggregate_uncaptured": {
+   "baseline": "aggregate",
+   "baseline_job": "focused-uncaptured-aggregate",
+   "candidate": "assessed",
+   "candidate_job": "focused-uncaptured",
+   "cases": {
+    "dev3-11": {
+     "cells_with_findings": {
+      "aggregate": 3,
+      "assessed": 3
+     },
+     "complete": {
+      "aggregate": 3,
+      "assessed": 3
+     },
+     "detected": {
+      "aggregate": "3/3",
+      "assessed": "3/3"
+     },
+     "latency_ratio": 1.606,
+     "mean_latency_seconds": {
+      "aggregate": 26.02,
+      "assessed": 41.79
+     },
+     "mean_tokens": {
+      "aggregate": 45019.0,
+      "assessed": 56403.7
+     },
+     "specialists": [],
+     "token_ratio": 1.253
+    },
+    "dev3-12": {
+     "cells_with_findings": {
+      "aggregate": 2,
+      "assessed": 3
+     },
+     "complete": {
+      "aggregate": 3,
+      "assessed": 3
+     },
+     "detected": {
+      "aggregate": "0/3",
+      "assessed": "0/3"
+     },
+     "latency_ratio": 1.804,
+     "mean_latency_seconds": {
+      "aggregate": 24.92,
+      "assessed": 44.95
+     },
+     "mean_tokens": {
+      "aggregate": 47999.3,
+      "assessed": 57469.3
+     },
+     "specialists": [],
+     "token_ratio": 1.197
+    }
+   },
+   "detection_difference_cells": 0,
+   "same_job": false,
+   "token_ratio_range": [
+    1.197,
+    1.253
+   ]
+  },
+  "assessment_vs_aggregate_untried": {
+   "baseline": "aggregate",
+   "baseline_job": "discussion-untried",
+   "candidate": "assessed",
+   "candidate_job": "discussion-untried",
+   "cases": {
+    "dev2-03": {
+     "cells_with_findings": {
+      "aggregate": 0,
+      "assessed": 0
+     },
+     "complete": {
+      "aggregate": 3,
+      "assessed": 3
+     },
+     "detected": {
+      "aggregate": "0/3",
+      "assessed": "0/3"
+     },
+     "latency_ratio": 0.957,
+     "mean_latency_seconds": {
+      "aggregate": 11.6,
+      "assessed": 11.1
+     },
+     "mean_tokens": {
+      "aggregate": 43057.7,
+      "assessed": 43028.0
+     },
+     "specialists": [],
+     "token_ratio": 0.999
+    },
+    "dev2-08": {
+     "cells_with_findings": {
+      "aggregate": 0,
+      "assessed": 0
+     },
+     "complete": {
+      "aggregate": 3,
+      "assessed": 3
+     },
+     "detected": {
+      "aggregate": "0/3",
+      "assessed": "0/3"
+     },
+     "latency_ratio": 1.097,
+     "mean_latency_seconds": {
+      "aggregate": 12.57,
+      "assessed": 13.79
+     },
+     "mean_tokens": {
+      "aggregate": 43275.7,
+      "assessed": 43284.0
+     },
+     "specialists": [],
+     "token_ratio": 1.0
+    },
+    "dev2-12": {
+     "cells_with_findings": {
+      "aggregate": 0,
+      "assessed": 0
+     },
+     "complete": {
+      "aggregate": 3,
+      "assessed": 3
+     },
+     "detected": {
+      "aggregate": "0/3",
+      "assessed": "0/3"
+     },
+     "latency_ratio": 0.888,
+     "mean_latency_seconds": {
+      "aggregate": 12.49,
+      "assessed": 11.09
+     },
+     "mean_tokens": {
+      "aggregate": 41788.0,
+      "assessed": 41789.7
+     },
+     "specialists": [],
+     "token_ratio": 1.0
+    }
+   },
+   "detection_difference_cells": 0,
+   "same_job": true,
+   "token_ratio_range": [
+    0.999,
+    1.0
+   ]
+  },
+  "assessment_vs_aggregate_wrong_candidates": {
+   "baseline": "aggregate",
+   "baseline_job": "focused-wrong-candidates",
+   "candidate": "assessed",
+   "candidate_job": "focused-wrong-candidates",
+   "cases": {
+    "dev3-05": {
+     "cells_with_findings": {
+      "aggregate": 0,
+      "assessed": 0
+     },
+     "complete": {
+      "aggregate": 3,
+      "assessed": 3
+     },
+     "detected": {
+      "aggregate": "0/3",
+      "assessed": "0/3"
+     },
+     "latency_ratio": 0.906,
+     "mean_latency_seconds": {
+      "aggregate": 13.46,
+      "assessed": 12.2
+     },
+     "mean_tokens": {
+      "aggregate": 47411.7,
+      "assessed": 47394.0
+     },
+     "specialists": [],
+     "token_ratio": 1.0
+    },
+    "dev3-06": {
+     "cells_with_findings": {
+      "aggregate": 0,
+      "assessed": 0
+     },
+     "complete": {
+      "aggregate": 3,
+      "assessed": 3
+     },
+     "detected": {
+      "aggregate": "0/3",
+      "assessed": "0/3"
+     },
+     "latency_ratio": 0.982,
+     "mean_latency_seconds": {
+      "aggregate": 11.36,
+      "assessed": 11.15
+     },
+     "mean_tokens": {
+      "aggregate": 44926.7,
+      "assessed": 44913.7
+     },
+     "specialists": [],
+     "token_ratio": 1.0
+    },
+    "dev3-07": {
+     "cells_with_findings": {
+      "aggregate": 2,
+      "assessed": 1
+     },
+     "complete": {
+      "aggregate": 2,
+      "assessed": 3
+     },
+     "detected": {
+      "aggregate": "0/3",
+      "assessed": "0/3"
+     },
+     "latency_ratio": 0.762,
+     "mean_latency_seconds": {
+      "aggregate": 30.15,
+      "assessed": 22.98
+     },
+     "mean_tokens": {
+      "aggregate": 48953.0,
+      "assessed": 52076.7
+     },
+     "specialists": [],
+     "token_ratio": 1.064
+    }
+   },
+   "detection_difference_cells": 0,
+   "same_job": true,
+   "token_ratio_range": [
+    1.0,
+    1.064
+   ]
+  },
+  "assessment_vs_evidence_separating": {
+   "baseline": "evidence",
+   "baseline_job": "routing",
+   "candidate": "assessment",
+   "candidate_job": "assessment-separating",
+   "cases": {
+    "dev3-06": {
+     "cells_with_findings": {
+      "assessment": 0,
+      "evidence": 0
+     },
+     "complete": {
+      "assessment": 3,
+      "evidence": 3
+     },
+     "detected": {
+      "assessment": "0/3",
+      "evidence": "0/3"
+     },
+     "latency_ratio": 1.014,
+     "mean_latency_seconds": {
+      "assessment": 11.98,
+      "evidence": 11.81
+     },
+     "mean_tokens": {
+      "assessment": 44925.0,
+      "evidence": 44914.0
+     },
+     "specialists": [],
+     "token_ratio": 1.0
+    },
+    "dev3-07": {
+     "cells_with_findings": {
+      "assessment": 2,
+      "evidence": 1
+     },
+     "complete": {
+      "assessment": 2,
+      "evidence": 2
+     },
+     "detected": {
+      "assessment": "0/3",
+      "evidence": "0/3"
+     },
+     "latency_ratio": 1.651,
+     "mean_latency_seconds": {
+      "assessment": 42.63,
+      "evidence": 25.82
+     },
+     "mean_tokens": {
+      "assessment": 56855.3,
+      "evidence": 48522.0
+     },
+     "specialists": [],
+     "token_ratio": 1.172
+    },
+    "dev3-08": {
+     "cells_with_findings": {
+      "assessment": 3,
+      "evidence": 3
+     },
+     "complete": {
+      "assessment": 3,
+      "evidence": 3
+     },
+     "detected": {
+      "assessment": "3/3",
+      "evidence": "3/3"
+     },
+     "latency_ratio": 2.964,
+     "mean_latency_seconds": {
+      "assessment": 69.74,
+      "evidence": 23.53
+     },
+     "mean_tokens": {
+      "assessment": 69427.0,
+      "evidence": 49830.3
+     },
+     "specialists": [],
+     "token_ratio": 1.393
+    },
+    "dev3-09": {
+     "cells_with_findings": {
+      "assessment": 3,
+      "evidence": 3
+     },
+     "complete": {
+      "assessment": 3,
+      "evidence": 3
+     },
+     "detected": {
+      "assessment": "3/3",
+      "evidence": "3/3"
+     },
+     "latency_ratio": 2.686,
+     "mean_latency_seconds": {
+      "assessment": 58.27,
+      "evidence": 21.69
+     },
+     "mean_tokens": {
+      "assessment": 64221.0,
+      "evidence": 46759.3
+     },
+     "specialists": [],
+     "token_ratio": 1.373
+    },
+    "dev3-10": {
+     "cells_with_findings": {
+      "assessment": 3,
+      "evidence": 3
+     },
+     "complete": {
+      "assessment": 3,
+      "evidence": 3
+     },
+     "detected": {
+      "assessment": "3/3",
+      "evidence": "3/3"
+     },
+     "latency_ratio": 2.97,
+     "mean_latency_seconds": {
+      "assessment": 72.39,
+      "evidence": 24.37
+     },
+     "mean_tokens": {
+      "assessment": 71483.0,
+      "evidence": 51128.7
+     },
+     "specialists": [],
+     "token_ratio": 1.398
+    }
+   },
+   "detection_difference_cells": 0,
+   "same_job": false,
+   "token_ratio_range": [
+    1.0,
+    1.398
+   ]
+  },
+  "one_round_vs_assessment_comment": {
+   "baseline": "assessed",
+   "baseline_job": "focused-comment",
+   "candidate": "focused1",
+   "candidate_job": "focused-comment",
+   "cases": {
+    "dev3-08": {
+     "cells_with_findings": {
+      "assessed": 3,
+      "focused1": 3
+     },
+     "complete": {
+      "assessed": 3,
+      "focused1": 3
+     },
+     "detected": {
+      "assessed": "3/3",
+      "focused1": "3/3"
+     },
+     "latency_ratio": 0.989,
+     "mean_latency_seconds": {
+      "assessed": 71.77,
+      "focused1": 70.98
+     },
+     "mean_tokens": {
+      "assessed": 69261.3,
+      "focused1": 69353.7
+     },
+     "specialists": [],
+     "token_ratio": 1.001
+    }
+   },
+   "detection_difference_cells": 0,
+   "same_job": true,
+   "token_ratio_range": [
+    1.001,
+    1.001
+   ]
+  },
+  "one_round_vs_assessment_uncaptured": {
+   "baseline": "assessed",
+   "baseline_job": "focused-uncaptured",
+   "candidate": "focused1",
+   "candidate_job": "focused-uncaptured",
+   "cases": {
+    "dev3-11": {
+     "cells_with_findings": {
+      "assessed": 3,
+      "focused1": 2
+     },
+     "complete": {
+      "assessed": 3,
+      "focused1": 2
+     },
+     "detected": {
+      "assessed": "3/3",
+      "focused1": "2/3"
+     },
+     "latency_ratio": 1.091,
+     "mean_latency_seconds": {
+      "assessed": 41.79,
+      "focused1": 45.6
+     },
+     "mean_tokens": {
+      "assessed": 56403.7,
+      "focused1": 65775.0
+     },
+     "specialists": [],
+     "token_ratio": 1.166
+    },
+    "dev3-12": {
+     "cells_with_findings": {
+      "assessed": 3,
+      "focused1": 3
+     },
+     "complete": {
+      "assessed": 3,
+      "focused1": 3
+     },
+     "detected": {
+      "assessed": "0/3",
+      "focused1": "0/3"
+     },
+     "latency_ratio": 1.038,
+     "mean_latency_seconds": {
+      "assessed": 44.95,
+      "focused1": 46.65
+     },
+     "mean_tokens": {
+      "assessed": 57469.3,
+      "focused1": 57603.7
+     },
+     "specialists": [],
+     "token_ratio": 1.002
+    }
+   },
+   "detection_difference_cells": -1,
+   "same_job": true,
+   "token_ratio_range": [
+    1.002,
+    1.166
+   ]
+  },
+  "one_round_vs_assessment_wrong_candidates": {
+   "baseline": "assessed",
+   "baseline_job": "focused-wrong-candidates",
+   "candidate": "focused1",
+   "candidate_job": "focused-wrong-candidates",
+   "cases": {
+    "dev3-05": {
+     "cells_with_findings": {
+      "assessed": 0,
+      "focused1": 0
+     },
+     "complete": {
+      "assessed": 3,
+      "focused1": 3
+     },
+     "detected": {
+      "assessed": "0/3",
+      "focused1": "0/3"
+     },
+     "latency_ratio": 1.052,
+     "mean_latency_seconds": {
+      "assessed": 12.2,
+      "focused1": 12.84
+     },
+     "mean_tokens": {
+      "assessed": 47394.0,
+      "focused1": 47406.0
+     },
+     "specialists": [],
+     "token_ratio": 1.0
+    },
+    "dev3-06": {
+     "cells_with_findings": {
+      "assessed": 0,
+      "focused1": 0
+     },
+     "complete": {
+      "assessed": 3,
+      "focused1": 3
+     },
+     "detected": {
+      "assessed": "0/3",
+      "focused1": "0/3"
+     },
+     "latency_ratio": 1.03,
+     "mean_latency_seconds": {
+      "assessed": 11.15,
+      "focused1": 11.49
+     },
+     "mean_tokens": {
+      "assessed": 44913.7,
+      "focused1": 44928.0
+     },
+     "specialists": [],
+     "token_ratio": 1.0
+    },
+    "dev3-07": {
+     "cells_with_findings": {
+      "assessed": 1,
+      "focused1": 3
+     },
+     "complete": {
+      "assessed": 3,
+      "focused1": 3
+     },
+     "detected": {
+      "assessed": "0/3",
+      "focused1": "0/3"
+     },
+     "latency_ratio": 2.003,
+     "mean_latency_seconds": {
+      "assessed": 22.98,
+      "focused1": 46.04
+     },
+     "mean_tokens": {
+      "assessed": 52076.7,
+      "focused1": 61161.7
+     },
+     "specialists": [],
+     "token_ratio": 1.174
+    }
+   },
+   "detection_difference_cells": 0,
+   "same_job": true,
+   "token_ratio_range": [
+    1.0,
+    1.174
+   ]
+  },
+  "routing_vs_fixed": {
+   "baseline": "evidence",
+   "baseline_job": "routing",
+   "candidate": "routing",
+   "candidate_job": "routing",
+   "cases": {
+    "dev3-06": {
+     "cells_with_findings": {
+      "evidence": 0,
+      "routing": 0
+     },
+     "complete": {
+      "evidence": 3,
+      "routing": 3
+     },
+     "detected": {
+      "evidence": "0/3",
+      "routing": "0/3"
+     },
+     "latency_ratio": 0.963,
+     "mean_latency_seconds": {
+      "evidence": 11.81,
+      "routing": 11.37
+     },
+     "mean_tokens": {
+      "evidence": 44914.0,
+      "routing": 62964.0
+     },
+     "specialists": [
+      "performance-concurrency"
+     ],
+     "token_ratio": 1.402
+    },
+    "dev3-07": {
+     "cells_with_findings": {
+      "evidence": 1,
+      "routing": 2
+     },
+     "complete": {
+      "evidence": 2,
+      "routing": 2
+     },
+     "detected": {
+      "evidence": "0/3",
+      "routing": "0/3"
+     },
+     "latency_ratio": 1.203,
+     "mean_latency_seconds": {
+      "evidence": 25.82,
+      "routing": 31.07
+     },
+     "mean_tokens": {
+      "evidence": 48522.0,
+      "routing": 68749.7
+     },
+     "specialists": [
+      "data-integrity-migrations"
+     ],
+     "token_ratio": 1.417
+    },
+    "dev3-08": {
+     "cells_with_findings": {
+      "evidence": 3,
+      "routing": 3
+     },
+     "complete": {
+      "evidence": 3,
+      "routing": 3
+     },
+     "detected": {
+      "evidence": "3/3",
+      "routing": "3/3"
+     },
+     "latency_ratio": 1.023,
+     "mean_latency_seconds": {
+      "evidence": 23.53,
+      "routing": 24.07
+     },
+     "mean_tokens": {
+      "evidence": 49830.3,
+      "routing": 69027.0
+     },
+     "specialists": [
+      "performance-concurrency"
+     ],
+     "token_ratio": 1.385
+    },
+    "dev3-09": {
+     "cells_with_findings": {
+      "evidence": 3,
+      "routing": 3
+     },
+     "complete": {
+      "evidence": 3,
+      "routing": 3
+     },
+     "detected": {
+      "evidence": "3/3",
+      "routing": "3/3"
+     },
+     "latency_ratio": 1.049,
+     "mean_latency_seconds": {
+      "evidence": 21.69,
+      "routing": 22.76
+     },
+     "mean_tokens": {
+      "evidence": 46759.3,
+      "routing": 64881.0
+     },
+     "specialists": [
+      "performance-concurrency"
+     ],
+     "token_ratio": 1.388
+    },
+    "dev3-10": {
+     "cells_with_findings": {
+      "evidence": 3,
+      "routing": 3
+     },
+     "complete": {
+      "evidence": 3,
+      "routing": 3
+     },
+     "detected": {
+      "evidence": "3/3",
+      "routing": "3/3"
+     },
+     "latency_ratio": 1.062,
+     "mean_latency_seconds": {
+      "evidence": 24.37,
+      "routing": 25.87
+     },
+     "mean_tokens": {
+      "evidence": 51128.7,
+      "routing": 70442.7
+     },
+     "specialists": [
+      "data-integrity-migrations"
+     ],
+     "token_ratio": 1.378
+    }
+   },
+   "detection_difference_cells": 0,
+   "same_job": true,
+   "token_ratio_range": [
+    1.378,
+    1.417
+   ]
+  },
+  "three_rounds_vs_one_comment": {
+   "baseline": "focused1",
+   "baseline_job": "focused-comment",
+   "candidate": "focused3",
+   "candidate_job": "focused-comment",
+   "cases": {
+    "dev3-08": {
+     "cells_with_findings": {
+      "focused1": 3,
+      "focused3": 2
+     },
+     "complete": {
+      "focused1": 3,
+      "focused3": 2
+     },
+     "detected": {
+      "focused1": "3/3",
+      "focused3": "2/3"
+     },
+     "latency_ratio": 1.014,
+     "mean_latency_seconds": {
+      "focused1": 70.98,
+      "focused3": 71.95
+     },
+     "mean_tokens": {
+      "focused1": 69353.7,
+      "focused3": 76943.7
+     },
+     "specialists": [],
+     "token_ratio": 1.109
+    }
+   },
+   "detection_difference_cells": -1,
+   "same_job": true,
+   "token_ratio_range": [
+    1.109,
+    1.109
+   ]
+  },
+  "three_rounds_vs_one_uncaptured": {
+   "baseline": "focused1",
+   "baseline_job": "focused-uncaptured",
+   "candidate": "focused3",
+   "candidate_job": "focused-uncaptured",
+   "cases": {
+    "dev3-11": {
+     "cells_with_findings": {
+      "focused1": 2,
+      "focused3": 2
+     },
+     "complete": {
+      "focused1": 2,
+      "focused3": 2
+     },
+     "detected": {
+      "focused1": "2/3",
+      "focused3": "2/3"
+     },
+     "latency_ratio": 0.973,
+     "mean_latency_seconds": {
+      "focused1": 45.6,
+      "focused3": 44.35
+     },
+     "mean_tokens": {
+      "focused1": 65775.0,
+      "focused3": 65894.3
+     },
+     "specialists": [],
+     "token_ratio": 1.002
+    },
+    "dev3-12": {
+     "cells_with_findings": {
+      "focused1": 3,
+      "focused3": 3
+     },
+     "complete": {
+      "focused1": 3,
+      "focused3": 3
+     },
+     "detected": {
+      "focused1": "0/3",
+      "focused3": "0/3"
+     },
+     "latency_ratio": 0.952,
+     "mean_latency_seconds": {
+      "focused1": 46.65,
+      "focused3": 44.39
+     },
+     "mean_tokens": {
+      "focused1": 57603.7,
+      "focused3": 55556.3
+     },
+     "specialists": [],
+     "token_ratio": 0.964
+    }
+   },
+   "detection_difference_cells": 0,
+   "same_job": true,
+   "token_ratio_range": [
+    0.964,
+    1.002
+   ]
+  },
+  "three_rounds_vs_one_wrong_candidates": {
+   "baseline": "focused1",
+   "baseline_job": "focused-wrong-candidates",
+   "candidate": "focused3",
+   "candidate_job": "focused-wrong-candidates",
+   "cases": {
+    "dev3-05": {
+     "cells_with_findings": {
+      "focused1": 0,
+      "focused3": 0
+     },
+     "complete": {
+      "focused1": 3,
+      "focused3": 3
+     },
+     "detected": {
+      "focused1": "0/3",
+      "focused3": "0/3"
+     },
+     "latency_ratio": 0.945,
+     "mean_latency_seconds": {
+      "focused1": 12.84,
+      "focused3": 12.14
+     },
+     "mean_tokens": {
+      "focused1": 47406.0,
+      "focused3": 47406.3
+     },
+     "specialists": [],
+     "token_ratio": 1.0
+    },
+    "dev3-06": {
+     "cells_with_findings": {
+      "focused1": 0,
+      "focused3": 0
+     },
+     "complete": {
+      "focused1": 3,
+      "focused3": 3
+     },
+     "detected": {
+      "focused1": "0/3",
+      "focused3": "0/3"
+     },
+     "latency_ratio": 0.965,
+     "mean_latency_seconds": {
+      "focused1": 11.49,
+      "focused3": 11.09
+     },
+     "mean_tokens": {
+      "focused1": 44928.0,
+      "focused3": 44919.7
+     },
+     "specialists": [],
+     "token_ratio": 1.0
+    },
+    "dev3-07": {
+     "cells_with_findings": {
+      "focused1": 3,
+      "focused3": 1
+     },
+     "complete": {
+      "focused1": 3,
+      "focused3": 2
+     },
+     "detected": {
+      "focused1": "0/3",
+      "focused3": "0/3"
+     },
+     "latency_ratio": 1.036,
+     "mean_latency_seconds": {
+      "focused1": 46.04,
+      "focused3": 47.69
+     },
+     "mean_tokens": {
+      "focused1": 61161.7,
+      "focused3": 52554.0
+     },
+     "specialists": [],
+     "token_ratio": 0.859
+    }
+   },
+   "detection_difference_cells": 0,
+   "same_job": true,
+   "token_ratio_range": [
+    0.859,
+    1.0
+   ]
+  },
+  "tools_vs_assessment": {
+   "baseline": "assessment",
+   "baseline_job": "tools",
+   "candidate": "tools",
+   "candidate_job": "tools",
+   "cases": {
+    "dev3-01": {
+     "cells_with_findings": {
+      "assessment": 3,
+      "tools": 3
+     },
+     "complete": {
+      "assessment": 3,
+      "tools": 3
+     },
+     "detected": {
+      "assessment": "3/3",
+      "tools": "3/3"
+     },
+     "latency_ratio": 1.102,
+     "mean_latency_seconds": {
+      "assessment": 69.67,
+      "tools": 76.78
+     },
+     "mean_tokens": {
+      "assessment": 75965.0,
+      "tools": 79803.3
+     },
+     "specialists": [],
+     "token_ratio": 1.051
+    },
+    "dev3-02": {
+     "cells_with_findings": {
+      "assessment": 3,
+      "tools": 3
+     },
+     "complete": {
+      "assessment": 3,
+      "tools": 3
+     },
+     "detected": {
+      "assessment": "3/3",
+      "tools": "3/3"
+     },
+     "latency_ratio": 1.061,
+     "mean_latency_seconds": {
+      "assessment": 62.7,
+      "tools": 66.51
+     },
+     "mean_tokens": {
+      "assessment": 69233.0,
+      "tools": 72580.7
+     },
+     "specialists": [],
+     "token_ratio": 1.048
+    },
+    "dev3-03": {
+     "cells_with_findings": {
+      "assessment": 0,
+      "tools": 0
+     },
+     "complete": {
+      "assessment": 3,
+      "tools": 3
+     },
+     "detected": {
+      "assessment": "0/3",
+      "tools": "0/3"
+     },
+     "latency_ratio": 1.035,
+     "mean_latency_seconds": {
+      "assessment": 14.67,
+      "tools": 15.19
+     },
+     "mean_tokens": {
+      "assessment": 49312.7,
+      "tools": 52078.3
+     },
+     "specialists": [],
+     "token_ratio": 1.056
+    },
+    "dev3-04": {
+     "cells_with_findings": {
+      "assessment": 3,
+      "tools": 3
+     },
+     "complete": {
+      "assessment": 3,
+      "tools": 3
+     },
+     "detected": {
+      "assessment": "3/3",
+      "tools": "3/3"
+     },
+     "latency_ratio": 1.156,
+     "mean_latency_seconds": {
+      "assessment": 63.71,
+      "tools": 73.68
+     },
+     "mean_tokens": {
+      "assessment": 69299.7,
+      "tools": 71725.3
+     },
+     "specialists": [],
+     "token_ratio": 1.035
+    }
+   },
+   "detection_difference_cells": 0,
+   "same_job": true,
+   "token_ratio_range": [
+    1.035,
+    1.056
+   ]
+  },
+  "tools_vs_assessment_silent": {
+   "baseline": "assessment",
+   "baseline_job": "tools-silent",
+   "candidate": "tools",
+   "candidate_job": "tools-silent",
+   "cases": {
+    "dev2-01": {
+     "cells_with_findings": {
+      "assessment": 3,
+      "tools": 3
+     },
+     "complete": {
+      "assessment": 3,
+      "tools": 3
+     },
+     "detected": {
+      "assessment": "3/3",
+      "tools": "3/3"
+     },
+     "latency_ratio": 1.041,
+     "mean_latency_seconds": {
+      "assessment": 48.97,
+      "tools": 50.99
+     },
+     "mean_tokens": {
+      "assessment": 58073.7,
+      "tools": 60378.3
+     },
+     "specialists": [],
+     "token_ratio": 1.04
+    },
+    "dev2-06": {
+     "cells_with_findings": {
+      "assessment": 3,
+      "tools": 2
+     },
+     "complete": {
+      "assessment": 3,
+      "tools": 2
+     },
+     "detected": {
+      "assessment": "3/3",
+      "tools": "2/3"
+     },
+     "latency_ratio": 0.781,
+     "mean_latency_seconds": {
+      "assessment": 51.66,
+      "tools": 40.33
+     },
+     "mean_tokens": {
+      "assessment": 58555.3,
+      "tools": 54872.3
+     },
+     "specialists": [],
+     "token_ratio": 0.937
+    },
+    "dev2-07": {
+     "cells_with_findings": {
+      "assessment": 0,
+      "tools": 0
+     },
+     "complete": {
+      "assessment": 3,
+      "tools": 3
+     },
+     "detected": {
+      "assessment": "0/3",
+      "tools": "0/3"
+     },
+     "latency_ratio": 0.953,
+     "mean_latency_seconds": {
+      "assessment": 10.99,
+      "tools": 10.47
+     },
+     "mean_tokens": {
+      "assessment": 39654.7,
+      "tools": 41139.3
+     },
+     "specialists": [],
+     "token_ratio": 1.037
+    }
+   },
+   "detection_difference_cells": -1,
+   "same_job": true,
+   "token_ratio_range": [
+    0.937,
+    1.04
+   ]
+  },
+  "tools_vs_assessment_voided": {
+   "baseline": "assessment",
+   "baseline_job": "tools-voided",
+   "candidate": "tools",
+   "candidate_job": "tools-voided",
+   "cases": {
+    "dev3-01": {
+     "cells_with_findings": {
+      "assessment": 0,
+      "tools": 0
+     },
+     "complete": {
+      "assessment": 0,
+      "tools": 0
+     },
+     "detected": {
+      "assessment": "0/3",
+      "tools": "0/3"
+     },
+     "latency_ratio": 0.787,
+     "mean_latency_seconds": {
+      "assessment": 71.69,
+      "tools": 56.44
+     },
+     "mean_tokens": {
+      "assessment": 76592.0,
+      "tools": 72378.3
+     },
+     "specialists": [],
+     "token_ratio": 0.945
+    },
+    "dev3-02": {
+     "cells_with_findings": {
+      "assessment": 2,
+      "tools": 0
+     },
+     "complete": {
+      "assessment": 2,
+      "tools": 0
+     },
+     "detected": {
+      "assessment": "2/3",
+      "tools": "0/3"
+     },
+     "latency_ratio": 0.979,
+     "mean_latency_seconds": {
+      "assessment": 60.59,
+      "tools": 59.29
+     },
+     "mean_tokens": {
+      "assessment": 69716.0,
+      "tools": 72479.7
+     },
+     "specialists": [],
+     "token_ratio": 1.04
+    },
+    "dev3-03": {
+     "cells_with_findings": {
+      "assessment": 0,
+      "tools": 0
+     },
+     "complete": {
+      "assessment": 3,
+      "tools": 3
+     },
+     "detected": {
+      "assessment": "0/3",
+      "tools": "0/3"
+     },
+     "latency_ratio": 1.012,
+     "mean_latency_seconds": {
+      "assessment": 14.21,
+      "tools": 14.38
+     },
+     "mean_tokens": {
+      "assessment": 49320.7,
+      "tools": 52090.7
+     },
+     "specialists": [],
+     "token_ratio": 1.056
+    },
+    "dev3-04": {
+     "cells_with_findings": {
+      "assessment": 3,
+      "tools": 0
+     },
+     "complete": {
+      "assessment": 3,
+      "tools": 0
+     },
+     "detected": {
+      "assessment": "3/3",
+      "tools": "0/3"
+     },
+     "latency_ratio": 0.77,
+     "mean_latency_seconds": {
+      "assessment": 79.34,
+      "tools": 61.13
+     },
+     "mean_tokens": {
+      "assessment": 69372.3,
+      "tools": 71579.3
+     },
+     "specialists": [],
+     "token_ratio": 1.032
+    }
+   },
+   "detection_difference_cells": -5,
+   "same_job": true,
+   "token_ratio_range": [
+    0.945,
+    1.056
+   ]
+  }
+ },
+ "reliability": {
+  "cell_first_attempt_rate": 0.9583,
+  "cell_first_attempt_rate_wilson95": [
+   0.9121,
+   0.9808
+  ],
+  "cells": 144,
+  "cells_complete_on_first_attempt": 138,
+  "independence_caveat": "cells within one schedule share an upstream window; all six losses are in one schedule, so the cell interval understates the uncertainty",
+  "schedule_pass_rate": 0.75,
+  "schedule_pass_rate_wilson95": [
+   0.3006,
+   0.9544
+  ],
+  "schedules": {
+   "r1": {
+    "cells": 36,
+    "first_attempt": 36,
+    "passed": true,
+    "source": "2026-10-13-qualification-rerun/qualification"
+   },
+   "r2": {
+    "cells": 36,
+    "first_attempt": 36,
+    "passed": true,
+    "rerun_attempts": 0,
+    "source": "reliability-r2"
+   },
+   "r3": {
+    "cells": 36,
+    "first_attempt": 36,
+    "passed": true,
+    "rerun_attempts": 0,
+    "source": "reliability-r3"
+   },
+   "sol100k": {
+    "cells": 36,
+    "first_attempt": 30,
+    "passed": false,
+    "source": "2026-10-13-protocol/sol100"
+   }
+  },
+  "schedules_passed": 3,
+  "schedules_run": 4
+ },
+ "schema_version": 1,
+ "spend": {
+  "limit_usd": 60.0,
+  "measured_method": "reported tokens of every attempt at the advertised input and output rates, cached input charged as uncached",
+  "measured_usd": 43.34,
+  "measured_usd_by_job": {
+   "assessment-separating": 2.365,
+   "discussion-untried": 3.4704,
+   "focused-comment": 2.1496,
+   "focused-uncaptured": 2.4897,
+   "focused-uncaptured-aggregate": 0.6341,
+   "focused-wrong-candidates": 3.9656,
+   "line-counts": 4.3553,
+   "reliability-r2": 4.379,
+   "reliability-r3": 4.3834,
+   "routing": 4.2762,
+   "tools": 4.2567,
+   "tools-silent": 2.4019,
+   "tools-voided": 4.2131
+  },
+  "nominal_method": "attempts x configured ceiling x advertised output rate",
+  "nominal_usd": 321.0,
+  "note": "no invoice or billed amount is asserted",
+  "total_tokens": 17312889,
+  "within_limit": true
+ },
+ "unmatched_findings": 32,
+ "withdrawn_before_launch": {
+  "focused-uncaptured-default": "withdrawn before launch: includes an assessed arm under the 20,000-token assessor reservation that voided 12 of 24 cells of job t1 on development-v3 files; no provider call was made",
+  "line-counts-first-freeze": "superseded by l1b before launch: its gate named the withdrawn jobs c1x and c1y as its baseline; no provider call was made",
+  "routing-assessment-a": "withdrawn before launch: includes an assessed arm under the 20,000-token assessor reservation that voided 12 of 24 cells of job t1 on development-v3 files; no provider call was made",
+  "routing-assessment-b": "withdrawn before launch: includes an assessed arm under the 20,000-token assessor reservation that voided 12 of 24 cells of job t1 on development-v3 files; no provider call was made"
+ }
+}

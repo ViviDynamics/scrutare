@@ -1,0 +1,16 @@
+{
+ "assessment_tokens": 30000,
+ "chosen_after_seeing": "job t1 on development-v3: the assessor used 19478 to 23650 tokens with candidates present against a 20000 reservation, and 12 of 24 cells were voided for assessment_incomplete; the largest reviewer session used 14341 tokens",
+ "everything_else": "unchanged from the profile of schedules r1 to r3: batching prompt, six native turns, 120-second session timeout, concurrency 3, nare 2026.10.4, three repetitions",
+ "known_limit": "discussion rounds and reassessment share these same grants, so a round may still exhaust them; that would be reported as measured",
+ "model_alias": "gpt-6.1-sol",
+ "name": "sol100-assessor30",
+ "post_hoc": true,
+ "qualification": "the 36-cell qualification schedules ran with a 20000 reservation and do not strictly cover this profile",
+ "reviewer_grant_in_assessed_arms": 17500,
+ "schema_version": 1,
+ "sizing": "30000 is about 27% above the largest observed assessor usage; the 17500 left to each reviewer is about 22% above the largest observed reviewer session",
+ "total_review_ceiling": 100000,
+ "unassessed_arms": "unchanged: 25000 per reviewer, or the routed split",
+ "voided_cells": "no cell of job t1 is reused under this profile"
+}

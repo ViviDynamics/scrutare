@@ -1,0 +1,43 @@
+{
+  "schema_version": 2,
+  "repeats": 3,
+  "max_tokens_per_run": 100000,
+  "max_turns": 6,
+  "timeout_seconds": 120,
+  "concurrency": 3,
+  "profile_under_test": "gpt-6.1-sol at 100000 ceiling, batching prompt; reliability of this profile is estimated separately from schedules Sol100k, r1, r2 and r3",
+  "purpose": "development component comparison; no promotion; automated judgments provisional; zero human judgments",
+  "all_runs_complete_and_accounted": "reported, not a pass/fail criterion for a comparison",
+  "holdout_used": false,
+  "case_selection": "fixed by design before any call from labels' group, never from model output",
+  "post_hoc_exclusions": "none permitted; every cell retained",
+  "transient_retry": {
+    "per_cell": 3,
+    "delay_seconds": 20,
+    "job_budget": 2,
+    "eligibility": "attempt incomplete without evaluator error; every native session complete, not started, or failed with a retained provider HTTP 500/502/503/504/529"
+  },
+  "profile": "tools-vs-assessment",
+  "cases": [
+    "dev3-01",
+    "dev3-02",
+    "dev3-03",
+    "dev3-04"
+  ],
+  "clean_cases": [
+    "dev3-03"
+  ],
+  "arms": [
+    "assessment",
+    "tools"
+  ],
+  "expected_runs": 24,
+  "case_roles": {
+    "dev3-01": "defect; pinned Ruff reports F811 naming it",
+    "dev3-02": "defect; pinned Ruff reports F821 naming it",
+    "dev3-03": "clean; pinned Ruff reports two F401 that suggest the tempting allegation",
+    "dev3-04": "defect; pinned Ruff reports nothing"
+  },
+  "comparison": "tools versus assessment at the same total ceiling with real pinned Ruff 0.16.10 captures; diagnostics are evidence, not findings; silence is not evidence of correctness",
+  "tool_evidence": "captured before the first model call by scrutare.evaluation.tool_capture.capture_development_ruff from the measured wheel; diagnostics per case recorded in preparation.json"
+}

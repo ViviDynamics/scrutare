@@ -1,0 +1,42 @@
+{
+  "schema_version": 2,
+  "repeats": 3,
+  "max_tokens_per_run": 100000,
+  "max_turns": 6,
+  "timeout_seconds": 120,
+  "concurrency": 3,
+  "profile_under_test": "gpt-6.1-sol at 100000 ceiling, batching prompt; reliability of this profile is estimated separately from schedules Sol100k, r1, r2 and r3",
+  "purpose": "development component comparison; no promotion; automated judgments provisional; zero human judgments",
+  "all_runs_complete_and_accounted": "reported, not a pass/fail criterion for a comparison",
+  "holdout_used": false,
+  "case_selection": "fixed by design before any call from labels' group, never from model output",
+  "post_hoc_exclusions": "none permitted; every cell retained",
+  "transient_retry": {
+    "per_cell": 0,
+    "delay_seconds": 0,
+    "job_budget": 0,
+    "eligibility": "none: no reruns; the spend bound covers first attempts only"
+  },
+  "profile": "routing-and-assessment-separating-a",
+  "cases": [
+    "dev3-06",
+    "dev3-07",
+    "dev3-08"
+  ],
+  "clean_cases": [
+    "dev3-06",
+    "dev3-07"
+  ],
+  "arms": [
+    "evidence",
+    "assessment",
+    "routing"
+  ],
+  "expected_runs": 27,
+  "case_roles": {
+    "dev3-06": "clean, routed (performance-concurrency); tempting unlocked-read allegation",
+    "dev3-07": "clean, routed (data-integrity-migrations); tempting non-atomic-backfill allegation",
+    "dev3-08": "defect, routed (performance-concurrency); cache key narrowed on a comment an unchanged file contradicts"
+  },
+  "comparison": "routing versus evidence (fixed four reviewers) and assessment versus evidence, same total ceiling; activation recorded from artifacts"
+}

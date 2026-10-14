@@ -1,0 +1,41 @@
+{
+  "schema_version": 2,
+  "repeats": 3,
+  "max_tokens_per_run": 100000,
+  "max_turns": 6,
+  "timeout_seconds": 120,
+  "concurrency": 3,
+  "profile_under_test": "gpt-6.1-sol at 100000 ceiling, batching prompt; schedules r1 and r2 passed the unchanged gate, the original Sol100k schedule did not",
+  "purpose": "development component comparison; no promotion; automated judgments provisional; zero human judgments",
+  "all_runs_complete_and_accounted": "reported, not a pass/fail criterion for a comparison",
+  "holdout_used": false,
+  "case_selection": "fixed by design before any call from labels' group, never from model output",
+  "post_hoc_exclusions": "none permitted; every cell retained",
+  "transient_retry": {
+    "per_cell": 3,
+    "delay_seconds": 20,
+    "job_budget": 2,
+    "eligibility": "attempt incomplete without evaluator error; every native session complete, not started, or failed with a retained provider HTTP 500/502/503/504/529"
+  },
+  "profile": "tools-vs-assessment-silent",
+  "cases": [
+    "dev2-01",
+    "dev2-06",
+    "dev2-07"
+  ],
+  "clean_cases": [
+    "dev2-07"
+  ],
+  "arms": [
+    "assessment",
+    "tools"
+  ],
+  "expected_runs": 18,
+  "case_roles": {
+    "dev2-01": "defect; pinned Ruff reports nothing",
+    "dev2-06": "defect; pinned Ruff reports nothing",
+    "dev2-07": "clean with a tempting allegation; pinned Ruff reports nothing"
+  },
+  "comparison": "tools versus assessment at the same total ceiling, with real pinned Ruff 0.16.10 captures that contain zero diagnostics: what a silent complete tool run changes; silence is not evidence of correctness",
+  "tool_evidence": "captured before the first model call by scrutare.evaluation.tool_capture.capture_development_ruff from the measured wheel; diagnostics per case recorded in preparation.json"
+}

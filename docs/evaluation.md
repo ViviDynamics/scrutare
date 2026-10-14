@@ -172,6 +172,13 @@ the citation bound reduces `line_range_outside_capture` refusals. It changes the
 manifest and prompts the reviewers see, so compare it only against the same arms
 without it.
 
+The [tools, reliability and separating-case measurements](../evaluations/reports/2026-10-13-tools-reliability-separating/README.md)
+retain 321 cells in thirteen jobs and four withdrawn freezes. The unchanged profile
+passed 3 of the 4 qualification schedules run; captured Ruff evidence changed no
+outcome; the assessor supported an allegation it could not check on every assessed
+cell of one clean case; and three discussion rounds started and none completed.
+Judgments are automated and provisional; no default changed.
+
 Ordinary CI uses `--evidence-kind offline` and deterministic provider substitutions
 to verify orchestration and scoring. Offline metrics measure software behavior only.
 A real baseline requires explicit model jobs and completed independent human
