@@ -242,7 +242,7 @@ def replay_run(run_dir: Path) -> ReplayResult:
                                          run_dir / "review-inputs", artifact=True)
                 if config.findings.discussion.enabled:
                     from scrutare.replay.discussion import replay_discussion
-                    rows = replay_discussion(run_dir, config, rows, exhaustion)
+                    rows, degradation = replay_discussion(run_dir, config, rows, exhaustion)
                 result = AssessmentResult("complete", rows)
                 sources = tuple(source for group in findings for source in group.sources)
                 from scrutare.engine.discussion import equivalent_groups

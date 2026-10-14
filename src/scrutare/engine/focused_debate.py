@@ -24,6 +24,7 @@ from scrutare.engine.fanout import (
     _run_initial_wave,
 )
 from scrutare.engine.nare_session import run_persona_session
+from scrutare.engine.overrun import phase_degradation
 from scrutare.engine.panel import (
     PanelResult,
     _correct,
@@ -140,8 +141,8 @@ async def run_focused_debate(
         "final_assessments": [assessment_wire(row) for row in rows],
         "ledger": context.ledger.snapshot(),
     }
-    if degradation is not None and verdict is not None:
-        document["degraded"] = degradation.to_dict()
+    if verdict is not None and verdict.degradation is not None:
+        document["degraded"] = verdict.degradation.to_dict()
     write_owned_json(context.run_dir / "debate.json", document, prepared_root=context.inputs.root)
     publish_panel(context.run_dir, context.inputs.root, document, verdict)
     return result
@@ -224,7 +225,10 @@ async def _discuss(
             for o in outcomes
         ):
             _finish_round(record, context, usage_before, started)
-            return rows, rounds, "failed", "perspectives_incomplete", None
+            degradation = _discussion_fallback(context, number, [o.to_dict() for o in outcomes])
+            if degradation is None:
+                return rows, rounds, "failed", "perspectives_incomplete", None
+            return _fall_back(context, rows, rounds, degradation)
         parsed_proposals: list[Proposal] = []
         for descriptor, attempt in zip(descriptors, attempts):
             session = decode_artifact(
@@ -299,6 +303,30 @@ async def _discuss(
                 verdict,
             )
     raise AssertionError("positive round bound required")
+
+
+def _discussion_fallback(context: _ExecutionContext, number: int,
+                         outcomes: list[dict[str, object]]) -> Degradation | None:
+    """The opt-in degraded record for a measured discussion overrun, else None (void)."""
+    settings = context.config.findings.discussion
+    if settings.overrun != "fallback" or not context.ledger.accounting_complete:
+        return None
+    return phase_degradation("discussion", outcomes, round_number=number,
+                             allowance=settings.tokens)
+
+
+def _fall_back(
+    context: _ExecutionContext, rows: tuple[Assessment, ...], rounds: list[dict[str, object]],
+    degradation: Degradation,
+) -> tuple[tuple[Assessment, ...], list[dict[str, object]], Literal["partial"], str, Verdict]:
+    """Keep the last complete (pre-round) assessment; uncertainty still escalates."""
+    result = AssessmentResult("complete", rows)
+    verdict = derive_verdict(
+        equivalent_groups(result.retained), context.config.verdict, evidence_version=2,
+        unresolved_candidates=result.unresolved_blocking(
+            context.config.verdict.blocking_categories),
+        degradation=degradation)
+    return rows, rounds, "partial", "discussion_overrun_fallback", verdict
 
 
 def _finish_round(record: dict[str, object], context: _ExecutionContext,

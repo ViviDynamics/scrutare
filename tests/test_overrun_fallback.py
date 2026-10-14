@@ -473,3 +473,137 @@ def test_focused_assessor_overrun_falls_back_before_any_discussion(capture, tmp_
     assert trace["rounds"] == [] and trace["final_assessments"] == []
     assert trace["degraded"]["phase"] == "assessment"
     assert replay_run(capture).saved_identical
+
+
+# The three failed focused cells (dev3-11/focused1/3, dev3-11/focused3/3, dev3-08/focused3/2):
+# four reviewers at a 100,000 ceiling with a 30,000 assessor reservation, so 17,500 each;
+# about 11,100 used in discovery; the assessor supported the claim but returned a
+# counter-citation; every position re-read the files and stopped about 566 past its remainder.
+CELL = {"budgets": {"per_persona_tokens": 25000, "review_max_tokens": 100000},
+        "personas": ("senior-dev", "junior-dev", "security", "devops")}
+
+
+def cell_capture(capture, monkeypatch, *, discussion="fallback", category="correctness",
+                 tokens=None, rounds=1):
+    from test_panel import install
+    config, claim = discussion_capture(capture, discussion=discussion, category=category,
+                                       tokens=tokens, rounds=rounds, **CELL)
+    config = replace(config, findings=replace(config.findings, assessment=replace(
+        config.findings.assessment, tokens=30000)))
+    from test_review_inputs import save_json
+    for name in ("config.json", "config.yaml"):
+        save_json(capture / name, config.to_dict())
+    install(monkeypatch, {"security": (claim,)}, initial_usage=11100)
+    return config, claim
+
+
+STOPPED = {"input": 6960, "shape": "stop"}  # 6,966 total against a 6,400 remainder
+
+
+@pytest.mark.parametrize("category,initial,want,rule", [
+    ("correctness", "supported", "changes_requested", "any_blocking_finding"),
+    ("style", "supported", "escalated", "phase_overrun_fallback"),
+    ("correctness", "unresolved", "escalated", "unresolved_semantic_assessment"),
+])
+def test_position_overrun_falls_back_to_the_pre_round_assessment(
+        capture, tmp_path, monkeypatch, category, initial, want, rule):
+    import asyncio
+
+    from scrutare.engine.debate import run_debate
+    from scrutare.replay.audit import replay_run
+    config, claim = cell_capture(capture, monkeypatch, category=category)
+    plan = {"assessment": {"status": initial, "counter": True}, "position": STOPPED}
+    result = asyncio.run(run_debate(capture, config, runtime=phase_runtime(tmp_path, plan)))
+    assert result.status == "partial"
+    assert result.accounting_complete
+    assert (result.verdict.verdict, result.verdict.rule) == (want, rule)
+    assert result.verdict.findings[0].sources == (claim,)
+    assert result.verdict.unresolved_candidates == (("one",) if initial == "unresolved" else ())
+    assert result.verdict.exhaustion is None
+    record = {"phase": "discussion", "round": 1, "allowance_tokens": None,
+              "grant_tokens": 4 * 6400, "usage_tokens": 4 * 6966, "overrun_tokens": 4 * 566,
+              "fallback_stage": "pre_round_assessment"}
+    assert result.verdict.to_dict()["degraded"] == record
+    trace = json.loads((capture / "debate.json").read_bytes())
+    assert (trace["status"], trace["reason"]) == ("partial", "discussion_overrun_fallback")
+    assert trace["degraded"] == record
+    assert [p["reason"] for p in trace["rounds"][0]["positions"]] == ["budget"] * 4
+    assert [row["status"] for row in trace["final_assessments"]] == [initial]
+    assert trace["ledger"]["accounting_complete"] is True
+    assert trace["ledger"]["usage"]["total"] == result.usage.total == (
+        4 * 11100 + 10 + 4 * 6966)
+    assert replay_run(capture).saved_identical
+
+
+def test_position_overrun_still_voids_by_default(capture, tmp_path, monkeypatch):
+    import asyncio
+
+    from scrutare.engine.debate import run_debate
+    config, _ = cell_capture(capture, monkeypatch, discussion="void")
+    plan = {"assessment": {"counter": True}, "position": STOPPED}
+    result = asyncio.run(run_debate(capture, config, runtime=phase_runtime(tmp_path, plan)))
+    assert (result.status, result.verdict) == ("failed", None)
+    trace = json.loads((capture / "debate.json").read_bytes())
+    assert trace["reason"] == "perspectives_incomplete" and "degraded" not in trace
+    assert not (capture / "verdict.json").exists()
+
+
+@pytest.mark.parametrize("tamper", ["policy", "position", "proposals", "final", "record",
+                                    "status"])
+def test_replay_refuses_an_unsupported_discussion_fallback(capture, tmp_path, monkeypatch,
+                                                            tamper):
+    import asyncio
+
+    from test_review_inputs import save_json
+
+    from scrutare.engine.debate import run_debate
+    from scrutare.replay.audit import replay_run
+    from scrutare.replay.models import ReplayError
+    config, _ = cell_capture(capture, monkeypatch, category="style")
+    plan = {"assessment": {"counter": True}, "position": STOPPED}
+    asyncio.run(run_debate(capture, config, runtime=phase_runtime(tmp_path, plan)))
+    assert replay_run(capture).saved_identical
+    path = capture / "debate.json"
+    document = json.loads(path.read_bytes())
+    if tamper == "policy":
+        path = capture / "config.json"
+        document = json.loads(path.read_bytes())
+        del document["findings"]["discussion"]["overrun"]
+    elif tamper == "position":
+        document["rounds"][0]["positions"][0]["reason"] = "provider"
+    elif tamper == "proposals":
+        document["rounds"][0]["proposals"] = [{"candidate_id": "one"}]
+    elif tamper == "final":
+        document["final_assessments"][0]["status"] = "refuted"
+    elif tamper == "status":
+        document["status"] = "complete"
+    else:
+        path = capture / "verdict.json"
+        document = json.loads(path.read_bytes())
+        document["degraded"]["grant_tokens"] = 27864
+    save_json(path, document)
+    try:
+        replayed = replay_run(capture)
+    except ReplayError:
+        return
+    assert not replayed.saved_identical
+
+
+@pytest.mark.parametrize("outcomes,want", [
+    ([{"status": "partial", "reason": "budget"}], True),
+    ([{"status": "partial", "reason": "budget"}, {"status": "complete"}], True),
+    ([{"status": "partial", "reason": "budget"}, {"status": "failed", "reason": "provider"}],
+     False),
+    ([{"status": "partial", "reason": "budget", "accounting_complete": False}], False),
+    ([{"status": "partial", "reason": "budget"}, {"status": "complete",
+                                                  "output_available": False}], False),
+    ([{"status": "not_started", "reason": "review_budget"}], False),
+    ([{"status": "complete"}], False),
+    ([], False),
+])
+def test_only_measured_overruns_qualify_for_fallback(outcomes, want):
+    from scrutare.engine.overrun import phase_degradation
+    full = [{"accounting_complete": True, "output_available": True, "allocated_tokens": 10,
+             "overshoot_tokens": 2, "usage": {"total": 12}} | outcome for outcome in outcomes]
+    record = phase_degradation("discussion", full, round_number=1, allowance=None)
+    assert (record is not None) == want

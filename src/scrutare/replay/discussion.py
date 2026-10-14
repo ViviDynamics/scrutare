@@ -8,8 +8,10 @@ from typing import Any, cast
 from scrutare.config import ReviewConfig
 from scrutare.engine.assessment import Assessment, assessment_wire, parse_assessments
 from scrutare.engine.discussion import Proposal, disputed_ids, parse_proposals, proposal_wire
+from scrutare.engine.overrun import phase_degradation
 from scrutare.findings import Exhaustion
 from scrutare.findings.models import artifact_data, finding_from_artifact
+from scrutare.findings.verdict import Degradation
 from scrutare.replay.artifacts import decode_artifact, read_artifact
 from scrutare.replay.models import ReplayError
 
@@ -23,14 +25,18 @@ def _document(path: Path) -> dict[str, object]:
 
 def replay_discussion(
     run_dir: Path, config: ReviewConfig, rows: tuple[Assessment, ...], exhaustion: Exhaustion | None
-) -> tuple[Assessment, ...]:
+) -> tuple[tuple[Assessment, ...], Degradation | None]:
     root = run_dir / "review-inputs"
     trace = _document(run_dir / "debate.json")
     rounds = trace.get("rounds")
+    # Only the opt-in policy may end discussion on a recorded, measured overrun.
+    fallback = "degraded" in trace and config.findings.discussion.overrun == "fallback"
+    degradation: Degradation | None = None
     if (
         trace.get("schema_version") != 2
         or trace.get("kind") != "focused_evidence_discussion"
         or trace.get("status") not in ("complete", "partial")
+        or (fallback and trace.get("status") != "partial")
         or not isinstance(rounds, list)
         or len(rounds) > config.rounds.max
     ):
@@ -80,6 +86,18 @@ def replay_discussion(
             )]
         if [p.get("persona") for p in positions if isinstance(p, dict)] != names:
             raise ValueError("discussion: perspective coverage disagrees")
+        if fallback and number == len(rounds) and not all(
+                isinstance(p, dict) and _usable(p) for p in positions):
+            # The positions overran: nothing from this round may change a disposition.
+            degradation = phase_degradation(
+                "discussion", positions, round_number=number,
+                allowance=config.findings.discussion.tokens)
+            if (degradation is None or proposals != [] or record.get("reassessment") is not None
+                    or record.get("disposition_changes") != []
+                    or record.get("new_citations") != []
+                    or record.get("tokens") != sum(_tokens(p) for p in positions)):
+                raise ValueError("discussion: fallback round disagrees")
+            break
         parsed: list[Proposal] = []
         total_tokens = 0
         for position in positions:
@@ -178,14 +196,22 @@ def replay_discussion(
         if record.get("new_citations") != new_refs or record.get("tokens") != total_tokens:
             raise ValueError("discussion: evidence or token trace disagrees")
         remaining = disputed_ids(rows) if needs else ()
-    if remaining and len(rounds) != config.rounds.max:
+    if fallback and (degradation is None or trace.get("degraded") != degradation.to_dict()):
+        raise ValueError("discussion: recorded fallback disagrees")
+    if degradation is None and remaining and len(rounds) != config.rounds.max:
         raise ValueError("discussion: uncertainty before bound")
-    expected = Exhaustion("debate", len(rounds), config.rounds.max) if remaining else None
+    expected = (Exhaustion("debate", len(rounds), config.rounds.max)
+                if remaining and degradation is None else None)
     if exhaustion != expected:
         raise ValueError("discussion: bound disagrees")
     if trace.get("final_assessments") != [assessment_wire(row) for row in rows]:
         raise ValueError("discussion: final states disagree")
-    return rows
+    return rows, degradation
+
+
+def _usable(outcome: dict[str, object]) -> bool:
+    return (outcome.get("status") == "complete" and outcome.get("output_available") is True
+            and outcome.get("accounting_complete") is True)
 
 
 def _complete(outcome: dict[str, object]) -> None:
