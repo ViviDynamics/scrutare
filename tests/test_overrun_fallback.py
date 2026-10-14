@@ -440,12 +440,12 @@ def discussion_capture(capture, *, assessment="void", discussion="void", tokens=
 
     from scrutare.config import DiscussionSettings
     config, claim = focused_capture(capture)
+    if budgets is not None:
+        config = replace(config, budgets=replace(config.budgets, **budgets))
     findings = replace(config.findings,
                        assessment=replace(config.findings.assessment, overrun=assessment),
                        discussion=DiscussionSettings(True, tokens, discussion))
     config = replace(config, findings=findings, rounds=replace(config.rounds, max=rounds))
-    if budgets is not None:
-        config = replace(config, budgets=replace(config.budgets, **budgets))
     if personas is not None:
         config = replace(config, personas=personas)
     for name in ("config.json", "config.yaml"):
@@ -686,5 +686,90 @@ def test_replay_refuses_an_unsupported_reassessment_fallback(capture, tmp_path, 
         document = json.loads(path.read_bytes())
         document["rounds"][0]["disposition_changes"] = [{"candidate_id": "one"}]
     save_json(path, document)
+    with pytest.raises(ReplayError):
+        replay_run(capture)
+
+
+# The same cells with a separate discussion allowance carved out before discovery.
+ALLOWANCE_CELL = {"per_persona_tokens": 25000, "review_max_tokens": 110000}
+
+
+def allowance_capture(capture, monkeypatch, *, discussion="void"):
+    config, claim = cell_capture(capture, monkeypatch, discussion=discussion, tokens=30000)
+    config = replace(config, budgets=replace(config.budgets, **ALLOWANCE_CELL))
+    from test_review_inputs import save_json
+    for name in ("config.json", "config.yaml"):
+        save_json(capture / name, config.to_dict())
+    return config, claim
+
+
+def test_discussion_allowance_admits_positions_without_spending_discovery_grants(
+        capture, tmp_path, monkeypatch):
+    import asyncio
+
+    from scrutare.engine.debate import run_debate
+    from scrutare.replay.audit import replay_run
+    config, claim = allowance_capture(capture, monkeypatch)
+    plan = {"assessment": {"counter": True}, "position": {"input": 6960}}
+    result = asyncio.run(run_debate(capture, config, runtime=phase_runtime(tmp_path, plan)))
+    assert (result.status, result.verdict.verdict) == ("complete", "changes_requested")
+    trace = json.loads((capture / "debate.json").read_bytes())
+    ledger = trace["ledger"]
+    assert ledger["allocations"] == {"senior-dev": 12500, "junior-dev": 12500,
+                                     "security": 12500, "devops": 12500,
+                                     "evidence-assessor": 30000}
+    assert ledger["configured"]["phase_allowances"] == {"discussion": 30000}
+    assert [p["allocated_tokens"] for p in trace["rounds"][0]["positions"]] == [7500] * 4
+    assert [p["usage"]["total"] for p in ledger["personas"][:4]] == [11100] * 4
+    assert ledger["phases"][0]["usage"]["total"] == 4 * 6966
+    assert ledger["usage"]["total"] == result.usage.total == 4 * 11100 + 10 + 4 * 6966
+    assert {s["session_key"]: s.get("phase") for s in ledger["sessions"]}["devops/attempt-0003"] \
+        == "discussion"
+    fanout = json.loads((capture / "fanout.json").read_bytes())
+    assert fanout["ledger"]["configured"]["phase_allowances"] == {"discussion": 30000}
+    assert replay_run(capture).saved_identical
+
+
+def test_discussion_allowance_overrun_records_its_allowance(capture, tmp_path, monkeypatch):
+    import asyncio
+
+    from scrutare.engine.debate import run_debate
+    from scrutare.replay.audit import replay_run
+    config, _ = allowance_capture(capture, monkeypatch, discussion="fallback")
+    plan = {"assessment": {"counter": True}, "position": {"input": 8000, "shape": "stop"}}
+    result = asyncio.run(run_debate(capture, config, runtime=phase_runtime(tmp_path, plan)))
+    assert result.verdict.to_dict()["degraded"] == {
+        "phase": "discussion", "round": 1, "allowance_tokens": 30000, "grant_tokens": 30000,
+        "usage_tokens": 4 * 8006, "overrun_tokens": 4 * 506,
+        "fallback_stage": "pre_round_assessment"}
+    assert replay_run(capture).saved_identical
+
+
+def test_reassessment_draws_on_the_discussion_allowance(capture, tmp_path, monkeypatch):
+    import asyncio
+
+    from test_panel import install
+    from test_review_inputs import save_json
+
+    from scrutare.engine.debate import run_debate
+    from scrutare.replay.audit import replay_run
+    from scrutare.replay.models import ReplayError
+    config, claim = discussion_capture(capture, tokens=100, rounds=1)
+    install(monkeypatch, {"security": (claim,)})
+    plan = {"assessment": {"status": "unresolved"}, "reassessment": {"status": "refuted"}}
+    result = asyncio.run(run_debate(capture, config, runtime=phase_runtime(tmp_path, plan)))
+    assert (result.status, result.verdict.verdict) == ("complete", "approve")
+    trace = json.loads((capture / "debate.json").read_bytes())
+    positions = trace["rounds"][0]["positions"]
+    used = sum(p["usage"]["total"] for p in positions)
+    reassessment = json.loads((capture / "assessment-round-0001.json").read_bytes())
+    assert reassessment["allocation_tokens"] == 100
+    assert reassessment["outcome"]["allocated_tokens"] == 100 - used
+    assessor = next(p for p in trace["ledger"]["personas"]
+                    if p["persona"] == "evidence-assessor")
+    assert assessor["usage"]["total"] == 10  # the initial assessment alone
+    assert replay_run(capture).saved_identical
+    reassessment["outcome"]["allocated_tokens"] = 101 - used
+    save_json(capture / "assessment-round-0001.json", reassessment)
     with pytest.raises(ReplayError):
         replay_run(capture)

@@ -51,6 +51,9 @@ def replay_discussion(
     initial_assessment = _document(run_dir / "assessment.json")
     initial_outcome = initial_assessment.get("outcome")
     assessor_used = _tokens(initial_outcome) if isinstance(initial_outcome, dict) else 0
+    # With a separate allowance, positions and reassessments draw on it alone.
+    allowance = config.findings.discussion.tokens
+    discussion_used = 0
     remaining = disputed_ids(rows)
     for number, record in enumerate(rounds, 1):
         if not remaining or not isinstance(record, dict) or record.get("round") != number:
@@ -86,6 +89,14 @@ def replay_discussion(
             )]
         if [p.get("persona") for p in positions if isinstance(p, dict)] != names:
             raise ValueError("discussion: perspective coverage disagrees")
+        if allowance is not None:
+            grants = [p.get("allocated_tokens") if isinstance(p, dict) else None
+                      for p in positions]
+            if (any(type(grant) is not int or grant <= 0 for grant in grants)
+                    or sum(cast(list[int], grants)) > allowance - discussion_used
+                    or grants != _split(sum(cast(list[int], grants)), len(grants))):
+                raise ValueError("discussion: allowance grants disagree")
+            discussion_used += sum(_tokens(p) for p in positions)
         if fallback and number == len(rounds) and not all(
                 isinstance(p, dict) and _usable(p) for p in positions):
             # The positions overran: nothing from this round may change a disposition.
@@ -132,7 +143,8 @@ def replay_discussion(
                 assessment.get("schema_version") != 1
                 or assessment.get("kind") != "model_based_not_formal_proof"
                 or (assessment.get("status") != "complete" and not overran)
-                or assessment.get("allocation_tokens") != config.findings.assessment.tokens
+                or assessment.get("allocation_tokens") != (
+                    config.findings.assessment.tokens if allowance is None else allowance)
                 or assessment.get("attempt_limit") != 1
             ):
                 raise ValueError("discussion: invalid independent reassessment")
@@ -150,10 +162,13 @@ def replay_discussion(
             allocation = outcome.get("allocated_tokens")
             if (
                 type(allocation) is not int
-                or allocation != config.findings.assessment.tokens - assessor_used
+                or allocation != (config.findings.assessment.tokens - assessor_used
+                                  if allowance is None else allowance - discussion_used)
                 or allocation <= 0
             ):
                 raise ValueError("discussion: assessor allocation disagrees")
+            if allowance is not None:
+                discussion_used += _tokens(outcome)
             if overran:
                 # Nothing from an overrun reassessment may change a disposition.
                 degradation = phase_degradation(
@@ -182,9 +197,12 @@ def replay_discussion(
                 native_rows = parse_assessments(session["output"], pool, root)
                 if native_rows != updated_rows:
                     raise ValueError("discussion: reassessment disagrees with native output")
-                assessor_used += _tokens(outcome)
-                if assessor_used > config.findings.assessment.tokens:
-                    raise ValueError("discussion: assessor exceeded original reservation")
+                if allowance is None:
+                    assessor_used += _tokens(outcome)
+                    if assessor_used > config.findings.assessment.tokens:
+                        raise ValueError("discussion: assessor exceeded original reservation")
+                elif discussion_used > allowance:
+                    raise ValueError("discussion: complete sessions exceeded the allowance")
                 updated = {row.candidate.candidate_id: row for row in updated_rows}
                 changes = [
                     {
@@ -224,6 +242,12 @@ def replay_discussion(
     if trace.get("final_assessments") != [assessment_wire(row) for row in rows]:
         raise ValueError("discussion: final states disagree")
     return rows, degradation
+
+
+def _split(total: int, count: int) -> list[int]:
+    """The ledger's even split of a phase pool, remainder to the earlier session."""
+    quotient, remainder = divmod(total, count)
+    return [quotient + (index < remainder) for index in range(count)]
 
 
 def _usable(outcome: dict[str, object]) -> bool:

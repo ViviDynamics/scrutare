@@ -112,8 +112,12 @@ class AssessmentResult:
 async def assess_candidates(
     context: _ExecutionContext, candidates: tuple[Finding, ...], *,
     attempt_number: int = 1, counterevidence: tuple[dict[str, object], ...] = (),
+    phase: str | None = None,
 ) -> AssessmentResult:
-    """Use one independently reserved batch on the caller's live review ledger."""
+    """Use one independently reserved batch on the caller's live review ledger.
+
+    With `phase`, the batch is admitted from that phase allowance instead of the assessor's.
+    """
     from scrutare.engine.assessment_inputs import AssessmentInput, assessor_persona
     from scrutare.engine.nare_session import run_persona_session
     from scrutare.engine.session_artifacts import create_attempt_directory, write_owned_json
@@ -131,7 +135,12 @@ async def assess_candidates(
     if candidates:
         attempt = create_attempt_directory(context.run_dir, name, attempt_number,
                                            prepared_root=context.inputs.root)
-        lease = context.ledger.admit(name, f"{name}/attempt-{attempt_number:04d}")
+        key = f"{name}/attempt-{attempt_number:04d}"
+        if phase is None:
+            lease = context.ledger.admit(name, key)
+        else:
+            admitted = context.ledger.admit_phase(phase, ((name, key),))
+            lease = None if admitted is None else admitted[0]
         if lease is None:
             status = "failed"
         else:
@@ -151,7 +160,9 @@ async def assess_candidates(
     write_owned_json(context.run_dir / ("assessment.json" if attempt_number == 1
         else f"assessment-round-{attempt_number - 1:04d}.json"), {
         "schema_version": 1, "kind": "model_based_not_formal_proof", "status": status,
-        "attempt_limit": 1, "allocation_tokens": context.config.findings.assessment.tokens,
+        "attempt_limit": 1, "allocation_tokens": (
+            context.config.findings.assessment.tokens if phase is None
+            else context.config.findings.discussion.tokens),
         "candidates": artifact_data(candidates),
         "assessments": [assessment_wire(row) for row in rows],
         "outcome": outcome.to_dict() if outcome is not None else None,

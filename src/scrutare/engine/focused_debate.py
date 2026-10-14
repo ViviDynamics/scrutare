@@ -15,6 +15,7 @@ from scrutare.engine.assessment import (
     assessment_fallback,
     assessment_wire,
 )
+from scrutare.engine.budgets import BudgetLease
 from scrutare.engine.discussion import Proposal, disputed_ids, equivalent_groups, proposal_wire
 from scrutare.engine.discussion_inputs import DiscussionInput
 from scrutare.engine.fanout import (
@@ -159,6 +160,7 @@ async def _discuss(
 ]:
     """Only independently reassessed rows change disposition; peers never count as votes."""
     rounds: list[dict[str, object]] = []
+    allowance = context.config.findings.discussion.tokens is not None
     for number in range(1, context.config.rounds.max + 1):
         _validate_binding(context, hashes)
         identifiers = disputed_ids(rows)
@@ -182,10 +184,15 @@ async def _discuss(
             )
             for d in descriptors
         )
-        leases = tuple(
-            context.ledger.admit(d.persona.name, f"{d.persona.name}/attempt-{number + 2:04d}")
-            for d in descriptors
-        )
+        keys = tuple((d.persona.name, f"{d.persona.name}/attempt-{number + 2:04d}")
+                     for d in descriptors)
+        leases: tuple[BudgetLease | None, ...]
+        if allowance:
+            # A separate discussion allowance: positions never spend discovery grants.
+            admitted = context.ledger.admit_phase("discussion", keys)
+            leases = admitted if admitted is not None else (None,)
+        else:
+            leases = tuple(context.ledger.admit(persona, key) for persona, key in keys)
         if any(lease is None for lease in leases):
             for lease in leases:
                 if lease is not None:
@@ -258,6 +265,7 @@ async def _discuss(
                 pool,
                 attempt_number=number + 1,
                 counterevidence=tuple(proposal_wire(p) for p in proposals),
+                phase="discussion" if allowance else None,
             )
             record["reassessment"] = f"assessment-round-{number:04d}.json"
             if assessment.status != "complete":
