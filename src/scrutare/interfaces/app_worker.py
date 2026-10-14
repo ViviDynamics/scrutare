@@ -231,9 +231,12 @@ def _replies(run: Path) -> str:
     journal = run / "reply-posting.json"
     if not journal.exists():
         return "not_sent"
-    states = {{"posted": "confirmed", "pending": "not_sent", "rejected": "not_sent",
-               "observed": "not_sent"}.get(response.get("status"), "uncertain")
-              for response in json.loads(journal.read_bytes())["responses"]}
+    try:
+        states = {{"posted": "confirmed", "pending": "not_sent", "rejected": "not_sent",
+                   "observed": "not_sent"}.get(response.get("status"), "uncertain")
+                  for response in json.loads(journal.read_bytes())["responses"]}
+    except (OSError, ValueError, AttributeError, TypeError, KeyError):
+        return "uncertain"
     return next((state for state in ("uncertain", "confirmed") if state in states), "not_sent")
 
 
@@ -260,8 +263,8 @@ def _journal(runs: set[Path]) -> tuple[str, str | None]:
             return "not_sent", None
         delivery = states.pop() if len(states) == 1 else "uncertain"
         return delivery, heads.pop() if len(heads) == 1 else None
-    except (OSError, ValueError, AttributeError, TypeError, KeyError):
-        return "uncertain", heads.pop() if len(heads) == 1 else None
+    except (OSError, ValueError, AttributeError, TypeError):
+        return "uncertain", None
 
 
 def _repository_root(settings: AppSettings, job: dict[str, Any]) -> Path:
@@ -333,14 +336,24 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
         api = client if client is not None else GitHubAppClient(settings)
         token = api.installation_token(job["repository"], job["installation"])
         reply = job["delivery"].startswith(REPLY_DELIVERY)
+        raw: bytes | None = None
         if not reply and not job["delivery"].startswith("api:"):
             # A late or redelivered event must not re-review a head already reviewed.
             prior = store.reviewed(job["repository"], job["number"],
                                    api.head(job["repository"], job["number"], token))
             if prior is not None:
-                store.finish(job["id"], "superseded", {"superseded_by": prior})
-                return
-        raw = api.configuration(job["repository"], token)
+                # Replies may have been coalesced into this job. Where the repository
+                # answers them, it still runs, and posts only for a trusted contest.
+                try:
+                    raw = api.configuration(job["repository"], token)
+                    reply = parse_config(raw).replies.enabled
+                except (AppError, ConfigError):
+                    reply = False
+                if not reply:
+                    store.finish(job["id"], "superseded", {"superseded_by": prior})
+                    return
+        if raw is None:
+            raw = api.configuration(job["repository"], token)
         config = parse_config(raw)
         if reply and not config.replies.enabled:
             # Opt-in: without the setting a reply starts no review and spends nothing.

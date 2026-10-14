@@ -364,3 +364,14 @@ def test_unchanged_is_a_terminal_status(tmp_path):
     saved = store.get(job["id"])
     assert saved["status"] == "unchanged" and saved["reviewed"] is None
     assert store.claim() is None
+
+
+def test_push_event_from_an_unlisted_repository_is_refused_before_its_body_is_read(tmp_path):
+    document = payload()
+    document["repository"]["full_name"] = "other/repo"
+    del document["pull_request"]
+    body, signature = signed(document)
+    with pytest.raises(AppError) as refused:
+        admit_webhook(settings(tmp_path), JobStore(tmp_path / "jobs.sqlite"), "pull_request",
+                      "delivery", signature, body)
+    assert refused.value.status == 403

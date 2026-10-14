@@ -410,3 +410,18 @@ def test_permission_lookup_rejects_malformed_or_mismatched_records(payload):
     with pytest.raises(mod.GitHubError, match="permission"):
         mod.GitHubClient(runner=runner).get_permission(
             mod.PullRequestRef("owner", "repo", 12), "maintainer")
+
+
+@pytest.mark.parametrize("login", ["mona_acme", "mona-lisa_acme1"])
+def test_managed_user_logins_can_be_looked_up(login):
+    mod = github()
+    runner = Mock(return_value=subprocess.CompletedProcess(
+        [], 0, json.dumps({"permission": "write", "user": {"login": login}}).encode(), b""))
+    assert mod.GitHubClient(runner=runner).get_permission(
+        mod.PullRequestRef("owner", "repo", 12), login) == "write"
+    assert runner.call_args.args[0][2] == f"repos/owner/repo/collaborators/{login}/permission"
+
+
+@pytest.mark.parametrize("login", ["_acme", "mona_", "mona__acme", "mona_ac_me", "mona_ac-me"])
+def test_only_one_managed_suffix_is_a_login(login):
+    assert github().human_login(login) is False

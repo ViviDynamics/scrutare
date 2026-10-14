@@ -94,7 +94,7 @@ describes.
 | --- | --- |
 | `queued`, `running` | Admitted; one job runs at a time. |
 | `posted` | The CLI exited 0 and its stdout is byte-identical to the installed `result.json`. Approval, changes requested and escalation are all posted results. |
-| `unchanged` | A reply job that posted no review: replies are not enabled for the repository, or the head was already reviewed and no trusted reply contested a finding. |
+| `unchanged` | A job that posted no review because none was needed: replies are not enabled for the repository, or the pull request already shows the current head and verdict. Threaded responses may still have been delivered; see `result.replies`. |
 | `failed` | Configuration, model origin, token, capture, execution or posting was refused or failed, and the posting journal shows the review was either never sent or was confirmed. |
 | `interrupted` | The CLI was interrupted (exit 130 or a signal), reached the job deadline, was running when the service restarted, or ended with a review POST whose outcome is unknown. |
 | `superseded` | A webhook job that needed no review of its own. Its `result` names the job that covers it. |
@@ -206,9 +206,13 @@ the engine decides trust from what it captures.
   one job, one reassessment and one response per thread.
 - **Worker.** A reply job skips the reviewed-head guard, since the head is
   unchanged by design, and runs `scrutare review --replies-only`. It posts a
-  review only for a head not yet reviewed or a trusted reply that contests a
-  finding; otherwise it ends `unchanged`. When the repository has not enabled
+  review only when the pull request does not already show the current head and
+  verdict; otherwise it ends `unchanged`. When the repository has not enabled
   replies, the job ends `unchanged` before any model origin check or CLI run.
+  A push job that finds its head already reviewed may be carrying coalesced
+  replies, so on a repository with replies enabled it runs the same
+  replies-only review instead of ending `superseded`. Without the setting the
+  guard behaves as before.
 - **Budget.** Reassessments spend the same `rounds.max` as pushes. Once the
   bound is reached no session starts and the review escalates.
 - **Redelivery.** Missed `pull_request_review_comment` deliveries are requested

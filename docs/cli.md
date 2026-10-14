@@ -47,8 +47,8 @@ captured `head_sha`, code-derived `verdict` and `rule`, `panel_status`, reported
 reviewer-request receipt is included separately. Success is emitted only after
 the result and manifest are installed. With `replies.enabled` the document also
 has `replies`, one entry per threaded response this run delivered. A
-`--replies-only` run that found no new head and no trusted contest posts no
-review: it exits 0 with `status: unchanged` and no `review` field.
+`--replies-only` run whose head and verdict the pull request already shows posts
+no review: it exits 0 with `status: unchanged` and no `review` field.
 
 Failures leave stdout empty and explain the failure on stderr. Once capture has
 completed, the diagnostic identifies its retained run. A later persistence

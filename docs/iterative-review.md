@@ -72,16 +72,24 @@ that wave yields:
 
 Reply text cannot change configuration, budgets, scope or the verdict. It
 reaches the model as JSON data after an explicit notice, bounded per wave to 16
-comments (trusted first, then newest) of 2000 characters each, and is never
-copied into anything Scrutare posts.
+comments (contesting replies first, then newest) of 2000 characters each, and is
+never copied into anything Scrutare posts. Each entry carries `may_contest`,
+which records what the policy lets the account trigger and tells the model
+nothing about whether the account is right. A trusted reply the wave did not
+read because of that bound is not answered: it stays unconsumed and contests
+again, within `rounds.max`.
 
 **Who may contest.** With `trust: write`, only an account whose verified
 repository permission is `admin` or `write` triggers a reassessment. The
 permission is read at capture with the review's own token and retained in
 `reply-permissions.json`; a lookup that fails counts as untrusted, and at most
-32 accounts are looked up per capture: likely maintainers first, then newest
-comments. `author_association` only orders those lookups. It never grants trust,
-because `MEMBER` and `COLLABORATOR` do not imply write access.
+32 accounts are looked up per capture: likely maintainers first, then authors of
+replies, then newest comments. `author_association` only orders those lookups.
+It never grants trust, because `MEMBER` and `COLLABORATOR` do not imply write
+access. A maintainer whose organization membership is private is ordered with
+outside accounts and can fall past the bound on a very busy pull request; that
+fails closed. Logins are plain GitHub logins, with one `_shortcode` suffix
+accepted for managed users.
 `trust: anyone` admits every account GitHub types as `User`. Bots and Scrutare's
 own responses never trigger a reassessment under either policy. An untrusted
 reply triggers nothing and spends nothing. It stays unconsumed until an ordinary
@@ -101,7 +109,7 @@ current finding quoted as untrusted text:
 | Outcome | Meaning |
 | --- | --- |
 | `reassessed` | A wave reviewed the hunk again with the replies as evidence. |
-| `incomplete` | The wave did not cover the finding completely, so it stands. |
+| `incomplete` | The wave did not cover the finding completely. It stands pending a complete review; the response does not claim it was confirmed. |
 | `exhausted` | `rounds.max` is used up. No session starts; the review escalates under the existing policy. |
 | `recorded` | The finding was already fixed or withdrawn; its recorded disposition is reported without a wave. |
 
@@ -111,16 +119,22 @@ comment is not new evidence and an edit is, once. Reassessments use the same
 ledger and `rounds.max` as pushes: a pull request can never spend more than
 `rounds.max` waves, however many replies arrive.
 
-The same run posts its review as usual, which is how GitHub sees a re-derived
-verdict. At a head that already carries Scrutare's threads, findings whose
-inline comment would be byte-identical are counted in the summary but not posted
-as a second thread.
+An ordinary invocation posts its review as usual, which is how GitHub sees a
+re-derived verdict. At a head that already carries Scrutare's threads, findings
+whose inline comment would be byte-identical are counted in the summary but not
+posted as a second thread.
 
 `scrutare review --replies-only` is for callers triggered by a reply rather than
-a push. When the head is unchanged and no trusted reply contests anything, it
-posts no review and reports `status: unchanged`; a new head or a trusted contest
-is reviewed as usual. Ordinary invocations, including the Action's, handle
-replies without the flag.
+a push. It posts a review only when the pull request does not already show the
+current result: the engine compares the captured head and the digest of the
+verdict it derived with the latest review an earlier run posted, or may have
+posted, according to its `posting.json`. A reassessment that upholds a finding
+unchanged, or a reply past the round bound, therefore gets its threaded response
+and no second review or reviewer request, and the run reports
+`status: unchanged`. A withdrawal changes the verdict, so its review is posted;
+if that POST fails, the next replies-only run posts it, because the history
+never counts as delivered what no journal confirms. Ordinary invocations,
+including the Action's, handle replies without the flag.
 
 Retained for replay: the raw `review_comments.json`, `reply-permissions.json`,
 and `replies.json` with every new comment's author, trust, text and status, each

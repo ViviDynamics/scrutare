@@ -458,3 +458,14 @@ def test_a_flood_of_outside_commenters_cannot_crowd_out_likely_maintainers(tmp_p
     assert client.lookups[:2] == ["owner", "maintainer"] and len(client.lookups) == 32
     saved = read_json(run, "reply-permissions.json")["permissions"]
     assert saved["maintainer"] == "write" and saved["owner"] == "admin"
+
+
+def test_thread_replies_are_looked_up_before_other_outside_comments(tmp_path):
+    comments = [inline(1, "private-member", author_association="NONE", in_reply_to_id=9)]
+    comments += [inline(index, f"drive{index}", author_association="NONE")
+                 for index in range(2, 50)]
+    client = ReplyClient(comments, {f"drive{index}": "read" for index in range(2, 50)}
+                         | {"private-member": "write"})
+    run = ingestion().ingest_pr(client, REF, tmp_path / "runs", **configured(REPLIES))
+    assert client.lookups[0] == "private-member"
+    assert read_json(run, "reply-permissions.json")["permissions"]["private-member"] == "write"

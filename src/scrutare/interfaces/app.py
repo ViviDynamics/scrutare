@@ -255,10 +255,11 @@ def admit_webhook(settings: AppSettings, store: JobStore, event: str, delivery: 
                           or document.get("action") not in REVIEWED_ACTIONS):
             return {"status": "ignored"}
         repository = document["repository"]["full_name"]
-        pr = document["pull_request"]
-        number = pr["number"] if reply else document["number"]
+        # A review comment event carries its pull request number only in the nested object.
+        number = document["pull_request"]["number"] if reply else document["number"]
         installation = document["installation"]["id"]
         settings.authorize(repository, number, installation)
+        pr = document["pull_request"]
         if (type(pr["number"]) is not int or pr["number"] != number
                 or pr["base"]["repo"]["full_name"] != repository):
             raise ValueError

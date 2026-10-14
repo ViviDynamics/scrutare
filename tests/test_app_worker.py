@@ -648,11 +648,10 @@ def test_reply_job_runs_a_replies_only_review_of_a_head_already_reviewed(tmp_pat
     assert saved["status"] == "posted" and saved["reviewed"] == "a" * 40
     assert calls[1][-1] == "--replies-only" and len(calls[1]) == len(calls[0]) + 1
     assert calls[1][1:4] == ["-m", "scrutare", "review"] and client.heads == 1
-    # A later push event for that head is still reviewed at most once.
+    # A later push event for that head never starts an ordinary second review.
     late = store.enqueue("webhook:late", "owner/repo", 12, 456, "a" * 40)
-    run_job(settings(tmp_path), store, store.claim(), client=client,
-            runner=lambda *a, **k: pytest.fail("must not review the same head again"))
-    assert store.get(late["id"])["status"] == "superseded"
+    run_job(settings(tmp_path), store, store.claim(), client=client, runner=runner)
+    assert calls[2][-1] == "--replies-only" and store.get(late["id"])["status"] == "posted"
 
 
 def test_reply_job_with_nothing_to_reassess_ends_unchanged(tmp_path):
@@ -771,3 +770,57 @@ def test_missed_reply_deliveries_are_redelivery_candidates(tmp_path):
     ]
     client, _ = deliveries(tmp_path, items)
     assert client.failed_deliveries(NOW) == [(20, "g-reply"), (21, "g-edit")]
+
+
+def test_push_job_for_a_reviewed_head_still_serves_the_replies_it_covers(tmp_path):
+    store = JobStore(tmp_path / "jobs.sqlite")
+    calls = []
+    def runner(argv, **kwargs):
+        calls.append(argv)
+        root = kwargs["cwd"] / ".scrutare" / "runs" / f"run-{len(calls)}"
+        root.mkdir(parents=True)
+        document = cli_result(root) if len(calls) == 1 else unchanged(root)
+        return subprocess.CompletedProcess(argv, 0, document, b"")
+    client = ReplyingClient()
+    # A reply job captured and reviewed the head a queued push announces.
+    first = reply_job(store)
+    run_job(settings(tmp_path), store, first, client=client, runner=runner)
+    assert store.get(first["id"])["reviewed"] == "a" * 40
+    # A later reply was coalesced into that push job. It must not vanish with it.
+    pushed = store.enqueue("webhook:push", "owner/repo", 12, 456, "a" * 40)
+    run_job(settings(tmp_path), store, store.claim(), client=client, runner=runner)
+    assert calls[1][-1] == "--replies-only"
+    assert store.get(pushed["id"])["status"] == "unchanged"
+
+
+@pytest.mark.parametrize("raw", [
+    b"models:\n  default:\n    provider: openai\n"
+    b"    base_url: https://models.example/v1\n    model: example\n",
+    b"replies: {enabled: maybe}\n",
+])
+def test_reviewed_head_guard_is_unchanged_when_replies_are_not_enabled(tmp_path, raw):
+    store = JobStore(tmp_path / "jobs.sqlite")
+    def runner(argv, **kwargs):
+        root = kwargs["cwd"] / ".scrutare" / "runs" / "run-1"
+        root.mkdir(parents=True)
+        return subprocess.CompletedProcess(argv, 0, cli_result(root), b"")
+    first = store.enqueue("api:first", "owner/repo", 12, 456)
+    run_job(settings(tmp_path), store, store.claim(), client=TrustedClient(), runner=runner)
+    late = store.enqueue("webhook:late", "owner/repo", 12, 456, "a" * 40)
+    run_job(settings(tmp_path), store, store.claim(), client=ReplyingClient(raw),
+            runner=lambda *a, **k: pytest.fail("must not review the same head again"))
+    assert store.get(late["id"])["status"] == "superseded"
+    assert store.get(late["id"])["result"] == {"superseded_by": first["id"]}
+
+
+def test_unreadable_journal_reports_no_head_as_before(tmp_path):
+    store, job = claimed(tmp_path)
+    def runner(argv, **kwargs):
+        journal(kwargs, "posted")
+        other = kwargs["cwd"] / ".scrutare" / "runs" / "run-other"
+        other.mkdir()
+        (other / "posting.json").write_text("{")
+        return subprocess.CompletedProcess(argv, 1, b"", b"")
+    run_job(settings(tmp_path), store, job, client=TrustedClient(), runner=runner)
+    saved = store.get(job["id"])
+    assert (saved["result"]["delivery"], saved["reviewed"]) == ("uncertain", None)

@@ -18,7 +18,8 @@ _TIMEOUT_SECONDS = 60
 _OWNER = r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?"
 _REPO = r"[A-Za-z0-9_.-]+"
 _REPOSITORY = re.compile(rf"({_OWNER})/({_REPO})")
-_HUMAN_LOGIN = re.compile(r"[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*")
+# A plain login, optionally with the one `_shortcode` suffix of a managed user.
+_HUMAN_LOGIN = re.compile(r"[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*(?:_[A-Za-z0-9]+)?")
 _PR_URL = re.compile(rf"https://github\.com/({_OWNER})/({_REPO})/pull/([0-9]+)/?")
 
 
