@@ -572,3 +572,13 @@ def test_native_sigint_during_failed_run_snapshot_keeps_unconfirmed_context(
     assert "interrupt" in output.err and "confirmed" not in output.err
     assert (run / "artifacts.json").is_file()
     assert not (run / "posting.json").exists()
+
+
+def test_replies_only_flag_reaches_the_review_service(tmp_path, monkeypatch, capsys, gh):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "scrutare.yaml").write_bytes(VALID_CONFIG)
+    assert cli_main(["review", "--pr", "https://github.com/owner/repo/pull/12",
+                     "--replies-only"]) == 1
+    captured = capsys.readouterr()
+    assert "replies.enabled" in captured.err and captured.out == ""
+    assert gh == [] and not (tmp_path / ".scrutare").exists()

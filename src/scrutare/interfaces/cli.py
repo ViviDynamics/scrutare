@@ -44,6 +44,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     review.add_argument("--analysis-capture", type=Path, metavar="PATH",
                         help="explicit captured Ruff evidence; requires analysis.enabled")
+    review.add_argument("--replies-only", action="store_true",
+                        help="post a review only for a new head or a trusted reply that "
+                             "contests a finding; requires replies.enabled")
     replay = commands.add_parser(
         "replay", help="audit a stored verdict offline; no model or network",
         description="Recompute a stored verdict and compare saved and recorded posted identity.",
@@ -82,12 +85,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         runtime = NareRuntime(args.nare_executable)
-        preflight_review(review_config, runtime)
+        preflight_review(review_config, runtime, replies_only=args.replies_only)
         ref = resolve_pr(args.pr)
         result = asyncio.run(review_pr(
             ref, review_config, config_bytes=config_bytes,
             runs_root=Path(".scrutare/runs"), runtime=runtime,
-            analysis_capture=args.analysis_capture,
+            analysis_capture=args.analysis_capture, replies_only=args.replies_only,
         ))
     except ReviewRunError as exc:
         location = f" Run: {exc.run_dir}" if exc.run_dir is not None else ""
