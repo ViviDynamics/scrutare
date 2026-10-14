@@ -162,21 +162,21 @@ def test_uncertain_reply_is_never_resent_and_is_recovered_by_marker(capture, mon
         post_replies(second, config, client=client)
     assert state_of(second)["responses"][0]["status"] == "unknown"
     assert journal(second)["responses"][0]["status"] == "unknown"
-    with pytest.raises(PostingUncertain):
-        post_replies(second, config, client=client)
+    # Reported once. Later calls and runs neither resend it nor fail because of it.
+    assert post_replies(second, config, client=client) == ()
     # A later capture that does not show the reply proves nothing.
     third = again(second, "third", comments, permissions=PERMISSIONS)
     run(third, config)
-    with pytest.raises(PostingUncertain):
-        post_replies(third, config, client=client)
-    assert len(client.created) == 1
+    assert post_replies(third, config, client=client) == ()
+    assert len(client.created) == 1 and not (third / "reply-posting.json").exists()
     response = state_of(second)["responses"][0]
+    assert response["status"] == "unknown"
     # A copy of the marker from another account does not confirm delivery.
     forged = again(third, "forged", comments + [answer(response, "mallory", "User")],
                    permissions=PERMISSIONS)
     run(forged, config)
-    with pytest.raises(PostingUncertain):
-        post_replies(forged, config, client=client)
+    assert post_replies(forged, config, client=client) == ()
+    assert state_of(second)["responses"][0]["status"] == "unknown"
     fourth = again(forged, "fourth", comments + [answer(response)], permissions=PERMISSIONS)
     run(fourth, config)
     observed, = post_replies(fourth, config, client=client)
@@ -194,6 +194,8 @@ def test_interrupted_send_is_reconciled_not_repeated(capture, monkeypatch):
     client = Threads()
     with pytest.raises(PostingUncertain):
         post_replies(second, config, client=client)
+    assert client.created == [] and state_of(second)["responses"][0]["status"] == "unknown"
+    assert post_replies(second, config, client=client) == ()
     assert client.created == []
 
 

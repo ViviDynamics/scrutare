@@ -86,7 +86,8 @@ def post_replies(run_dir: Path, config: ReviewConfig, *,
 
     A response is marked `sending` in the history and the run journal before its
     POST. One left `sending` or `unknown` is only ever reconciled against a later
-    capture, by marker and Scrutare's own login; it is never sent again.
+    capture, by marker and Scrutare's own login; it is never sent again. The run in
+    which a response becomes uncertain fails; later runs are not failed by it.
     """
     if not config.replies.enabled:
         return ()
@@ -108,7 +109,7 @@ def post_replies(run_dir: Path, config: ReviewConfig, *,
             if journal_path.exists():
                 journal = {entry["key"]: entry for entry in read_json(journal_path)["responses"]}
             bodies = {response["key"]: render_reply(response) for response in responses
-                      if response["status"] not in _FINAL or response["key"] in journal}
+                      if response["status"] not in _FINAL}
         except (KeyError, TypeError, ValueError, GitHubError) as error:
             if isinstance(error, PostingError):
                 raise
@@ -147,7 +148,9 @@ def post_replies(run_dir: Path, config: ReviewConfig, *,
                        html_url=seen[0].get("html_url")
                        if isinstance(seen[0].get("html_url"), str) else None)
                 continue
-            if seen or response["status"] in ("sending", "unknown"):
+            if response["status"] == "unknown":
+                continue  # Reported when it became uncertain; only a capture resolves it.
+            if seen or response["status"] == "sending":
                 # A reply may exist. Its absence from one capture proves nothing.
                 record(response, status="unknown")
                 failure = PostingUncertain(_UNCERTAIN)

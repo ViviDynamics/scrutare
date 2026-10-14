@@ -494,8 +494,8 @@ def test_reply_failure_after_the_review_reports_confirmed_delivery(tmp_path, mon
     assert json.loads((run / "reply-posting.json").read_bytes())["responses"][0][
         "status"] == "unknown"
     assert not (run / "result.json").exists() and (run / "artifacts.json").is_file()
-    # The next invocation reconciles and never sends the reply a second time.
+    # The next invocation never sends the reply a second time, and is not failed by it.
     poster.reply_failure = None
-    with pytest.raises(module.ReviewRunError):
-        discuss(tmp_path, poster, capture, replies_only=True)
+    later = discuss(tmp_path, poster, capture, replies_only=True)
+    assert later.to_dict()["status"] == "unchanged" and later.to_dict()["replies"] == []
     assert len(poster.replies) == 1 and len(poster.creates) == 2
