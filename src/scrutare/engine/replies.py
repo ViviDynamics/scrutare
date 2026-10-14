@@ -99,6 +99,33 @@ def own_reviews(runs_root: Path, names: object, repository: str, number: int) ->
     return found
 
 
+def delivered_review(runs_root: Path, names: object, repository: str,
+                     number: int) -> tuple[str, str] | None:
+    """Head and verdict digest of the latest review that was, or may have been, posted.
+
+    The history can be ahead of GitHub: a run saves its pool and then fails to post.
+    Only a posting journal says what the pull request actually shows.
+    """
+    for name in reversed(names) if isinstance(names, list) else []:
+        if (not isinstance(name, str) or name in (".", "..")
+                or re.fullmatch(r"[A-Za-z0-9_.-]+", name) is None):
+            continue
+        path = runs_root / name / "posting.json"
+        try:
+            if path.is_symlink():
+                continue
+            journal = json.loads(path.read_bytes())
+            if (journal["pr_number"] != number
+                    or journal["repository"].lower() != repository.lower()
+                    or journal["status"] in ("prepared", "rejected")):
+                continue
+            if isinstance(journal["head_sha"], str) and isinstance(journal["verdict_sha256"], str):
+                return journal["head_sha"], journal["verdict_sha256"]
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            continue
+    return None
+
+
 @dataclass(frozen=True)
 class ReplyView:
     """Every inline comment that is not Scrutare's own, with its thread and trust."""
@@ -119,22 +146,31 @@ class ReplyView:
         return bool(comment["path"] == anchor.file
                     and (comment["line"] is None or comment["line"] == anchor.line))
 
-    def discussion(self, fresh: list[dict[str, Any]],
-                   paths: Container[str]) -> tuple[list[dict[str, Any]], set[str]]:
-        """A bounded projection for the prompt: trusted first, newest first."""
+    def discussion(self, fresh: list[dict[str, Any]], paths: Container[str],
+                   contested: frozenset[Anchor]) -> tuple[list[dict[str, Any]], set[str]]:
+        """A bounded projection for the prompt: contesting replies first, then newest.
+
+        `may_contest` says what the policy allows the account to trigger. It is not a
+        claim that the account is right.
+        """
+        def contesting(comment: dict[str, Any]) -> bool:
+            return bool(comment["trusted"]) and any(
+                self.matches(comment, anchor) for anchor in contested)
+
         chosen = sorted((comment for comment in fresh if comment["path"] in paths),
-                        key=lambda comment: (not comment["trusted"], -comment["id"]))
+                        key=lambda comment: (not contesting(comment), not comment["trusted"],
+                                             -comment["id"]))
         chosen = chosen[:MAX_DISCUSSION]
         return ([{"id": comment["id"], "in_reply_to_id": comment["in_reply_to_id"],
                   "path": comment["path"], "line": comment["line"],
-                  "author": comment["author"], "trusted": comment["trusted"],
+                  "author": comment["author"], "may_contest": comment["trusted"],
                   "body": comment["body"][:MAX_DISCUSSION_BODY]} for comment in chosen],
                 {comment["digest"] for comment in chosen})
 
     def settle(self, state: dict[str, Any], before: list[dict[str, Any]],
                fresh: list[dict[str, Any]], *, anchor_of: Callable[[dict[str, Any]], Anchor],
                reviewed: bool, complete: bool, supplied: set[str], head: str,
-               limit: int, repeated: bool) -> dict[str, Any]:
+               limit: int) -> dict[str, Any]:
         """Consume answered contests and record one pending response per thread.
 
         The disposition is read from the pool the reassessment left, never from a reply.
@@ -146,7 +182,9 @@ class ReplyView:
             upheld = any(entry["disposition"] == "upheld" for entry in earlier)
             status = "retained"
             if comment["trusted"] and upheld:
-                status = "contested"
+                # A reply the wave did not read is not answered; it contests again.
+                if not reviewed or comment["digest"] in supplied:
+                    status = "contested"
             elif comment["trusted"] and comment["thread"] is not None and earlier:
                 status = "answered"
             elif reviewed and comment["digest"] in supplied:
@@ -189,7 +227,7 @@ class ReplyView:
             responses.append(response)
             state["responses"].append(response | {"status": "pending"})
         return {"schema_version": 1, "policy": self.policy, "head_sha": head,
-                "review_required": not repeated, "own_reviews": sorted(self.reviews),
+                "review_required": True, "own_reviews": sorted(self.reviews),
                 "existing_threads": list(self.existing), "contests": contests,
                 "responses": responses}
 
@@ -219,8 +257,9 @@ def reply_view(run: Path, config: ReviewConfig, runs: object, comments: object,
                         or _identity(comment["in_reply_to_id"]))):
             continue
         valid.append(comment)
-        if comment.get("in_reply_to_id") is None and comment.get(
-                "pull_request_review_id") in reviews:
+        if (comment.get("in_reply_to_id") is None
+                and _identity(comment.get("pull_request_review_id"))
+                and comment["pull_request_review_id"] in reviews):
             line = comment["line"] if comment["line"] is not None else comment.get("original_line")
             anchor: Anchor | None = None
             if type(line) is int and line > 0:
@@ -241,7 +280,8 @@ def reply_view(run: Path, config: ReviewConfig, runs: object, comments: object,
         identity = author(comment)
         if comment["id"] in threads or (
                 comment.get("in_reply_to_id") is None
-                and comment.get("pull_request_review_id") in generated):
+                and _identity(comment.get("pull_request_review_id"))
+                and comment["pull_request_review_id"] in generated):
             continue  # A posted finding never contests itself.
         if identity is not None and identity[0] in logins and RESPONSE_MARKER in comment["body"]:
             continue  # Scrutare's own threaded response.

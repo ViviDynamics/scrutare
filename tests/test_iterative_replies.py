@@ -25,11 +25,14 @@ def enabled(capture, *, rounds=3, trust="write"):
     return config
 
 
-def posted(run_dir, review=900, login="scrutare[bot]"):
-    """Record the confirmed delivery a real review leaves behind."""
+def posted(run_dir, review=900, login="scrutare[bot]", status="posted"):
+    """Record the delivery a real review leaves behind: its head and verdict digest."""
+    metadata = json.loads((run_dir / "metadata.json").read_bytes())
     (run_dir / "posting.json").write_text(json.dumps({
-        "status": "posted", "repository": "owner/repo", "pr_number": 12,
-        "receipt": {"review_id": review, "login": login}}))
+        "status": status, "repository": "owner/repo", "pr_number": 12,
+        "head_sha": metadata["head_sha"],
+        "verdict_sha256": sha256((run_dir / "verdict.json").read_bytes()).hexdigest(),
+        "receipt": {"review_id": review, "login": login} if status == "posted" else None}))
 
 
 def root(identity=50, *, review=900, line=1, user=BOT, head=HEAD):
@@ -114,6 +117,7 @@ def test_trusted_reply_without_a_push_reassesses_and_upholds_a_supported_finding
     pool = document(second, "iterative.json")
     assert pool["rounds_completed"] == 2 and pool["pool"][0]["disposition"] == "upheld"
     replies = document(second)
+    # The verdict changed (the reason did), so the posted review no longer matches it.
     assert replies["review_required"] is True and replies["policy"] == "write"
     response, = replies["responses"]
     assert (response["thread"], response["replies"]) == (50, [51])
@@ -209,8 +213,8 @@ def test_untrusted_reply_triggers_nothing_and_waits_for_an_ordinary_review(
     install(monkeypatch, {"security": (finding(),)})
     monkeypatch.setattr(wave, "run_persona_session", inspect)
     run(third, config)
-    assert "Not a bug, trust me." in prompts[0] and '"trusted": false' in prompts[0]
-    assert "accounts the repository's reply policy does not trust" in prompts[0]
+    assert "Not a bug, trust me." in prompts[0] and '"may_contest": false' in prompts[0]
+    assert "says nothing about whether the account is right" in prompts[0]
     assert [c["status"] for c in document(third)["contests"]] == ["evidence"]
     fourth = again(third, "fourth", comments, permissions=permissions, head="def456", patch=patch)
     run(fourth, config)
@@ -289,6 +293,7 @@ def test_exhausted_bound_escalates_without_sessions_and_does_not_loop(capture, m
     assert (response["disposition"], response["outcome"]) == ("upheld", "exhausted")
     assert response["replies"] == [52]
     assert document(third, "iterative.json")["rounds_completed"] == 2
+    posted(third, review=901)
     fourth = again(third, "fourth", comments, permissions=permissions)
     run(fourth, config)
     assert sessions(calls) == 0 and document(fourth)["responses"] == []
@@ -367,13 +372,23 @@ def test_threads_cannot_grow_the_prompt_without_bound(capture, monkeypatch):
     discussion = prompts[0][prompts[0].index('"discussion"'):]
     assert len(discussion) < 40000 and discussion.count('"body"') == 16
     replies = document(second)
-    # Forty replies on one thread are one contest, one round and one response.
-    assert len(replies["responses"]) == 1 and len(replies["responses"][0]["replies"]) == 40
+    # One round and one response, which answers only the replies the wave actually read.
+    answered = replies["responses"][0]["replies"]
+    assert len(replies["responses"]) == 1 and answered == list(range(124, 140))
     assert document(second, "iterative.json")["rounds_completed"] == 2
+    statuses = [c["status"] for c in replies["contests"]]
+    assert statuses.count("contested") == 16 and statuses.count("retained") == 24
+    # The unread replies contest again, and the round bound still ends it.
     third = again(second, "third", comments)
     _, calls, _, _ = install(monkeypatch, {"security": (finding(),)})
-    run(third, config)
-    assert sessions(calls) == 0
+    assert run(third, config).verdict.verdict == "escalated"
+    assert sessions(calls) == 1
+    assert document(third, "iterative.json")["rounds_completed"] == 3
+    fourth = again(third, "fourth", comments)
+    run(fourth, config)
+    assert sessions(calls) == 1
+    last, = document(fourth)["responses"]
+    assert last["outcome"] == "exhausted" and len(last["replies"]) == 8
 
 
 def test_a_human_sharing_scrutares_account_can_still_contest(capture, monkeypatch):
@@ -425,3 +440,48 @@ def test_malformed_reply_records_are_refused_or_ignored_safely(capture, monkeypa
     (third / "reply-permissions.json").write_text('{"permissions": ["lead"]}')
     run(third, config)
     assert [c["trusted"] for c in document(third)["contests"]] == [False]
+
+
+def test_review_is_required_until_the_current_verdict_is_the_one_posted(capture, monkeypatch):
+    config = enabled(capture)
+    first(capture, monkeypatch, config)
+    permissions = {"lead": "write"}
+    second = again(capture, "second", [root(), reply(51)], permissions=permissions)
+    install(monkeypatch, {"security": ()})
+    assert run(second, config).verdict.verdict == "approve"
+    assert document(second)["review_required"] is True
+    # Its review was never delivered. The pool has moved on, GitHub has not.
+    third = again(second, "third", [root(), reply(51)], permissions=permissions)
+    _, calls, _, _ = install(monkeypatch, {"security": ()})
+    run(third, config)
+    assert sessions(calls) == 0 and document(third)["review_required"] is True
+    # A POST that may have arrived is not sent again; a confirmed one settles it.
+    posted(third, review=901, status="unknown")
+    fourth = again(third, "fourth", [root(), reply(51)], permissions=permissions)
+    run(fourth, config)
+    assert document(fourth)["review_required"] is False
+    posted(fourth, review=902)
+    fifth = again(fourth, "fifth", [root(), reply(51)], permissions=permissions)
+    run(fifth, config)
+    assert document(fifth)["review_required"] is False
+
+
+def test_upheld_reassessment_with_an_unchanged_verdict_needs_no_new_review(capture, monkeypatch):
+    config = enabled(capture)
+    first(capture, monkeypatch, config)
+    second = again(capture, "second", [root(), reply(51)], permissions={"lead": "write"})
+    install(monkeypatch, {"security": (finding(),)})
+    assert run(second, config).verdict.verdict == "changes_requested"
+    replies = document(second)
+    assert replies["review_required"] is False and len(replies["responses"]) == 1
+
+
+def test_hostile_review_identifiers_cannot_fail_the_review(capture, monkeypatch):
+    config = enabled(capture)
+    first(capture, monkeypatch, config)
+    odd = [dict(root(60), pull_request_review_id=[900]), dict(root(61), pull_request_review_id={}),
+           root(), reply(51)]
+    second = again(capture, "second", odd, permissions={"lead": "write"})
+    install(monkeypatch, {"security": (finding(),)})
+    run(second, config)
+    assert len(document(second)["responses"]) == 1
