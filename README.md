@@ -34,7 +34,8 @@ on `main`, with panel as the default:
   persona, dedupes findings, and derives the verdict by rule.
 - **[iterative](docs/iterative-review.md)**: the findings pool persists,
   and each new push is reviewed for what is new or contested, until the bound
-  is reached.
+  is reached. With the opt-in `replies` setting, a maintainer's reply on a
+  finding's thread is reassessed and answered in that thread.
 - **[debate](docs/debate.md)**: the perspectives see each
   other's findings and a chair session arbitrates disputes, downgrades nitpicks,
   and accepts the final finding set.
