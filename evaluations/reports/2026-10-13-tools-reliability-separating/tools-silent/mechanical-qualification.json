@@ -1,0 +1,2063 @@
+{
+ "actual_human_judgments": 0,
+ "cells": [
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 16338,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 47.954055479960516,
+     "status": "complete",
+     "tokens": 58144,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "ae52a8c3d5a828bab8209e30899d16378042b2c38fec594fb3a02f3922324104",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "senior-dev",
+     "problem": "Computing the new count outside the lock loses concurrent increments.",
+     "reason": "The module explicitly permits calls to add from several threads. Two calls to add(1) can both compute updated = 1 from the initial value 0 before either acquires the lock. Each then stores 1 under the lock, so both return 1 and value() reports 1 instead of 2. Locking only the assignment does not protect the read-modify-write operation; keep the calculation inside the critical section as in the base implementation.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "bf38c6882cb63c2e74c373636150fec27165b0465f45def8c70a45645f1debf6",
+     "category": "regression",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Computing the updated count outside the lock loses concurrent increments.",
+     "reason": "The module explicitly allows callers to invoke add from several threads. Two add(1) calls can both compute updated = 1 from the initial value 0 before either acquires the lock, then each write and return 1. Locking only the assignment does not protect the read-modify-write operation. Previously, both the read and addition occurred inside the lock; keep that entire operation protected.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "9204bebdb50a07775a22956a91007c4f8ac3fec3efecd60bec45b2054f7d4d90",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "security",
+     "problem": "Reading the counter outside the lock allows concurrent additions to overwrite each other",
+     "reason": "The class explicitly supports calls from several threads, but `updated` now reads `_value` before acquiring the lock. Two concurrent `add(1)` calls can both read 0 and compute 1, then each acquire the lock and store 1, leaving the counter at 1 instead of 2. The lock serializes assignments but no longer protects the complete read-modify-write operation. Keep the calculation inside the critical section.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "c008cf726ea5185fbc2b1f223d51c7c82909278a593127cc998e5c6bb424ba30",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "devops",
+     "problem": "Computing the update outside the lock allows concurrent increments to be lost.",
+     "reason": "The counter explicitly supports callers from several threads. Two calls to add(1) can both compute updated = 1 from the initial value 0 before acquiring the lock, then each assign 1 and return 1. Locking only the assignment does not protect the read-modify-write operation. Keep the calculation inside the lock so each update includes preceding increments.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "9204bebdb50a07775a22956a91007c4f8ac3fec3efecd60bec45b2054f7d4d90": "supported",
+    "ae52a8c3d5a828bab8209e30899d16378042b2c38fec594fb3a02f3922324104": "supported",
+    "bf38c6882cb63c2e74c373636150fec27165b0465f45def8c70a45645f1debf6": "supported",
+    "c008cf726ea5185fbc2b1f223d51c7c82909278a593127cc998e5c6bb424ba30": "supported"
+   },
+   "latency_seconds": 47.96658841986209,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev2-01/assessment/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10431
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10488
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10446
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10441
+    }
+   ],
+   "status": "complete",
+   "tokens": 58144,
+   "usage": {
+    "cache_read": 34227,
+    "cache_write": 0,
+    "input": 18991,
+    "output": 4926,
+    "total": 58144
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 16191,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 49.27481229882687,
+     "status": "complete",
+     "tokens": 57951,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "0b06ac751bbefe4c002f1521237c55c1d9180ce8177fe577a19f904dec77977b",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "senior-dev",
+     "problem": "Computing the new value outside the lock allows concurrent additions to overwrite each other.",
+     "reason": "The module explicitly permits callers to invoke add from several threads. If two threads call add(1) on a counter at zero and both compute updated before either acquires the lock, both compute 1. The locked assignments then each store 1, so both calls return 1 and value() reports 1 rather than 2. The lock still serializes writes but no longer protects the read-modify-write operation. Keep the calculation inside the lock, as in the base implementation.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "7e00b352126b4dff32934c98d94a9937c9ac4c9dc8bb88e6904f798fd3d6bbcb",
+     "category": "regression",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Computing the new value outside the lock allows concurrent additions to overwrite each other.",
+     "reason": "The module explicitly permits callers to invoke add from several threads. Two calls can now compute updated from the same counter value before either acquires the lock, then each writes that stale result. The lock serializes assignments but no longer protects the read-modify-write operation. Keep the calculation inside the lock to preserve concurrent updates.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "9b72992f464c33c6b86643ab6a3415c977e5ba2513c7ddaa022c38662479040e",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "security",
+     "problem": "Computing the updated count outside the lock loses concurrent increments",
+     "reason": "The class explicitly supports calls from several threads, but the read-modify-write operation is no longer protected as a whole. Two calls to add(1) can both read 0 and compute 1 before either acquires the lock; each then writes 1, leaving the count at 1 instead of 2. The lock only serializes writes and cannot prevent stale calculations. Keep the calculation inside the locked section.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "a412fca750de14f4ed85fa8a0971fdc7ae56356f24f9698c22584ec239df7372",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "devops",
+     "problem": "Computing the updated value outside the lock loses concurrent increments.",
+     "reason": "The class explicitly supports calls from several threads. Two calls to add(1) can both compute updated = 1 before either acquires the lock, then each write 1 and return successfully. Locking only the assignment does not protect the read-modify-write operation. Keep the calculation inside the lock, as in the base implementation.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "0b06ac751bbefe4c002f1521237c55c1d9180ce8177fe577a19f904dec77977b": "supported",
+    "7e00b352126b4dff32934c98d94a9937c9ac4c9dc8bb88e6904f798fd3d6bbcb": "supported",
+    "9b72992f464c33c6b86643ab6a3415c977e5ba2513c7ddaa022c38662479040e": "supported",
+    "a412fca750de14f4ed85fa8a0971fdc7ae56356f24f9698c22584ec239df7372": "supported"
+   },
+   "latency_seconds": 49.28619133797474,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev2-01/assessment/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10451
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10484
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10404
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10421
+    }
+   ],
+   "status": "complete",
+   "tokens": 57951,
+   "usage": {
+    "cache_read": 46981,
+    "cache_write": 0,
+    "input": 6111,
+    "output": 4859,
+    "total": 57951
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 16336,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 49.657519293017685,
+     "status": "complete",
+     "tokens": 58126,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "fb6a4a90da72bd865b8d74436531b6401a0b30814e68a5161495715f228d36d8",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "senior-dev",
+     "problem": "Computing the updated count outside the lock loses concurrent additions.",
+     "reason": "The module explicitly permits calls to add from several threads. Two callers can both compute updated = 1 from the initial value 0 before either acquires the lock. Each then writes 1 under the lock, so both return 1 and value() reports 1 instead of 2. Locking only the assignment does not protect the read-modify-write operation; keep the calculation inside the critical section as it was previously.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "51e3bd2d5f6783a796ed129af68a1046d693a003b2561bc2613e172caaf04b65",
+     "category": "regression",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Computing the new value outside the lock can lose concurrent increments.",
+     "reason": "The module explicitly permits calling add from several threads. Two calls to add(1) can both compute updated = 1 from the initial value of 0 before either acquires the lock, then each writes 1. The lock now serializes only the writes, not the read-modify-write operation. Keep the calculation inside the lock to preserve the documented concurrent usage.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "9ccb8219d35c26f6130217a8cbf74818115a1399125fcce5294fc8082a4cddc5",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "security",
+     "problem": "Computing the updated value outside the lock loses concurrent increments",
+     "reason": "The counter explicitly supports calls from multiple threads, but the read-modify-write operation is no longer protected as a whole. Two threads calling add(1) can both read 0 and compute 1 before either acquires the lock; their serialized assignments then both store 1 instead of producing 2. The lock around assignment and value() does not prevent this stale-read race. Keep the computation inside the lock.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "c2721d914b3bd9aec3d8f8c6ee1ae345cd45553d7377ac5ddfb78d46637ec2e2",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "devops",
+     "problem": "Computing the updated count outside the lock loses concurrent increments.",
+     "reason": "The module explicitly supports calls from several threads. If two threads execute add(1) and both compute updated before either acquires the lock, both calculate the same value and subsequently write it under the lock. Starting from zero, the counter ends at one instead of two. Locking only the assignment does not protect the read-modify-write operation; keep the calculation inside the critical section.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "51e3bd2d5f6783a796ed129af68a1046d693a003b2561bc2613e172caaf04b65": "supported",
+    "9ccb8219d35c26f6130217a8cbf74818115a1399125fcce5294fc8082a4cddc5": "supported",
+    "c2721d914b3bd9aec3d8f8c6ee1ae345cd45553d7377ac5ddfb78d46637ec2e2": "supported",
+    "fb6a4a90da72bd865b8d74436531b6401a0b30814e68a5161495715f228d36d8": "supported"
+   },
+   "latency_seconds": 49.671289067016914,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev2-01/assessment/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10444
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10488
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10417
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10441
+    }
+   ],
+   "status": "complete",
+   "tokens": 58126,
+   "usage": {
+    "cache_read": 46357,
+    "cache_write": 0,
+    "input": 6834,
+    "output": 4935,
+    "total": 58126
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": [],
+   "analysis_status": "complete",
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 17110,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 50.77387419110164,
+     "status": "complete",
+     "tokens": 60397,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "9e0d04135d9d5234e7ef79b35e420462f2fffaab9b7480fe47344f59b729ccd7",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "senior-dev",
+     "problem": "Computing the updated count outside the lock loses concurrent increments.",
+     "reason": "The module explicitly permits calls to add from several threads. Two threads can both compute updated = 1 from the initial value 0 before either acquires the lock, then each writes 1 under the lock. The lock serializes writes but no longer protects the read-modify-write operation. Keep the calculation inside the critical section so value() reports all completed increments.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "85a58e1aeb9bd9f59474f8382e1eba02bcb3fea320bfafbd2fe9f4555ccc1957",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Computing the updated count outside the lock loses concurrent additions.",
+     "reason": "The module explicitly supports calls from several threads, but the read-modify-write operation is no longer protected as a unit. Two calls can compute the same updated value before either acquires the lock, then overwrite each other. Keep the calculation inside the lock, as in the base implementation.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "d1f4ce65c83ce14fa1ca8cd5db884eee89a54bbdd3b1e045f61348b4779b0b82",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "security",
+     "problem": "Computing the increment outside the lock loses concurrent updates",
+     "reason": "The class explicitly supports callers invoking add from several threads, but the read of self._value now occurs before acquiring the lock. Two add(1) calls can both compute updated = 1 from an initial value of 0, then acquire the lock in turn and both store 1. The lock serializes the writes but does not protect the read-modify-write operation. Keep the calculation inside the locked section.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "fed053954e5072b68cbc366e8fc23445d058e5dd654bcabebd37053e3c54e8f3",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "devops",
+     "problem": "Computing the increment outside the lock loses concurrent updates.",
+     "reason": "The counter explicitly supports calls from several threads. Two callers can compute `updated` from the same value before either acquires the lock, then overwrite each other's increments. Locking only the assignment does not protect the read-modify-write operation; keep the calculation inside the critical section.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "85a58e1aeb9bd9f59474f8382e1eba02bcb3fea320bfafbd2fe9f4555ccc1957": "supported",
+    "9e0d04135d9d5234e7ef79b35e420462f2fffaab9b7480fe47344f59b729ccd7": "supported",
+    "d1f4ce65c83ce14fa1ca8cd5db884eee89a54bbdd3b1e045f61348b4779b0b82": "supported",
+    "fed053954e5072b68cbc366e8fc23445d058e5dd654bcabebd37053e3c54e8f3": "supported"
+   },
+   "latency_seconds": 50.7867156828288,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev2-01/tools/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10831
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10856
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10808
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10792
+    }
+   ],
+   "status": "complete",
+   "tokens": 60397,
+   "usage": {
+    "cache_read": 30112,
+    "cache_write": 0,
+    "input": 25270,
+    "output": 5015,
+    "total": 60397
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": [],
+   "analysis_status": "complete",
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 17166,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 50.26560082589276,
+     "status": "complete",
+     "tokens": 60477,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "27b889eacc1a6f7d9095933aff8cb642de087d99230068962d67e689358805cf",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "senior-dev",
+     "problem": "Computing the updated count outside the lock allows concurrent additions to overwrite each other.",
+     "reason": "The module explicitly permits calls to add from several threads. Two threads can both compute updated = 1 from an initial value of 0 before either acquires the lock. Each then writes 1 under the lock, so both calls return 1 and value() reports 1 instead of 2. Locking only the assignment does not protect the read-modify-write operation; keep the calculation inside the critical section.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "b9d9977efe87d7762a975bbb006bd632516b9d3c225876f83784f0dbd5ef8c12",
+     "category": "regression",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Computing the updated count outside the lock allows concurrent additions to overwrite each other.",
+     "reason": "The module explicitly permits callers to invoke add from several threads. Two calls to add(1) can both compute updated = 1 from the initial value of 0 before either acquires the lock. Each then writes 1 under the lock, leaving the counter at 1 instead of 2. The default threading.Lock only serializes the assignments; it no longer protects the read-modify-write operation. Keep the calculation inside the lock.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "a58ebe466e359f807435f54972f1c151e65dcd3a977b6161b7a9ff8b9d56778f",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "security",
+     "problem": "Computing the updated count outside the lock loses concurrent increments.",
+     "reason": "The class explicitly supports calls from several threads, but the read-modify-write operation is no longer protected as a unit. Two add(1) calls can both read 0 and compute 1 before acquiring the lock, then each write 1. The lock serializes the writes but does not prevent stale calculations. Keep the calculation inside the lock.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "57df1e6f7c134c1631cca45f18e356775c55bc21a81d0d4721fd754abb0880f9",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "devops",
+     "problem": "Computing the new count outside the lock loses concurrent increments",
+     "reason": "The module explicitly supports calls from several threads, but the read-modify-write operation is no longer protected as a unit. Two calls can compute `updated` from the same value before either acquires the lock, then serialize assignments of that same result. The lock around the assignment and `value()` does not prevent this stale write. Keep the calculation inside the lock.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "27b889eacc1a6f7d9095933aff8cb642de087d99230068962d67e689358805cf": "supported",
+    "57df1e6f7c134c1631cca45f18e356775c55bc21a81d0d4721fd754abb0880f9": "supported",
+    "a58ebe466e359f807435f54972f1c151e65dcd3a977b6161b7a9ff8b9d56778f": "supported",
+    "b9d9977efe87d7762a975bbb006bd632516b9d3c225876f83784f0dbd5ef8c12": "supported"
+   },
+   "latency_seconds": 50.278240074869245,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev2-01/tools/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10827
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10885
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10792
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10807
+    }
+   ],
+   "status": "complete",
+   "tokens": 60477,
+   "usage": {
+    "cache_read": 49027,
+    "cache_write": 0,
+    "input": 6415,
+    "output": 5035,
+    "total": 60477
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": [],
+   "analysis_status": "complete",
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 17006,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 51.88373735593632,
+     "status": "complete",
+     "tokens": 60261,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "b3d1677dc423b4a43aac0fe783b0c3cb7cc2085043f532287e82e09522253d27",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "senior-dev",
+     "problem": "Computing the updated count outside the lock loses concurrent increments.",
+     "reason": "The module explicitly permits calls from several threads. Two threads can both compute updated = 1 from an initial count of 0 before either acquires the lock, then each writes 1 under the lock. Locking only the assignment does not protect the read-modify-write operation. Keep the calculation inside the critical section, as in the base implementation.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "d50e81de136bad0a5cd9ad03ae9a5ff4f777918ca5a0357ef35ea477193fc94a",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "junior-dev",
+     "problem": "Computing the updated count outside the lock loses concurrent increments.",
+     "reason": "The module explicitly permits calls to add from several threads. Two calls can now read the same previous value before either acquires the lock, then sequentially overwrite the counter with their independently computed totals. Keep the read, addition, and assignment inside the lock; locking only the assignment does not protect the read-modify-write operation.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "4d9e96eef1171627b152a978281ff67632fb6c2ed675a85eb20061be154c24cd",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "security",
+     "problem": "Computing the new value outside the lock loses concurrent increments",
+     "reason": "The counter explicitly supports calls from several threads, but the read-modify-write operation is no longer protected as a unit. Two concurrent add(1) calls can both compute updated = 1 from an initial value of 0, then acquire the lock in succession and each write 1. The lock serializes the assignments but does not prevent stale calculations. Keep the calculation inside the lock to preserve every increment.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "33734b06681d424dd8870273b397192b0633f52156bc152405cde711bec5ab65",
+     "category": "correctness",
+     "file": "src/concurrency/counter.py",
+     "line": 11,
+     "persona": "devops",
+     "problem": "Computing the updated value outside the lock loses concurrent increments.",
+     "reason": "The class explicitly supports calls from several threads, but the change protects only the assignment, not the read-modify-write operation. Two callers can compute their updates from the same old value before either acquires the lock, then overwrite each other's increments. Keep the calculation inside the critical section.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "33734b06681d424dd8870273b397192b0633f52156bc152405cde711bec5ab65": "supported",
+    "4d9e96eef1171627b152a978281ff67632fb6c2ed675a85eb20061be154c24cd": "supported",
+    "b3d1677dc423b4a43aac0fe783b0c3cb7cc2085043f532287e82e09522253d27": "supported",
+    "d50e81de136bad0a5cd9ad03ae9a5ff4f777918ca5a0357ef35ea477193fc94a": "supported"
+   },
+   "latency_seconds": 51.89549530297518,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev2-01/tools/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10806
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10862
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10798
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10789
+    }
+   ],
+   "status": "complete",
+   "tokens": 60261,
+   "usage": {
+    "cache_read": 48895,
+    "cache_write": 0,
+    "input": 6349,
+    "output": 5017,
+    "total": 60261
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 15850,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 49.79471942293458,
+     "status": "complete",
+     "tokens": 58118,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "89d1d0edfe6c10980ec2b7881e8fa85d78732e821973a07b8c78444a20f30e59",
+     "category": "correctness",
+     "file": "src/ledger_transaction.py",
+     "line": 17,
+     "persona": "senior-dev",
+     "problem": "Committing each adjustment breaks atomic transfers",
+     "reason": "The new commit in _adjust persists the source debit before transfer attempts the target credit. If the target does not exist, the second adjustment raises UnknownAccount, but transfer's rollback cannot undo the already committed debit. Keep the audit insertion in the enclosing transaction and leave the commit to transfer after both adjustments succeed.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "4931e39e98ea97992b05796c794876e08a3ba16b038e17ab352f4c1020826ebd",
+     "category": "regression",
+     "file": "src/ledger_transaction.py",
+     "line": 17,
+     "persona": "junior-dev",
+     "problem": "Committing each adjustment breaks atomic transfers",
+     "reason": "The new commit persists the source debit before the target adjustment runs. If the target account does not exist, the second adjustment raises UnknownAccount, but transfer's rollback cannot undo the already committed debit and audit entry. Keep both adjustments and their audit inserts in the transaction committed by transfer.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "ea8e2f768e6d5d98f7c499769bc223143d7c390188b50d72225496f8b3fee195",
+     "category": "correctness",
+     "file": "src/ledger_transaction.py",
+     "line": 17,
+     "persona": "security",
+     "problem": "Committing each adjustment breaks transfer atomicity",
+     "reason": "The new commit persists the source debit before the target adjustment runs. If the target does not exist, the second adjustment raises UnknownAccount, but transfer's rollback cannot undo the already committed debit and audit entry. Keep the commit at the transfer boundary so both adjustments succeed or roll back together.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "906e010cbd28d4feb0be75a4274801b7ddc34cc2de1563852da89b6c254b3cd0",
+     "category": "correctness",
+     "file": "src/ledger_transaction.py",
+     "line": 17,
+     "persona": "devops",
+     "problem": "Committing each adjustment breaks atomic transfers",
+     "reason": "The new commit persists the source debit before the target adjustment runs. If the target account does not exist, the second adjustment raises UnknownAccount, but transfer's rollback cannot undo the already committed debit or its audit entry. Keep transaction ownership in transfer so both adjustments and audit entries commit together.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "4931e39e98ea97992b05796c794876e08a3ba16b038e17ab352f4c1020826ebd": "supported",
+    "89d1d0edfe6c10980ec2b7881e8fa85d78732e821973a07b8c78444a20f30e59": "supported",
+    "906e010cbd28d4feb0be75a4274801b7ddc34cc2de1563852da89b6c254b3cd0": "supported",
+    "ea8e2f768e6d5d98f7c499769bc223143d7c390188b50d72225496f8b3fee195": "supported"
+   },
+   "latency_seconds": 49.80871057882905,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev2-06/assessment/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10536
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10544
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10601
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10587
+    }
+   ],
+   "status": "complete",
+   "tokens": 58118,
+   "usage": {
+    "cache_read": 33034,
+    "cache_write": 0,
+    "input": 19872,
+    "output": 5212,
+    "total": 58118
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 16025,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 49.620216079987586,
+     "status": "complete",
+     "tokens": 58340,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "f1175c69ab247b691c3ba3ce5038409fefe1f7649fb3d62cacca2cd926fcb151",
+     "category": "correctness",
+     "file": "src/ledger_transaction.py",
+     "line": 17,
+     "persona": "senior-dev",
+     "problem": "Committing each adjustment breaks transfer atomicity",
+     "reason": "The new commit persists the source debit before transfer attempts the target credit. If the target account does not exist, the second adjustment raises UnknownAccount, but transfer's rollback cannot undo the already committed debit or its audit entry. Keep both adjustments and their audit inserts in the transaction committed by transfer.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "b32112eab98fb59e35f154a876a3398d521917c424e59b4e5d7c0da215564167",
+     "category": "correctness",
+     "file": "src/ledger_transaction.py",
+     "line": 17,
+     "persona": "junior-dev",
+     "problem": "Committing each adjustment breaks atomic transfers",
+     "reason": "When the source exists but the target does not, the new commit persists the source debit and its audit entry before the target adjustment raises UnknownAccount. The rollback in transfer() cannot undo that committed debit, so a failed transfer removes money from the source without crediting the destination. Keep both adjustments and audit inserts within the transaction committed by transfer().",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "68a5c87359b5fad3138d9fad863cf12b5d59fef4c9820d83d5b409c448e4364d",
+     "category": "correctness",
+     "file": "src/ledger_transaction.py",
+     "line": 17,
+     "persona": "security",
+     "problem": "Committing each adjustment breaks transfer atomicity",
+     "reason": "The new commit persists the source debit before the target is adjusted. If the target does not exist, the second adjustment raises UnknownAccount, but transfer's rollback cannot undo the already committed debit and audit entry. Keep both adjustments and their audit inserts within the transaction committed by transfer.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "11b331ac9bd8cd1e1ba20fc86adfeaa8123f6f18f5b53b3760dabead7efc39cc",
+     "category": "correctness",
+     "file": "src/ledger_transaction.py",
+     "line": 17,
+     "persona": "devops",
+     "problem": "Committing each adjustment breaks atomic transfers",
+     "reason": "The source adjustment now commits before the target adjustment runs. If the target account does not exist, the second adjustment raises UnknownAccount, but transfer's rollback cannot undo the already committed debit and audit entry. Keep both adjustments and their audit inserts in the transaction committed by transfer.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "11b331ac9bd8cd1e1ba20fc86adfeaa8123f6f18f5b53b3760dabead7efc39cc": "supported",
+    "68a5c87359b5fad3138d9fad863cf12b5d59fef4c9820d83d5b409c448e4364d": "supported",
+    "b32112eab98fb59e35f154a876a3398d521917c424e59b4e5d7c0da215564167": "supported",
+    "f1175c69ab247b691c3ba3ce5038409fefe1f7649fb3d62cacca2cd926fcb151": "supported"
+   },
+   "latency_seconds": 49.63687615492381,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev2-06/assessment/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10603
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10596
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10553
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10563
+    }
+   ],
+   "status": "complete",
+   "tokens": 58340,
+   "usage": {
+    "cache_read": 46992,
+    "cache_write": 0,
+    "input": 6115,
+    "output": 5233,
+    "total": 58340
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 16714,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 55.519933657953516,
+     "status": "complete",
+     "tokens": 59208,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "ae5840fd84ffaee355ee4363745af7b0f8a4ff57059cac50c1fb80c3833c5927",
+     "category": "correctness",
+     "file": "src/ledger_transaction.py",
+     "line": 17,
+     "persona": "senior-dev",
+     "problem": "Committing each adjustment breaks transfer atomicity",
+     "reason": "When the source exists but the target does not, the first _adjust commits the source debit and audit entry before the second _adjust raises UnknownAccount. The rollback in transfer cannot undo that committed debit, so a failed transfer permanently removes money from the source. Keep the adjustments and audit inserts in the transaction already committed by transfer.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "ce2e9fecb105e3754ce658e6eee806c002ffad4f49c6051e462ec8b00a177f9a",
+     "category": "regression",
+     "file": "src/ledger_transaction.py",
+     "line": 17,
+     "persona": "junior-dev",
+     "problem": "Committing each adjustment breaks atomic transfers",
+     "reason": "The new commit persists the source debit before the target adjustment runs. If the target account does not exist, transfer() raises UnknownAccount and calls rollback(), but the source debit and its audit entry have already been committed. Keep the audit insert within the transaction and let transfer() commit only after both adjustments succeed.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "d5e462a5a794ebd8ad4759b6be5fcd255895988152270c2936dc47e3b9e4b2f8",
+     "category": "correctness",
+     "file": "src/ledger_transaction.py",
+     "line": 17,
+     "persona": "security",
+     "problem": "Committing each adjustment breaks transfer atomicity",
+     "reason": "The new commit persists the source debit before the target adjustment runs. If the target does not exist, its adjustment raises UnknownAccount, but transfer's rollback cannot undo the already committed debit. Keep both balance updates and audit inserts in the transaction committed by transfer.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "e05bf9a13c3288f26c9596adb5a4af6afd28535e7f5fd58efffddb45e767a1af",
+     "category": "correctness",
+     "file": "src/ledger_transaction.py",
+     "line": 17,
+     "persona": "devops",
+     "problem": "Committing each adjustment breaks atomic transfers",
+     "reason": "When the source exists but the target does not, the first _adjust call commits the source debit and its audit row before the second call raises UnknownAccount. The rollback in transfer can no longer undo that debit, so the function reports failure while leaving money removed from the source. Keep the audit inserts within the transfer transaction and commit only after both adjustments succeed.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "ae5840fd84ffaee355ee4363745af7b0f8a4ff57059cac50c1fb80c3833c5927": "supported",
+    "ce2e9fecb105e3754ce658e6eee806c002ffad4f49c6051e462ec8b00a177f9a": "supported",
+    "d5e462a5a794ebd8ad4759b6be5fcd255895988152270c2936dc47e3b9e4b2f8": "supported",
+    "e05bf9a13c3288f26c9596adb5a4af6afd28535e7f5fd58efffddb45e767a1af": "supported"
+   },
+   "latency_seconds": 55.532918978948146,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev2-06/assessment/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10523
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10704
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10581
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10686
+    }
+   ],
+   "status": "complete",
+   "tokens": 59208,
+   "usage": {
+    "cache_read": 47222,
+    "cache_write": 0,
+    "input": 6230,
+    "output": 5756,
+    "total": 59208
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": [],
+   "analysis_status": "complete",
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 16635,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 49.62014645896852,
+     "status": "complete",
+     "tokens": 60420,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "087c1a47c7986d38d48da2b8c35ecd0977c456803630a164ecec607d49817a56",
+     "category": "correctness",
+     "file": "src/ledger_transaction.py",
+     "line": 17,
+     "persona": "senior-dev",
+     "problem": "Committing each adjustment breaks atomic transfers",
+     "reason": "The new commit persists the source debit before transfer() attempts the target credit. If the target does not exist, the second adjustment raises UnknownAccount, but transfer()'s rollback cannot undo the already committed debit. Keep the audit insert in the transfer transaction and leave the commit to transfer() after both adjustments succeed.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "435ad9541c54d10ea61f85b17fe7da02e5e4b067e0b4d6b23aff5482e33d059e",
+     "category": "correctness",
+     "file": "src/ledger_transaction.py",
+     "line": 17,
+     "persona": "junior-dev",
+     "problem": "Committing each adjustment breaks atomic transfers when the target adjustment fails.",
+     "reason": "The new commit in _adjust permanently saves the source debit before transfer attempts the target credit. If the target does not exist, the second adjustment raises UnknownAccount, but transfer's rollback cannot undo the already committed debit. Keep both balance adjustments and audit inserts in the transaction committed by transfer.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "a73201a161ef46cce9339f883bdc9cb3553738a456f823be157752dde775957d",
+     "category": "correctness",
+     "file": "src/ledger_transaction.py",
+     "line": 16,
+     "persona": "security",
+     "problem": "Committing each adjustment breaks transfer atomicity",
+     "reason": "The new commit persists the source debit before the target is adjusted. If the target does not exist, the second adjustment raises UnknownAccount, but transfer's rollback cannot undo the already committed debit or its audit entry. Keep the audit insert within the transaction and leave the commit to transfer after both adjustments succeed.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "f0602dd42ace89abf8358f7991e550656f5e21f0fc1924797581a6a26bd386fa",
+     "category": "correctness",
+     "file": "src/ledger_transaction.py",
+     "line": 17,
+     "persona": "devops",
+     "problem": "Committing each adjustment breaks transfer atomicity",
+     "reason": "The new commit persists the source debit before the target adjustment runs. If the target account does not exist, the second adjustment raises UnknownAccount, but transfer's rollback cannot undo the already committed debit or its audit entry. Keep both adjustments and audit inserts in the transaction committed by transfer.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "087c1a47c7986d38d48da2b8c35ecd0977c456803630a164ecec607d49817a56": "supported",
+    "435ad9541c54d10ea61f85b17fe7da02e5e4b067e0b4d6b23aff5482e33d059e": "supported",
+    "a73201a161ef46cce9339f883bdc9cb3553738a456f823be157752dde775957d": "supported",
+    "f0602dd42ace89abf8358f7991e550656f5e21f0fc1924797581a6a26bd386fa": "supported"
+   },
+   "latency_seconds": 49.63318080408499,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev2-06/tools/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10954
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10959
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10884
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10988
+    }
+   ],
+   "status": "complete",
+   "tokens": 60420,
+   "usage": {
+    "cache_read": 34179,
+    "cache_write": 0,
+    "input": 20950,
+    "output": 5291,
+    "total": 60420
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": [],
+   "analysis_status": "complete",
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 16627,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 49.553728964179754,
+     "status": "complete",
+     "tokens": 60278,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "b36980e625a7c580d221d887de1d7f829f8a965aad259631be2263ccf1d6086b",
+     "category": "correctness",
+     "file": "src/ledger_transaction.py",
+     "line": 17,
+     "persona": "senior-dev",
+     "problem": "Committing each adjustment breaks transfer atomicity",
+     "reason": "When the source account exists but the target does not, the first _adjust now commits the source debit and its audit record. The second _adjust raises UnknownAccount, but transfer's rollback cannot undo the already committed debit. Keep the audit insert in the enclosing transaction and leave the commit to transfer after both adjustments succeed.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "2b51b916ad21cd817117f87b097f4a7f40a52355af50a186c4159a7288918aa4",
+     "category": "correctness",
+     "file": "src/ledger_transaction.py",
+     "line": 17,
+     "persona": "junior-dev",
+     "problem": "Committing each adjustment breaks the atomicity of transfers.",
+     "reason": "When the source exists but the target does not, the first _adjust call now commits the source debit and audit entry. The second call raises UnknownAccount, but transfer's rollback cannot undo the already committed debit. Keep the commit at the transfer boundary so both adjustments and their audit entries succeed or roll back together.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "71ff45feeeb80862bc62aea3ad15539d03a1766c28050993fc8000c3cff4409a",
+     "category": "correctness",
+     "file": "src/ledger_transaction.py",
+     "line": 16,
+     "persona": "security",
+     "problem": "Committing each adjustment breaks transfer atomicity",
+     "reason": "The new commit persists the source debit before the target adjustment runs. If the target does not exist, its row-count check raises UnknownAccount, but transfer's rollback cannot undo the already committed debit or audit entry. Keep the audit insert within the transaction and leave the commit to transfer after both adjustments succeed.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "22ba26fdac1ae348f6ab794d9de47a26b8abfe1f943e9207597a7dc1ca8898b5",
+     "category": "correctness",
+     "file": "src/ledger_transaction.py",
+     "line": 16,
+     "persona": "devops",
+     "problem": "Committing each adjustment breaks transfer atomicity",
+     "reason": "The new commit persists the source debit before the target adjustment runs. If the target account is missing, that adjustment raises UnknownAccount, but transfer's rollback can no longer undo the committed debit or its audit entry. Keep both adjustments and audit inserts in the transaction committed by transfer.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "22ba26fdac1ae348f6ab794d9de47a26b8abfe1f943e9207597a7dc1ca8898b5": "supported",
+    "2b51b916ad21cd817117f87b097f4a7f40a52355af50a186c4159a7288918aa4": "supported",
+    "71ff45feeeb80862bc62aea3ad15539d03a1766c28050993fc8000c3cff4409a": "supported",
+    "b36980e625a7c580d221d887de1d7f829f8a965aad259631be2263ccf1d6086b": "supported"
+   },
+   "latency_seconds": 49.56522014690563,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev2-06/tools/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10915
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10963
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10866
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10907
+    }
+   ],
+   "status": "complete",
+   "tokens": 60278,
+   "usage": {
+    "cache_read": 48809,
+    "cache_write": 0,
+    "input": 6317,
+    "output": 5152,
+    "total": 60278
+   }
+  },
+  {
+   "accounting_complete": false,
+   "analysis_rules": [],
+   "analysis_status": "complete",
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": false,
+     "attempt": 1,
+     "latency_seconds": 21.777643972076476,
+     "status": "invalid",
+     "tokens": 43919,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [
+    {
+     "lines_past_end": [
+      1,
+      1
+     ],
+     "reason": "line_range_outside_capture",
+     "session": "senior-dev"
+    }
+   ],
+   "discovery_findings": 3,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "invalid",
+   "initial_dispositions": {},
+   "latency_seconds": 21.789450637996197,
+   "panel_reason": "discovery_incomplete",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev2-06/tools/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "citation_validation",
+     "status": "failed",
+     "tokens": 11005
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 11127
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10906
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10881
+    }
+   ],
+   "status": "invalid",
+   "tokens": 43919,
+   "usage": {
+    "cache_read": 40225,
+    "cache_write": 0,
+    "input": 36,
+    "output": 3658,
+    "total": 43919
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": "complete",
+   "assessor_actual": false,
+   "assessor_allocation": 20000,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 9.925886200973764,
+     "status": "complete",
+     "tokens": 39650,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 9.937805377878249,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev2-07/assessment/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9903
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9932
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9901
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9914
+    }
+   ],
+   "status": "complete",
+   "tokens": 39650,
+   "usage": {
+    "cache_read": 25285,
+    "cache_write": 0,
+    "input": 13456,
+    "output": 909,
+    "total": 39650
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": "complete",
+   "assessor_actual": false,
+   "assessor_allocation": 20000,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 13.297424949938431,
+     "status": "complete",
+     "tokens": 39651,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 13.306678756140172,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev2-07/assessment/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9907
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9932
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9901
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9911
+    }
+   ],
+   "status": "complete",
+   "tokens": 39651,
+   "usage": {
+    "cache_read": 38705,
+    "cache_write": 0,
+    "input": 36,
+    "output": 910,
+    "total": 39651
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": "complete",
+   "assessor_actual": false,
+   "assessor_allocation": 20000,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 9.706997671164572,
+     "status": "complete",
+     "tokens": 39663,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 9.719354268163443,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev2-07/assessment/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9904
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9932
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9913
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9914
+    }
+   ],
+   "status": "complete",
+   "tokens": 39663,
+   "usage": {
+    "cache_read": 38705,
+    "cache_write": 0,
+    "input": 36,
+    "output": 922,
+    "total": 39663
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": [],
+   "analysis_status": "complete",
+   "assessment_dispositions": {},
+   "assessment_status": "complete",
+   "assessor_actual": false,
+   "assessor_allocation": 20000,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 10.831913708010688,
+     "status": "complete",
+     "tokens": 41154,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 10.844671031925827,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev2-07/tools/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10280
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10305
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10278
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10291
+    }
+   ],
+   "status": "complete",
+   "tokens": 41154,
+   "usage": {
+    "cache_read": 25921,
+    "cache_write": 0,
+    "input": 14252,
+    "output": 981,
+    "total": 41154
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": [],
+   "analysis_status": "complete",
+   "assessment_dispositions": {},
+   "assessment_status": "complete",
+   "assessor_actual": false,
+   "assessor_allocation": 20000,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 9.677716546924785,
+     "status": "complete",
+     "tokens": 41141,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 9.689351502805948,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev2-07/tools/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10277
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10305
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10273
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10286
+    }
+   ],
+   "status": "complete",
+   "tokens": 41141,
+   "usage": {
+    "cache_read": 40137,
+    "cache_write": 0,
+    "input": 36,
+    "output": 968,
+    "total": 41141
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": [],
+   "analysis_status": "complete",
+   "assessment_dispositions": {},
+   "assessment_status": "complete",
+   "assessor_actual": false,
+   "assessor_allocation": 20000,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 10.853033764986321,
+     "status": "complete",
+     "tokens": 41123,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 10.86496647587046,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "dev2-07/tools/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10276
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10305
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10276
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10266
+    }
+   ],
+   "status": "complete",
+   "tokens": 41123,
+   "usage": {
+    "cache_read": 40137,
+    "cache_write": 0,
+    "input": 36,
+    "output": 950,
+    "total": 41123
+   }
+  }
+ ],
+ "cells_needing_rerun": 0,
+ "discussion_attempted_rounds": 0,
+ "discussion_completed_rounds": 0,
+ "experiment_sha256": "9497b3e113e4fa2c87f672ad87c7d69de3e73e13254f760a4d762c79a909306b",
+ "experiment_status": "complete",
+ "first_attempt_status_counts": {
+  "complete": 17,
+  "invalid": 1
+ },
+ "gate_sha256": "5f07c60a1196e0cba678b7947faf35fdee035e7822720e0403fee120901cf3a0",
+ "holdout_used": false,
+ "qualification": "not_qualified",
+ "rerun_attempts": 0,
+ "schema_version": 2,
+ "semantic_qualification": false,
+ "status_counts": {
+  "complete": 17,
+  "invalid": 1
+ },
+ "tests": {
+  "all_attempts_within_ceiling": true,
+  "all_runs_complete_and_accounted": false,
+  "experiment_terminal": true,
+  "matrix_exact": true,
+  "retries_within_declared_policy": true
+ },
+ "transient_http_statuses": {}
+}

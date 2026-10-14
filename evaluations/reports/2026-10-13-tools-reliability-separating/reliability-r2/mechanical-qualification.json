@@ -1,0 +1,3944 @@
+{
+ "actual_human_judgments": 0,
+ "cells": [
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 11.77875314396806,
+     "status": "complete",
+     "tokens": 34844,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 11.790687011089176,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "contract-explicit-default-clean/aggregate/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8714
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8739
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8691
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8700
+    }
+   ],
+   "status": "complete",
+   "tokens": 34844,
+   "usage": {
+    "cache_read": 31787,
+    "cache_write": 0,
+    "input": 2182,
+    "output": 875,
+    "total": 34844
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 11.266800987068564,
+     "status": "complete",
+     "tokens": 34840,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 11.280417699133977,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "contract-explicit-default-clean/aggregate/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8710
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8739
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8691
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8700
+    }
+   ],
+   "status": "complete",
+   "tokens": 34840,
+   "usage": {
+    "cache_read": 26158,
+    "cache_write": 0,
+    "input": 7811,
+    "output": 871,
+    "total": 34840
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 12.091031310148537,
+     "status": "complete",
+     "tokens": 34860,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 12.108934739837423,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "contract-explicit-default-clean/aggregate/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8711
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8739
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8710
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8700
+    }
+   ],
+   "status": "complete",
+   "tokens": 34860,
+   "usage": {
+    "cache_read": 27594,
+    "cache_write": 0,
+    "input": 6375,
+    "output": 891,
+    "total": 34860
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": "complete",
+   "assessor_actual": false,
+   "assessor_allocation": 20000,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 10.670523452805355,
+     "status": "complete",
+     "tokens": 34838,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 10.683488375041634,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "contract-explicit-default-clean/assessed/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8708
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8739
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8691
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8700
+    }
+   ],
+   "status": "complete",
+   "tokens": 34838,
+   "usage": {
+    "cache_read": 33933,
+    "cache_write": 0,
+    "input": 36,
+    "output": 869,
+    "total": 34838
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": "complete",
+   "assessor_actual": false,
+   "assessor_allocation": 20000,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 9.99046353599988,
+     "status": "complete",
+     "tokens": 34840,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 10.002348791109398,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "contract-explicit-default-clean/assessed/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8710
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8739
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8691
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8700
+    }
+   ],
+   "status": "complete",
+   "tokens": 34840,
+   "usage": {
+    "cache_read": 33933,
+    "cache_write": 0,
+    "input": 36,
+    "output": 871,
+    "total": 34840
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": "complete",
+   "assessor_actual": false,
+   "assessor_allocation": 20000,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 11.655451809056103,
+     "status": "complete",
+     "tokens": 34838,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 11.668891397072002,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "contract-explicit-default-clean/assessed/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8708
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8739
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8691
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8700
+    }
+   ],
+   "status": "complete",
+   "tokens": 34838,
+   "usage": {
+    "cache_read": 33933,
+    "cache_write": 0,
+    "input": 36,
+    "output": 869,
+    "total": 34838
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": "complete",
+   "assessor_actual": false,
+   "assessor_allocation": 20000,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 10.1132166411262,
+     "status": "complete",
+     "tokens": 34839,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 10.123840690823272,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "contract-explicit-default-clean/focused1/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8709
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8739
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8691
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8700
+    }
+   ],
+   "status": "complete",
+   "tokens": 34839,
+   "usage": {
+    "cache_read": 33933,
+    "cache_write": 0,
+    "input": 36,
+    "output": 870,
+    "total": 34839
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": "complete",
+   "assessor_actual": false,
+   "assessor_allocation": 20000,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 10.53699534595944,
+     "status": "complete",
+     "tokens": 34841,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 10.549351438879967,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "contract-explicit-default-clean/focused1/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8711
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8739
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8691
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8700
+    }
+   ],
+   "status": "complete",
+   "tokens": 34841,
+   "usage": {
+    "cache_read": 33933,
+    "cache_write": 0,
+    "input": 36,
+    "output": 872,
+    "total": 34841
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": "complete",
+   "assessor_actual": false,
+   "assessor_allocation": 20000,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 10.74516976508312,
+     "status": "complete",
+     "tokens": 34860,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 10.759149389807135,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "contract-explicit-default-clean/focused1/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8711
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8739
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8710
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8700
+    }
+   ],
+   "status": "complete",
+   "tokens": 34860,
+   "usage": {
+    "cache_read": 33933,
+    "cache_write": 0,
+    "input": 36,
+    "output": 891,
+    "total": 34860
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": "complete",
+   "assessor_actual": false,
+   "assessor_allocation": 20000,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 9.909337199991569,
+     "status": "complete",
+     "tokens": 34839,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 9.921510036103427,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "contract-explicit-default-clean/focused3/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8709
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8739
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8691
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8700
+    }
+   ],
+   "status": "complete",
+   "tokens": 34839,
+   "usage": {
+    "cache_read": 33933,
+    "cache_write": 0,
+    "input": 36,
+    "output": 870,
+    "total": 34839
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": "complete",
+   "assessor_actual": false,
+   "assessor_allocation": 20000,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 10.655580366030335,
+     "status": "complete",
+     "tokens": 34855,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 10.666376467095688,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "contract-explicit-default-clean/focused3/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8711
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8739
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8705
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8700
+    }
+   ],
+   "status": "complete",
+   "tokens": 34855,
+   "usage": {
+    "cache_read": 33933,
+    "cache_write": 0,
+    "input": 36,
+    "output": 886,
+    "total": 34855
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": "complete",
+   "assessor_actual": false,
+   "assessor_allocation": 20000,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 9.986562198027968,
+     "status": "complete",
+     "tokens": 34842,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 0,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 0,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 10.000015225959942,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "contract-explicit-default-clean/focused3/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8712
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8739
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8691
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 8700
+    }
+   ],
+   "status": "complete",
+   "tokens": 34842,
+   "usage": {
+    "cache_read": 33933,
+    "cache_write": 0,
+    "input": 36,
+    "output": 873,
+    "total": 34842
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 20.378772974945605,
+     "status": "complete",
+     "tokens": 40385,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 20.390079573960975,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "security-auth-order/aggregate/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10078
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10114
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10104
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10089
+    }
+   ],
+   "status": "complete",
+   "tokens": 40385,
+   "usage": {
+    "cache_read": 24093,
+    "cache_write": 0,
+    "input": 12600,
+    "output": 3692,
+    "total": 40385
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 20.683352335123345,
+     "status": "complete",
+     "tokens": 40376,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 20.702853008871898,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "security-auth-order/aggregate/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10086
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10124
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10094
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10072
+    }
+   ],
+   "status": "complete",
+   "tokens": 40376,
+   "usage": {
+    "cache_read": 36657,
+    "cache_write": 0,
+    "input": 36,
+    "output": 3683,
+    "total": 40376
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 20.48503994802013,
+     "status": "complete",
+     "tokens": 40423,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 20.50128533807583,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "security-auth-order/aggregate/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10090
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10129
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10120
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10084
+    }
+   ],
+   "status": "complete",
+   "tokens": 40423,
+   "usage": {
+    "cache_read": 36657,
+    "cache_write": 0,
+    "input": 36,
+    "output": 3730,
+    "total": 40423
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 16666,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 57.44038402894512,
+     "status": "complete",
+     "tokens": 57093,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "c2c05a1e9d4a1c3e54d253819dd00035e9e4bb4ce95687c663ae456dd4fe4847",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "senior-dev",
+     "problem": "The store is cleared before authorization is checked.",
+     "reason": "Calling delete with an actor different from the owner now clears the supplied store before raising PermissionError. The policy still rejects that actor, but its rejection no longer prevents deletion. Move store.clear() after the permission check so unauthorized calls leave the store unchanged.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "3c9570c7361d6f255f5a6d0eb748284e3f1905701b572398e37e0207422d1079",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "junior-dev",
+     "problem": "The store is cleared before authorization is checked.",
+     "reason": "Calling delete with an actor different from the owner now clears the store before raising PermissionError. The policy still permits only actor == owner, and the previous implementation checked that policy before mutating the store. Move store.clear() after the permission check so rejected requests cannot delete data.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "08b5733b260a2d4080c6a5261bee014e7e7303d89d0b7b65900806355829596e",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "security",
+     "problem": "The store is cleared before authorization is checked.",
+     "reason": "A call to delete with actor != owner now executes store.clear() before raising PermissionError. The equality-based permission check does not prevent the destructive operation because it runs afterward. Keep the clear operation after the permission check so denied calls leave the store unchanged.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "95d3224ede5f78d9d16c1c5ec2f2cc4db77f66e703a9f1f6c568c577ad6d0e64",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "devops",
+     "problem": "The store is cleared before deletion permission is checked.",
+     "reason": "When actor differs from owner, delete() now calls store.clear() before raising PermissionError. The permission check therefore rejects the request only after its destructive side effect has occurred. Keep the authorization check before clearing the store.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "08b5733b260a2d4080c6a5261bee014e7e7303d89d0b7b65900806355829596e": "supported",
+    "3c9570c7361d6f255f5a6d0eb748284e3f1905701b572398e37e0207422d1079": "supported",
+    "95d3224ede5f78d9d16c1c5ec2f2cc4db77f66e703a9f1f6c568c577ad6d0e64": "supported",
+    "c2c05a1e9d4a1c3e54d253819dd00035e9e4bb4ce95687c663ae456dd4fe4847": "supported"
+   },
+   "latency_seconds": 57.45238516503014,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "security-auth-order/assessed/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10103
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10125
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10115
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10084
+    }
+   ],
+   "status": "complete",
+   "tokens": 57093,
+   "usage": {
+    "cache_read": 45142,
+    "cache_write": 0,
+    "input": 5996,
+    "output": 5955,
+    "total": 57093
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 16551,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 57.099518425995484,
+     "status": "complete",
+     "tokens": 56952,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "0ab42f1eea335b48c82a82671366ab1240b10d3d77688812eefe54fa83674a64",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "senior-dev",
+     "problem": "Unauthorized delete calls clear the store before permission is checked.",
+     "reason": "Moving store.clear() ahead of permitted(actor, owner) allows an actor who is not the owner to erase the store. The subsequent PermissionError does not undo the mutation. Keep the permission check before the destructive operation.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "21b4f22d5e5a306acf4dfb97c29cc9dcb22be543c1799a68183aad06cfd8abaa",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "junior-dev",
+     "problem": "Unauthorized deletion clears the store before checking permission.",
+     "reason": "Moving store.clear() ahead of the permission check lets an actor who is not the owner erase the store. The subsequent PermissionError does not undo the mutation. Keep the permission check before clearing the store.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "75bedc9783cbe41d7d3659aa5db0160c191be2e8d96c48e0d82cfffbae66b344",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "security",
+     "problem": "The store is cleared before deletion permission is checked.",
+     "reason": "For an actor unequal to the owner, delete() now calls store.clear() before raising PermissionError. The denial therefore does not prevent the destructive operation. Keep the permission check before clearing the store.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "e1f905b24342b6ae184e1cac2e620fefa46fa7dc0a4fe252ff144f6194837c4b",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "devops",
+     "problem": "Store contents are deleted before authorization is checked",
+     "reason": "When actor != owner, delete() now clears the store before raising PermissionError. The rejection therefore occurs after the unauthorized destructive operation. Keep store.clear() after the permission check so denied requests leave the store unchanged.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "0ab42f1eea335b48c82a82671366ab1240b10d3d77688812eefe54fa83674a64": "supported",
+    "21b4f22d5e5a306acf4dfb97c29cc9dcb22be543c1799a68183aad06cfd8abaa": "supported",
+    "75bedc9783cbe41d7d3659aa5db0160c191be2e8d96c48e0d82cfffbae66b344": "supported",
+    "e1f905b24342b6ae184e1cac2e620fefa46fa7dc0a4fe252ff144f6194837c4b": "supported"
+   },
+   "latency_seconds": 57.11263919202611,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "security-auth-order/assessed/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10070
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10150
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10095
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10086
+    }
+   ],
+   "status": "complete",
+   "tokens": 56952,
+   "usage": {
+    "cache_read": 45066,
+    "cache_write": 0,
+    "input": 5958,
+    "output": 5928,
+    "total": 56952
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 16556,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 57.695163681171834,
+     "status": "complete",
+     "tokens": 56968,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "357ec4fba17f3957f5b209348ca1bc9d338011cf1b566530fb38f605114bee28",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "senior-dev",
+     "problem": "The store is cleared before authorization is checked.",
+     "reason": "Calling delete with an actor different from the owner now clears the supplied store before raising PermissionError. The unchanged policy rejects this actor, but its check occurs too late to prevent deletion. Keep store.clear() after the permission guard so denied requests leave the store unchanged.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "5c133d3316acc4cb168cf224207e057de98d58dbb87550f719ce8df683864b6b",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "junior-dev",
+     "problem": "Unauthorized deletion clears the store before permission is checked.",
+     "reason": "Moving store.clear() ahead of the authorization guard lets an actor who is not the owner delete the store's contents. The subsequent PermissionError does not undo the mutation. Keep the permission check before the destructive operation.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "2ef3ea47158cd4c20654c3f56e3c2e29fc8b6e14fa1111ed6e734f0a02e308b3",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "security",
+     "problem": "The store is cleared before authorization is checked.",
+     "reason": "When delete() is called with an actor different from the owner, store.clear() now executes before permitted() rejects the operation. The subsequent PermissionError does not undo the mutation. Keep the permission check ahead of the destructive operation.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "260e2fa20e66cb8fdb69be6503c796e3b9c5bafa185680479b2732fef8c1a782",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "devops",
+     "problem": "The store is cleared before authorization is checked.",
+     "reason": "When actor differs from owner, delete() now clears the supplied store and only then raises PermissionError. The rejection does not undo the mutation. Keep store.clear() after the permission check so unauthorized calls cannot delete data.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "260e2fa20e66cb8fdb69be6503c796e3b9c5bafa185680479b2732fef8c1a782": "supported",
+    "2ef3ea47158cd4c20654c3f56e3c2e29fc8b6e14fa1111ed6e734f0a02e308b3": "supported",
+    "357ec4fba17f3957f5b209348ca1bc9d338011cf1b566530fb38f605114bee28": "supported",
+    "5c133d3316acc4cb168cf224207e057de98d58dbb87550f719ce8df683864b6b": "supported"
+   },
+   "latency_seconds": 57.712950030108914,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "security-auth-order/assessed/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10093
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10126
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10096
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10097
+    }
+   ],
+   "status": "complete",
+   "tokens": 56968,
+   "usage": {
+    "cache_read": 45086,
+    "cache_write": 0,
+    "input": 5968,
+    "output": 5914,
+    "total": 56968
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 16561,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 57.22311031492427,
+     "status": "complete",
+     "tokens": 56938,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "f8038cb881d14b1f414373b9a4adc32f971462012869c633e9016eb30aeb4b69",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "senior-dev",
+     "problem": "The store is cleared before the caller's permission is checked.",
+     "reason": "Calling delete with an actor different from the owner now clears the supplied store before raising PermissionError. The policy still rejects that actor, but the rejection no longer prevents deletion. Move store.clear() after the permission check to preserve the authorization boundary.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "c4e96b4b160b4ad0fdf6c2dca2a69e8b4303bca6befb67128fde62e1d3137446",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "junior-dev",
+     "problem": "The store is cleared before the caller's permission is checked.",
+     "reason": "When actor differs from owner, delete now executes store.clear() before raising PermissionError. The unchanged policy denies this caller, and the base implementation raised before modifying the store. Move the clear operation after the permission check so denied requests cannot delete data.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "46e5602936d99a14ed38cc5572e7ab4eda712563bc03bfceedcc6d13259de70f",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "security",
+     "problem": "The store is cleared before deletion is authorized.",
+     "reason": "When delete is called with actor != owner, store.clear() now executes before permitted rejects the actor. Raising PermissionError afterward does not undo the mutation. Keep the authorization check before the destructive operation.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "a1d57a1edee55904874bbbe4490e4b4c5ed18327a507a3a30a76ec8868278a65",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "devops",
+     "problem": "The store is cleared before authorization is checked.",
+     "reason": "When actor differs from owner, delete() now executes store.clear() before raising PermissionError. The authorization failure therefore no longer prevents deletion. Keep the permission check before the destructive operation.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "46e5602936d99a14ed38cc5572e7ab4eda712563bc03bfceedcc6d13259de70f": "supported",
+    "a1d57a1edee55904874bbbe4490e4b4c5ed18327a507a3a30a76ec8868278a65": "supported",
+    "c4e96b4b160b4ad0fdf6c2dca2a69e8b4303bca6befb67128fde62e1d3137446": "supported",
+    "f8038cb881d14b1f414373b9a4adc32f971462012869c633e9016eb30aeb4b69": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "46e5602936d99a14ed38cc5572e7ab4eda712563bc03bfceedcc6d13259de70f": "supported",
+    "a1d57a1edee55904874bbbe4490e4b4c5ed18327a507a3a30a76ec8868278a65": "supported",
+    "c4e96b4b160b4ad0fdf6c2dca2a69e8b4303bca6befb67128fde62e1d3137446": "supported",
+    "f8038cb881d14b1f414373b9a4adc32f971462012869c633e9016eb30aeb4b69": "supported"
+   },
+   "latency_seconds": 57.234928362770006,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "security-auth-order/focused1/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10088
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10126
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10091
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10072
+    }
+   ],
+   "status": "complete",
+   "tokens": 56938,
+   "usage": {
+    "cache_read": 45020,
+    "cache_write": 0,
+    "input": 5935,
+    "output": 5983,
+    "total": 56938
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 16567,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 55.64765583211556,
+     "status": "complete",
+     "tokens": 56983,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "7709951f83ac66a8b5fb92aa7ba2f54d22523a421fd3154fb53a6bb63b56e1bf",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "senior-dev",
+     "problem": "The store is cleared before authorization is checked.",
+     "reason": "Calling delete with an actor different from the owner now clears the supplied store before permitted returns false and PermissionError is raised. Previously, the permission check prevented that mutation. Move store.clear() after the authorization guard so a denied deletion leaves the store unchanged.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "8c118b6c84e1a71299d3b2714cd930b0d5d615fb4f15802bbd0f269ace1b607d",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "junior-dev",
+     "problem": "Unauthorized deletion clears the store before permission is checked.",
+     "reason": "For an actor different from the owner, permitted() returns false, but delete() now calls store.clear() before raising PermissionError. The previous implementation rejected this call without modifying the store. Move the clear operation back after the permission check so rejected requests cannot delete data.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "73d5dbd258d2ed39eb97cfa792570c924374417556efd9677697a8d7ff9aa3c9",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "security",
+     "problem": "The store is cleared before the caller's permission is checked.",
+     "reason": "When delete is called with actor != owner, store.clear() now runs before PermissionError is raised. The equality-based permission guard therefore no longer prevents unauthorized deletion. Keep the permission check ahead of the mutation.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "42b06ca110a884e661dad148cb6b837197343d4b709860d0653b152d8cdebf7d",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "devops",
+     "problem": "Check authorization before clearing the store",
+     "reason": "Moving store.clear() ahead of permitted() lets an actor who is not the owner delete the store's contents. PermissionError is raised only after the destructive operation and does not undo it. Keep the authorization guard before the mutation so rejected requests leave the store unchanged.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "42b06ca110a884e661dad148cb6b837197343d4b709860d0653b152d8cdebf7d": "supported",
+    "73d5dbd258d2ed39eb97cfa792570c924374417556efd9677697a8d7ff9aa3c9": "supported",
+    "7709951f83ac66a8b5fb92aa7ba2f54d22523a421fd3154fb53a6bb63b56e1bf": "supported",
+    "8c118b6c84e1a71299d3b2714cd930b0d5d615fb4f15802bbd0f269ace1b607d": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "42b06ca110a884e661dad148cb6b837197343d4b709860d0653b152d8cdebf7d": "supported",
+    "73d5dbd258d2ed39eb97cfa792570c924374417556efd9677697a8d7ff9aa3c9": "supported",
+    "7709951f83ac66a8b5fb92aa7ba2f54d22523a421fd3154fb53a6bb63b56e1bf": "supported",
+    "8c118b6c84e1a71299d3b2714cd930b0d5d615fb4f15802bbd0f269ace1b607d": "supported"
+   },
+   "latency_seconds": 55.66077163303271,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "security-auth-order/focused1/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10073
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10144
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10117
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10082
+    }
+   ],
+   "status": "complete",
+   "tokens": 56983,
+   "usage": {
+    "cache_read": 45096,
+    "cache_write": 0,
+    "input": 5973,
+    "output": 5914,
+    "total": 56983
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 16529,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 53.27233436820097,
+     "status": "complete",
+     "tokens": 56933,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "d4e0ff05e114c76835d5aaffe8a6404daccea355ccf6760363f3d1b84e39d4ca",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "senior-dev",
+     "problem": "The store is cleared before authorization is checked.",
+     "reason": "Calling delete with an actor different from the owner now clears the store before policy.permitted returns false and PermissionError is raised. The exception cannot undo that mutation. Keep store.clear() after the permission guard so unauthorized calls leave the store unchanged.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "a41226723612c447578b8a8d4f3a6898cb423a54dfb087f5075c786a42b086ad",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "junior-dev",
+     "problem": "Unauthorized deletion clears the store before permission is checked.",
+     "reason": "Moving store.clear() ahead of the authorization check lets an actor unequal to the owner erase the supplied store. The subsequent PermissionError does not undo the mutation. Check permission before clearing the store, as the base implementation did.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "e1528916de8cb405a9e29b227b1ea8ea939f64176daa806aa91b89b28b0963ea",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "security",
+     "problem": "The store is cleared before deletion is authorized.",
+     "reason": "When delete() receives an actor unequal to the owner, store.clear() now executes before permitted() rejects the operation. Raising PermissionError afterward does not undo the mutation. Keep the authorization check before the destructive operation.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "5026c03b36fe9db5b33e3f5914408435b31c973c039214eec1a11e2fe81a743b",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "devops",
+     "problem": "Authorize deletion before clearing the store",
+     "reason": "Moving store.clear() before the permission check lets an actor who is not the owner erase the store. PermissionError is still raised, but only after the destructive operation has completed; it does not undo the deletion. Keep the authorization check ahead of the mutation.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "5026c03b36fe9db5b33e3f5914408435b31c973c039214eec1a11e2fe81a743b": "supported",
+    "a41226723612c447578b8a8d4f3a6898cb423a54dfb087f5075c786a42b086ad": "supported",
+    "d4e0ff05e114c76835d5aaffe8a6404daccea355ccf6760363f3d1b84e39d4ca": "supported",
+    "e1528916de8cb405a9e29b227b1ea8ea939f64176daa806aa91b89b28b0963ea": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "5026c03b36fe9db5b33e3f5914408435b31c973c039214eec1a11e2fe81a743b": "supported",
+    "a41226723612c447578b8a8d4f3a6898cb423a54dfb087f5075c786a42b086ad": "supported",
+    "d4e0ff05e114c76835d5aaffe8a6404daccea355ccf6760363f3d1b84e39d4ca": "supported",
+    "e1528916de8cb405a9e29b227b1ea8ea939f64176daa806aa91b89b28b0963ea": "supported"
+   },
+   "latency_seconds": 53.28485540789552,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "security-auth-order/focused1/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10083
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10121
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10120
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10080
+    }
+   ],
+   "status": "complete",
+   "tokens": 56933,
+   "usage": {
+    "cache_read": 45072,
+    "cache_write": 0,
+    "input": 5961,
+    "output": 5900,
+    "total": 56933
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 16717,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 52.40067382296547,
+     "status": "complete",
+     "tokens": 57168,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "e4832c5f924b9b8e511a708205a541a4b6756dedc91c6fa3b57aec7b8b67abf0",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "senior-dev",
+     "problem": "The store is cleared before authorization is checked.",
+     "reason": "Calling delete with an actor different from the owner now empties the store before raising PermissionError. The policy still rejects that actor, but the rejection no longer prevents deletion. Move store.clear() after the permission check to preserve the previous authorization behavior.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "9e009dbcbe7fe79fe3eac9b7fe1227ff4787df6620d8208748aec6b4cbc6c9ef",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "junior-dev",
+     "problem": "The store is cleared before the caller's permission is checked.",
+     "reason": "When actor differs from owner, delete now clears the store and only then raises PermissionError. The unchanged policy denies this caller, but the exception cannot undo the deletion. Keep store.clear() after the permission check so denied calls leave the store unchanged.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "58b3647e82ea17ca1f0c99b7dcdfad045705a625813590f4d70accc009e1e1f9",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "security",
+     "problem": "The store is cleared before the caller is authorized.",
+     "reason": "For an invocation with actor != owner, store.clear() now executes before permitted() rejects the actor. Raising PermissionError afterward does not undo the mutation. Keep the permission check before the destructive operation.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "9b3151af0db77eba5ec9cb2951b5ae941be62e107177c0e6d2c3df3a4100d4bd",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "devops",
+     "problem": "Unauthorized deletion clears the store before permission is checked.",
+     "reason": "When actor differs from owner, permitted() returns false, but store.clear() has already executed. Raising PermissionError afterward does not undo the mutation, and the captured function has no restoration path. Keep the permission check before clearing the store so rejected calls leave its contents unchanged.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "58b3647e82ea17ca1f0c99b7dcdfad045705a625813590f4d70accc009e1e1f9": "supported",
+    "9b3151af0db77eba5ec9cb2951b5ae941be62e107177c0e6d2c3df3a4100d4bd": "supported",
+    "9e009dbcbe7fe79fe3eac9b7fe1227ff4787df6620d8208748aec6b4cbc6c9ef": "supported",
+    "e4832c5f924b9b8e511a708205a541a4b6756dedc91c6fa3b57aec7b8b67abf0": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "58b3647e82ea17ca1f0c99b7dcdfad045705a625813590f4d70accc009e1e1f9": "supported",
+    "9b3151af0db77eba5ec9cb2951b5ae941be62e107177c0e6d2c3df3a4100d4bd": "supported",
+    "9e009dbcbe7fe79fe3eac9b7fe1227ff4787df6620d8208748aec6b4cbc6c9ef": "supported",
+    "e4832c5f924b9b8e511a708205a541a4b6756dedc91c6fa3b57aec7b8b67abf0": "supported"
+   },
+   "latency_seconds": 52.41225494607352,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "security-auth-order/focused3/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10084
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10133
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10122
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10112
+    }
+   ],
+   "status": "complete",
+   "tokens": 57168,
+   "usage": {
+    "cache_read": 45184,
+    "cache_write": 0,
+    "input": 6017,
+    "output": 5967,
+    "total": 57168
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 16431,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 56.87552555697039,
+     "status": "complete",
+     "tokens": 56805,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "8124e7c7f131f59eea68b1a74ac3eeb8769277192a2835a1236342c0bc49bb63",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "senior-dev",
+     "problem": "The store is cleared before deletion is authorized.",
+     "reason": "Calling delete with unequal actor and owner values now clears the supplied store before permitted returns false and PermissionError is raised. The exception does not undo the mutation, so an unauthorized caller can delete data. Keep store.clear() after the permission check.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "f0a2896f6bb5a1d0e8e64258deedca9ec9810060ec129541a45438520ec3ddd4",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "junior-dev",
+     "problem": "Unauthorized deletion clears the store before checking permission",
+     "reason": "Moving store.clear() ahead of permitted(actor, owner) lets an actor different from the owner erase the store. The subsequent PermissionError does not undo the mutation. Check permission before clearing the store, as the base implementation did.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "dced596bc2defce143c78740898c20227051a96315e9e1ac4a366866a02d852a",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "security",
+     "problem": "The store is cleared before the caller is authorized.",
+     "reason": "When delete is called with actor != owner, store.clear() now executes before permitted rejects the actor. Raising PermissionError afterward does not undo the mutation. Keep the authorization check before the destructive operation.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "73825b6f7c1161883457562cd20e880b71875f815e897c9c2799095fc54eca47",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "devops",
+     "problem": "Deletion now occurs before authorization",
+     "reason": "When actor differs from owner, delete() clears the store before raising PermissionError. The authorization failure no longer prevents destructive changes. Keep store.clear() after the permission check so denied calls leave the store unchanged.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "73825b6f7c1161883457562cd20e880b71875f815e897c9c2799095fc54eca47": "supported",
+    "8124e7c7f131f59eea68b1a74ac3eeb8769277192a2835a1236342c0bc49bb63": "supported",
+    "dced596bc2defce143c78740898c20227051a96315e9e1ac4a366866a02d852a": "supported",
+    "f0a2896f6bb5a1d0e8e64258deedca9ec9810060ec129541a45438520ec3ddd4": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "73825b6f7c1161883457562cd20e880b71875f815e897c9c2799095fc54eca47": "supported",
+    "8124e7c7f131f59eea68b1a74ac3eeb8769277192a2835a1236342c0bc49bb63": "supported",
+    "dced596bc2defce143c78740898c20227051a96315e9e1ac4a366866a02d852a": "supported",
+    "f0a2896f6bb5a1d0e8e64258deedca9ec9810060ec129541a45438520ec3ddd4": "supported"
+   },
+   "latency_seconds": 56.88911084202118,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "security-auth-order/focused3/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10081
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10117
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10102
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10074
+    }
+   ],
+   "status": "complete",
+   "tokens": 56805,
+   "usage": {
+    "cache_read": 45000,
+    "cache_write": 0,
+    "input": 5925,
+    "output": 5880,
+    "total": 56805
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 16585,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 55.01458889897913,
+     "status": "complete",
+     "tokens": 56981,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "d397b5628bef99067f21b4c0245e493a0c6c252984a424e516f6d16ab89e0e67",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "senior-dev",
+     "problem": "Unauthorized deletion occurs before the permission check",
+     "reason": "Moving store.clear() ahead of permitted(actor, owner) allows a non-owner to erase the store. For example, delete('guest', 'owner', store) with a nonempty dictionary clears it before raising PermissionError. Keep the permission check before the destructive operation so rejected requests leave the store unchanged.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "91c09420041cf523d9228d7c247a3e7ffc172e07c489ba54c2e13a7c3f0652f7",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "junior-dev",
+     "problem": "Unauthorized deletion clears the store before permission is checked.",
+     "reason": "When actor differs from owner, permitted() returns false, but delete() now calls store.clear() before raising PermissionError. The previous implementation rejected the request without modifying the store. Keep the permission check before the destructive operation.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "e40109eb2f57d2042b7c18b60277ea746e1de053e507fd86a886b534d6237d7a",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "security",
+     "problem": "The store is cleared before authorization is checked.",
+     "reason": "When delete is called with actor != owner, store.clear() now runs before permitted rejects the actor. Raising PermissionError afterward does not undo the deletion. Keep the permission check before the destructive operation.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "a183e0d9d2c10e2bbf6be476194f4209cd3ddf3773f492bf9bf8c55e3c4a0116",
+     "category": "security",
+     "file": "api.py",
+     "line": 5,
+     "persona": "devops",
+     "problem": "The store is cleared before authorization is checked.",
+     "reason": "When actor != owner, delete() now executes store.clear() before raising PermissionError. The rejection therefore occurs after the destructive operation, allowing an unauthorized caller to erase the supplied store. Keep the permission check before clear().",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "91c09420041cf523d9228d7c247a3e7ffc172e07c489ba54c2e13a7c3f0652f7": "supported",
+    "a183e0d9d2c10e2bbf6be476194f4209cd3ddf3773f492bf9bf8c55e3c4a0116": "supported",
+    "d397b5628bef99067f21b4c0245e493a0c6c252984a424e516f6d16ab89e0e67": "supported",
+    "e40109eb2f57d2042b7c18b60277ea746e1de053e507fd86a886b534d6237d7a": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "91c09420041cf523d9228d7c247a3e7ffc172e07c489ba54c2e13a7c3f0652f7": "supported",
+    "a183e0d9d2c10e2bbf6be476194f4209cd3ddf3773f492bf9bf8c55e3c4a0116": "supported",
+    "d397b5628bef99067f21b4c0245e493a0c6c252984a424e516f6d16ab89e0e67": "supported",
+    "e40109eb2f57d2042b7c18b60277ea746e1de053e507fd86a886b534d6237d7a": "supported"
+   },
+   "latency_seconds": 55.02655951795168,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "security-auth-order/focused3/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10104
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10118
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10088
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 10086
+    }
+   ],
+   "status": "complete",
+   "tokens": 56981,
+   "usage": {
+    "cache_read": 45072,
+    "cache_write": 0,
+    "input": 5961,
+    "output": 5948,
+    "total": 56981
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 21.544990717899054,
+     "status": "complete",
+     "tokens": 37696,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 21.558361599920318,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "tests-consumer-fixture/aggregate/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9398
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9462
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9405
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9431
+    }
+   ],
+   "status": "complete",
+   "tokens": 37696,
+   "usage": {
+    "cache_read": 22897,
+    "cache_write": 0,
+    "input": 11240,
+    "output": 3559,
+    "total": 37696
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 20.849078295053914,
+     "status": "complete",
+     "tokens": 37558,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 20.867390590021387,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "tests-consumer-fixture/aggregate/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9402
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9449
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9287
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9420
+    }
+   ],
+   "status": "complete",
+   "tokens": 37558,
+   "usage": {
+    "cache_read": 34101,
+    "cache_write": 0,
+    "input": 36,
+    "output": 3421,
+    "total": 37558
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {},
+   "assessment_status": null,
+   "assessor_actual": false,
+   "assessor_allocation": null,
+   "assessor_complete": false,
+   "assessor_reason": null,
+   "assessor_tokens": null,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 19.39588338905014,
+     "status": "complete",
+     "tokens": 37677,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {},
+   "latency_seconds": 19.407094025984406,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "tests-consumer-fixture/aggregate/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9395
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9463
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9394
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9425
+    }
+   ],
+   "status": "complete",
+   "tokens": 37677,
+   "usage": {
+    "cache_read": 34101,
+    "cache_write": 0,
+    "input": 36,
+    "output": 3540,
+    "total": 37677
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 15536,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 58.49137278995477,
+     "status": "complete",
+     "tokens": 53120,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "56aedb5ec6c8d9b0da6c5732ca1a0033f45dbcddb90538223f9a0f8fb21d7527",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "senior-dev",
+     "problem": "The new label value violates the existing tested contract.",
+     "reason": "Calling label() now returns \"waiting\", while the unchanged test_label() explicitly requires \"ready\". There are no arguments or guards that could preserve the expected result, so the existing test will fail with an AssertionError.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "d7a45acd6e5b885d821037aae6aeee2d9d49ec85aa843af04cda109444f55230",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "junior-dev",
+     "problem": "Changing label() to return \"waiting\" breaks its existing tested contract.",
+     "reason": "The unchanged test_label() calls label() without arguments and requires \"ready\". The new unconditional return produces \"waiting\", so this assertion fails. Preserve the existing result unless the contract and its consumers are intentionally migrated together.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "4929b3550accad101600e834959e0021589b07ebd214167af069a956a6ebc8c0",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "security",
+     "problem": "The new label value contradicts the existing test contract.",
+     "reason": "label() now unconditionally returns \"waiting\", but the unchanged test_label() requires \"ready\". Calling the function in that test therefore fails its assertion.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "6750a0ceec6b405f914eca52961306b1a644e4365609fff5c0e9bafa9b96ec00",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "devops",
+     "problem": "Changing the label breaks the existing tested contract",
+     "reason": "The unchanged test_label() requires label() to return \"ready\", but this change unconditionally returns \"waiting\". Running that test will fail its assertion. Preserve the existing value unless the intended contract change also updates the corresponding expectations.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "4929b3550accad101600e834959e0021589b07ebd214167af069a956a6ebc8c0": "supported",
+    "56aedb5ec6c8d9b0da6c5732ca1a0033f45dbcddb90538223f9a0f8fb21d7527": "supported",
+    "6750a0ceec6b405f914eca52961306b1a644e4365609fff5c0e9bafa9b96ec00": "supported",
+    "d7a45acd6e5b885d821037aae6aeee2d9d49ec85aa843af04cda109444f55230": "supported"
+   },
+   "latency_seconds": 58.504250799072906,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "tests-consumer-fixture/assessed/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9410
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9463
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9289
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9422
+    }
+   ],
+   "status": "complete",
+   "tokens": 53120,
+   "usage": {
+    "cache_read": 41808,
+    "cache_write": 0,
+    "input": 5413,
+    "output": 5899,
+    "total": 53120
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 15096,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 51.58249642490409,
+     "status": "complete",
+     "tokens": 52672,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "4d840e098b5272c051e616092129756ed21a5de96c87e6a29424f41338d9e703",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "senior-dev",
+     "problem": "The new label value violates the existing tested contract.",
+     "reason": "Calling label() now returns \"waiting\", but the unchanged test_formatting.py explicitly requires \"ready\". Consequently, test_label fails at its assertion. Preserve the existing value unless the intended contract change also updates its consumers and test expectations.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "bf6ee04b83b00837db55a48fd63e96b07f2e1bded502a316ba0f42de312dae8c",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "junior-dev",
+     "problem": "Changing label() to return \"waiting\" breaks its existing tested contract.",
+     "reason": "The unchanged test_label() explicitly requires label() to return \"ready\". The new unconditional return violates that expectation on every call; no captured adapter or updated test reconciles the change.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "8a01eb7ad23f696219643e56137f11f80214eac10dd32ddde90933a59ba0c563",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "security",
+     "problem": "The new label value contradicts the existing test contract.",
+     "reason": "label() now unconditionally returns \"waiting\", while the unchanged test_label() asserts that it returns \"ready\". Calling the function therefore fails the existing assertion.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "1ac7ff25467cde99344868351f316a49799ab97007b8bf1cff9c0ed5e6cda245",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "devops",
+     "problem": "The new label value breaks the existing test contract.",
+     "reason": "label() now returns \"waiting\", but the unchanged test_label() explicitly requires \"ready\". Running that test will fail its assertion. Preserve the expected value, or, if the behavior change is intentional, update the contract and its test together.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "1ac7ff25467cde99344868351f316a49799ab97007b8bf1cff9c0ed5e6cda245": "supported",
+    "4d840e098b5272c051e616092129756ed21a5de96c87e6a29424f41338d9e703": "supported",
+    "8a01eb7ad23f696219643e56137f11f80214eac10dd32ddde90933a59ba0c563": "supported",
+    "bf6ee04b83b00837db55a48fd63e96b07f2e1bded502a316ba0f42de312dae8c": "supported"
+   },
+   "latency_seconds": 51.595177696086466,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "tests-consumer-fixture/assessed/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9419
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9444
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9284
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9429
+    }
+   ],
+   "status": "complete",
+   "tokens": 52672,
+   "usage": {
+    "cache_read": 41786,
+    "cache_write": 0,
+    "input": 5402,
+    "output": 5484,
+    "total": 52672
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 15678,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 57.04223100701347,
+     "status": "complete",
+     "tokens": 53254,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "a937d7c843a661beb62cdc13dbb1dc4b223a09f7f32d7431304e7c86c5fd722a",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "senior-dev",
+     "problem": "The new label value breaks the existing tested contract.",
+     "reason": "Calling label() now returns \"waiting\", but the unchanged test_label() explicitly requires \"ready\". There are no arguments or guards that could preserve the expected value, so this change causes that test to fail.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "37c02c205c3653d2a2cea33781264a90c6e2bb852ead1d282b272c021d1cb2fb",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "junior-dev",
+     "problem": "The new label value violates the existing tested contract.",
+     "reason": "Calling label() now returns \"waiting\", while the unchanged test_label explicitly requires \"ready\". This changes the public function's result and causes that assertion to fail.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "bb546151e3c39bc2bde400a464ae3dfd7ead2b73e87dccded6dc518e490aec60",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "security",
+     "problem": "The new label value contradicts the existing test contract.",
+     "reason": "Changing label() to return \"waiting\" makes the unchanged test_label() assertion fail, since it explicitly requires \"ready\". Preserve the existing value unless the intended contract and its test are updated together.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "abbb31ce270ed5280ec28f3a43deb72d16f12e42c1938f372311914b40a3fded",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "devops",
+     "problem": "The new label value breaks the existing test contract.",
+     "reason": "label() now returns \"waiting\", but the unchanged test_label() explicitly requires \"ready\". Running that test will fail its assertion. Preserve the existing value, or update the contract and test together if this behavior change is intentional.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": null,
+   "discussion_rounds": [],
+   "discussion_trace_available": false,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {},
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "37c02c205c3653d2a2cea33781264a90c6e2bb852ead1d282b272c021d1cb2fb": "supported",
+    "a937d7c843a661beb62cdc13dbb1dc4b223a09f7f32d7431304e7c86c5fd722a": "supported",
+    "abbb31ce270ed5280ec28f3a43deb72d16f12e42c1938f372311914b40a3fded": "supported",
+    "bb546151e3c39bc2bde400a464ae3dfd7ead2b73e87dccded6dc518e490aec60": "supported"
+   },
+   "latency_seconds": 57.055632509989664,
+   "panel_reason": "converged",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "tests-consumer-fixture/assessed/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9402
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9445
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9294
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9435
+    }
+   ],
+   "status": "complete",
+   "tokens": 53254,
+   "usage": {
+    "cache_read": 41788,
+    "cache_write": 0,
+    "input": 5403,
+    "output": 6063,
+    "total": 53254
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 15591,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 52.78108225017786,
+     "status": "complete",
+     "tokens": 53284,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "0b096b381e3e147775b2e7115320901f36b9f5ae0305c72a3b8ff0b75609adac",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "senior-dev",
+     "problem": "The new label value violates the existing tested contract.",
+     "reason": "test_formatting.py still requires label() to return \"ready\". Returning \"waiting\" unconditionally makes test_label fail with an AssertionError. No input, state, or guard permits the function to satisfy that assertion.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "63ff18839480aa031a94803b94808e41cf82851dcad83d28b229a0219daf34eb",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "junior-dev",
+     "problem": "Changing label() to \"waiting\" breaks its existing tested contract.",
+     "reason": "The unchanged test_label() explicitly requires label() to return \"ready\". The new unconditional return violates that expectation, so the existing test will fail and consumers relying on the tested value receive a different label.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "7687811e7a3ea8296b12a2a36ac9a23fda91ae2e44cc54bca767e828f6caad10",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "security",
+     "problem": "The new label value contradicts the existing test contract.",
+     "reason": "Returning \"waiting\" unconditionally makes the unchanged test_label assertion fail, since it still requires \"ready\". Preserve the expected value unless the contract and its test are deliberately updated together.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "c6a51728757d4c47fdc43b7d891e118a5d3aa58f47231773bc815bc02bee1626",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "devops",
+     "problem": "The new label value violates the existing test contract.",
+     "reason": "Returning \"waiting\" makes the unchanged test_label assertion fail: it requires label() to return \"ready\". Preserve the existing value, or update the contract and its test together if this behavior change is intentional.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "0b096b381e3e147775b2e7115320901f36b9f5ae0305c72a3b8ff0b75609adac": "supported",
+    "63ff18839480aa031a94803b94808e41cf82851dcad83d28b229a0219daf34eb": "supported",
+    "7687811e7a3ea8296b12a2a36ac9a23fda91ae2e44cc54bca767e828f6caad10": "supported",
+    "c6a51728757d4c47fdc43b7d891e118a5d3aa58f47231773bc815bc02bee1626": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "0b096b381e3e147775b2e7115320901f36b9f5ae0305c72a3b8ff0b75609adac": "supported",
+    "63ff18839480aa031a94803b94808e41cf82851dcad83d28b229a0219daf34eb": "supported",
+    "7687811e7a3ea8296b12a2a36ac9a23fda91ae2e44cc54bca767e828f6caad10": "supported",
+    "c6a51728757d4c47fdc43b7d891e118a5d3aa58f47231773bc815bc02bee1626": "supported"
+   },
+   "latency_seconds": 52.80041728494689,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "tests-consumer-fixture/focused1/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9413
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9451
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9397
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9432
+    }
+   ],
+   "status": "complete",
+   "tokens": 53284,
+   "usage": {
+    "cache_read": 41998,
+    "cache_write": 0,
+    "input": 5508,
+    "output": 5778,
+    "total": 53284
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 15439,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 51.66770454286598,
+     "status": "complete",
+     "tokens": 53069,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "c10f010122f94d088e7e1c9384ae3ecdef71118920f735ade150ff6a029647b5",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "senior-dev",
+     "problem": "The new label value breaks the existing tested contract.",
+     "reason": "Calling label() now returns \"waiting\", but the unchanged test_label() explicitly requires \"ready\". The returned value flows directly from formatting.py into that assertion, so the test will fail with AssertionError. No condition or guard preserves the expected value.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "51c4f57f229df9d8c9f6c09885e831b1f04cea2e7c36c6a0403cbfd13dfe4bae",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "junior-dev",
+     "problem": "Changing label() to return \"waiting\" breaks its existing tested contract.",
+     "reason": "The unchanged test_label() explicitly expects label() to return \"ready\". The new unconditional return produces \"waiting\" instead, so this test will fail and consumers relying on the tested value receive a different label. No argument, option, or compatibility adapter preserves the previous result.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "a7ec2ee0996050d8cfd9c6fa6bc92a2d5785a9d2fae01e9901014b661e6fa262",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "security",
+     "problem": "The new label value contradicts the existing test contract.",
+     "reason": "label() now unconditionally returns \"waiting\", while the unchanged test_label() requires \"ready\". Calling the function therefore fails the existing assertion. Either preserve the expected value or update the contract and test if this behavior change is intentional.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "351d92a8687cf243dc1a77a6b801cdc2cacd3a1b7e344e3280f4bb1b17d25ebc",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "devops",
+     "problem": "The new label value breaks the existing tested contract.",
+     "reason": "label() now unconditionally returns \"waiting\", while the unchanged test_label() requires \"ready\". Running that test at the head revision will fail its assertion. Preserve the existing value unless this contract change is intentional and its consumers and tests are updated accordingly.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "351d92a8687cf243dc1a77a6b801cdc2cacd3a1b7e344e3280f4bb1b17d25ebc": "supported",
+    "51c4f57f229df9d8c9f6c09885e831b1f04cea2e7c36c6a0403cbfd13dfe4bae": "supported",
+    "a7ec2ee0996050d8cfd9c6fa6bc92a2d5785a9d2fae01e9901014b661e6fa262": "supported",
+    "c10f010122f94d088e7e1c9384ae3ecdef71118920f735ade150ff6a029647b5": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "351d92a8687cf243dc1a77a6b801cdc2cacd3a1b7e344e3280f4bb1b17d25ebc": "supported",
+    "51c4f57f229df9d8c9f6c09885e831b1f04cea2e7c36c6a0403cbfd13dfe4bae": "supported",
+    "a7ec2ee0996050d8cfd9c6fa6bc92a2d5785a9d2fae01e9901014b661e6fa262": "supported",
+    "c10f010122f94d088e7e1c9384ae3ecdef71118920f735ade150ff6a029647b5": "supported"
+   },
+   "latency_seconds": 51.68074398091994,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "tests-consumer-fixture/focused1/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9410
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9473
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9312
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9435
+    }
+   ],
+   "status": "complete",
+   "tokens": 53069,
+   "usage": {
+    "cache_read": 41926,
+    "cache_write": 0,
+    "input": 5472,
+    "output": 5671,
+    "total": 53069
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 15163,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 51.88721505505964,
+     "status": "complete",
+     "tokens": 52713,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "442e08dc1cfb12b79b31c32f9f975d9d83f5da27eb5c54b982e5d344857224d1",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "senior-dev",
+     "problem": "The new label value breaks the existing tested contract.",
+     "reason": "The unchanged test_label consumer imports label() and requires it to return \"ready\". Returning \"waiting\" instead makes that assertion fail. The captured changes contain no corresponding update to this expectation.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "19a8448ff4c40738ecc4d5897ae4256a93040e3992a381f4517dbbe8f45cf9c0",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "junior-dev",
+     "problem": "Changing label() to return \"waiting\" violates the existing tested contract.",
+     "reason": "The unchanged test_label() explicitly expects \"ready\". The new unconditional return makes that assertion fail on every call; no arguments, prerequisites, or compatibility adapter in the captured implementation preserve the expected result.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "bd61caf8583fafeb663d5bf4769384bafdf930ed95837a4a25294a1289fee71c",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "security",
+     "problem": "The new label value contradicts the existing test contract.",
+     "reason": "Returning \"waiting\" makes the unchanged test_label assertion fail, because it explicitly expects \"ready\". Preserve the expected value or update the contract and its test together if this behavior change is intentional.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "3387d0b7127c86725e532c2053abd3de3862b13b2ba950a22e700b59348147fb",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "devops",
+     "problem": "Changing the label breaks the existing tested contract",
+     "reason": "The unchanged test_label() requires label() to return \"ready\". Returning \"waiting\" instead makes that assertion fail on every invocation. Preserve the existing value unless the intended contract change also updates its test.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "19a8448ff4c40738ecc4d5897ae4256a93040e3992a381f4517dbbe8f45cf9c0": "supported",
+    "3387d0b7127c86725e532c2053abd3de3862b13b2ba950a22e700b59348147fb": "supported",
+    "442e08dc1cfb12b79b31c32f9f975d9d83f5da27eb5c54b982e5d344857224d1": "supported",
+    "bd61caf8583fafeb663d5bf4769384bafdf930ed95837a4a25294a1289fee71c": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "19a8448ff4c40738ecc4d5897ae4256a93040e3992a381f4517dbbe8f45cf9c0": "supported",
+    "3387d0b7127c86725e532c2053abd3de3862b13b2ba950a22e700b59348147fb": "supported",
+    "442e08dc1cfb12b79b31c32f9f975d9d83f5da27eb5c54b982e5d344857224d1": "supported",
+    "bd61caf8583fafeb663d5bf4769384bafdf930ed95837a4a25294a1289fee71c": "supported"
+   },
+   "latency_seconds": 51.90125773916952,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "tests-consumer-fixture/focused1/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9400
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9447
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9278
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9425
+    }
+   ],
+   "status": "complete",
+   "tokens": 52713,
+   "usage": {
+    "cache_read": 41740,
+    "cache_write": 0,
+    "input": 5379,
+    "output": 5594,
+    "total": 52713
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 15202,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 53.86658429191448,
+     "status": "complete",
+     "tokens": 52754,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "eee312e63688a8f083af166403e5de09c3a8712bf278ed24d7cb9d158a9a38b0",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "senior-dev",
+     "problem": "The new label value breaks the existing expected output.",
+     "reason": "Calling label() now returns \"waiting\", but the unchanged test_label() explicitly requires \"ready\". There are no arguments or guards that preserve the expected value, so this change causes that test to fail.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "42134528875084f0f56810f9187480893e5d955f3ad51d4ee4259b20076ab6e6",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "junior-dev",
+     "problem": "The new label value violates the existing tested contract.",
+     "reason": "The unchanged test_label() expects label() to return \"ready\", but this change unconditionally returns \"waiting\". Calling the function now breaks that expectation and causes the existing test to fail.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "89d6d2f6823cbf66f0f821a85eeb5ccbed7093ef53a57c5d3c8d1bc6eff95dc8",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "security",
+     "problem": "The new label value breaks the existing test contract",
+     "reason": "label() now unconditionally returns \"waiting\", while the unchanged test_label() requires \"ready\". Calling the test therefore produces an assertion failure.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "2bdbe4137591b256fa88bad1960bfa595b6c38815e7bee0778e623c1398d4481",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "devops",
+     "problem": "The changed label breaks the existing test contract.",
+     "reason": "label() now unconditionally returns \"waiting\", but the unchanged test_label() asserts that it returns \"ready\". Running that test against the head revision will fail. Preserve the existing value unless this contract is intentionally changed and its test updated.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "2bdbe4137591b256fa88bad1960bfa595b6c38815e7bee0778e623c1398d4481": "supported",
+    "42134528875084f0f56810f9187480893e5d955f3ad51d4ee4259b20076ab6e6": "supported",
+    "89d6d2f6823cbf66f0f821a85eeb5ccbed7093ef53a57c5d3c8d1bc6eff95dc8": "supported",
+    "eee312e63688a8f083af166403e5de09c3a8712bf278ed24d7cb9d158a9a38b0": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "2bdbe4137591b256fa88bad1960bfa595b6c38815e7bee0778e623c1398d4481": "supported",
+    "42134528875084f0f56810f9187480893e5d955f3ad51d4ee4259b20076ab6e6": "supported",
+    "89d6d2f6823cbf66f0f821a85eeb5ccbed7093ef53a57c5d3c8d1bc6eff95dc8": "supported",
+    "eee312e63688a8f083af166403e5de09c3a8712bf278ed24d7cb9d158a9a38b0": "supported"
+   },
+   "latency_seconds": 53.879789280937985,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "tests-consumer-fixture/focused3/1",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9400
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9455
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9281
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9416
+    }
+   ],
+   "status": "complete",
+   "tokens": 52754,
+   "usage": {
+    "cache_read": 41752,
+    "cache_write": 0,
+    "input": 5385,
+    "output": 5617,
+    "total": 52754
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 15161,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 52.14006092003547,
+     "status": "complete",
+     "tokens": 52714,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "21e2fc536265764fac3eeaf8e565f8ce6605f80f2e69d2b0f1812d4e02a176ff",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "senior-dev",
+     "problem": "The new label value violates the existing tested contract.",
+     "reason": "Calling label() now returns \"waiting\", while the unchanged test_label() explicitly requires \"ready\". There are no inputs or guards that could preserve the expected result, so this change causes the existing test to fail.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "c07dd78189ebdad2a9019f1459de297ef9674944231349b0bd7ac1741c82f557",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "junior-dev",
+     "problem": "label() now violates the existing expected return value.",
+     "reason": "The unchanged test_label() requires label() to return \"ready\". Returning \"waiting\" unconditionally breaks that contract and makes the existing assertion fail.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "a667f6bde672db0e636cfdedf34e117921e0c10407610212b3f7e9f64e4d42bd",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "security",
+     "problem": "The new label value breaks the existing test contract.",
+     "reason": "label() now unconditionally returns \"waiting\", but the unchanged test_label() asserts that it returns \"ready\". Running that test will fail. The captured context contains no corresponding update to the expected behavior.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "f3fec0e639f1e10ffdcd36312b3b4dc0387d19af1b793759885aafd9513728c0",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "devops",
+     "problem": "The new label value breaks the existing tested contract.",
+     "reason": "Changing label() to return \"waiting\" makes the unchanged test_label assertion fail, since it still requires \"ready\". Preserve the existing value or, if this is an intentional contract change, update the corresponding test.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "21e2fc536265764fac3eeaf8e565f8ce6605f80f2e69d2b0f1812d4e02a176ff": "supported",
+    "a667f6bde672db0e636cfdedf34e117921e0c10407610212b3f7e9f64e4d42bd": "supported",
+    "c07dd78189ebdad2a9019f1459de297ef9674944231349b0bd7ac1741c82f557": "supported",
+    "f3fec0e639f1e10ffdcd36312b3b4dc0387d19af1b793759885aafd9513728c0": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "21e2fc536265764fac3eeaf8e565f8ce6605f80f2e69d2b0f1812d4e02a176ff": "supported",
+    "a667f6bde672db0e636cfdedf34e117921e0c10407610212b3f7e9f64e4d42bd": "supported",
+    "c07dd78189ebdad2a9019f1459de297ef9674944231349b0bd7ac1741c82f557": "supported",
+    "f3fec0e639f1e10ffdcd36312b3b4dc0387d19af1b793759885aafd9513728c0": "supported"
+   },
+   "latency_seconds": 52.151705745840445,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "tests-consumer-fixture/focused3/2",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9396
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9449
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9297
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9411
+    }
+   ],
+   "status": "complete",
+   "tokens": 52714,
+   "usage": {
+    "cache_read": 41750,
+    "cache_write": 0,
+    "input": 5384,
+    "output": 5580,
+    "total": 52714
+   }
+  },
+  {
+   "accounting_complete": true,
+   "analysis_rules": null,
+   "analysis_status": null,
+   "assessment_dispositions": {
+    "supported": 4
+   },
+   "assessment_status": "complete",
+   "assessor_actual": true,
+   "assessor_allocation": 20000,
+   "assessor_complete": true,
+   "assessor_reason": "done",
+   "assessor_tokens": 15492,
+   "attempts": [
+    {
+     "accounting_complete": true,
+     "attempt": 1,
+     "latency_seconds": 55.906105160014704,
+     "status": "complete",
+     "tokens": 53173,
+     "transient_provider_failures": null
+    }
+   ],
+   "candidates": [
+    {
+     "candidate_id": "cb6f5603a488f355bc3ec27ef0c0db19a66174a770c5065f422f45088d02088f",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "senior-dev",
+     "problem": "The new label value violates the existing tested contract.",
+     "reason": "Calling label() now returns \"waiting\", but the unchanged test_label() explicitly requires \"ready\". The changed return value therefore causes that test to fail. Preserve the existing value unless the contract and its consumers are intentionally updated together.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "528a0cac9df069d407fa675fd2a59c817eeca4319a36072cc37f31cc54e40388",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "junior-dev",
+     "problem": "Changing label() to return \"waiting\" breaks its existing tested contract.",
+     "reason": "The unchanged test_label() requires label() to return \"ready\". The new unconditional return produces \"waiting\" instead, so this ordinary no-argument call fails the existing assertion. No captured adapter or updated expectation reconciles the change.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "0c8fc747a13475dd6f9d89540489754a5895403ab41e00dfdbff9375806c01f5",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "security",
+     "problem": "The changed label breaks the existing test contract",
+     "reason": "label() now returns \"waiting\", but the unchanged test_label() requires \"ready\". Calling the test therefore produces an assertion failure. Restore the expected label or update the test if the behavior change is intentional.",
+     "side": "RIGHT"
+    },
+    {
+     "candidate_id": "f596e87dfd0944434e8b5b46bdfe163c60103eca2a9efee15d61899986acf6c5",
+     "category": "regression",
+     "file": "formatting.py",
+     "line": 2,
+     "persona": "devops",
+     "problem": "The new label value breaks the existing tested contract.",
+     "reason": "Changing label() to return \"waiting\" contradicts the unchanged test_label(), which requires \"ready\". Calling that test now produces an assertion failure. Preserve the existing value unless the contract and its test are intentionally updated together.",
+     "side": "RIGHT"
+    }
+   ],
+   "citation_refusals": [],
+   "discovery_findings": 4,
+   "discussion_attempted_rounds": 0,
+   "discussion_completed_rounds": 0,
+   "discussion_reason": "undisputed",
+   "discussion_rounds": [],
+   "discussion_trace_available": true,
+   "effective_personas": [
+    "senior-dev",
+    "junior-dev",
+    "security",
+    "devops"
+   ],
+   "error": null,
+   "final_dispositions": {
+    "0c8fc747a13475dd6f9d89540489754a5895403ab41e00dfdbff9375806c01f5": "supported",
+    "528a0cac9df069d407fa675fd2a59c817eeca4319a36072cc37f31cc54e40388": "supported",
+    "cb6f5603a488f355bc3ec27ef0c0db19a66174a770c5065f422f45088d02088f": "supported",
+    "f596e87dfd0944434e8b5b46bdfe163c60103eca2a9efee15d61899986acf6c5": "supported"
+   },
+   "finding_validation_errors": [],
+   "findings": 4,
+   "first_attempt_status": "complete",
+   "initial_dispositions": {
+    "0c8fc747a13475dd6f9d89540489754a5895403ab41e00dfdbff9375806c01f5": "supported",
+    "528a0cac9df069d407fa675fd2a59c817eeca4319a36072cc37f31cc54e40388": "supported",
+    "cb6f5603a488f355bc3ec27ef0c0db19a66174a770c5065f422f45088d02088f": "supported",
+    "f596e87dfd0944434e8b5b46bdfe163c60103eca2a9efee15d61899986acf6c5": "supported"
+   },
+   "latency_seconds": 55.91914702602662,
+   "panel_reason": "undisputed",
+   "retry_denied": null,
+   "retry_tokens": 0,
+   "routing_activated": [],
+   "run_id": "tests-consumer-fixture/focused3/3",
+   "session_statuses": [
+    {
+     "persona": "senior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9407
+    },
+    {
+     "persona": "junior-dev",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9469
+    },
+    {
+     "persona": "security",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9392
+    },
+    {
+     "persona": "devops",
+     "reason": "done",
+     "status": "complete",
+     "tokens": 9413
+    }
+   ],
+   "status": "complete",
+   "tokens": 53173,
+   "usage": {
+    "cache_read": 41968,
+    "cache_write": 0,
+    "input": 5493,
+    "output": 5712,
+    "total": 53173
+   }
+  }
+ ],
+ "cells_needing_rerun": 0,
+ "discussion_attempted_rounds": 0,
+ "discussion_completed_rounds": 0,
+ "experiment_sha256": "1c88b2ff1306a9b986c0991b6ac9964242a19320bf8965e70fe8a4f568b81209",
+ "experiment_status": "complete",
+ "first_attempt_status_counts": {
+  "complete": 36
+ },
+ "gate_sha256": "c7076e5ed687171709886a35310984f5a238d1e7175418329d9b902d540ddf5f",
+ "holdout_used": false,
+ "qualification": "pass",
+ "rerun_attempts": 0,
+ "schema_version": 2,
+ "semantic_qualification": false,
+ "status_counts": {
+  "complete": 36
+ },
+ "tests": {
+  "aggregate_bug_cells_nonempty_valid_v2": true,
+  "all_attempts_within_ceiling": true,
+  "all_runs_complete_and_accounted": true,
+  "assessed_bug_cells_actual_complete_assessor": true,
+  "experiment_terminal": true,
+  "matrix_exact": true,
+  "retries_within_declared_policy": true
+ },
+ "transient_http_statuses": {}
+}

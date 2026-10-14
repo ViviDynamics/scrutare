@@ -1,0 +1,6 @@
+{
+ "label": "f2",
+ "never_launched": true,
+ "at": 1791937805.5492735,
+ "reason": "withdrawn before launch: includes an assessed arm under the 20,000-token assessor reservation that voided 12 of 24 cells of job t1 on development-v3 files; no provider call was made"
+}

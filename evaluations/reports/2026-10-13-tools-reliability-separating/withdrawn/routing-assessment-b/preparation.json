@@ -1,0 +1,68 @@
+{
+  "label": "c1y",
+  "source_commit": "a34c8b2a6eb26397a757c5c35e0458064a93a361",
+  "source_is_ancestor_of_origin_main": true,
+  "model_alias": "gpt-6.1-sol",
+  "backend_revision_verified": false,
+  "corpus": "evaluations/development-v3",
+  "cases": [
+    "dev3-09",
+    "dev3-10"
+  ],
+  "split": "development",
+  "comparison_set": "architectures",
+  "variants": [
+    "evidence",
+    "assessment",
+    "routing"
+  ],
+  "repeats": 3,
+  "expected_runs": 18,
+  "configured_max_tokens": 100000,
+  "concurrency": 3,
+  "max_turns": 6,
+  "timeout_seconds": 120,
+  "transient_retries_per_cell": 0,
+  "transient_retry_delay_seconds": 0.0,
+  "transient_retry_budget_job": 0,
+  "nominal_estimate_usd": {
+    "method": "attempts x configured ceiling x proxy-advertised output rate",
+    "output_rate_per_token": 1e-05,
+    "first_attempts": 18.0,
+    "worst_case_with_all_budgeted_reruns": 18.0,
+    "not_a_billing_cap": true
+  },
+  "tool_capture": null,
+  "context_line_counts": false,
+  "related_paths": [
+    "src/downloads/manifest.py",
+    "src/listing/views.py",
+    "src/plugins/builtin.py",
+    "src/plugins/registry.py",
+    "src/region_reader.py",
+    "src/render/pricing_page.py",
+    "src/signup.py"
+  ],
+  "holdout_used": false,
+  "frozen_before_this_job_calls": true,
+  "input_sha256": {
+    "corpus/captures/dev3-09/diff.patch": "af32335f732d51ba9ac9475bf7f891ccb0a0b29269115e96a0caeb5558e32b69",
+    "corpus/captures/dev3-09/files.json": "9b2229701241f570f1c5e55b631da08b075a01bcdb81eeaf61c3ee87952afda0",
+    "corpus/captures/dev3-09/metadata.json": "c96dd0457498e982747213fb130d59d772cbd8c49b002f3e3e823aaf611b237e",
+    "corpus/captures/dev3-10/diff.patch": "b15eb2bfa29b6825d8376ac696148aeb330263147d4af483e0d35a49975022a4",
+    "corpus/captures/dev3-10/files.json": "1235e4a40feb65f0dc7eae00cfe2d5950199c2bf77d791b8c58ba53697841b26",
+    "corpus/captures/dev3-10/metadata.json": "230bd7254518121cc3e2829a1f37d44820400632e11ec1c8e83475b8a72b2d19",
+    "corpus/labels/dev3-09.json": "8f6e0a9142d683cdfc87d39fd92e30be5a14040f771e866c03f09bc6cbed0eee",
+    "corpus/labels/dev3-10.json": "d393d409c2936a17ce493446fabd9e9b71ba48473f93d1ef91a52f9ac72795d1",
+    "corpus/manifest.json": "593f3c10f5db60dfa03a2d46f55d1fe07cb28035a0b75ad2b15ebfe24ac54602",
+    "corpus/sources/dev3-09/base/src/concurrency/account_locks.py": "ff7da72632c6b3ebcd489cab43f3615da59b6b0d84a30c6dec557ea95abf3c1c",
+    "corpus/sources/dev3-09/head/src/concurrency/account_locks.py": "3cc10a079f2885461e89d40e015cc9cd5f42840b8c389bd4403e5f3dc140ce8c",
+    "corpus/sources/dev3-10/base/src/migrations/0011_unique_email.py": "cb065c7e725a08be40b3ef9e1e2b374cff6bba57091b5fc3b1e86e44ddc7b1e3",
+    "corpus/sources/dev3-10/base/src/signup.py": "522c0017367b497c91231a0021147265e2f32733f42fd81976b82d8b0d2eba4c",
+    "corpus/sources/dev3-10/head/src/migrations/0011_unique_email.py": "0aa7a29b71c4331f6d98abb3b03eb9c79f901fe8211fef03d2d97764c44379bc",
+    "corpus/sources/dev3-10/head/src/signup.py": "522c0017367b497c91231a0021147265e2f32733f42fd81976b82d8b0d2eba4c",
+    "evaluation.json": "6918e3b93bd450cde895a0e372c1414526b160971d268378ae905c39768b1bef",
+    "gate.json": "87cc99facae679befbb95db7ec143c912aeb8052230274ef5da4c72e2052333e",
+    "scrutare-2026.10.2-py3-none-any.whl": "020297e29446e0a1542066485ea9b9eddf6fc3cad7f7f5dc6bc436540176ce43"
+  }
+}

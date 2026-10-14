@@ -47,7 +47,7 @@ Out:
       refusal and prompts first; then the implementation; validator untouched.
 - [x] 2. Development corpus v3 with executable gold controls, sealed inventory,
       pinned-Ruff expectation test and lint-exemption pin.
-- [ ] 3. Frozen jobs: reliability r2 and r3; discussion on `dev2-03`, `dev2-08`,
+- [x] 3. Frozen jobs: reliability r2 and r3; discussion on `dev2-03`, `dev2-08`,
       `dev2-12`; tools, focused, routing/assessment and line-count jobs on v3.
-- [ ] 4. Report package with reproduction script, artifact hashes and a test.
+- [x] 4. Report package with reproduction script, artifact hashes and a test.
 - [ ] 5. Status blocks on #51, #47, #48, #49 and #50. Nothing is closed.

@@ -1,0 +1,112 @@
+{
+  "label": "t1",
+  "source_commit": "a34c8b2a6eb26397a757c5c35e0458064a93a361",
+  "source_is_ancestor_of_origin_main": true,
+  "model_alias": "gpt-6.1-sol",
+  "backend_revision_verified": false,
+  "corpus": "evaluations/development-v3",
+  "cases": [
+    "dev3-01",
+    "dev3-02",
+    "dev3-03",
+    "dev3-04"
+  ],
+  "split": "development",
+  "comparison_set": "architectures",
+  "variants": [
+    "assessment",
+    "tools"
+  ],
+  "repeats": 3,
+  "expected_runs": 24,
+  "configured_max_tokens": 100000,
+  "concurrency": 3,
+  "max_turns": 6,
+  "timeout_seconds": 120,
+  "transient_retries_per_cell": 3,
+  "transient_retry_delay_seconds": 20.0,
+  "transient_retry_budget_job": 2,
+  "nominal_estimate_usd": {
+    "method": "attempts x configured ceiling x proxy-advertised output rate",
+    "output_rate_per_token": 1e-05,
+    "first_attempts": 24.0,
+    "worst_case_with_all_budgeted_reruns": 26.0,
+    "not_a_billing_cap": true
+  },
+  "tool_capture": {
+    "tool": {
+      "name": "ruff",
+      "version": "0.16.10"
+    },
+    "statuses": {
+      "dev3-01": "complete",
+      "dev3-02": "complete",
+      "dev3-03": "complete",
+      "dev3-04": "complete"
+    },
+    "diagnostics_per_case": {
+      "dev3-01": 1,
+      "dev3-02": 1,
+      "dev3-03": 2,
+      "dev3-04": 0
+    },
+    "index_sha256": "10a983d962183930ae496e2e7af5dc19eb285f7acce1dce500154abd0f34e3ea"
+  },
+  "context_line_counts": false,
+  "related_paths": [
+    "src/downloads/manifest.py",
+    "src/listing/views.py",
+    "src/plugins/builtin.py",
+    "src/plugins/registry.py",
+    "src/region_reader.py",
+    "src/render/pricing_page.py",
+    "src/signup.py"
+  ],
+  "holdout_used": false,
+  "frozen_before_this_job_calls": true,
+  "input_sha256": {
+    "corpus/analysis/dev3-01.json": "199e954a95715fc2193efa053f50d2bf430db46a2aa09ddde0ac3dc76ad89a0d",
+    "corpus/analysis/dev3-02.json": "7443981b748150b59623cc7499edb4ee11cae8f3ca7e1cc7ca24042bfb989302",
+    "corpus/analysis/dev3-03.json": "97e9f654265a475633c57f4bfc008a2537ca234f66d1ad091b9de9ad4401f9cc",
+    "corpus/analysis/dev3-04.json": "176448535b94d07a61c10976d39a4d13637b21cf202b02e24abcd4fe6680565b",
+    "corpus/captures/dev3-01/diff.patch": "cce8df2707f9e4d4e0079b245e15b59a518b796e568c0c0245535134cbed1809",
+    "corpus/captures/dev3-01/files.json": "5f11a5244c8abfec733395d7cd47209e95353900450d9bef0af6ce49671ebf80",
+    "corpus/captures/dev3-01/metadata.json": "28e771a606f3643cb1b400c9447f82a58961dd8d7785f45e68072c1e21a03c7e",
+    "corpus/captures/dev3-02/diff.patch": "7d4cbfd19a3a6b6dd9083900c53695993a0b24e891f228f38df01555e7e8ff26",
+    "corpus/captures/dev3-02/files.json": "61c730236528c46f5a341b5248d04457839e55b5a6e4b749c3c8f269464d8f80",
+    "corpus/captures/dev3-02/metadata.json": "95b9efc26039be107197b48a94d35695de18e30ac4b6db4a1dc1e42e0283cf11",
+    "corpus/captures/dev3-03/diff.patch": "792fe201e72813964fa443fd6849807c527e8a598d1163e324ebfd9176244488",
+    "corpus/captures/dev3-03/files.json": "4c6baffafd13b9245e58af0935f0b0204c11b74fa6ce818d3c8628ace123c047",
+    "corpus/captures/dev3-03/metadata.json": "40fcd9bbae7b4f9756ee5651b907d7790be875a05c20a690eeea63935b8e7a9c",
+    "corpus/captures/dev3-04/diff.patch": "4719ea52aea1b026a42b89655c62c9b532d59bfd8e5448e90527444e5536c272",
+    "corpus/captures/dev3-04/files.json": "417f8c586bbf9ef7512f754fd4942619efcf31a8aab11c28f78819602f189484",
+    "corpus/captures/dev3-04/metadata.json": "473cc755fd994c54d9503f52940dd01ee0859037e82826fdc7b1863cabb01ad6",
+    "corpus/labels/dev3-01.json": "cfc32a7f1ac9d6cf91164ecd9d6be2f8bc37a70de2f840daf8dba53c1f271915",
+    "corpus/labels/dev3-02.json": "76a64ed572f3c253301e66fc1d9929b7e6b37eac1af748779092485188e54350",
+    "corpus/labels/dev3-03.json": "9d8099eeb7684ac1a9439080033494a7524d69939b5ee15296d59dbbf1d68b46",
+    "corpus/labels/dev3-04.json": "80d1ab0131fe12f6cbb4df7c362a1c9b00d07a7428c995368283483ba7221eea",
+    "corpus/manifest.json": "677cf6a90c7ed0d4a83ef55b9e8039799a11ac5c2160e8044e7ed419e5559077",
+    "corpus/sources/dev3-01/base/src/reporting/formatters.py": "c7e782cf2ecba412e4ee34edcf838a4b7b3a593f873e7e83286ccef59c732590",
+    "corpus/sources/dev3-01/head/src/reporting/formatters.py": "358202d93a14a5f3b76858b59a1e803e1b061fe383a2638333150550434a3e6a",
+    "corpus/sources/dev3-02/base/src/client/http_settings.py": "8f7068acf7203b7f08fdd6eab7511aa221c4da39b349e33c5c00ecb607764d71",
+    "corpus/sources/dev3-02/head/src/client/http_settings.py": "b658958f2828450d613fa9bd892c1b5b2f75c810f043d6b8ed54b03301a200bd",
+    "corpus/sources/dev3-03/base/src/plugins/api.py": "d1025996ee1662af8db8edb4a747b49121a8a764cf8f8c444f6fccfc694e8831",
+    "corpus/sources/dev3-03/base/src/plugins/builtin.py": "5fbeae313616daa4d0371ee87b787d8eb2ccdae6ed2df658b4e39a6202fdc45d",
+    "corpus/sources/dev3-03/base/src/plugins/registry.py": "8a21fd1a24a53056b4c5ae9a14d694b1b6b06f2077e82546e5e1372fd118c302",
+    "corpus/sources/dev3-03/head/src/plugins/api.py": "1cbdc398a11e3f7fbde47ead15a4dfafb0bcc2661a8832172245257f17f971d7",
+    "corpus/sources/dev3-03/head/src/plugins/builtin.py": "5fbeae313616daa4d0371ee87b787d8eb2ccdae6ed2df658b4e39a6202fdc45d",
+    "corpus/sources/dev3-03/head/src/plugins/registry.py": "8a21fd1a24a53056b4c5ae9a14d694b1b6b06f2077e82546e5e1372fd118c302",
+    "corpus/sources/dev3-04/base/src/listing/pager.py": "c3e8ed945800ff58f70eebf433716caea71b975ffc8d230ebe15a892ce4b0de8",
+    "corpus/sources/dev3-04/base/src/listing/views.py": "6c56419cb7bbb0c1ff4b58fe1616bc688077a377edf29625f2e6700b26c20913",
+    "corpus/sources/dev3-04/head/src/listing/pager.py": "bfdf0ef703566f2a333faa6f86282c7f1ef748da2ee33fc5dcda5f0901e037b1",
+    "corpus/sources/dev3-04/head/src/listing/views.py": "6c56419cb7bbb0c1ff4b58fe1616bc688077a377edf29625f2e6700b26c20913",
+    "evaluation.json": "6918e3b93bd450cde895a0e372c1414526b160971d268378ae905c39768b1bef",
+    "gate.json": "792a92b85442e7dcdfcfbdf2e7f7eb5c6e38c0019adc44e0be44a720327e91c0",
+    "scrutare-2026.10.2-py3-none-any.whl": "020297e29446e0a1542066485ea9b9eddf6fc3cad7f7f5dc6bc436540176ce43",
+    "tool-captures/dev3-01.json": "199e954a95715fc2193efa053f50d2bf430db46a2aa09ddde0ac3dc76ad89a0d",
+    "tool-captures/dev3-02.json": "7443981b748150b59623cc7499edb4ee11cae8f3ca7e1cc7ca24042bfb989302",
+    "tool-captures/dev3-03.json": "97e9f654265a475633c57f4bfc008a2537ca234f66d1ad091b9de9ad4401f9cc",
+    "tool-captures/dev3-04.json": "176448535b94d07a61c10976d39a4d13637b21cf202b02e24abcd4fe6680565b",
+    "tool-captures/index.json": "10a983d962183930ae496e2e7af5dc19eb285f7acce1dce500154abd0f34e3ea"
+  }
+}
