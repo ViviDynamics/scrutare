@@ -168,6 +168,20 @@ class RoutingSettings:
 
 
 @dataclass(frozen=True)
+class ReplySettings:
+    """Who may contest a posted finding by replying, and whether Scrutare answers."""
+
+    enabled: bool = False
+    trust: Literal["write", "anyone"] = "write"
+
+    def __post_init__(self) -> None:
+        if type(self.enabled) is not bool:
+            raise ConfigError("replies.enabled: expected boolean")
+        if self.trust not in ("write", "anyone"):
+            raise ConfigError("replies.trust: expected one of write, anyone")
+
+
+@dataclass(frozen=True)
 class ReviewConfig:
     strategy: Strategy
     rounds: RoundSettings
@@ -181,8 +195,12 @@ class ReviewConfig:
     findings: FindingSettings = FindingSettings()
     analysis: AnalysisSettings = AnalysisSettings()
     routing: RoutingSettings = RoutingSettings()
+    replies: ReplySettings = ReplySettings()
 
     def __post_init__(self) -> None:
+        if self.replies.enabled and self.strategy != "iterative":
+            # Only iterative keeps the finding pool and round bound a contest needs.
+            raise ConfigError("replies.enabled: requires strategy iterative")
         if self.findings.evidence == "v2" and not self.context.enabled:
             raise ConfigError("findings.evidence: v2 requires context.enabled")
         if self.findings.assessment.enabled:
@@ -244,6 +262,8 @@ class ReviewConfig:
                             for role in ("implementation", "callers", "contracts", "tests")}}
                            for group in self.routing.groups],
             }
+        if self.replies != ReplySettings():
+            result["replies"] = asdict(self.replies)
         return result
 
 
@@ -510,7 +530,7 @@ def parse_config(data: bytes | str) -> ReviewConfig:
         _load_yaml(data),
         "",
         ("strategy", "rounds", "personas", "budgets", "models", "verdict", "github",
-         "inspection", "context", "findings", "analysis", "routing"),
+         "inspection", "context", "findings", "analysis", "routing", "replies"),
     )
     strategy = cast(
         Strategy,
@@ -542,7 +562,15 @@ def parse_config(data: bytes | str) -> ReviewConfig:
         _finding_settings(raw.get("findings", {})),
         _analysis_settings(raw.get("analysis", {}), context),
         _routing(raw.get("routing", {})),
+        _replies(raw.get("replies", {})),
     )
+
+
+def _replies(value: object) -> ReplySettings:
+    fields = _mapping(value, "replies", ("enabled", "trust"))
+    return ReplySettings(fields.get("enabled", False), cast(
+        Literal["write", "anyone"],
+        _choice(fields.get("trust", "write"), "replies.trust", ("write", "anyone"))))
 
 
 def load_config(path: Path) -> ReviewConfig:
