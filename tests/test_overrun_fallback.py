@@ -773,3 +773,52 @@ def test_reassessment_draws_on_the_discussion_allowance(capture, tmp_path, monke
     save_json(capture / "assessment-round-0001.json", reassessment)
     with pytest.raises(ReplayError):
         replay_run(capture)
+
+
+def degraded_payload(category=None, unresolved=(), phase="discussion"):
+    from scrutare.findings.verdict import derive_verdict
+    from scrutare.poster.payload import build_review_payload
+    findings = merged(category) if category else ()
+    verdict = derive_verdict(findings, configuration().verdict, evidence_version=2,
+                             unresolved_candidates=unresolved, degradation=degradation(phase))
+    diff = ("diff --git a/a.py b/a.py\n--- a/a.py\n+++ b/a.py\n"
+            "@@ -1 +1 @@\n-old\n+new\n")
+    return build_review_payload(verdict, diff, head_sha="a" * 40, strategy="debate",
+                                post_mode="review", run_id="1" * 32,
+                                human_reviewers=("maintainer",))
+
+
+DEGRADED_TEXT = ("Degraded: the discussion phase overran its grant in round 1 and fell back "
+                 "to pre_round_assessment. It is not an approval.\nGrant tokens: 20000\n"
+                 "Usage tokens: 23086\nOverrun tokens: 3086\n")
+
+
+def test_degraded_fallback_without_blocking_findings_posts_an_escalation():
+    from scrutare.replay.posting import _original_targets
+    payload = degraded_payload("style")
+    assert payload.event == "COMMENT"
+    assert payload.body.startswith("Scrutare escalation\n\nStrategy: debate\n"
+                                   "Verdict: escalated\nRule: phase_overrun_fallback\n")
+    assert DEGRADED_TEXT in payload.body
+    assert "@maintainer" in payload.body
+    assert _original_targets(payload) == ("maintainer",)
+
+
+def test_degraded_fallback_with_blocking_findings_still_requests_changes():
+    payload = degraded_payload("correctness")
+    assert payload.event == "REQUEST_CHANGES"
+    assert "Rule: any_blocking_finding\n" + DEGRADED_TEXT in payload.body
+
+
+def test_degraded_fallback_with_unresolved_blocking_claims_escalates_under_its_rule():
+    from scrutare.replay.posting import _original_targets
+    payload = degraded_payload("correctness", ("one",))
+    assert payload.event == "COMMENT"
+    assert "Rule: unresolved_semantic_assessment\n" + DEGRADED_TEXT in payload.body
+    assert _original_targets(payload) == ("maintainer",)
+
+
+def test_assessor_degraded_text_names_its_stage():
+    payload = degraded_payload("style", phase="assessment")
+    assert ("Degraded: the assessment phase overran its grant and fell back to "
+            "anchor_validated. It is not an approval.\n") in payload.body
