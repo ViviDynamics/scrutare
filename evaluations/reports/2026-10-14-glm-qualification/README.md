@@ -1,11 +1,12 @@
 # Qualification of the self-hosted `spark/glm-5.3-flash`
 
-**Result: not qualified.** The one judged schedule (`g2`) completed 14 of 36
-cells, all with complete accounting, and failed every gate item that depends on
-the defect cases. A first schedule (`g1`) was interrupted after 6 cells when the
-operator's tool session ended; it is retained and was not judged. No further
-schedule was run, because the failures that sank `g2` include a class no
-profile setting addresses (below). External spend was US$0. Judgments are
+**Result: not qualified.** In the one judged schedule (`g2`), 14 of 36 cells
+completed with complete accounting, and every gate item that depends on the
+defect cases failed. A first schedule (`g1`) was interrupted after 6 cells when
+the operator's tool session ended; it is retained and was not judged. The
+operator chose not to run the one further schedule the gate permitted, because
+`g2`'s failures include a class no profile setting addresses (below). External
+spend was US$0. Judgments are
 automated and provisional, there are zero human judgments, nothing here changes
 a default, and `evaluations/holdout-v1` was not opened or used.
 
@@ -28,36 +29,58 @@ per-session timeout in place of 120 s.
 | Upstream 5xx reruns used | 0 of 6 allowed | 0 / 0 / 0 |
 
 The reference columns are recomputed by `reproduce.py` from the sibling packages
-under this package's stricter reading of reruns; none of them needed one.
+under this package's stricter reading of reruns; none of them needed one. They ran
+on a different source commit (`2f1e95c` vs `5c4a8b6`), a day earlier, with a 120 s
+session timeout and another model, so the columns are a side-by-side, not a
+paired comparison.
 
 ## Why `g2` failed
 
-`g2` ran 144 discovery sessions and 3 assessor sessions; no discussion round
-started, because no discussion arm got past discovery. 109 discovery sessions
-completed, and none of the 3 assessors did. The other 38:
+`g2` ran 144 discovery sessions and 3 assessor sessions. No discussion round
+started: the focused defect cells failed in discovery, except
+`tests-consumer-fixture/focused3/3`, which failed in its assessor, and the clean
+focused cells had no candidate to discuss. 109 discovery sessions completed, and
+none of the 3 assessors did. The other 38:
 
 | Session outcome | Sessions | Cause |
 | --- | ---: | --- |
-| `timeout` | 22 discovery, 1 assessor | still generating at 600 s. The sessions inspected were inside one long reasoning turn (one held about 19,900 characters of reasoning after 9.5 minutes), not stalled. |
-| `provider` / `schema_violation` | 9 discovery | the answer was not valid JSON for the findings schema, twice. nare accepts an answer only when the whole text (or one fenced block) is JSON and reprompts once. The failures were missing brackets or delimiters in otherwise complete answers, `citations` placed beside `evidence` instead of inside it, a missing required `trigger`, and (in `g1`) valid JSON followed by stray tokens. |
-| `budget` | 3 discovery, 2 assessors | used up their grants (25,000 or 20,000 tokens) |
+| `timeout` | 22 discovery, 1 assessor | still generating at 600 s. None had stalled: the longest gap between stream events in any of them was 62 s. Most were reasoning after a tool call, and several were streaming their final answer. One reasoning stretch ran to about 19,600 characters over 9.5 minutes. |
+| `provider` / `schema_violation` | 9 discovery | the answer was not valid JSON for the findings schema, twice. nare accepts an answer only when the whole text (or one fenced block) is JSON and reprompts once. The failures were missing brackets or delimiters in otherwise complete answers, `citations` placed beside `evidence` instead of inside it, missing required `trigger` or `start_line` properties, and valid JSON followed by extra text (in `g1`, by stray tokens and a U+FFFD replacement character). |
+| `budget` | 3 discovery, 2 assessors | exceeded 20,000-token grants. Two of the discovery sessions finished their answer and overshot by only 17 and 610 tokens. |
 | `citation_validation` | 1 discovery | one citation past the end of a file (`line_range_outside_capture`), the shape seen before with `gpt-6.1-sol` |
 
-Ten of the 22 failed cells failed only because of timeouts. A longer timeout
-might have saved those. The other twelve also hold a schema, budget or citation
-failure. Two of the schema failures are in the aggregate arm (`security-auth-order`
-repeats 2 and 3), so the six-aggregate-cell criterion fails whatever the timeout.
-No setting in Scrutare or nare repairs a malformed final answer. The gate allowed
-one further schedule only for "a diagnosable reason that a documented,
-prospectively frozen profile change addresses", so none was run.
+Ten of the 22 failed cells failed only on timeouts. The other twelve also hold
+a schema, budget or citation failure. Three schema failures (in
+`security-auth-order` aggregate repeats 2 and 3) void aggregate defect cells.
+
+The frozen gate permitted ("may run") one further schedule for a failure a
+documented profile change addresses. Some `g2` failures were of that kind:
+- **Timeouts:** a longer session timeout. The LiteLLM router's own request
+  timeout is also 600 s, and the cut-off turns had already run for minutes, so a
+  longer session timeout alone might not save them.
+- **Assessor overruns:** the `--assessment-tokens` and #76 overrun-fallback
+  opt-ins.
+- **The one out-of-range citation:** `context.line_counts`.
+
+No setting in Scrutare or nare repairs a malformed final answer, and nare
+reprompts once. Schema failures hit 9 of 144 discovery sessions (6.25%). At that
+rate, the chance that all 144 discovery sessions of a schedule avoid one is about
+0.0001, so the six-aggregate-cell and 36-cell criteria are practically
+unreachable whatever else changes. On that arithmetic the operator chose not to
+run the further schedule. This is a judgment within the clause, not a
+prohibition by it.
 
 The engine was shared during `g2`. The LiteLLM spend log for its window
 (`provider-evidence.json`) shows 488 requests from this evaluator, plus 113 from
 opencode (about 7.0 million prompt tokens, contexts up to about 120,000) and 95
 from Claude Code (about 2.5 million prompt tokens), all served by the same Spark
-deployment. During `g1` there were two other requests. The timeouts are partly
-a property of that load, and the deployed App would face the same shared engine.
-The schema failures come from the model's own output.
+deployment. During `g1`'s run there was one other request (a second fell in the
+same log window before launch). The timeouts are partly a property of that load,
+and the deployed App would face the same shared engine. The schema failures are
+in the model's output as served. This package cannot separate the model from the
+serving stack: a vLLM development build, NVFP4 weights and speculative decoding
+per the serving role. The `g1` case, with stray non-Latin tokens and a
+replacement character after valid JSON, could be either.
 
 ## What the clean case shows
 
@@ -74,7 +97,12 @@ not detection, and the refused answers were not systematically read.
 
 Different model, source commit (`5c4a8b6` vs `2f1e95c`), day (2026-10-14 vs
 2026-10-13) and session timeout (600 s vs 120 s). The token figures are recorded
-cell usage of every attempt.
+cell usage of every attempt. For `g2` they **understate** what the model consumed:
+19 of its 36 cells have incomplete accounting, and the 23 turns cut off by the
+timeout are missing from cell usage. The proxy logged 488 requests from this
+evaluator in the `g2` window, totalling 2,113,836 tokens (1,642,331 prompt and
+471,505 completion), against 1,933,565 recorded. The Sol schedules had no
+cut-off turns.
 
 | | `g2` (glm-5.3-flash) | Sol r1 | Sol r2 | Sol r3 |
 | --- | ---: | ---: | ---: | ---: |
@@ -85,8 +113,9 @@ cell usage of every attempt.
 | Mean tokens, aggregate arm | 55,522 | 37,630 | 37,629 | 37,627 |
 | Mean latency, aggregate arm | 425 s | 18.9 s | 17.6 s | 17.2 s |
 
-Completed GLM sessions took a median 318 s (Sol r1: 16.5 s). They emitted a
-median 2,836 output tokens, most of it reasoning (Sol r1: 895). The pre-freeze probe
+Completed GLM discovery sessions took a median 318 s and emitted a median 2,836
+output tokens, most of it reasoning. Sol r1's completed discovery sessions took
+16.0 s and emitted 888.5. The pre-freeze probe
 measured 39 output tokens/s for one stream and 15 to 19 per stream with 12
 concurrent streams. Wall clock: `g1` ran 15:20:11Z to 15:31:27Z, and `g2` ran
 18:48:07Z to 20:36:34Z (1 h 48 min for 36 cells; the Sol schedules took 7 to 8
@@ -116,8 +145,8 @@ and the serving role. The model revision behind the alias is not verified.
 
 ## Schedules retained
 
-- `g1/`: frozen on `c8059bb` and launched 15:20:11Z (hashes posted on #51 at
-  15:19:59Z). Interrupted at 15:31:27Z, because the evaluator ran inside the tool
+- `g1/`: frozen on `c8059bb` at 15:19:59Z, hashes posted on #51 at 15:20:00Z,
+  launched 15:20:11Z. Interrupted at 15:31:27Z, because the evaluator ran inside the tool
   session's systemd cgroup and was killed with it. Six cells were recorded: five
   complete on the clean case, and `assessed/1` invalid after one discovery
   session's answer carried stray tokens (`INTERRUPTED.json`). It was not judged.
@@ -126,13 +155,18 @@ and the serving role. The model revision behind the alias is not verified.
 - `g2-withdrawn-c8059bb/`: a replacement frozen on `c8059bb`, withdrawn before any
   call on finding that #76 had merged. The brief required current `main`.
 - `g2/`: frozen on `5c4a8b6` (current `main`, including #76, whose opt-in
-  settings are absent here). Its `evaluation.json` is byte-identical to `g1`'s and
-  its gate criteria are identical. Hashes were posted on #51 before launch, and it
-  ran detached in its own systemd user unit.
+  settings are absent here). Its `evaluation.json` is byte-identical to `g1`'s,
+  and its gate criteria are identical. Its `gate.json` differs only in the profile
+  label, the source-commit lines, the predecessor note and the fallback clause,
+  which now names the further schedule `g3`. The #51 comment for `g2` listed the
+  first three of those and missed the fallback clause. Hashes were posted at
+  18:47:48Z and it launched at 18:48:07Z, detached in its own systemd user unit.
 
 `freeze-record.json` holds the freeze hashes, the launch ledger and the comment
-links. As in earlier packages, the ordering of the freeze before the first call
-rests on operator records plus those timestamped public comments.
+links. The ordering of each freeze before its first call rests on operator records
+plus those unedited, timestamped public comments. The launcher refused to start
+unless every input matched `preparation.json`. The nare runtime itself is not
+hashed in the freeze.
 
 ## Reproduce
 
@@ -140,17 +174,28 @@ rests on operator records plus those timestamped public comments.
 python reproduce.py --output glm-qualification-summary.json
 ```
 
-Python 3.10 or newer, standard library only, no network. It checks every
-published hash here and in the two sibling packages it compares against,
-recomputes `g2`'s gate, the automated decisions, `g1`'s recorded cells and the
-side-by-side, and fails on any difference. It does not authenticate normalized
-evidence against native sessions; that needs the retained private captures.
-`original-artifact-sha256.json` in each job directory records their hashes. Raw
-transcripts, credentials and provider headers are not published.
+Python 3.10 or newer, standard library only, no network. It fails on any
+difference, and it:
+- checks every published hash here and in the two sibling packages it compares
+  against, and refuses files outside the manifest;
+- requires each schedule's `preparation.json`, `gate.json` and `evaluation.json`
+  to match the hashes posted on #51, the freeze record, the private-original
+  hashes and the preparation's own input hashes;
+- requires each mechanical summary to name that gate and experiment;
+- recomputes `g2`'s gate, the automated decisions, `g1`'s recorded cells and the
+  side-by-side.
+
+It does not recompute figures that come from private captures or proxy reads:
+session durations and medians, probe rates, wall clock, spend-log counts and the
+per-client split in `provider-evidence.json`. It does not authenticate normalized
+evidence against native sessions. Both need the retained private captures, whose
+hashes `original-artifact-sha256.json` records in each job directory. Raw
+transcripts, credentials and raw provider responses are not published.
 
 ## What this does not establish
 
 - How often a larger timeout would complete this profile. That was not run, and
   the schema failures would still void cells.
+- Whether the schema failures belong to the model or to this serving stack.
 - Anything about review quality. Too few defect cells completed.
 - Behavior on an unshared engine. The `g2` window had other heavy clients.

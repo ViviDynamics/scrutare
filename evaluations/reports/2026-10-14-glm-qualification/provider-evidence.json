@@ -185,8 +185,8 @@
   "serving_config": {
     "glm_max_model_len": 262144,
     "glm_max_num_seqs": 16,
-    "note": "an older unmanaged copy (glm53-tp3/cluster.env) says MAX_MODEL_LEN=1048576; the managed role and the LiteLLM model_info both say 262144. The deployed value was not read from the host (the brief forbids accessing it). max_output_tokens 32768 is a LiteLLM-advertised cap, not established as an engine limit.",
-    "path": "datacenters/30-snowden-place/ansible/roles/spark_glm_engine/defaults/main.yml at the same commit",
+    "note": "an older unmanaged copy of the engine env file says MAX_MODEL_LEN=1048576; the managed role and the LiteLLM model_info both say 262144. The deployed value was not read from the host (the brief forbids accessing it). max_output_tokens 32768 is a LiteLLM-advertised cap, not established as an engine limit.",
+    "path": "the spark_glm_engine Ansible role defaults in the same repository and commit",
     "tensor_parallel": 3
   },
   "spend_log_windows": {
@@ -229,7 +229,7 @@
           "served_by_spark_glm_deployment": 110
         }
       },
-      "note": "python-httpx2 is nare (this evaluator) and Python-urllib/curl are the pre-freeze probes; opencode and claude-cli are other clients of the same engine on the same master key. attributed_spend_usd is LiteLLM applying its configured rate to a self-hosted model; no provider bills it.",
+      "note": "python-httpx2 is nare (this evaluator) and Python-urllib/curl are the pre-freeze probes; opencode and claude-cli are other clients of the same proxy and engine; the evaluator authenticated with the proxy admin credential, which the log records by name, not value. attributed_spend_usd is LiteLLM applying its configured rate to a self-hosted model; no provider bills it.",
       "private_raw_rows_sha256": "2654acd347ff008b8303503a6452d18acc82aaf99cb2905d0e94bb23a3c705ab",
       "rows": 126
     },
@@ -253,7 +253,7 @@
           "rows": 113,
           "served_by_spark_glm_deployment": 113
         },
-        "other key (non-model admin UI calls)": {
+        "other credential (non-model admin UI calls)": {
           "attempted_fallbacks_nonzero": 0,
           "attributed_spend_usd": 0.0,
           "completion_tokens": 0,
@@ -272,7 +272,7 @@
           "served_by_spark_glm_deployment": 488
         }
       },
-      "note": "python-httpx2 is nare (this evaluator) and Python-urllib/curl are the pre-freeze probes; opencode and claude-cli are other clients of the same engine on the same master key. attributed_spend_usd is LiteLLM applying its configured rate to a self-hosted model; no provider bills it.",
+      "note": "python-httpx2 is nare (this evaluator) and Python-urllib/curl are the pre-freeze probes; opencode and claude-cli are other clients of the same proxy and engine; the evaluator authenticated with the proxy admin credential, which the log records by name, not value. attributed_spend_usd is LiteLLM applying its configured rate to a self-hosted model; no provider bills it.",
       "private_raw_rows_sha256": "6e39a28f2b5df51402b62848df07fea21ac29af02a93595e9fd0a3a1b1052944",
       "rows": 702
     }
@@ -287,7 +287,6 @@
       "x-litellm-attempted-retries": "0",
       "x-litellm-model-api-base": "http://192.168.3.40:8045/v1",
       "x-litellm-model-group": "spark/glm-5.3-flash",
-      "x-litellm-model-id": "d31159ac94c6ef5729858bcfe729e216e5b49b6f351c4a236b3189da2e1b4d9f",
       "x-litellm-model-name": "openai/glm-5.3-flash"
     },
     "http": 200,

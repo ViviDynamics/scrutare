@@ -78,6 +78,41 @@ def test_judged_and_interrupted_schedules_share_profile_and_criteria():
     assert all(gates[0][key] == gates[1][key] for key in criteria)
 
 
+def test_frozen_files_are_the_ones_posted_on_issue_51():
+    reproduce = module()
+    for job, posted in reproduce.POSTED_ON_51.items():
+        for name, digest in posted.items():
+            assert hashlib.sha256((PACKAGE / job / name).read_bytes()).hexdigest() == digest
+    assert reproduce.POSTED_ON_51['g2']['gate.json'] == (
+        'b3121fa3c2ba56960528e91e53a05830d406e3d1491bb2b3028f71ab159c996c')
+
+
+def rehash(copy, name):
+    hashes = json.loads((copy / 'published-sha256.json').read_text())
+    hashes[name] = hashlib.sha256((copy / name).read_bytes()).hexdigest()
+    (copy / 'published-sha256.json').write_text(json.dumps(hashes))
+
+
+def test_reproduction_refuses_regenerated_freeze_or_mechanical_files(tmp_path, monkeypatch):
+    for name, old, new in (
+            ('g2/preparation.json', '"concurrency": 3', '"concurrency": 4'),
+            ('g2/mechanical-qualification.json', '"gate_sha256":"', '"gate_sha256":"0'),
+            ('freeze-record.json', '"gate_sha256": "c3301ce7', '"gate_sha256": "d3301ce7')):
+        copy = tmp_path / name.replace('/', '-')
+        shutil.copytree(PACKAGE, copy, ignore=shutil.ignore_patterns('__pycache__'))
+        text = (copy / name).read_text()
+        assert old in text, name
+        (copy / name).write_text(text.replace(old, new, 1))
+        rehash(copy, name)
+        with pytest.raises(ValueError, match='posted on #51|not bound|freeze'):
+            run(monkeypatch, copy, tmp_path / 'out.json')
+    copy = tmp_path / 'extra'
+    shutil.copytree(PACKAGE, copy, ignore=shutil.ignore_patterns('__pycache__'))
+    (copy / 'unlisted.json').write_text('{}')
+    with pytest.raises(ValueError, match='outside the hash manifest'):
+        run(monkeypatch, copy, tmp_path / 'out.json')
+
+
 def test_reproduction_refuses_changed_evidence(tmp_path, monkeypatch):
     copy = tmp_path / 'package'
     shutil.copytree(PACKAGE, copy, ignore=shutil.ignore_patterns('__pycache__'))

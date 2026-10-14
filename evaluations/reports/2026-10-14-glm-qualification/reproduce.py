@@ -20,6 +20,16 @@ JOBS = ('g2',)
 INTERRUPTED = ('g1',)
 # Frozen and withdrawn before any provider call.
 WITHDRAWN = ('g2-withdrawn-c8059bb',)
+# Freeze hashes posted on issue #51 before each schedule's first call (comments
+# 6171757077 and 6175788942). They tie this package to a record outside it.
+POSTED_ON_51 = {
+    'g1': {'preparation.json': 'b6440e47eb35fec7416d3f6882eb4e4de57d35ba963e5ce0bc31c4a9edba153e',
+           'gate.json': 'c3301ce7135c3ddb33f87b75a1731f759069ecdfde8d63aca02a2eaa5a25337b',
+           'evaluation.json': 'a0b4f9920ee6fcbafd1d3156940a0ca3073fcb37d617386b3ea00385adf03cf8'},
+    'g2': {'preparation.json': '5a364521b5f29082db278696519be188aebf1303a07e2db9c3f07509ed046681',
+           'gate.json': 'b3121fa3c2ba56960528e91e53a05830d406e3d1491bb2b3028f71ab159c996c',
+           'evaluation.json': 'a0b4f9920ee6fcbafd1d3156940a0ca3073fcb37d617386b3ea00385adf03cf8'},
+}
 # The gpt-6.1-sol schedules of the reference profile, read from sibling packages and
 # checked against those packages' own published hashes. Different source commit
 # (2f1e95c), different day (2026-10-13) and a 120-second session timeout.
@@ -78,13 +88,49 @@ def nearest_rank(values, fraction):
     return ordered[max(0, math.ceil(fraction * len(ordered)) - 1)] if ordered else None
 
 
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 def verify_hashes(package):
     manifest = read(package / 'published-sha256.json')
+    present = {p.relative_to(package).as_posix() for p in package.rglob('*')
+               if p.is_file() and '__pycache__' not in p.parts}
+    if present - {'published-sha256.json'} != set(manifest):
+        raise ValueError(f'files outside the hash manifest: {package.name}')
     for name, expected in manifest.items():
         path = package / name
         if path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
             raise ValueError(f'public artifact hash mismatch: {package.name}/{name}')
     return len(manifest)
+
+
+def cross_hashes(package):
+    """Hashes that must agree across files that could each be regenerated alone."""
+    record = read(package / 'freeze-record.json')['freezes']
+    for job in (*JOBS, *INTERRUPTED, *WITHDRAWN):
+        directory = package / job
+        prep = read(directory / 'preparation.json')
+        for name in ('gate.json', 'evaluation.json'):
+            if prep['input_sha256'][name] != sha(directory / name):
+                raise ValueError(f'{job}/{name} differs from its frozen preparation')
+        if job in WITHDRAWN:
+            continue
+        posted = POSTED_ON_51[job]
+        frozen = record[job]
+        original = read(directory / 'original-artifact-sha256.json')
+        for name in ('preparation.json', 'gate.json', 'evaluation.json'):
+            digest = sha(directory / name)
+            if (digest != posted[name] or digest != original[name]
+                    or digest != frozen[name.replace('.json', '_sha256')]):
+                raise ValueError(f'{job}/{name} differs from the hash posted on #51')
+        if frozen['wheel_sha256'] != next(
+                v for k, v in prep['input_sha256'].items() if k.endswith('.whl')):
+            raise ValueError(f'{job} wheel differs from its freeze record')
+        mechanical = read(directory / 'mechanical-qualification.json')
+        if (mechanical['gate_sha256'] != sha(directory / 'gate.json')
+                or mechanical['experiment_sha256'] != original['experiment/experiment.json']):
+            raise ValueError(f'{job} mechanical summary is not bound to its gate and experiment')
 
 
 def gate_tests(directory, first_attempt_rule):
@@ -267,6 +313,7 @@ def summarize(directory, first_attempt_rule, retained_tests=True):
         'tests': tests, 'all_gate_tests_pass': all(tests.values()),
         'gate_items': gate_items(gate, cells),
         'status_counts': dict(collections.Counter(c['status'] for c in cells)),
+        'cells_accounting_incomplete': sum(not c['accounting_complete'] for c in cells),
         'first_attempt_status_counts': dict(collections.Counter(
             c['first_attempt_status'] for c in cells)),
         'rerun_attempts': sum(len(c['attempts']) - 1 for c in cells),
@@ -319,8 +366,21 @@ def interrupted(directory):
             'gate': 'not judged'}
 
 
+def proxy_tokens(package):
+    """The proxy's own count of this evaluator's requests in the g2 window, from
+    provider-evidence.json (derived from private spend-log rows; not recomputable here)."""
+    row = read(package / 'provider-evidence.json')['spend_log_windows'][
+        'g2_2026-10-14T18:44Z_20:40Z']['by_client']['python-httpx2']
+    return {'requests': row['rows'], 'prompt_tokens': row['prompt_tokens'],
+            'completion_tokens': row['completion_tokens'],
+            'total_tokens': row['prompt_tokens'] + row['completion_tokens'],
+            'note': 'exceeds recorded cell usage because the turns cut off by the session '
+                    'timeout are logged by the proxy but not counted in cell accounting'}
+
+
 def build(package, reports=None):
     reports = package.parent if reports is None else reports
+    cross_hashes(package)
     decisions, jobs = [], {}
     for job in JOBS:
         rows, jobs[job] = summarize(package / job, first_attempt_rule=True)
@@ -358,6 +418,7 @@ def build(package, reports=None):
         'jobs': jobs, 'interrupted': stopped, 'withdrawn_before_launch': withdrawn,
         'reference_gpt_6_1_sol': reference,
         'side_by_side': side,
+        'proxy_logged_evaluator_tokens_g2_window': proxy_tokens(package),
         'side_by_side_caveat': 'different model, source commit (5c4a8b6 vs 2f1e95c), day '
                                '(2026-10-14 vs 2026-10-13) and session timeout (600 vs 120 '
                                's); the reference r1 was judged at the time on its final '

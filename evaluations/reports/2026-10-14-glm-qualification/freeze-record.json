@@ -65,5 +65,9 @@
     "preparation_written_utc": "2026-10-14T18:46:40Z",
     "launched": false
   },
-  "note": "freeze-*.json were written by the operator before each launch and the hashes were posted on #51 before the first call of each schedule (g1 comment 15:19:59Z vs launch 15:20:11Z; g2 comment after 18:47:33Z freeze and before 18:48:07Z launch). The process records and ledger are local operator records."
+  "note": "freeze-*.json were written by the operator before each launch, and the hashes were posted on #51 before the first call of each schedule: g1 freeze 15:19:59Z, comment 15:20:00Z, launch 15:20:11Z; g2 freeze 18:47:33Z, comment 18:47:48Z, launch 18:48:07Z. Neither comment was edited. The process records and ledger are local operator records; the comments are the only timestamps outside them.",
+  "public_freeze_comment_created_utc": {
+    "g1": "2026-10-14T15:20:00Z",
+    "g2": "2026-10-14T18:47:48Z"
+  }
 }

@@ -68,7 +68,7 @@
       "invalid_cell_diagnosis": {
         "cell": "contract-explicit-default-clean/assessed/1",
         "classification": "model or serving output-format failure (stray and malformed tokens after valid JSON); not budget, turns, timeout or upstream 5xx, so not rerun-eligible and not addressed by any profile setting",
-        "frequency_in_g1": "1 of 24 terminated sessions; the other 23 ended end_turn with no stray characters",
+        "frequency_in_g1": "1 of 25 terminated sessions (24 in the 6 recorded cells plus one in the unrecorded focused1/1); the other 24 ended end_turn with no stray characters",
         "native_result": "status error, stop_reason schema_violation, 4 of 6 turns, 15,821 of 20,000 tokens, accounting incomplete",
         "session": "junior-dev/attempt-0001 (discovery)",
         "what_happened": "the model's answer was '{\"findings\": []}' followed by a stray token ('\\u0628\\u0644'); nare extract_json accepts only a whole-text or fenced JSON answer and refused it; on its single schema reprompt the model answered '{\"findings\": []}' + U+FFFD + an orphan word fragment + prose + a second '{\"findings\": []}', refused again"
@@ -478,6 +478,7 @@
         "mean": 504.09,
         "median": 595.77
       },
+      "cells_accounting_incomplete": 19,
       "findings": 8,
       "findings_left_pending_for_a_person": 1,
       "first_attempt_status_counts": {
@@ -537,6 +538,13 @@
     }
   },
   "judgments": "automated keyword filters, provisional",
+  "proxy_logged_evaluator_tokens_g2_window": {
+    "completion_tokens": 471505,
+    "note": "exceeds recorded cell usage because the turns cut off by the session timeout are logged by the proxy but not counted in cell accounting",
+    "prompt_tokens": 1642331,
+    "requests": 488,
+    "total_tokens": 2113836
+  },
   "qualified": false,
   "reference_gpt_6_1_sol": {
     "sol-r1": {
@@ -929,6 +937,7 @@
         "mean": 38.63,
         "median": 40.88
       },
+      "cells_accounting_incomplete": 0,
       "findings": 96,
       "findings_left_pending_for_a_person": 0,
       "first_attempt_status_counts": {
@@ -1364,6 +1373,7 @@
         "mean": 34.48,
         "median": 36.58
       },
+      "cells_accounting_incomplete": 0,
       "findings": 96,
       "findings_left_pending_for_a_person": 2,
       "first_attempt_status_counts": {
@@ -1799,6 +1809,7 @@
         "mean": 34.66,
         "median": 36.61
       },
+      "cells_accounting_incomplete": 0,
       "findings": 96,
       "findings_left_pending_for_a_person": 0,
       "first_attempt_status_counts": {
