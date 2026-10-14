@@ -18,6 +18,9 @@ from scrutare.engine.github import GitHubError, resolve_pr
 
 MAX_BODY = 1024 * 1024
 REVIEWED_ACTIONS = frozenset({"opened", "synchronize", "reopened", "ready_for_review"})
+REPLY_EVENT = "pull_request_review_comment"
+REPLY_ACTIONS = frozenset({"created", "edited"})
+REPLY_DELIVERY = "webhook:reply:"
 _ORIGIN = re.compile(r"https://[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?(?::[1-9][0-9]{0,4})?")
 _SHA = re.compile(r"[0-9a-f]{40}")
 
@@ -76,7 +79,7 @@ class AppSettings:
 class JobStore:
     """SQLite admissions and leases; running work is never replayed after restart.
 
-    Statuses: queued, running, then posted, failed, interrupted or superseded.
+    Statuses: queued, running, then posted, unchanged, failed, interrupted or superseded.
     """
 
     def __init__(self, path: Path, max_pending: int = 100):
@@ -129,7 +132,16 @@ class JobStore:
             if prior is not None and not revive:
                 return self._job(prior)
             identity = prior["id"] if prior is not None else uuid.uuid4().hex
-            if webhook:
+            if delivery.startswith(REPLY_DELIVERY):
+                # A queued job of this pull request will capture the reply. A reply never
+                # displaces a queued push: its own job may end without reviewing anything.
+                covering = db.execute(
+                    "SELECT * FROM jobs WHERE status = 'queued' AND repository = ? "
+                    "AND number = ? AND delivery LIKE 'webhook:%' ORDER BY created, rowid "
+                    "LIMIT 1", (repository, number)).fetchone()
+                if covering is not None:
+                    return self._job(covering)
+            elif webhook:
                 # One queued push per pull request. The review that runs captures the
                 # head current then, so older queued pushes announce heads that are gone,
                 # and one author cannot fill the queue for every other pull request.
@@ -181,7 +193,7 @@ class JobStore:
     def finish(self, identity: str, status: str, result: dict[str, Any],
                reviewed: str | None = None) -> None:
         """Record a terminal state and the head whose review was or may have been sent."""
-        if status not in {"posted", "failed", "interrupted", "superseded"}:
+        if status not in {"posted", "unchanged", "failed", "interrupted", "superseded"}:
             raise AppError("invalid terminal job status")
         with closing(self._connect()) as db, db:
             cursor = db.execute("UPDATE jobs SET status = ?, result = ?, reviewed = ? "
@@ -238,13 +250,15 @@ def admit_webhook(settings: AppSettings, store: JobStore, event: str, delivery: 
         document = json.loads(body)
         if not isinstance(document, dict):
             raise ValueError
-        if event != "pull_request" or document.get("action") not in REVIEWED_ACTIONS:
+        reply = event == REPLY_EVENT and document.get("action") in REPLY_ACTIONS
+        if not reply and (event != "pull_request"
+                          or document.get("action") not in REVIEWED_ACTIONS):
             return {"status": "ignored"}
         repository = document["repository"]["full_name"]
-        number = document["number"]
+        pr = document["pull_request"]
+        number = pr["number"] if reply else document["number"]
         installation = document["installation"]["id"]
         settings.authorize(repository, number, installation)
-        pr = document["pull_request"]
         if (type(pr["number"]) is not int or pr["number"] != number
                 or pr["base"]["repo"]["full_name"] != repository):
             raise ValueError
@@ -253,6 +267,8 @@ def admit_webhook(settings: AppSettings, store: JobStore, event: str, delivery: 
             raise ValueError
         if pr["state"] != "open":
             return {"status": "ignored"}
+        if reply:
+            return _admit_reply(store, document, repository, number, installation, head)
         # The delivery header is not covered by the signature. Key admission on signed
         # content, so a replayed body under a fresh delivery ID is the same job and each
         # announced head of a pull request is admitted once.
@@ -262,3 +278,29 @@ def admit_webhook(settings: AppSettings, store: JobStore, event: str, delivery: 
         if isinstance(error, AppError):
             raise
         raise AppError("invalid pull request event") from None
+
+
+def _admit_reply(store: JobStore, document: dict[str, Any], repository: str, number: int,
+                 installation: int, head: str) -> dict[str, Any]:
+    """Queue a reassessment for a person's reply on an inline review thread.
+
+    Admission cannot know the repository's trust policy or whose thread this is. It
+    drops what can never contest: new threads, bots and Scrutare's own responses. The
+    engine applies the policy to what it captures.
+    """
+    comment = document["comment"]
+    identity, parent, body = comment["id"], comment.get("in_reply_to_id"), comment["body"]
+    accounts = (comment["user"], document["sender"])
+    if (type(identity) is not int or identity <= 0 or not isinstance(body, str)
+            or not (parent is None or (type(parent) is int and parent > 0))
+            or any(not isinstance(account["login"], str) or not isinstance(account["type"], str)
+                   for account in accounts)):
+        raise ValueError
+    if parent is None or any(account["type"] != "User" or account["login"].endswith("[bot]")
+                             for account in accounts):
+        return {"status": "ignored"}
+    # Keyed on signed content: one job per text of a comment. A redelivery or an edit
+    # that leaves the text alone is the same job; a changed text is fresh evidence once.
+    text = hashlib.sha256(body.encode()).hexdigest()
+    signed = hashlib.sha256(f"{repository}\0{number}\0{identity}\0{text}".encode()).hexdigest()
+    return store.enqueue(REPLY_DELIVERY + signed, repository, number, installation, head)
