@@ -7,7 +7,7 @@ from typing import Any, Literal
 
 from scrutare import __version__
 from scrutare.config import Strategy, VerdictSettings
-from scrutare.findings.verdict import Exhaustion, Verdict
+from scrutare.findings.verdict import Degradation, Exhaustion, Verdict
 
 
 class ReplayError(ValueError):
@@ -51,6 +51,7 @@ class SavedVerdict:
     raw: bytes
     document: Mapping[str, object]
     exhaustion: Exhaustion | None
+    degradation: Degradation | None = None
 
 
 @dataclass(frozen=True)
