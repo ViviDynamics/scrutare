@@ -179,6 +179,16 @@ outcome; the assessor rejected nothing because no wrong candidate reached it; an
 three discussion rounds started and none completed.
 Judgments are automated and provisional; no default changed.
 
+The [onprem/glm-5.3-flash qualification](../evaluations/reports/2026-10-14-glm-qualification/README.md)
+ran the profile that qualified `gpt-6.1-sol` against the maintainer's self-hosted
+model, with a 600-second session timeout, on a later commit and day than the
+`gpt-6.1-sol` schedules. It did not qualify: 14 of 36 cells completed and 2 of
+the 6 aggregate defect cells produced evidence. Sessions timed out while still
+generating on a shared engine, and nine final answers failed the findings schema
+twice (model or serving stack; not separated). One earlier schedule was
+interrupted by the operator's session ending and is retained unjudged. External
+spend was zero.
+
 Ordinary CI uses `--evidence-kind offline` and deterministic provider substitutions
 to verify orchestration and scoring. Offline metrics measure software behavior only.
 A real baseline requires explicit model jobs and completed independent human
