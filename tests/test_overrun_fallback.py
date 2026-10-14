@@ -2,6 +2,7 @@
 
 import json
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 from test_assessment import configuration
@@ -822,3 +823,176 @@ def test_assessor_degraded_text_names_its_stage():
     payload = degraded_payload("style", phase="assessment")
     assert ("Degraded: the assessment phase overran its grant and fell back to "
             "anchor_validated. It is not an approval.\n") in payload.body
+
+
+# Review round 1.
+
+@pytest.mark.parametrize("strategy", ["panel", "debate"])
+def test_no_output_assessor_budget_stop_falls_back_and_replays(capture, tmp_path, monkeypatch,
+                                                               strategy):
+    # The nare error/budget shape with no output: the artifact status is "failed" while the
+    # outcome is a measured partial/budget overrun.
+    import asyncio
+
+    from test_panel import install
+
+    from scrutare.engine.strategy import run_review
+    from scrutare.replay.audit import replay_run
+    config, claim = assessed_capture(capture, strategy=strategy, category="style")
+    install(monkeypatch, {"security": (claim,)})
+    result = asyncio.run(run_review(capture, config, runtime=phase_runtime(
+        tmp_path, {"assessment": {"input": 120, "shape": "stop"}})))
+    assert result.verdict.rule == "phase_overrun_fallback"
+    assessment = json.loads((capture / "assessment.json").read_bytes())
+    assert assessment["status"] == "failed"
+    assert (assessment["outcome"]["status"], assessment["outcome"]["reason"]) == (
+        "partial", "budget")
+    assert replay_run(capture).saved_identical
+
+
+def test_no_output_reassessment_budget_stop_falls_back_and_replays(capture, tmp_path,
+                                                                   monkeypatch):
+    import asyncio
+
+    from test_panel import install
+
+    from scrutare.engine.debate import run_debate
+    from scrutare.replay.audit import replay_run
+    config, claim = discussion_capture(capture, discussion="fallback")
+    install(monkeypatch, {"security": (claim,)})
+    plan = {"assessment": {"status": "unresolved"},
+            "reassessment": {"input": 200, "shape": "stop"}}
+    result = asyncio.run(run_debate(capture, config, runtime=phase_runtime(tmp_path, plan)))
+    assert result.verdict.to_dict()["degraded"]["phase"] == "discussion"
+    assert json.loads((capture / "assessment-round-0001.json").read_bytes())["status"] == "failed"
+    assert replay_run(capture).saved_identical
+
+
+def test_phase_allowance_survives_discovery_overshoot():
+    from scrutare.engine.session_models import TokenUsage
+    ledger = phase_ledger()  # a, b: 50 each; assessor 40; discussion 60; ceiling 200
+    a, b = ledger.admit("a", "a/1"), ledger.admit("b", "b/1")
+    # Discovery ends 80 past its grants: more than the assessor's unspent reservation.
+    ledger.settle(a, TokenUsage(input=90), True)
+    ledger.settle(b, TokenUsage(input=90), True)
+    (assessor,) = (ledger.admit("assessor", "assessor/1"),)
+    assert assessor.allocated_tokens == 40
+    ledger.settle(assessor, TokenUsage(input=40), True)
+    leases = ledger.admit_phase("discussion", (("a", "a/3"), ("b", "b/3")))
+    assert [lease.allocated_tokens for lease in leases] == [30, 30]
+
+
+def test_discovery_overshoot_cannot_starve_the_cell_allowances(capture, tmp_path, monkeypatch):
+    import asyncio
+
+    from test_panel import install
+
+    from scrutare.engine.debate import run_debate
+    from scrutare.replay.audit import replay_run
+    config, claim = allowance_capture(capture, monkeypatch)
+    # Each reviewer ends 8,500 past its 12,500 grant: 34,000 in all, beyond the unspent
+    # assessor reservation, so the ceiling alone would shrink both reserved pools.
+    install(monkeypatch, {"security": (claim,)}, initial_usage=21000)
+    plan = {"assessment": {"counter": True}, "position": {"input": 6960}}
+    result = asyncio.run(run_debate(capture, config, runtime=phase_runtime(tmp_path, plan)))
+    assert result.verdict is not None
+    assert json.loads((capture / "assessment.json").read_bytes())["outcome"][
+        "allocated_tokens"] == 30000
+    trace = json.loads((capture / "debate.json").read_bytes())
+    assert [p["allocated_tokens"] for p in trace["rounds"][0]["positions"]] == [7500] * 4
+    assert replay_run(capture).saved_identical
+
+
+def test_overshoot_protection_is_opt_in():
+    # Without any new setting, discovery overshoot still reduces later grants as before.
+    from scrutare.engine.budgets import ReviewBudgetLedger
+    from scrutare.engine.session_models import TokenUsage
+    settings = replace(configuration().budgets, per_persona_tokens=100, review_max_tokens=140)
+    ledger = ReviewBudgetLedger(("a", "assessor"), settings, reserved_allocations={"assessor": 40})
+    a = ledger.admit("a", "a/1")
+    ledger.settle(a, TokenUsage(input=130), True)
+    assert ledger.admit("assessor", "assessor/1").allocated_tokens == 10
+
+
+@pytest.mark.parametrize("forgery", ["native", "accounting", "extra_position"])
+def test_replay_checks_native_evidence_for_a_position_fallback(capture, tmp_path, monkeypatch,
+                                                               forgery):
+    import asyncio
+
+    from test_review_inputs import save_json
+
+    from scrutare.engine.debate import run_debate
+    from scrutare.replay.audit import replay_run
+    from scrutare.replay.models import ReplayError
+    config, _ = cell_capture(capture, monkeypatch, category="style")
+    plan = {"assessment": {"counter": True}, "position": STOPPED}
+    asyncio.run(run_debate(capture, config, runtime=phase_runtime(tmp_path, plan)))
+    assert replay_run(capture).saved_identical
+    trace = json.loads((capture / "debate.json").read_bytes())
+    if forgery == "native":
+        # The native session says the position finished well inside its grant.
+        path = capture / "sessions/devops/attempt-0003/session.json"
+        session = json.loads(path.read_bytes())
+        session.update(status="done", stop_reason="end_turn",
+                       usage={"input": 4, "output": 2, "cache_read": 3, "cache_write": 1})
+        save_json(path, session)
+    elif forgery == "accounting":
+        trace["ledger"]["accounting_complete"] = False
+        save_json(capture / "debate.json", trace)
+    else:
+        trace["rounds"][0]["positions"].append("not an outcome")
+        save_json(capture / "debate.json", trace)
+    with pytest.raises(ReplayError):
+        replay_run(capture)
+
+
+@pytest.mark.parametrize("forgery", ["native", "accounting"])
+def test_replay_checks_native_evidence_for_an_assessor_fallback(capture, tmp_path, monkeypatch,
+                                                                forgery):
+    import asyncio
+
+    from test_panel import install
+    from test_review_inputs import save_json
+
+    from scrutare.engine.strategy import run_review
+    from scrutare.replay.audit import replay_run
+    from scrutare.replay.models import ReplayError
+    config, claim = assessed_capture(capture, category="style")
+    install(monkeypatch, {"security": (claim,)})
+    asyncio.run(run_review(capture, config, runtime=phase_runtime(
+        tmp_path, {"assessment": {"input": 120}})))
+    if forgery == "native":
+        path = capture / "sessions/evidence-assessor/attempt-0001/session.json"
+        session = json.loads(path.read_bytes())
+        session["usage"] = {"input": 4, "output": 2, "cache_read": 3, "cache_write": 1}
+        save_json(path, session)
+    else:
+        panel = json.loads((capture / "panel.json").read_bytes())
+        panel["ledger"]["accounting_complete"] = False
+        save_json(capture / "panel.json", panel)
+    with pytest.raises(ReplayError):
+        replay_run(capture)
+
+
+def test_degraded_result_and_action_accept_the_fallback_rule():
+    from scrutare.interfaces.action import ActionError, validate_success
+    base = {"accounting_complete": True, "panel_status": "partial",
+            "usage": {"input": 1, "output": 1, "cache_read": 0, "cache_write": 0, "total": 2},
+            "review": {"review_id": 7, "html_url":
+                       "https://github.com/owner/repo/pull/12#pullrequestreview-7",
+                       "commit_id": "a" * 40, "body": "x", "state": "COMMENTED",
+                       "login": "scrutare[bot]"}}
+    degraded = degradation("discussion").to_dict()
+    validate_success(base | {"rule": "phase_overrun_fallback", "degraded": degraded},
+                     "escalated", "a" * 40, "owner/repo", 12)
+    with pytest.raises(ActionError):
+        validate_success(base | {"rule": "phase_overrun_fallback"}, "escalated", "a" * 40,
+                         "owner/repo", 12)
+    from scrutare.engine.review import ReviewRunResult
+    from scrutare.engine.session_models import TokenUsage
+    result = ReviewRunResult(Path("/run"), "a" * 40, "escalated", "phase_overrun_fallback",
+                             "partial", TokenUsage(), True, None, degraded=degraded)
+    assert result.to_dict()["degraded"] == degraded
+    plain = ReviewRunResult(Path("/run"), "a" * 40, "approve", "no_blocking_findings",
+                            "complete", TokenUsage(), True, None)
+    assert "degraded" not in plain.to_dict()

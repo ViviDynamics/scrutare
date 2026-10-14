@@ -226,7 +226,11 @@ def validate_success(
         "changes_requested": "any_blocking_finding",
         "escalated": "rounds_exhausted_without_convergence",
     }
-    if scalar(result.get("rule")) != rules[verdict]:
+    rule = scalar(result.get("rule"))
+    # An opt-in phase overrun fallback escalates under its own rule and names its record.
+    fallback = (verdict == "escalated" and rule == "phase_overrun_fallback"
+                and isinstance(result.get("degraded"), dict))
+    if rule != rules[verdict] and not fallback:
         raise ActionError("invalid recorded verdict rule")
     usage = mapping(result.get("usage"))
     counters: list[int] = []

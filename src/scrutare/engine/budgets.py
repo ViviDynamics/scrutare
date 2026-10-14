@@ -57,7 +57,8 @@ class ReviewBudgetLedger:
 
     def __init__(self, persona_names: tuple[str, ...], settings: BudgetSettings, *,
                  reserved_allocations: Mapping[str, int] | None = None,
-                 phase_allowances: Mapping[str, int] | None = None) -> None:
+                 phase_allowances: Mapping[str, int] | None = None,
+                 protect_reservations: bool = False) -> None:
         if not isinstance(persona_names, tuple) or not persona_names:
             raise ValueError("persona_names: expected a nonempty tuple")
         for persona in persona_names:
@@ -93,6 +94,9 @@ class ReviewBudgetLedger:
         self._phases = phases
         self._phase_usage = dict.fromkeys(phases, TokenUsage())
         self._session_phase: dict[str, str] = {}
+        # Opt-in (implied by a phase allowance): another participant's overshoot past its own
+        # grant cannot shrink a later grant. Every grant stays within its share of the ceiling.
+        self._protected = bool(protect_reservations or phases)
         self._sessions: dict[str, tuple[str, TokenUsage]] = {}
         self._active: dict[str, BudgetLease] = {}
         self._usage = TokenUsage()
@@ -114,6 +118,17 @@ class ReviewBudgetLedger:
     def accounting_complete(self) -> bool:
         return self._accounting_complete
 
+    def _room(self) -> int:
+        """Ceiling capacity left for a new grant, net of live leases."""
+        held = sum(self._remaining(lease) for lease in self._active.values())
+        if not self._protected:
+            return self._settings.review_max_tokens - self.usage.total - held
+        entitled = sum(min(self._persona_usage[name].total, self._allocations[name])
+                       for name in self._names) + sum(
+            min(self._phase_usage[phase].total, allowance)
+            for phase, allowance in self._phases.items())
+        return self._settings.review_max_tokens - entitled - held
+
     def _remaining(self, lease: BudgetLease) -> int:
         return max(0, lease.limit_tokens - self._sessions[lease.session_key][1].total)
 
@@ -132,13 +147,13 @@ class ReviewBudgetLedger:
                 raise ValueError("baseline: a fresh session must start at zero")
         elif previous != (persona, baseline):
             raise ValueError("baseline: expected this persona's exact session high-water vector")
-        if not self.accounting_complete or self.exhausted or persona in self._active:
+        if session_key in self._session_phase:
+            raise ValueError("session_key: a phase session is admitted only from its phase")
+        if (not self.accounting_complete or (self.exhausted and not self._protected)
+                or persona in self._active):
             return None
         available = self._allocations[persona] - self._persona_usage[persona].total
-        reserved = sum(self._remaining(lease) for lease in self._active.values())
-        grant = min(
-            available, max(0, self._settings.review_max_tokens - self.usage.total - reserved)
-        )
+        grant = min(available, max(0, self._room()))
         if grant <= 0:
             return None
         lease = BudgetLease(persona, session_key, baseline, baseline.total + grant, grant)
@@ -173,14 +188,13 @@ class ReviewBudgetLedger:
             personas.append(persona)
         if len(set(personas)) != len(personas):
             raise ValueError("requests: duplicate persona")
-        if (not self.accounting_complete or self.exhausted
+        if (not self.accounting_complete
                 or any(persona in self._active for persona in personas)):
             return None
-        held = sum(self._remaining(lease) for lease in self._active.values())
         in_phase = sum(self._remaining(lease) for lease in self._active.values()
                        if self._session_phase.get(lease.session_key) == phase)
         pool = min(self._phases[phase] - self._phase_usage[phase].total - in_phase,
-                   self._settings.review_max_tokens - self.usage.total - held)
+                   self._room())
         if pool <= 0:
             return None
         quotient, remainder = divmod(pool, len(requests))

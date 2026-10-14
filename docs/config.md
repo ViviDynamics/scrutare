@@ -245,6 +245,17 @@ findings:
   blocking claims still escalate under `unresolved_semantic_assessment`, and
   otherwise the verdict escalates under `phase_overrun_fallback`. Replay rebuilds
   the fallback from the retained outcomes without running a model.
+- With any of these settings, one participant's overshoot past its own grant no
+  longer shrinks a later reserved grant: each grant is bounded by its own share of
+  the ceiling, not by what others overspent. Every grant still fits the ceiling's
+  partition, but total actual usage can exceed `review_max_tokens` by overshoot
+  already incurred, as after-turn enforcement always allowed.
+- The discussion allowance is shared by every round. Positions take an even share
+  of what remains and a reassessment takes the rest, so a reassessment or a later
+  round can find nothing left. Admission is then refused, and a refused admission is
+  not a fallback trigger: the review is void. Size the allowance for `rounds.max`.
+- `result.json` and the CLI envelope carry the same `degraded` record. The reusable
+  Action accepts an escalation under `phase_overrun_fallback` only with that record.
 - `findings.assessment.overrun: fallback` requires `strategy: panel` or `debate`.
   Iterative reviews re-derive verdicts from assessment state kept across pushes,
   so the setting is refused there.

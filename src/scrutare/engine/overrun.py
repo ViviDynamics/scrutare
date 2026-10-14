@@ -7,7 +7,8 @@ records, so replay reconstructs the fallback from evidence without running a mod
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Literal
+from pathlib import Path
+from typing import Literal, cast
 
 from scrutare.findings.verdict import Degradation
 
@@ -31,6 +32,41 @@ def overran(outcome: Mapping[str, object]) -> bool:
     """An admitted session stopped for its budget with complete, exact accounting."""
     return (outcome.get("status") == "partial" and outcome.get("reason") == "budget"
             and outcome.get("accounting_complete") is True)
+
+
+def artifact_status(outcome: Mapping[str, object]) -> str:
+    """The assessment artifact status an overrun outcome records (no output: failed)."""
+    return "partial" if outcome.get("output_available") is True else "failed"
+
+
+def native_overrun(directory: Path, outcome: Mapping[str, object]) -> None:
+    """Confirm a recorded overrun against the native session nare saved, or raise ValueError.
+
+    The saved session must carry the granted budget and the recorded usage, and show either
+    a budget stop or a finished turn past that budget.
+    """
+    from scrutare.replay.artifacts import decode_artifact, read_artifact
+
+    session = decode_artifact(read_artifact(directory / "session.json"), artifact="session.json")
+    if not isinstance(session, dict):
+        raise ValueError("overrun: missing native session")
+    budget = session.get("budget")
+    usage = session.get("usage")
+    recorded = outcome.get("usage")
+    fields = ("input", "output", "cache_read", "cache_write")
+    if (not isinstance(budget, dict) or not isinstance(usage, dict)
+            or not isinstance(recorded, Mapping)):
+        raise ValueError("overrun: incomplete native session")
+    limit = budget.get("tokens")
+    if (type(limit) is not int or limit != outcome.get("allocated_tokens")
+            or limit != outcome.get("invocation_limit")
+            or any(usage.get(field) != recorded.get(field) for field in fields)):
+        raise ValueError("overrun: native session disagrees with the recorded outcome")
+    total = sum(cast(int, usage[field]) for field in fields)
+    stopped = session.get("status") == "error" and session.get("stop_reason") == "budget"
+    if total != _usage_total(outcome) or not (stopped or (
+            session.get("status") == "done" and total > limit)):
+        raise ValueError("overrun: native session shows no budget overrun")
 
 
 def phase_degradation(

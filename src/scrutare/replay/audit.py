@@ -109,6 +109,14 @@ def _context_issues(run_dir: Path, policy: CapturedPolicy) -> tuple[AuditIssue, 
         return (AuditIssue("repository_context_invalid", "repository-context.json", "invalid"),)
 
 
+def _ledger_complete(run_dir: Path) -> None:
+    """A fallback is never an accounting failure: the retained ledger must be complete."""
+    panel = decode_artifact(read_artifact(run_dir / "panel.json"), artifact="panel.json")
+    ledger = panel.get("ledger") if isinstance(panel, dict) else None
+    if not isinstance(ledger, dict) or ledger.get("accounting_complete") is not True:
+        raise ValueError("fallback: accounting must be complete")
+
+
 class _Fallback(Exception):
     """The validated assessor fallback replaces assessment rows by the candidates."""
 
@@ -118,14 +126,19 @@ def _assessment_fallback(run_dir: Path, config: ReviewConfig, assessment: dict[s
                          findings: tuple[MergedFinding, ...]) -> Degradation:
     """Accept a recorded assessor fallback only from a measured, exactly accounted overrun."""
     from scrutare.engine.discussion import equivalent_groups
-    from scrutare.engine.overrun import phase_degradation
+    from scrutare.engine.overrun import artifact_status, native_overrun, phase_degradation
     from scrutare.findings.dedupe import dedupe_findings
 
     outcome = assessment.get("outcome")
     tokens = config.findings.assessment.tokens
     if (not isinstance(outcome, dict) or outcome.get("allocated_tokens") != tokens
-            or outcome.get("status") != assessment.get("status")):
+            or assessment.get("status") != artifact_status(outcome)):
         raise ValueError("assessment: fallback needs the admitted assessor outcome")
+    _ledger_complete(run_dir)
+    persona = outcome.get("persona")
+    if not isinstance(persona, str) or "/" in persona:
+        raise ValueError("assessment: fallback needs the assessor identity")
+    native_overrun(run_dir / "sessions" / persona / "attempt-0001", outcome)
     degradation = phase_degradation("assessment", (outcome,), round_number=None,
                                     allowance=tokens)
     if degradation is None:

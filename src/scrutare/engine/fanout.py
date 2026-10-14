@@ -103,8 +103,11 @@ async def _prepare_execution(
     # An opt-in discussion allowance is carved out of the ceiling before discovery is split.
     phases = ({"discussion": config.findings.discussion.tokens}
               if config.findings.discussion.tokens is not None else None)
+    findings = config.findings
     ledger = ReviewBudgetLedger(names, config.budgets, reserved_allocations=reserved,
-                                phase_allowances=phases)
+                                phase_allowances=phases, protect_reservations=(
+                                    findings.assessment.overrun != "void"
+                                    or findings.discussion.overrun != "void"))
     attempts = tuple(
         create_attempt_directory(run, d.persona.name, prepared_root=inputs.root)
         for d in descriptors

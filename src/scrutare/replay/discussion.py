@@ -8,7 +8,7 @@ from typing import Any, cast
 from scrutare.config import ReviewConfig
 from scrutare.engine.assessment import Assessment, assessment_wire, parse_assessments
 from scrutare.engine.discussion import Proposal, disputed_ids, parse_proposals, proposal_wire
-from scrutare.engine.overrun import phase_degradation
+from scrutare.engine.overrun import artifact_status, native_overrun, phase_degradation
 from scrutare.findings import Exhaustion
 from scrutare.findings.models import artifact_data, finding_from_artifact
 from scrutare.findings.verdict import Degradation
@@ -89,6 +89,8 @@ def replay_discussion(
             )]
         if [p.get("persona") for p in positions if isinstance(p, dict)] != names:
             raise ValueError("discussion: perspective coverage disagrees")
+        if any(not isinstance(p, dict) for p in positions):
+            raise ValueError("discussion: invalid position record")
         if allowance is not None:
             grants = [p.get("allocated_tokens") if isinstance(p, dict) else None
                       for p in positions]
@@ -108,6 +110,10 @@ def replay_discussion(
                     or record.get("new_citations") != []
                     or record.get("tokens") != sum(_tokens(p) for p in positions)):
                 raise ValueError("discussion: fallback round disagrees")
+            for position in positions:
+                if not _usable(position):
+                    native_overrun(run_dir / "sessions" / cast(str, position["persona"])
+                                   / f"attempt-{number + 2:04d}", position)
             break
         parsed: list[Proposal] = []
         total_tokens = 0
@@ -174,11 +180,13 @@ def replay_discussion(
                 degradation = phase_degradation(
                     "discussion", [outcome], round_number=number,
                     allowance=config.findings.discussion.tokens)
-                if (degradation is None or outcome.get("status") != assessment.get("status")
+                if (degradation is None or assessment.get("status") != artifact_status(outcome)
                         or not isinstance(initial_outcome, dict)
                         or outcome.get("persona") != initial_outcome.get("persona")
                         or record.get("disposition_changes") != []):
                     raise ValueError("discussion: fallback reassessment disagrees")
+                native_overrun(run_dir / "sessions" / cast(str, outcome["persona"])
+                               / f"attempt-{number + 1:04d}", outcome)
                 total_tokens += _tokens(outcome)
             else:
                 updated_rows = parse_assessments(
@@ -233,6 +241,10 @@ def replay_discussion(
         remaining = disputed_ids(rows) if needs else ()
     if fallback and (degradation is None or trace.get("degraded") != degradation.to_dict()):
         raise ValueError("discussion: recorded fallback disagrees")
+    ledger = trace.get("ledger")
+    if degradation is not None and (not isinstance(ledger, dict)
+                                    or ledger.get("accounting_complete") is not True):
+        raise ValueError("discussion: a fallback needs complete accounting")
     if degradation is None and remaining and len(rounds) != config.rounds.max:
         raise ValueError("discussion: uncertainty before bound")
     expected = (Exhaustion("debate", len(rounds), config.rounds.max)

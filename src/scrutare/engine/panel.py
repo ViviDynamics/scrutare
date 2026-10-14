@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from hashlib import sha256
 from pathlib import Path
 from typing import Literal
@@ -224,7 +224,10 @@ async def run_panel(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime
                     verdict = derive_verdict(
                         dedupe_findings(accepted), config.verdict,
                         evidence_version=2 if config.findings.evidence == "v2" else 1,
-                        unresolved_candidates=unresolved, degradation=degradation)
+                        unresolved_candidates=unresolved)
+                    if degradation is not None:
+                        # Default runs keep the established call exactly.
+                        verdict = replace(verdict, degradation=degradation)
         _validate_binding(context, hashes)
     except ReviewInputError:
         status, reason, verdict = "failed", "inputs", None
