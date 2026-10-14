@@ -18,6 +18,7 @@ _TIMEOUT_SECONDS = 60
 _OWNER = r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?"
 _REPO = r"[A-Za-z0-9_.-]+"
 _REPOSITORY = re.compile(rf"({_OWNER})/({_REPO})")
+_HUMAN_LOGIN = re.compile(r"[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*")
 _PR_URL = re.compile(rf"https://github\.com/({_OWNER})/({_REPO})/pull/([0-9]+)/?")
 
 
@@ -34,6 +35,12 @@ class PullRequestRef:
     owner: str
     repo: str
     number: int
+
+
+def human_login(value: object) -> bool:
+    """Whether a value is a plain account login, safe to place in an API path."""
+    return (isinstance(value, str) and len(value) <= 39
+            and _HUMAN_LOGIN.fullmatch(value) is not None)
 
 
 def _repository(value: str) -> tuple[str, str]:
@@ -191,6 +198,20 @@ class GitHubClient:
 
     def get_review_comments(self, ref: PullRequestRef) -> list[dict[str, Any]]:
         return self._list(f"{self._endpoint(ref)}/comments")
+
+    def get_permission(self, ref: PullRequestRef, login: str) -> str:
+        """Read one human account's verified repository permission, never a bot's."""
+        if not human_login(login):
+            raise GitHubError("Permission lookup requires a plain GitHub login.")
+        endpoint = self._endpoint(ref).rsplit("/pulls/", 1)[0]
+        data = _json(_run(["gh", "api", f"{endpoint}/collaborators/{login}/permission"],
+                          self._runner))
+        user = data.get("user") if isinstance(data, dict) else None
+        if (not isinstance(user, dict) or not isinstance(user.get("login"), str)
+                or user["login"].lower() != login.lower()
+                or data.get("permission") not in ("admin", "write", "read", "none")):
+            raise GitHubError("GitHub returned a malformed permission record.")
+        return str(data["permission"])
 
     def _object(self, repository: str, kind: str, sha: str) -> dict[str, Any]:
         owner, repo = _repository(repository)

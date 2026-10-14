@@ -11,6 +11,7 @@ from typing import Any
 from scrutare import __version__
 from scrutare.config import ReviewConfig
 from scrutare.engine.github import GitHubClient, GitHubError, PullRequestRef, assert_pr_open
+from scrutare.engine.replies import capture_reply_permissions
 from scrutare.engine.repository_context import capture_repository_context
 from scrutare.engine.review_inputs import prepare_review_inputs
 from scrutare.engine.static_analysis import capture_static_analysis
@@ -96,6 +97,8 @@ def ingest_pr(
             json.dumps(metadata, indent=2) + "\n", encoding="utf-8"
         )
         if review_config is not None:
+            capture_reply_permissions(client, ref, run_dir, review_config,
+                                      inputs["review_comments.json"])
             capture_repository_context(client, run_dir, review_config)
             capture_static_analysis(run_dir, review_config, analysis_capture)
             prepare_review_inputs(run_dir, review_config)
