@@ -166,8 +166,10 @@ Timeouts and caller cancellation terminate and reap owned process groups.
 Cancellation waits for cleanup before propagating and does not publish a
 completed wave manifest. Captures and prepared input bytes remain unchanged.
 Provider failures retain logs and session evidence with uncertain accounting.
-Nare 2026.10.0 records a denied fabricated ask call as a blocked terminal
+Under contract 1, nare records a denied fabricated ask call as a blocked terminal
 session; the engine treats blocked sessions as failed without deriving a verdict.
+Under contract 2 (nare 2026.10.7 and newer), the denied ask is an ordinary error
+tool result and the session continues to its answer.
 
 For panel execution, each admitted correction's `attempt-0002/` retains an
 anchor-only schema, original request IDs, exact unchanged system and model rail,
