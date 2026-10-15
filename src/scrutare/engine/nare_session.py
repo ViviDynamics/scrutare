@@ -603,7 +603,8 @@ async def _run_session(
             structured: dict[str, object] = {}
             if isinstance(rail, ModelRail) and rail.structured_output is not None:
                 if constrained is None and evidence.started:
-                    # A session that stopped before decoding keeps a lower-bound count.
+                    # A session that stopped before decoding counts the constrained turns nare
+                    # recorded; each is recorded before its request, so one may not have finished.
                     constrained = constrained_turns(evidence.stdout, rail.structured_output,
                                                     strict=False)
                 structured = {"structured_output": {"mode": rail.structured_output,

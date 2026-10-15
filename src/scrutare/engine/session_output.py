@@ -205,8 +205,9 @@ def constrained_turns(stdout: bytes, mode: str | None, *, strict: bool = True) -
             if _envelope(document) != "progress" or "structured_output" not in document["detail"]:
                 continue
             record = document["detail"]["structured_output"]
-            if (mode is None or not isinstance(record, dict) or set(record) != {
-                    "mode", "tools_withheld"} or record["mode"] != mode
+            # Additive fields are ignored, as nare's contract asks of callers.
+            if (mode is None or not isinstance(record, dict) or not {
+                    "mode", "tools_withheld"} <= set(record) or record["mode"] != mode
                     or type(record["tools_withheld"]) is not bool):
                 _fail()
             count += 1

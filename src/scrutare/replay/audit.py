@@ -143,6 +143,8 @@ def _structured_output_issues(run_dir: Path, config_data: object) -> tuple[Audit
     attempts = _session_records(run_dir)
     invocations: list[tuple[Path, object]] = []
     for attempt in attempts:
+        if not os.path.lexists(attempt / "invocation.json"):
+            continue  # Never launched (for example refused admission): nothing was sent.
         try:
             invocations.append((attempt, decode_artifact(
                 read_artifact(attempt / "invocation.json"), artifact="invocation.json")))
@@ -165,8 +167,14 @@ def _structured_output_issues(run_dir: Path, config_data: object) -> tuple[Audit
         config = parse_config(json.dumps(config_data))
     except (ConfigError, TypeError, ValueError):
         return (AuditIssue("structured_output_config_invalid", "config.json.models", "invalid"),)
-    configured = {(rail.provider, rail.model, rail.base_url, rail.structured_output)
+    def key(rail: Any) -> tuple[object, ...]:
+        return (rail.provider, rail.model, rail.base_url, rail.structured_output)
+
+    configured = {key(rail)
                   for rail in (config.models.default, *(r for _, r in config.models.overrides))}
+    # Configured personas use their own rail; reserved executors (assessor, chair) never
+    # share a configured name and may use any configured rail.
+    personas = {p if isinstance(p, str) else p.name for p in config.personas}
     issues = []
     for attempt, document in invocations:
         where = attempt.relative_to(run_dir).as_posix()
@@ -177,9 +185,11 @@ def _structured_output_issues(run_dir: Path, config_data: object) -> tuple[Audit
             if not isinstance(rail, dict) or not isinstance(argv, list):
                 raise ValueError
             mode = rail.get("structured_output")
-            if ("structured_output" in rail and mode != "json_schema") or (
-                    rail.get("provider"), rail.get("model"), rail.get("base_url"),
-                    mode) not in configured:
+            recorded_rail = (rail.get("provider"), rail.get("model"), rail.get("base_url"), mode)
+            persona = document.get("persona")
+            if ("structured_output" in rail and mode != "json_schema") or recorded_rail not in (
+                    {key(config.models.for_persona(persona))} if persona in personas
+                    else configured):
                 raise ValueError
             flags = [index for index, value in enumerate(argv) if value == "--structured-output"]
             if (len(flags) != (mode is not None)
@@ -196,11 +206,21 @@ def _structured_output_issues(run_dir: Path, config_data: object) -> tuple[Audit
             continue  # An interrupted attempt may have no result; its invocation still binds.
         record = outcome.get("structured_output") if isinstance(outcome, dict) else None
         count = record.get("constrained_turns") if isinstance(record, dict) else None
+        finished = isinstance(outcome, dict) and outcome.get("status") in ("complete", "partial")
         valid = (record is None and isinstance(outcome, dict)
                  and "structured_output" not in outcome) if mode is None else (
             isinstance(record, dict) and set(record) == {"mode", "constrained_turns"}
             and record["mode"] == mode
-            and (count is None or (type(count) is int and count >= 0)))
+            and (count is None or (type(count) is int and count >= 0))
+            and not (finished and count is None))
+        if valid and mode is not None and count is not None:
+            from scrutare.engine.session_output import constrained_turns
+            try:
+                retained = constrained_turns(read_artifact(attempt / "stdout.jsonl"), mode,
+                                             strict=False)
+            except ReplayError:
+                retained = None
+            valid = retained is None or retained == count
         if not valid:
             issues.append(AuditIssue("structured_output_result_disagrees",
                                      f"{where}/result.json", "invalid"))

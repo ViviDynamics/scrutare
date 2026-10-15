@@ -119,3 +119,56 @@ def test_nested_round_sessions_are_audited_too(tmp_path):
     assert codes(replay_run(tmp_path)) == [
         ("structured_output_unrecorded",
          "discussion/round-1/sessions/senior-dev/attempt-0001/invocation.json")]
+
+
+def test_attempts_that_were_never_launched_are_not_audited(tmp_path):
+    bundle(tmp_path)
+    configure(tmp_path, {"default": ON})
+    session(tmp_path, ON)
+    refused = tmp_path / "sessions" / "senior-dev" / "attempt-0002"
+    refused.mkdir()
+    (refused / "result.json").write_text(json.dumps({"status": "not_started",
+                                                    "reason": "review_budget"}))
+    (tmp_path / "sessions" / "debate-chair" / "attempt-0001").mkdir(parents=True)
+    result = replay_run(tmp_path)
+    assert codes(result) == [] and result.exit_code == 0
+
+
+def test_a_configured_persona_must_use_its_own_rail(tmp_path):
+    bundle(tmp_path)
+    configure(tmp_path, {"default": ON, "overrides": {"security": {"structured_output": None}}})
+    session(tmp_path, ON, persona="security")
+    assert codes(replay_run(tmp_path)) == [
+        ("structured_output_unrecorded", "sessions/security/attempt-0001/invocation.json")]
+
+
+def test_a_reserved_session_may_use_any_configured_rail(tmp_path):
+    bundle(tmp_path)
+    configure(tmp_path, {"default": ON, "overrides": {"security": {"structured_output": None}}})
+    session(tmp_path, ON)
+    session(tmp_path, ON, persona="assessment-reserved")
+    assert codes(replay_run(tmp_path)) == []
+
+
+def test_a_completed_session_must_record_an_integer_count(tmp_path):
+    bundle(tmp_path)
+    configure(tmp_path, {"default": ON})
+    session(tmp_path, ON, constrained=None)
+    assert codes(replay_run(tmp_path)) == [
+        ("structured_output_result_disagrees", "sessions/senior-dev/attempt-0001/result.json")]
+
+
+def marker_line():
+    return json.dumps({"type": "progress", "text": "constrained", "timestamp": "now", "detail": {
+        "structured_output": {"mode": "json_schema", "tools_withheld": True}}})
+
+
+@pytest.mark.parametrize(("markers", "clean"), [(1, True), (0, False), (2, False)])
+def test_the_recorded_count_matches_the_retained_event_stream(tmp_path, markers, clean):
+    bundle(tmp_path)
+    configure(tmp_path, {"default": ON})
+    directory = session(tmp_path, ON, constrained=1)
+    (directory / "stdout.jsonl").write_text("".join(marker_line() + "\n" for _ in range(markers)))
+    expected = [] if clean else [
+        ("structured_output_result_disagrees", "sessions/senior-dev/attempt-0001/result.json")]
+    assert codes(replay_run(tmp_path)) == expected

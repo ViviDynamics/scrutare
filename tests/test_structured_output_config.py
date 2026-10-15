@@ -77,3 +77,9 @@ def test_programmatic_rails_refuse_an_unsupported_backend():
         ModelRail("anthropic", None, "m", "json_schema")
     with pytest.raises(ConfigError, match="structured_output: expected one of json_schema"):
         ModelRail("openai", None, "m", "grammar")  # type: ignore[arg-type]
+
+
+def test_an_inherited_constraint_on_an_anthropic_override_says_how_to_clear_it():
+    with pytest.raises(ConfigError, match="inherited from models.default; set it to null"):
+        parse_config(OPENAI + ", structured_output: json_schema}\n"
+                     "  overrides:\n    senior-dev: {provider: anthropic}\n")

@@ -498,7 +498,13 @@ def _rail(value: object, path: str, default: ModelRail | None = None) -> ModelRa
         if not valid:
             raise ConfigError(f"{path}.base_url: expected an HTTP(S) URL with a host or null")
     structured = fields.get("structured_output", default.structured_output if default else None)
-    _structured_output(structured, provider, f"{path}.structured_output")
+    try:
+        _structured_output(structured, provider, f"{path}.structured_output")
+    except ConfigError as error:
+        if "structured_output" in fields or default is None:
+            raise
+        raise ConfigError(f"{error} (inherited from models.default; set it to null "
+                          "to clear it)") from None
     return ModelRail(provider, base_url, model, cast("StructuredOutput | None", structured))
 
 

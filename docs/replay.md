@@ -67,12 +67,17 @@ or reassess whether a finding is correct.
 When `config.json` opts any model rail in to
 [schema-constrained output](config.md#schema-constrained-output-opt-in), or any
 session's `invocation.json` records the constraint, replay also audits every
-`sessions/<persona>/attempt-NNNN/` record under the run. Each invocation's
-recorded rail, including `structured_output`, must equal a configured rail, and
-its argv must carry `--structured-output json_schema` exactly when that rail
-does (`structured_output_unrecorded`, invalid). Its `result.json`, when
-present, must carry `{"mode", "constrained_turns"}` exactly when the rail does
-(`structured_output_result_disagrees`, invalid). An opted-in run without any
+`sessions/<persona>/attempt-NNNN/` record under the run that has an
+`invocation.json`; an attempt that was never launched (for example, refused
+admission) sent nothing and is skipped. A configured persona's recorded rail,
+including `structured_output`, must equal that persona's configured rail; a
+reserved executor (assessor, chair) must use one of the configured rails. Argv
+must carry `--structured-output json_schema` exactly when that rail does
+(`structured_output_unrecorded`, invalid). Its `result.json`, when present,
+must carry `{"mode", "constrained_turns"}` exactly when the rail does, with an
+integer count for a complete or partial session that equals the constrained-turn
+records in the retained `stdout.jsonl` (`structured_output_result_disagrees`,
+invalid). An opted-in run without any
 session record is `structured_output_evidence_missing` (incomplete). Runs that
 never touch the setting are not audited, so earlier bundles replay as before.
 

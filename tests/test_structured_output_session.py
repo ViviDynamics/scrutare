@@ -98,3 +98,12 @@ def test_a_runtime_without_the_capability_never_launches(capture, tmp_path):
     assert outcome.status == "failed" and outcome.reason == "invocation"
     assert outcome.accounting_complete
     assert not (attempt / "cwd" / "observed.json").exists()
+
+
+def test_additive_fields_in_a_constrained_turn_record_are_ignored(capture, tmp_path):
+    extra = ("print(json.dumps({'type': 'progress', 'text': 'x', 'timestamp': 'now', 'detail': "
+             "{'structured_output': {'mode': 'json_schema', 'tools_withheld': True, "
+             "'future': 1}}}), flush=True)\n")
+    outcome, attempt = launch(capture, structured(tmp_path, markers=0, extra=extra), ON)
+    assert outcome.status == "complete"
+    assert recorded(attempt, "result.json")["structured_output"]["constrained_turns"] == 1
