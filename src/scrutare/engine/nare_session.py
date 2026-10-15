@@ -39,6 +39,7 @@ from scrutare.engine.session_output import (
     DecodedReanchorSession,
     DecodedSession,
     SessionProtocolError,
+    constrained_turns,
     decode_cost_event,
     decode_reanchor_session,
     decode_session,
@@ -221,6 +222,9 @@ def _rail(rail: ModelRail) -> None:
             or not isinstance(rail.model, str) or not rail.model.strip()
             or "\x00" in rail.model):
         raise SessionRuntimeError("rail: expected an explicit provider and nonempty model")
+    if rail.structured_output is not None and (
+            rail.structured_output != "json_schema" or rail.provider != "openai"):
+        raise SessionRuntimeError("rail.structured_output: expected json_schema on openai")
     if rail.base_url is not None:
         if not isinstance(rail.base_url, str):
             raise SessionRuntimeError("rail.base_url: expected an HTTP(S) URL or null")
@@ -423,6 +427,7 @@ async def _run_session(
     cancelled = False
     prepared_root: Path | None = None
     binding: dict[str, object] = {}
+    constrained: int | None = None
     try:
         expected_descriptor = PersonaReanchorInput if purpose == "reanchor" else PersonaReviewInput
         if (not isinstance(descriptor, expected_descriptor)
@@ -447,6 +452,11 @@ async def _run_session(
         _version(capability.version)
         if not _speaks(capability.version, capability.contract):
             raise SessionRuntimeError("capability: expected an inspected supported contract")
+        if (rail.structured_output is not None
+                and rail.structured_output not in capability.structured_output):
+            raise SessionRuntimeError(
+                f"capability: nare {capability.version} cannot send structured output "
+                f"{rail.structured_output}")
         if purpose == "reanchor" and lease.session_key != f"{lease.persona}/attempt-0002":
             raise SessionRuntimeError("session_key: expected the fresh correction identity")
         reason = "artifacts"
@@ -475,6 +485,8 @@ async def _run_session(
                          str(lease.limit_tokens), "--session",
                          str(artifact_directory / "session.json"),
                          "--max-turns", str(runtime.max_turns)))
+            if rail.structured_output is not None:
+                argv.extend(("--structured-output", rail.structured_output))
             write_owned_json(artifact_directory / schema_name, schema,
                              prepared_root=prepared_root)
             write_owned_json(artifact_directory / "invocation.json", {
@@ -484,7 +496,9 @@ async def _run_session(
                 "system_prompt_sha256": sha256(system.encode("utf-8")).hexdigest(),
                 "task_prompt_sha256": sha256(input_args[0].encode("utf-8")).hexdigest(),
                 "argv": argv, "rail": {"provider": rail.provider, "model": rail.model,
-                                        "base_url": rail.base_url},
+                                        "base_url": rail.base_url,
+                                        **({"structured_output": rail.structured_output}
+                                           if rail.structured_output is not None else {})},
                 "allocated_tokens": lease.allocated_tokens, "invocation_limit": lease.limit_tokens,
                 "max_turns": runtime.max_turns, "timeout_seconds": runtime.timeout_seconds,
             }, prepared_root=prepared_root)
@@ -502,6 +516,7 @@ async def _run_session(
             saved = _session_document(directory)
             if evidence.corrupt:
                 raise SessionProtocolError("session: corrupted event evidence")
+            constrained = constrained_turns(evidence.stdout, rail.structured_output)
             if isinstance(descriptor, PersonaReanchorInput):
                 try:
                     validate_prepared_inputs(descriptor.inputs)
@@ -575,10 +590,18 @@ async def _run_session(
     ledger.settle(lease, evidence.usage, complete)
     if prepared_root is not None:
         try:
+            structured: dict[str, object] = {}
+            if isinstance(rail, ModelRail) and rail.structured_output is not None:
+                if constrained is None and evidence.started:
+                    # A session that stopped before decoding keeps a lower-bound count.
+                    constrained = constrained_turns(evidence.stdout, rail.structured_output,
+                                                    strict=False)
+                structured = {"structured_output": {"mode": rail.structured_output,
+                                                    "constrained_turns": constrained}}
             write_owned_json(artifact_directory / "result.json", {
                 "schema_version": 1, "scrutare_version": __version__,
                 "nare_version": capability.version, "contract": capability.contract,
-                "session_key": lease.session_key, **binding, **outcome.to_dict(),
+                "session_key": lease.session_key, **binding, **outcome.to_dict(), **structured,
             }, prepared_root=prepared_root)
         except (SessionArtifactError, AttributeError):
             outcome = _outcome(lease, artifact_directory, evidence, status="failed",

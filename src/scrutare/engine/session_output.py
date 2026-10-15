@@ -190,6 +190,33 @@ def _envelope(document: dict[str, Any]) -> str:
     return kind
 
 
+def constrained_turns(stdout: bytes, mode: str | None, *, strict: bool = True) -> int:
+    """Count nare's schema-constrained answer turns, which an unconstrained session never has.
+
+    Strict decoding refuses a malformed record or one on a session that did not ask for the
+    constraint. Tolerant counting, for evidence a failed session leaves, skips unreadable lines.
+    """
+    count = 0
+    for line in stdout.split(b"\n"):
+        if not line.strip():
+            continue
+        try:
+            document = _json(line)
+            if _envelope(document) != "progress" or "structured_output" not in document["detail"]:
+                continue
+            record = document["detail"]["structured_output"]
+            if (mode is None or not isinstance(record, dict) or set(record) != {
+                    "mode", "tools_withheld"} or record["mode"] != mode
+                    or type(record["tools_withheld"]) is not bool):
+                _fail()
+            count += 1
+        except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
+            if strict:
+                raise SessionProtocolError(
+                    "Invalid constrained-answer evidence; inspect private capture.") from None
+    return count
+
+
 def decode_cost_event(line: bytes) -> TokenUsage | None:
     """Decode a single event's disjoint turn counters, ignoring additive event types."""
     try:

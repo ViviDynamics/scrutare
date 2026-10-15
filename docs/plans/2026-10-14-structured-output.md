@@ -16,7 +16,7 @@ Out: constraining tool-using turns (measured on vLLM: a constrained request cann
 ## Tasks
 - [x] 1. Config: `structured_output` on rails, inheritance and `null` clearing, refusal for non-OpenAI rails and unknown modes, canonical record omits it when unset. Failing config tests.
 - [x] 2. Runtime: inspection accepts contract 1 or 2 and reads the advertised `structured_output` capability; `--contract` follows the inspected contract; the decoder accepts the matching contract. Failing nare-session tests.
-- [ ] 3. Sessions: an enabled rail adds `--structured-output json_schema`, records the rail field in `invocation.json`, counts constrained turns from nare events into `result.json`, and refuses constrained-turn events on an unconstrained session. Failing scripted tests.
+- [x] 3. Sessions: an enabled rail adds `--structured-output json_schema`, records the rail field in `invocation.json`, counts constrained turns from nare events into `result.json`, and refuses constrained-turn events on an unconstrained session. Failing scripted tests.
 - [ ] 4. Wave start: fan-out and the evaluator refuse a runtime without the capability before any session or admission, with a clear diagnostic. Failing tests.
 - [ ] 5. Replay audit: every session invocation and result record agrees with the captured configuration. Failing replay tests.
 - [ ] 6. Installed native proofs (pinned nare): off, on with a tool turn then a malformed answer then a constrained correction (factory seam and real OpenAI transport over HTTP), and an unsupported backend. Failing installed tests.
