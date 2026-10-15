@@ -167,6 +167,32 @@ async def _probe(executable: Path, args: tuple[str, ...], root: Path,
     return stdout
 
 
+# nare 2026.10.7 moved to contract 2, which only changes when `ask` blocks. Sessions here
+# offer only `read`, so both contracts carry the same evidence; each from its own releases.
+_CONTRACT_2_FROM = (2026, 10, 7)
+SUPPORTED_CONTRACTS = (1, 2)
+
+
+def _speaks(version: str, contract: object) -> bool:
+    if type(contract) is not int or contract not in SUPPORTED_CONTRACTS:
+        return False
+    return (tuple(map(int, version.split("."))) >= _CONTRACT_2_FROM) == (contract == 2)
+
+
+def _structured_output(contract: dict[str, object]) -> tuple[str, ...]:
+    """The json_schema modes nare advertises for its OpenAI rail, or none."""
+    if "structured_output" not in contract:
+        return ()
+    entry = contract["structured_output"]
+    if (not isinstance(entry, dict) or not isinstance(entry.get("modes"), list)
+            or not isinstance(entry.get("providers"), list)
+            or any(not isinstance(mode, str) for mode in entry["modes"])):
+        raise SessionRuntimeError("contract: invalid structured_output capability")
+    if entry.get("flag") != "--structured-output" or "openai" not in entry["providers"]:
+        return ()
+    return tuple(mode for mode in entry["modes"] if mode == "json_schema")
+
+
 async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
     """Inspect external version and contract without constructing a provider or session."""
     executable = _executable(runtime)
@@ -177,15 +203,16 @@ async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
             _version(version)
             contract = json.loads(await _probe(executable, ("contract",), root, runtime),
                                   object_pairs_hook=_contract_pairs)
-            if (not isinstance(contract, dict) or type(contract.get("contract")) is not int
-                    or contract["contract"] != 1 or contract.get("nare") != version):
-                raise SessionRuntimeError("contract: expected contract 1 and matching nare release")
-            return NareCapability(version, 1)
+            if (not isinstance(contract, dict) or not _speaks(version, contract.get("contract"))
+                    or contract.get("nare") != version):
+                raise SessionRuntimeError(
+                    "contract: expected contract 1 (before 2026.10.7) or 2 and matching release")
+            return NareCapability(version, contract["contract"], _structured_output(contract))
     except SessionRuntimeError:
         raise
     except (OSError, ValueError, asyncio.TimeoutError, RecursionError):
         raise SessionRuntimeError(
-            "inspection: cannot verify executable version and contract 1"
+            "inspection: cannot verify executable version and contract"
         ) from None
 
 
@@ -415,9 +442,11 @@ async def _run_session(
         reason = "invocation"
         _rail(rail)
         executable = _executable(runtime)
-        if not isinstance(capability, NareCapability) or capability.contract != 1:
-            raise SessionRuntimeError("capability: expected inspected contract 1")
+        if not isinstance(capability, NareCapability):
+            raise SessionRuntimeError("capability: expected an inspected runtime")
         _version(capability.version)
+        if not _speaks(capability.version, capability.contract):
+            raise SessionRuntimeError("capability: expected an inspected supported contract")
         if purpose == "reanchor" and lease.session_key != f"{lease.persona}/attempt-0002":
             raise SessionRuntimeError("session_key: expected the fresh correction identity")
         reason = "artifacts"
@@ -441,7 +470,7 @@ async def _run_session(
                       if isinstance(descriptor, (DebateInput, AssessmentInput)) else
                       reanchor_schema() if purpose == "reanchor" else
                       findings_schema(evidence_version=evidence_version(prepared_root)))
-            argv.extend(("--jsonl", "--yes", "--contract", "1", "--schema",
+            argv.extend(("--jsonl", "--yes", "--contract", str(capability.contract), "--schema",
                          str(artifact_directory / schema_name), "--budget-tokens",
                          str(lease.limit_tokens), "--session",
                          str(artifact_directory / "session.json"),

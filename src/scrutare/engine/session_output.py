@@ -1,4 +1,4 @@
-"""Strict contract-1 decoding of nare evidence and caller-attributed candidates."""
+"""Strict contract-1/2 decoding of nare evidence and caller-attributed candidates."""
 
 from __future__ import annotations
 
@@ -280,7 +280,7 @@ def _decode_evidence(
         if stop is not None:
             stop = _text(stop)
         contract = _integer(result["contract"], positive=True)
-        if contract != 1:
+        if contract not in (1, 2):
             _fail()
         version = _text(result["nare"])
         count = _integer(result["turns"])
@@ -313,7 +313,8 @@ def _decode_evidence(
             _fail()
         saved = _json(session_document)
         if (_text(saved["id"]) != identity or _text(saved["status"]) != status
-                or saved["stop_reason"] != stop or _integer(saved["contract"], positive=True) != 1
+                or saved["stop_reason"] != stop
+                or _integer(saved["contract"], positive=True) != contract
                 or _text(saved["nare"]) != version or saved["output"] != output):
             _fail()
         saved_usage, saved_cost = _usage(saved["usage"])
