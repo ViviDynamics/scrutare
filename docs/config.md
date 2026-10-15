@@ -31,6 +31,7 @@ Errors identify a field path or YAML location without echoing field values.
 | `models.default.provider` | `anthropic`, `openai` | `anthropic` |
 | `models.default.base_url` | HTTP or HTTPS URL with a host, or `null` | `null` |
 | `models.default.model` | Explicit nonempty string | Required |
+| `models.default.structured_output` | `json_schema` (requires `provider: openai`), or `null` | `null` (off) |
 | `models.overrides` | Mapping from a configured persona name to partial model settings | `{}` |
 | `verdict.blocking_categories` | List drawn from the fixed vocabulary | `correctness`, `security`, `regression` |
 | `verdict.advisory_categories` | List drawn from the fixed vocabulary | `style`, `consistency`, `docs` |
@@ -99,6 +100,53 @@ clears an inherited URL. Empty override mappings inherit the whole default.
 `provider` and `model` cannot be `null` or empty, and a URL must have a host
 and a valid optional port. Override keys must name personas present in the
 configured panel, including inline personas.
+
+## Schema-constrained output (opt-in)
+
+Self-hosted models can end a session with a final answer that is not valid
+JSON for the required schema. A rail can ask the backend to enforce the schema
+at decode time instead:
+
+```yaml
+models:
+  default:
+    provider: openai
+    base_url: https://litellm.example/v1
+    model: spark/glm-5.3-flash
+    structured_output: json_schema
+```
+
+Every nare session on that rail (discovery findings, assessment, discussion
+positions and chair selections, anchor corrections) is launched with nare's
+`--structured-output json_schema`. nare then sends the OpenAI-compatible
+`response_format` `json_schema` with the session's own output schema on the
+turns where it can: the single schema correction turn, after a final answer
+fails the schema, which is sent without tools. Tool-using turns stay
+unconstrained, because a constrained request cannot call `read` (measured on
+vLLM behind LiteLLM: the model invents an answer instead). A valid first answer
+is accepted as before. The setting is a transport aid only: every answer is
+still decoded by the same findings, assessment, discussion, identity and
+citation validation, and an answer that fails it fails the session as before.
+
+The setting is off by default and inherited by overrides like the other rail
+fields; an override can set it alone or clear an inherited value with `null`.
+It is refused at configuration load for a rail whose provider is not `openai`,
+and refused before any session launches when the nare runtime does not
+advertise the capability (nare 2026.10.12 or newer). Use it only with a
+backend that enforces `response_format` json_schema, such as vLLM; an
+OpenAI-compatible server that ignores the field answers unconstrained, and
+validation still decides.
+
+When no rail sets it, the canonical configuration, rail records,
+`invocation.json` and `result.json` are byte-identical to earlier releases.
+When any rail sets it, every rail in `config.to_dict()` records
+`structured_output` (with `null` where it is off), each session's
+`invocation.json` records it in `rail` and its argv, and `result.json` records
+`{"mode": "json_schema", "constrained_turns": N}` (`null` when the session never
+reported). [Replay](replay.md) reports `structured_output_unrecorded` or
+`structured_output_result_disagrees` as invalid when a session's record does not
+match a configured rail, and `structured_output_evidence_missing` as incomplete
+when an opted-in run has no session evidence.
 
 ## Category partition
 

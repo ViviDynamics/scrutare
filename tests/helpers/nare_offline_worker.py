@@ -112,13 +112,16 @@ class FakeProvider:
     def __init__(self, scenario):
         self.scenario = scenario
         self.replies = list(scenario.get("replies", []))
+        # A scenario declares a backend that can constrain an answer turn to a schema.
+        self.supports_structured_output = scenario.get("structured_output", False) is True
 
     async def context_window(self):
         return None
 
-    async def turn(self, messages, tools):
+    async def turn(self, messages, tools, *, response_schema=None):
         observations["calls"].append(
-            {"messages": [asdict(m) for m in messages], "tools": tools, "start": time.monotonic()}
+            {"messages": [asdict(m) for m in messages], "tools": tools, "start": time.monotonic(),
+             **({"response_schema": response_schema} if response_schema is not None else {})}
         )
         if len(observations["calls"]) == 1:
             (artifact / "transport-ready.json").write_text(json.dumps({"pid": os.getpid()}))
