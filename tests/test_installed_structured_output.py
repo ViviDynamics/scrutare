@@ -3,6 +3,7 @@
 import asyncio
 import json
 
+from test_fanout import configure
 from test_nare_cli_integration import (
     FINDING,
     installed,
@@ -13,7 +14,6 @@ from test_nare_cli_integration import (
     text,
     tool,
 )
-from test_fanout import configure
 from test_review_inputs import capture as capture
 
 from scrutare.config import parse_config
