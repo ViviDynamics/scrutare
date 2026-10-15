@@ -23,7 +23,7 @@ Commands default to Python 3.10 when `SCRUTARE_PYTHON` is unset.
 | Installed CLI | always | `scripts/smoke-cli.sh` |
 
 Set `SCRUTARE_TEST_NARE_EXECUTABLE` to the absolute separately installed nare
-2026.10.4 console path before the complete table. See
+2026.10.12 console path before the complete table. See
 [docs/session-fanout.md](../docs/session-fanout.md) for the exact release commit
 and locked installation. The full acceptance run requires these installed
 runtime cases to execute, with no skips. Keep lanes sequential because `uv sync`
