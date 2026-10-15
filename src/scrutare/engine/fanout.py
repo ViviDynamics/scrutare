@@ -11,7 +11,11 @@ from typing import Any, TypeVar
 from scrutare import __version__
 from scrutare.config import ReviewConfig
 from scrutare.engine.budgets import BudgetLease, ReviewBudgetLedger
-from scrutare.engine.nare_session import inspect_nare_runtime, run_persona_session
+from scrutare.engine.nare_session import (
+    inspect_nare_runtime,
+    require_structured_output,
+    run_persona_session,
+)
 from scrutare.engine.persona_inputs import PersonaReviewInput, prepare_persona_inputs
 from scrutare.engine.review_inputs import (
     PreparedReviewInputs,
@@ -128,6 +132,7 @@ async def _prepare_execution(
             routing_record["phase_allowances"] = dict(phases)
         write_owned_json(run / "routing.json", routing_record, prepared_root=inputs.root)
     capability = await inspect_nare_runtime(runtime)
+    require_structured_output(config.models, capability)
     return _ExecutionContext(inputs, descriptors, ledger, capability, runtime, config, run,
                              attempts, leases, assessment_persona=assessor,
                              routing=routing_record)

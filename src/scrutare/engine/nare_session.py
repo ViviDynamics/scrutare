@@ -19,7 +19,7 @@ from typing import BinaryIO, Literal, TypedDict, TypeVar
 from urllib.parse import urlsplit
 
 from scrutare import __version__
-from scrutare.config import ModelRail
+from scrutare.config import ModelRail, ModelSettings
 from scrutare.engine.assessment_inputs import AssessmentInput
 from scrutare.engine.budgets import BudgetLease, ReviewBudgetLedger
 from scrutare.engine.debate_inputs import DebateInput
@@ -215,6 +215,16 @@ async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
         raise SessionRuntimeError(
             "inspection: cannot verify executable version and contract"
         ) from None
+
+
+def require_structured_output(models: ModelSettings, capability: NareCapability) -> None:
+    """Refuse a wave before any session when a rail asks for a constraint nare cannot send."""
+    for rail in (models.default, *(rail for _, rail in models.overrides)):
+        mode = rail.structured_output
+        if mode is not None and mode not in getattr(capability, "structured_output", ()):
+            raise SessionRuntimeError(
+                f"capability: nare {capability.version} cannot send structured output {mode}; "
+                "use a nare release that advertises it (2026.10.12 or newer)")
 
 
 def _rail(rail: ModelRail) -> None:
