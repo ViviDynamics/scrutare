@@ -14,6 +14,8 @@ from scrutare.personas.names import DEFAULT_PERSONA_NAMES, SELECTABLE_PERSONA_NA
 
 Strategy = Literal["panel", "iterative", "debate"]
 Provider = Literal["anthropic", "openai"]
+StructuredOutput = Literal["json_schema"]
+STRUCTURED_OUTPUT_MODES: tuple[StructuredOutput, ...] = ("json_schema",)
 PostMode = Literal["review", "comment"]
 Category = Literal["correctness", "security", "regression", "style", "consistency", "docs"]
 CATEGORIES: tuple[Category, ...] = (
@@ -46,6 +48,19 @@ class ModelRail:
     provider: Provider
     base_url: str | None
     model: str
+    # Opt-in decode-time schema constraint, sent through nare's OpenAI rail only.
+    structured_output: StructuredOutput | None = None
+
+    def __post_init__(self) -> None:
+        _structured_output(self.structured_output, self.provider, "structured_output")
+
+    def record(self, *, structured_output: bool = False) -> dict[str, Any]:
+        """The rail as recorded; the opt-in field appears only when it is set or requested."""
+        record: dict[str, Any] = {"provider": self.provider, "base_url": self.base_url,
+                                  "model": self.model}
+        if structured_output or self.structured_output is not None:
+            record["structured_output"] = self.structured_output
+        return record
 
 
 @dataclass(frozen=True)
@@ -55,6 +70,18 @@ class ModelSettings:
 
     def for_persona(self, name: str) -> ModelRail:
         return next((rail for persona, rail in self.overrides if persona == name), self.default)
+
+    @property
+    def structured_output(self) -> bool:
+        """Whether any rail opts in; then every rail records the field explicitly."""
+        return any(rail.structured_output is not None
+                   for rail in (self.default, *(rail for _, rail in self.overrides)))
+
+    def record(self) -> dict[str, Any]:
+        explicit = self.structured_output
+        return {"default": self.default.record(structured_output=explicit),
+                "overrides": {name: rail.record(structured_output=explicit)
+                              for name, rail in self.overrides}}
 
 
 @dataclass(frozen=True)
@@ -270,10 +297,7 @@ class ReviewConfig:
                 asdict(p) if isinstance(p, PersonaDefinition) else p for p in self.personas
             ],
             "budgets": asdict(self.budgets),
-            "models": {
-                "default": asdict(self.models.default),
-                "overrides": {name: asdict(rail) for name, rail in self.models.overrides},
-            },
+            "models": self.models.record(),
             "verdict": {
                 "blocking_categories": list(self.verdict.blocking_categories),
                 "advisory_categories": list(self.verdict.advisory_categories),
@@ -438,8 +462,17 @@ def _personas(value: object) -> tuple[str | PersonaDefinition, ...]:
     return tuple(result)
 
 
+def _structured_output(value: object, provider: str, path: str) -> None:
+    if value is None:
+        return
+    if not isinstance(value, str) or value not in STRUCTURED_OUTPUT_MODES:
+        raise ConfigError(f"{path}: expected one of {', '.join(STRUCTURED_OUTPUT_MODES)} or null")
+    if provider != "openai":
+        raise ConfigError(f"{path}: requires provider openai")
+
+
 def _rail(value: object, path: str, default: ModelRail | None = None) -> ModelRail:
-    fields = _mapping(value, path, ("provider", "base_url", "model"))
+    fields = _mapping(value, path, ("provider", "base_url", "model", "structured_output"))
     provider = cast(
         Provider,
         _choice(
@@ -464,7 +497,9 @@ def _rail(value: object, path: str, default: ModelRail | None = None) -> ModelRa
             valid = False
         if not valid:
             raise ConfigError(f"{path}.base_url: expected an HTTP(S) URL with a host or null")
-    return ModelRail(provider, base_url, model)
+    structured = fields.get("structured_output", default.structured_output if default else None)
+    _structured_output(structured, provider, f"{path}.structured_output")
+    return ModelRail(provider, base_url, model, cast("StructuredOutput | None", structured))
 
 
 def _models(value: object, personas: tuple[str | PersonaDefinition, ...]) -> ModelSettings:

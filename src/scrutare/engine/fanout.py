@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import os
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -242,7 +242,7 @@ async def _run_initial_wave(context: _ExecutionContext) -> FanOutResult:
                                        *config.personas,
                                        *(r.persona for r in config.routing.rules))),
                     ),
-                    "rail": asdict(config.models.for_persona(d.persona.name)),
+                    "rail": config.models.for_persona(d.persona.name).record(),
                 }
                 for d in descriptors
             ],
