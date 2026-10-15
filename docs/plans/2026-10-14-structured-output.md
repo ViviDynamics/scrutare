@@ -18,7 +18,7 @@ Out: constraining tool-using turns (measured on vLLM: a constrained request cann
 - [x] 2. Runtime: inspection accepts contract 1 or 2 and reads the advertised `structured_output` capability; `--contract` follows the inspected contract; the decoder accepts the matching contract. Failing nare-session tests.
 - [x] 3. Sessions: an enabled rail adds `--structured-output json_schema`, records the rail field in `invocation.json`, counts constrained turns from nare events into `result.json`, and refuses constrained-turn events on an unconstrained session. Failing scripted tests.
 - [x] 4. Wave start: fan-out and the evaluator refuse a runtime without the capability before any session or admission, with a clear diagnostic. Failing tests.
-- [ ] 5. Replay audit: every session invocation and result record agrees with the captured configuration. Failing replay tests.
+- [x] 5. Replay audit: every session invocation and result record agrees with the captured configuration. Failing replay tests.
 - [ ] 6. Installed native proofs (pinned nare): off, on with a tool turn then a malformed answer then a constrained correction (factory seam and real OpenAI transport over HTTP), and an unsupported backend. Failing installed tests.
 - [ ] 7. Pin the nare release with nare#79 (CI, release, Dockerfile, docs, pin tests); docs for the setting.
 - [ ] 8. Live smoke against `spark/glm-5.3-flash` with a constrained final answer and zero paid spend.
