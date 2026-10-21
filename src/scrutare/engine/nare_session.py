@@ -19,7 +19,7 @@ from typing import BinaryIO, Literal, TypedDict, TypeVar
 from urllib.parse import urlsplit
 
 from scrutare import __version__
-from scrutare.config import ModelRail
+from scrutare.config import ModelRail, ModelSettings
 from scrutare.engine.assessment_inputs import AssessmentInput
 from scrutare.engine.budgets import BudgetLease, ReviewBudgetLedger
 from scrutare.engine.debate_inputs import DebateInput
@@ -39,6 +39,7 @@ from scrutare.engine.session_output import (
     DecodedReanchorSession,
     DecodedSession,
     SessionProtocolError,
+    constrained_turns,
     decode_cost_event,
     decode_reanchor_session,
     decode_session,
@@ -167,6 +168,33 @@ async def _probe(executable: Path, args: tuple[str, ...], root: Path,
     return stdout
 
 
+# nare 2026.10.7 moved to contract 2, which only changes when `ask` blocks. Sessions here
+# offer only `read`, so both contracts carry the same evidence; each from its own releases.
+_CONTRACT_2_FROM = (2026, 10, 7)
+SUPPORTED_CONTRACTS = (1, 2)
+
+
+def _speaks(version: str, contract: object) -> bool:
+    if type(contract) is not int or contract not in SUPPORTED_CONTRACTS:
+        return False
+    return (tuple(map(int, version.split("."))) >= _CONTRACT_2_FROM) == (contract == 2)
+
+
+def _structured_output(contract: dict[str, object]) -> tuple[str, ...]:
+    """The json_schema modes nare advertises for its OpenAI rail, or none.
+
+    An unfamiliar entry advertises nothing rather than failing inspection: waves that never
+    ask for the constraint must not depend on it, and require_structured_output refuses one
+    that does.
+    """
+    entry = contract.get("structured_output")
+    if (not isinstance(entry, dict) or not isinstance(entry.get("modes"), list)
+            or not isinstance(entry.get("providers"), list)
+            or entry.get("flag") != "--structured-output" or "openai" not in entry["providers"]):
+        return ()
+    return tuple(mode for mode in entry["modes"] if mode == "json_schema")
+
+
 async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
     """Inspect external version and contract without constructing a provider or session."""
     executable = _executable(runtime)
@@ -177,16 +205,27 @@ async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
             _version(version)
             contract = json.loads(await _probe(executable, ("contract",), root, runtime),
                                   object_pairs_hook=_contract_pairs)
-            if (not isinstance(contract, dict) or type(contract.get("contract")) is not int
-                    or contract["contract"] != 1 or contract.get("nare") != version):
-                raise SessionRuntimeError("contract: expected contract 1 and matching nare release")
-            return NareCapability(version, 1)
+            if (not isinstance(contract, dict) or not _speaks(version, contract.get("contract"))
+                    or contract.get("nare") != version):
+                raise SessionRuntimeError(
+                    "contract: expected contract 1 (before 2026.10.7) or 2 and matching release")
+            return NareCapability(version, contract["contract"], _structured_output(contract))
     except SessionRuntimeError:
         raise
     except (OSError, ValueError, asyncio.TimeoutError, RecursionError):
         raise SessionRuntimeError(
-            "inspection: cannot verify executable version and contract 1"
+            "inspection: cannot verify executable version and contract"
         ) from None
+
+
+def require_structured_output(models: ModelSettings, capability: NareCapability) -> None:
+    """Refuse a wave before any session when a rail asks for a constraint nare cannot send."""
+    for rail in (models.default, *(rail for _, rail in models.overrides)):
+        mode = rail.structured_output
+        if mode is not None and mode not in getattr(capability, "structured_output", ()):
+            raise SessionRuntimeError(
+                f"capability: nare {capability.version} cannot send structured output {mode}; "
+                "use a nare release that advertises it (2026.10.12 or newer)")
 
 
 def _rail(rail: ModelRail) -> None:
@@ -194,6 +233,9 @@ def _rail(rail: ModelRail) -> None:
             or not isinstance(rail.model, str) or not rail.model.strip()
             or "\x00" in rail.model):
         raise SessionRuntimeError("rail: expected an explicit provider and nonempty model")
+    if rail.structured_output is not None and (
+            rail.structured_output != "json_schema" or rail.provider != "openai"):
+        raise SessionRuntimeError("rail.structured_output: expected json_schema on openai")
     if rail.base_url is not None:
         if not isinstance(rail.base_url, str):
             raise SessionRuntimeError("rail.base_url: expected an HTTP(S) URL or null")
@@ -396,6 +438,7 @@ async def _run_session(
     cancelled = False
     prepared_root: Path | None = None
     binding: dict[str, object] = {}
+    constrained: int | None = None
     try:
         expected_descriptor = PersonaReanchorInput if purpose == "reanchor" else PersonaReviewInput
         if (not isinstance(descriptor, expected_descriptor)
@@ -415,9 +458,16 @@ async def _run_session(
         reason = "invocation"
         _rail(rail)
         executable = _executable(runtime)
-        if not isinstance(capability, NareCapability) or capability.contract != 1:
-            raise SessionRuntimeError("capability: expected inspected contract 1")
+        if not isinstance(capability, NareCapability):
+            raise SessionRuntimeError("capability: expected an inspected runtime")
         _version(capability.version)
+        if not _speaks(capability.version, capability.contract):
+            raise SessionRuntimeError("capability: expected an inspected supported contract")
+        if (rail.structured_output is not None
+                and rail.structured_output not in capability.structured_output):
+            raise SessionRuntimeError(
+                f"capability: nare {capability.version} cannot send structured output "
+                f"{rail.structured_output}")
         if purpose == "reanchor" and lease.session_key != f"{lease.persona}/attempt-0002":
             raise SessionRuntimeError("session_key: expected the fresh correction identity")
         reason = "artifacts"
@@ -441,11 +491,13 @@ async def _run_session(
                       if isinstance(descriptor, (DebateInput, AssessmentInput)) else
                       reanchor_schema() if purpose == "reanchor" else
                       findings_schema(evidence_version=evidence_version(prepared_root)))
-            argv.extend(("--jsonl", "--yes", "--contract", "1", "--schema",
+            argv.extend(("--jsonl", "--yes", "--contract", str(capability.contract), "--schema",
                          str(artifact_directory / schema_name), "--budget-tokens",
                          str(lease.limit_tokens), "--session",
                          str(artifact_directory / "session.json"),
                          "--max-turns", str(runtime.max_turns)))
+            if rail.structured_output is not None:
+                argv.extend(("--structured-output", rail.structured_output))
             write_owned_json(artifact_directory / schema_name, schema,
                              prepared_root=prepared_root)
             write_owned_json(artifact_directory / "invocation.json", {
@@ -455,7 +507,9 @@ async def _run_session(
                 "system_prompt_sha256": sha256(system.encode("utf-8")).hexdigest(),
                 "task_prompt_sha256": sha256(input_args[0].encode("utf-8")).hexdigest(),
                 "argv": argv, "rail": {"provider": rail.provider, "model": rail.model,
-                                        "base_url": rail.base_url},
+                                        "base_url": rail.base_url,
+                                        **({"structured_output": rail.structured_output}
+                                           if rail.structured_output is not None else {})},
                 "allocated_tokens": lease.allocated_tokens, "invocation_limit": lease.limit_tokens,
                 "max_turns": runtime.max_turns, "timeout_seconds": runtime.timeout_seconds,
             }, prepared_root=prepared_root)
@@ -473,6 +527,7 @@ async def _run_session(
             saved = _session_document(directory)
             if evidence.corrupt:
                 raise SessionProtocolError("session: corrupted event evidence")
+            constrained = constrained_turns(evidence.stdout, rail.structured_output)
             if isinstance(descriptor, PersonaReanchorInput):
                 try:
                     validate_prepared_inputs(descriptor.inputs)
@@ -546,10 +601,19 @@ async def _run_session(
     ledger.settle(lease, evidence.usage, complete)
     if prepared_root is not None:
         try:
+            structured: dict[str, object] = {}
+            if isinstance(rail, ModelRail) and rail.structured_output is not None:
+                if constrained is None and evidence.started:
+                    # A session that stopped before decoding counts the constrained turns nare
+                    # recorded; each is recorded before its request, so one may not have finished.
+                    constrained = constrained_turns(evidence.stdout, rail.structured_output,
+                                                    strict=False)
+                structured = {"structured_output": {"mode": rail.structured_output,
+                                                    "constrained_turns": constrained}}
             write_owned_json(artifact_directory / "result.json", {
                 "schema_version": 1, "scrutare_version": __version__,
                 "nare_version": capability.version, "contract": capability.contract,
-                "session_key": lease.session_key, **binding, **outcome.to_dict(),
+                "session_key": lease.session_key, **binding, **outcome.to_dict(), **structured,
             }, prepared_root=prepared_root)
         except (SessionArtifactError, AttributeError):
             outcome = _outcome(lease, artifact_directory, evidence, status="failed",

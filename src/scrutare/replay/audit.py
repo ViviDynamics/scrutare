@@ -1,6 +1,8 @@
 """Read-only verdict reconstruction from the run's captured deciding evidence."""
 
 import json
+import os
+import re
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
@@ -109,6 +111,135 @@ def _context_issues(run_dir: Path, policy: CapturedPolicy) -> tuple[AuditIssue, 
         return (AuditIssue("repository_context_invalid", "repository-context.json", "invalid"),)
 
 
+def _session_records(run_dir: Path) -> list[Path]:
+    """Every session attempt directory under the run, without following directory links."""
+    found = []
+    for root, directories, _ in os.walk(run_dir, followlinks=False):
+        current = Path(root)
+        if (current.parent.parent.name == "sessions"
+                and re.fullmatch(r"attempt-[0-9]{4}", current.name)):
+            found.append(current)
+            directories[:] = []
+        directories.sort()
+    return sorted(found)
+
+
+def _opted_in(config_data: object) -> bool:
+    models = config_data.get("models") if isinstance(config_data, dict) else None
+    if not isinstance(models, dict):
+        return False
+    overrides = models.get("overrides")
+    rails = [models.get("default"), *(overrides.values() if isinstance(overrides, dict) else ())]
+    return any(isinstance(rail, dict) and rail.get("structured_output") is not None
+               for rail in rails)
+
+
+def _structured_output_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
+    """Check that each session recorded exactly the constraint its configured rail asked for.
+
+    Runs that never opted in and whose sessions never recorded a constraint are not audited,
+    so earlier bundles replay as before.
+    """
+    attempts = _session_records(run_dir)
+    invocations: list[tuple[Path, object]] = []
+    for attempt in attempts:
+        if not os.path.lexists(attempt / "invocation.json"):
+            if os.path.lexists(attempt / "stdout.jsonl"):
+                invocations.append((attempt, None))  # Ran without recording what it asked.
+            continue  # Never launched (for example refused admission): nothing was sent.
+        try:
+            invocations.append((attempt, decode_artifact(
+                read_artifact(attempt / "invocation.json"), artifact="invocation.json")))
+        except ReplayError:
+            invocations.append((attempt, None))
+
+    def recorded(document: object) -> bool:
+        if not isinstance(document, dict):
+            return False
+        rail, argv = document.get("rail"), document.get("argv")
+        return ((isinstance(rail, dict) and "structured_output" in rail)
+                or (isinstance(argv, list) and "--structured-output" in argv))
+
+    opted_in = _opted_in(config_data)
+    if not opted_in and not any(recorded(document) for _, document in invocations):
+        return ()
+    if opted_in and not attempts:
+        return (AuditIssue("structured_output_evidence_missing", "sessions", "incomplete"),)
+    try:
+        config = parse_config(json.dumps(config_data))
+    except (ConfigError, TypeError, ValueError):
+        return (AuditIssue("structured_output_config_invalid", "config.json.models", "invalid"),)
+    def key(rail: Any) -> tuple[object, ...]:
+        return (rail.provider, rail.model, rail.base_url, rail.structured_output)
+
+    configured = {key(rail)
+                  for rail in (config.models.default, *(r for _, r in config.models.overrides))}
+    # Configured personas use their own rail; reserved executors (assessor, chair) never
+    # share a configured name and may use any configured rail.
+    personas = {p if isinstance(p, str) else p.name for p in config.personas}
+    issues = []
+    for attempt, document in invocations:
+        where = attempt.relative_to(run_dir).as_posix()
+        try:
+            if not isinstance(document, dict):
+                raise ValueError
+            rail, argv = document["rail"], document["argv"]
+            if not isinstance(rail, dict) or not isinstance(argv, list):
+                raise ValueError
+            mode = rail.get("structured_output")
+            recorded_rail = (rail.get("provider"), rail.get("model"), rail.get("base_url"), mode)
+            persona = document.get("persona")
+            if ("structured_output" in rail and mode != "json_schema") or recorded_rail not in (
+                    {key(config.models.for_persona(persona))} if persona in personas
+                    else configured):
+                raise ValueError
+            flags = [index for index, value in enumerate(argv) if value == "--structured-output"]
+            if (len(flags) != (mode is not None)
+                    or any(argv[index + 1:index + 2] != [mode] for index in flags)):
+                raise ValueError
+        except (ValueError, KeyError, TypeError):
+            issues.append(AuditIssue("structured_output_unrecorded",
+                                     f"{where}/invocation.json", "invalid"))
+            continue
+        # A launched session always writes its result, even when cancelled.
+        if not os.path.lexists(attempt / "result.json"):
+            issues.append(AuditIssue("structured_output_evidence_missing",
+                                     f"{where}/result.json", "incomplete"))
+            continue
+        try:
+            outcome = decode_artifact(read_artifact(attempt / "result.json"),
+                                      artifact="result.json")
+        except ReplayError:
+            outcome = None
+        record = outcome.get("structured_output") if isinstance(outcome, dict) else None
+        count = record.get("constrained_turns") if isinstance(record, dict) else None
+        finished = isinstance(outcome, dict) and outcome.get("status") in ("complete", "partial")
+        valid = (record is None and isinstance(outcome, dict)
+                 and "structured_output" not in outcome) if mode is None else (
+            isinstance(record, dict) and set(record) == {"mode", "constrained_turns"}
+            and record["mode"] == mode
+            and (count is None or (type(count) is int and count >= 0))
+            and not (finished and count is None))
+        if valid and mode is not None:
+            from scrutare.engine.session_output import constrained_turns
+            try:
+                retained = constrained_turns(read_artifact(attempt / "stdout.jsonl"), mode,
+                                             strict=False)
+            except ReplayError:
+                retained = None
+            if retained is None and count is not None:
+                # A counted session started, so its event stream was captured.
+                issues.append(AuditIssue("structured_output_evidence_missing",
+                                         f"{where}/stdout.jsonl", "incomplete"))
+                continue
+            # No count means the session never started, so no constrained turn was recorded.
+            valid = retained is None or retained == (count or 0)
+        if not valid:
+            issues.append(AuditIssue("structured_output_result_disagrees",
+                                     f"{where}/result.json", "invalid"))
+    return tuple(issues)
+
+
 def _panel_fallback(run_dir: Path, degradation: Degradation, persona: str,
                     outcome: dict[str, Any]) -> None:
     """The published record must state this fallback, with complete exact accounting."""
@@ -203,7 +334,8 @@ def replay_run(run_dir: Path) -> ReplayResult:
                 findings = dedupe_findings(checked)
         except (OSError, ValueError, TypeError, KeyError):
             raise ReplayError("findings: captured citation validation disagrees") from None
-    issues = findings_issues + _yaml_issues(run_dir, policy) + _context_issues(run_dir, policy)
+    issues = (findings_issues + _yaml_issues(run_dir, policy) + _context_issues(run_dir, policy)
+              + _structured_output_issues(run_dir, config_data))
     posting = inspect_posting(run_dir)
     posted_sha256 = posting.verdict_sha256
     raw = None

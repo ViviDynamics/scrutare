@@ -113,7 +113,7 @@ def candidate_image(tmp_path_factory):
             "--version",
         ]
     )
-    assert nare.stdout == b"2026.10.4\n"
+    assert nare.stdout == b"2026.10.12\n"
     assert (
         run(["docker", "run", "--rm", "--network", "none", tag, "--version"]).stdout
         == f"scrutare {VERSION}\n".encode()
@@ -338,7 +338,7 @@ def test_actual_action_container(tmp_path, candidate_image, case, initial, exit_
             session = load(attempt / "session.json")
             terminal = json.loads((attempt / "stdout.jsonl").read_text().splitlines()[-1])
             outcome = load(attempt / "result.json")
-            assert observed["version"] == "2026.10.4" and observed["python"].startswith("3.14.")
+            assert observed["version"] == "2026.10.12" and observed["python"].startswith("3.14.")
             assert observed["credential_names"] == observed["guard_violations"] == []
             assert observed["nare_controls"] == {}
             assert len(observed["factory_calls"]) == 1

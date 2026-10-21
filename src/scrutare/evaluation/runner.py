@@ -22,7 +22,7 @@ from scrutare.config import (
 from scrutare.engine import assessment_inputs, discussion_inputs
 from scrutare.engine.assessment_inputs import assessor_persona
 from scrutare.engine.budgets import ReviewBudgetLedger
-from scrutare.engine.nare_session import inspect_nare_runtime
+from scrutare.engine.nare_session import inspect_nare_runtime, require_structured_output
 from scrutare.engine.repository_context import capture_repository_context, encoded
 from scrutare.engine.repository_snapshot import RepositorySnapshot
 from scrutare.engine.review_inputs import (
@@ -373,7 +373,10 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
     snapshot['case_variants'] = case_variants
     write_json(output / 'snapshot.json', snapshot)
     capability = await inspect_nare_runtime(runtime)
+    require_structured_output(config.models, capability)
     snapshot.update(nare_version=capability.version, nare_contract=capability.contract)
+    if config.models.structured_output:
+        snapshot['nare_structured_output'] = list(capability.structured_output)
     write_json(output / 'snapshot.next.json', snapshot)
     (output / 'snapshot.next.json').replace(output / 'snapshot.json')
     completed: dict[str, dict[str, Any]] = {}

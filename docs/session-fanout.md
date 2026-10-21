@@ -32,10 +32,10 @@ for outcome in result.outcomes:
 
 `NareRuntime` is an operational Python argument, with positive finite timeout
 and turn limits. It adds no YAML fields. Scrutare requires Python 3.10 or newer;
-install nare 2026.10.4 separately (supported minimum 2026.10.0) with the interpreter required by its
+install nare 2026.10.12 separately (supported minimum 2026.10.0) with the interpreter required by its
 release. For the pinned integration runtime, clone the public
-[ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.10.4),
-verify commit `79405f9d2e3db2efe4a3ffda35faaf1680000acd`, and run
+[ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.10.12),
+verify commit `96672e1e6d23920fc6cdeebfcad7250c8c36cc5e`, and run
 `uv sync --project /path/to/nare-checkout --python 3.14 --locked --no-dev`.
 Point `NareRuntime.executable`, or the CLI option `--nare-executable`, at that
 checkout's `.venv/bin/nare`. The CLI defaults to `nare` on PATH. Nare is
@@ -58,6 +58,19 @@ stopped before model work, retained diagnostics and added no review. See the
 [dated acceptance record](action-acceptance.md). The immutable `2026.10.1` Spark
 attempt failed with HTTP 524; this success does not prove that slow first bytes
 or silent gaps are fixed generally.
+
+A rail with [`structured_output: json_schema`](config.md#schema-constrained-output-opt-in)
+adds `--structured-output json_schema` to each of its sessions. Inspection reads
+the capability from `nare contract` (`structured_output`, nare 2026.10.12 or
+newer); an entry of unfamiliar shape advertises nothing. A wave whose
+configuration asks for it on a runtime that does not advertise it fails before
+any session launches. When any rail opts in, every rail in `fanout.json`
+records `structured_output`, with `null` where it is off, as in `config.json`. Each session
+counts nare's constrained-turn `progress` records into `result.json`; such a
+record on a session that did not ask for the constraint is a protocol failure.
+Scrutare passes `--contract` equal to the inspected contract: 1 for releases
+before 2026.10.7, 2 from then. Contract 2 only changes when `ask` blocks, and
+these sessions offer only `read`.
 
 The supplied configuration must agree with the capture's canonical and raw
 configuration snapshots. Preparation validates the captured target and head,
@@ -155,8 +168,10 @@ Timeouts and caller cancellation terminate and reap owned process groups.
 Cancellation waits for cleanup before propagating and does not publish a
 completed wave manifest. Captures and prepared input bytes remain unchanged.
 Provider failures retain logs and session evidence with uncertain accounting.
-Nare 2026.10.0 records a denied fabricated ask call as a blocked terminal
+Under contract 1, nare records a denied fabricated ask call as a blocked terminal
 session; the engine treats blocked sessions as failed without deriving a verdict.
+Under contract 2 (nare 2026.10.7 and newer), the denied ask is an ordinary error
+tool result and the session continues to its answer.
 
 For panel execution, each admitted correction's `attempt-0002/` retains an
 anchor-only schema, original request IDs, exact unchanged system and model rail,
@@ -171,7 +186,7 @@ and replay contracts.
 ## Offline installed CLI proof
 
 Set `SCRUTARE_TEST_NARE_EXECUTABLE` to the absolute installed console path for
-nare 2026.10.4, then run:
+nare 2026.10.12, then run:
 
 ```sh
 uv run --python 3.10 --locked --extra dev pytest tests/test_nare_cli_integration.py
