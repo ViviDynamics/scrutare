@@ -1,0 +1,388 @@
+{
+  "concurrent_load": {
+    "before_launch": {
+      "by_client_group_base": {
+        "opencode | spark/glm-5.3-flash | http://192.168.3.40:8045/v1": {
+          "completion_tokens": 67455,
+          "fallbacks": {
+            "0": 90
+          },
+          "first": "2026-10-21T13:02:28.583+00:00",
+          "last": "2026-10-21T13:58:43.331+00:00",
+          "prompt_tokens": 7539549,
+          "rows": 90
+        }
+      },
+      "label": "the 60 minutes before launch",
+      "private_sha256": "b27cdbd0f6a4ad19c3af5297e10ac78b18c0869d1b8d8140356b7302f9886547",
+      "rows": 90,
+      "window_utc": [
+        "2026-10-21 12:59:42",
+        "2026-10-21 13:59:42"
+      ]
+    },
+    "first_minutes": {
+      "by_client_group_base": {
+        "python-httpx2 | spark/glm-5.3-flash | http://192.168.3.40:8045/v1": {
+          "completion_tokens": 2715,
+          "fallbacks": {
+            "0": 22
+          },
+          "first": "2026-10-21T13:59:47.351+00:00",
+          "last": "2026-10-21T14:00:09.061+00:00",
+          "prompt_tokens": 52864,
+          "rows": 22
+        }
+      },
+      "label": "first 2 minutes of s2",
+      "private_sha256": "f1eef071e932cdbae724ff919e33b1494b979ace92b45dc84f2deb40acf157af",
+      "rows": 22,
+      "window_utc": [
+        "2026-10-21 13:59:00",
+        "2026-10-21 14:01:35"
+      ]
+    },
+    "note": "python-httpx2 is nare (this evaluator); opencode is another client of the same proxy and engine; python-httpx is an unidentified client",
+    "run_window": {
+      "by_client_group_base": {
+        "opencode | spark/glm-5.3-flash | http://192.168.3.40:8045/v1": {
+          "completion_tokens": 136240,
+          "fallbacks": {
+            "0": 205
+          },
+          "first": "2026-10-21T14:00:41.634+00:00",
+          "last": "2026-10-21T16:35:35.487+00:00",
+          "prompt_tokens": 17689297,
+          "rows": 205
+        },
+        "python-httpx | spark/glm-5.3-flash | http://192.168.3.40:8045/v1/": {
+          "completion_tokens": 37771,
+          "fallbacks": {
+            "0": 12
+          },
+          "first": "2026-10-21T14:33:05.919+00:00",
+          "last": "2026-10-21T15:17:29.938+00:00",
+          "prompt_tokens": 1858420,
+          "rows": 12
+        },
+        "python-httpx2 | spark/glm-5.3-flash | http://192.168.3.40:8045/v1": {
+          "completion_tokens": 646890,
+          "fallbacks": {
+            "0": 541
+          },
+          "first": "2026-10-21T13:59:47.351+00:00",
+          "last": "2026-10-21T16:29:41.608+00:00",
+          "prompt_tokens": 2025322,
+          "rows": 541
+        }
+      },
+      "label": "s2 run window",
+      "private_sha256": "859ed707bf772c3e7c73feb550fe5244711559421c755dc9e15339db59802123",
+      "rows": 758,
+      "window_utc": [
+        "2026-10-21 13:59:00",
+        "2026-10-21 16:37:00"
+      ]
+    }
+  },
+  "idle_window_waiter": {
+    "polls": [
+      {
+        "at_utc": "2026-10-21T11:53:14Z",
+        "clients": [
+          "opencode",
+          "python-httpx"
+        ],
+        "last_spark_row": "2026-10-21T11:52:22.668+00:00",
+        "spark_rows_30min": 20
+      },
+      {
+        "at_utc": "2026-10-21T11:58:14Z",
+        "clients": [
+          "opencode",
+          "python-httpx"
+        ],
+        "last_spark_row": "2026-10-21T11:57:36.993+00:00",
+        "spark_rows_30min": 27
+      },
+      {
+        "at_utc": "2026-10-21T12:03:14Z",
+        "clients": [
+          "opencode",
+          "python-httpx"
+        ],
+        "last_spark_row": "2026-10-21T12:02:33.103+00:00",
+        "spark_rows_30min": 31
+      },
+      {
+        "at_utc": "2026-10-21T12:08:15Z",
+        "clients": [
+          "opencode",
+          "python-httpx"
+        ],
+        "last_spark_row": "2026-10-21T12:06:53.846+00:00",
+        "spark_rows_30min": 34
+      },
+      {
+        "at_utc": "2026-10-21T12:13:15Z",
+        "clients": [
+          "opencode",
+          "python-httpx"
+        ],
+        "last_spark_row": "2026-10-21T12:09:06.696+00:00",
+        "spark_rows_30min": 35
+      },
+      {
+        "at_utc": "2026-10-21T12:18:15Z",
+        "clients": [
+          "opencode",
+          "python-httpx"
+        ],
+        "last_spark_row": "2026-10-21T12:17:35.312+00:00",
+        "spark_rows_30min": 37
+      },
+      {
+        "at_utc": "2026-10-21T12:23:15Z",
+        "clients": [
+          "opencode",
+          "python-httpx"
+        ],
+        "last_spark_row": "2026-10-21T12:17:56.612+00:00",
+        "spark_rows_30min": 25
+      },
+      {
+        "at_utc": "2026-10-21T12:28:16Z",
+        "clients": [
+          "opencode",
+          "python-httpx"
+        ],
+        "last_spark_row": "2026-10-21T12:17:56.612+00:00",
+        "spark_rows_30min": 19
+      },
+      {
+        "at_utc": "2026-10-21T12:33:16Z",
+        "clients": [
+          "opencode",
+          "python-httpx"
+        ],
+        "last_spark_row": "2026-10-21T12:32:36.611+00:00",
+        "spark_rows_30min": 16
+      },
+      {
+        "at_utc": "2026-10-21T12:38:16Z",
+        "clients": [
+          "opencode",
+          "python-httpx"
+        ],
+        "last_spark_row": "2026-10-21T12:33:49.626+00:00",
+        "spark_rows_30min": 17
+      },
+      {
+        "at_utc": "2026-10-21T12:43:17Z",
+        "clients": [
+          "opencode",
+          "python-httpx"
+        ],
+        "last_spark_row": "2026-10-21T12:35:26.564+00:00",
+        "spark_rows_30min": 13
+      },
+      {
+        "at_utc": "2026-10-21T12:48:17Z",
+        "clients": [
+          "opencode",
+          "python-httpx"
+        ],
+        "last_spark_row": "2026-10-21T12:47:36.849+00:00",
+        "spark_rows_30min": 9
+      },
+      {
+        "at_utc": "2026-10-21T12:53:17Z",
+        "clients": [
+          "opencode",
+          "python-httpx"
+        ],
+        "last_spark_row": "2026-10-21T12:47:36.849+00:00",
+        "spark_rows_30min": 8
+      },
+      {
+        "at_utc": "2026-10-21T12:58:17Z",
+        "clients": [
+          "opencode",
+          "python-httpx"
+        ],
+        "last_spark_row": "2026-10-21T12:54:29.423+00:00",
+        "spark_rows_30min": 10
+      },
+      {
+        "at_utc": "2026-10-21T13:03:17Z",
+        "clients": [
+          "opencode",
+          "python-httpx"
+        ],
+        "last_spark_row": "2026-10-21T13:02:35.926+00:00",
+        "spark_rows_30min": 9
+      },
+      {
+        "at_utc": "2026-10-21T13:08:18Z",
+        "clients": [
+          "opencode"
+        ],
+        "last_spark_row": "2026-10-21T13:02:35.926+00:00",
+        "spark_rows_30min": 6
+      },
+      {
+        "at_utc": "2026-10-21T13:13:18Z",
+        "clients": [
+          "opencode"
+        ],
+        "last_spark_row": "2026-10-21T13:12:35.757+00:00",
+        "spark_rows_30min": 10
+      },
+      {
+        "at_utc": "2026-10-21T13:18:18Z",
+        "clients": [
+          "opencode"
+        ],
+        "last_spark_row": "2026-10-21T13:17:56.736+00:00",
+        "spark_rows_30min": 12
+      },
+      {
+        "at_utc": "2026-10-21T13:23:18Z",
+        "clients": [
+          "opencode"
+        ],
+        "last_spark_row": "2026-10-21T13:21:19.205+00:00",
+        "spark_rows_30min": 16
+      },
+      {
+        "at_utc": "2026-10-21T13:28:18Z",
+        "clients": [
+          "opencode"
+        ],
+        "last_spark_row": "2026-10-21T13:27:54.260+00:00",
+        "spark_rows_30min": 29
+      },
+      {
+        "at_utc": "2026-10-21T13:33:19Z",
+        "clients": [
+          "opencode"
+        ],
+        "last_spark_row": "2026-10-21T13:32:41.719+00:00",
+        "spark_rows_30min": 44
+      },
+      {
+        "at_utc": "2026-10-21T13:38:19Z",
+        "clients": [
+          "opencode"
+        ],
+        "last_spark_row": "2026-10-21T13:34:13.630+00:00",
+        "spark_rows_30min": 45
+      },
+      {
+        "at_utc": "2026-10-21T13:43:19Z",
+        "clients": [
+          "opencode"
+        ],
+        "last_spark_row": "2026-10-21T13:40:59.245+00:00",
+        "spark_rows_30min": 44
+      },
+      {
+        "at_utc": "2026-10-21T13:48:19Z",
+        "clients": [
+          "opencode"
+        ],
+        "last_spark_row": "2026-10-21T13:47:51.537+00:00",
+        "spark_rows_30min": 52
+      },
+      {
+        "at_utc": "2026-10-21T13:53:20Z",
+        "clients": [
+          "opencode"
+        ],
+        "last_spark_row": "2026-10-21T13:52:21.994+00:00",
+        "spark_rows_30min": 58
+      },
+      {
+        "at_utc": "2026-10-21T13:58:20Z",
+        "clients": [
+          "opencode"
+        ],
+        "last_spark_row": "2026-10-21T13:57:23.875+00:00",
+        "spark_rows_30min": 57
+      }
+    ],
+    "private_sha256": "4faa1080f47f62f8a68cae5f64bbc3d678a08bb23b79ffd754918d03b5d5f4b2",
+    "rule": "launch after 30 minutes with no Spark spend-log row; waived by the maintainer at 13:58Z"
+  },
+  "router_2026-10-21T13:59Z_before_launch": {
+    "fallback_fields": {
+      "content_policy_fallbacks": null,
+      "context_window_fallbacks": null,
+      "fallbacks": null
+    },
+    "model_group_alias": {
+      "claude-haiku": {
+        "hidden": true,
+        "model": "claude-haiku-5-5"
+      },
+      "claude-haiku-4-5": {
+        "hidden": true,
+        "model": "claude-haiku-5-5"
+      },
+      "claude-sonnet": {
+        "hidden": true,
+        "model": "claude-sonnet-5-5"
+      }
+    },
+    "num_retries": 2,
+    "ok": true,
+    "private_sha256": "d4b8a0b3cddfdb2274ad7b9598434cadb7c2d8484da46193231976353d020b97",
+    "read_utc": "2026-10-21T13:59:42Z",
+    "spark_glm_deployments": [
+      {
+        "api_base": "http://192.168.3.40:8045/v1",
+        "db_model": false,
+        "model": "openai/glm-5.3-flash"
+      }
+    ],
+    "timeout": 3600,
+    "wildcard_groups": []
+  },
+  "schema_version": 1,
+  "spend_log_s2_window": {
+    "note": "every spend-log row in the window. this_key_paid_provider_rows counts 12 rows whose api_base is the same Spark host with a trailing slash (http://192.168.3.40:8045/v1/, the unidentified python-httpx client); they are the self-hosted deployment, not a paid provider. attributed_spend_usd is LiteLLM applying its configured rate to a self-hosted model; no provider bills it.",
+    "other_keys_by_model_group": {
+      "spark/glm-5.3-flash": 11
+    },
+    "private_sha256": "1ac21b381ef8f0b04747896bb3033e58644b3ebaf36ca96d738c2382aed21aa1",
+    "rows_all_keys": 758,
+    "rows_this_key": 747,
+    "this_key_attempted_fallbacks": {
+      "0": 747
+    },
+    "this_key_attempted_retries": {
+      "0": 747
+    },
+    "this_key_attributed_spend_usd": 3.506388,
+    "this_key_by_model_group_model_api_base_provider_status": {
+      "spark/glm-5.3-flash | openai/glm-5.3-flash | http://192.168.3.40:8045/v1 | openai | success": 735,
+      "spark/glm-5.3-flash | openai/glm-5.3-flash | http://192.168.3.40:8045/v1/ | openai | success": 12
+    },
+    "this_key_completion_tokens": 776526,
+    "this_key_paid_provider_rows": 12,
+    "this_key_prompt_tokens": 20787498,
+    "window_utc": [
+      "2026-10-21 13:59:00",
+      "2026-10-21 16:37:00"
+    ]
+  },
+  "upstream_timeouts_read_before_freeze": {
+    "evaluator": "only --timeout-seconds",
+    "litellm_request_timeout_configured": 3600,
+    "litellm_router_timeout_live": 3600,
+    "nare_openai_httpx": "600 s per read on a stream; longest observed inter-event gap 62 s",
+    "path": "https://litellm.vividynamics.com/v1 (private address, Caddy), not Cloudflare",
+    "vllm_serving_role": "no request timeout set",
+    "waf_reverse_proxy_read_write_timeout": "3600 s (infrastructure c752f20, #212, 2026-10-21)"
+  }
+}

@@ -198,6 +198,16 @@ earlier run), and none of the 31 constrained corrections failed schema validatio
 assessor overran the default 20,000-token reservation, and seven sessions timed
 out. External spend was zero.
 
+The [final schedule s2](../evaluations/reports/2026-10-21-glm-structured-s2-qualification/README.md),
+the one further schedule that gate allowed, raised the ceiling to 200,000, the
+assessor reservation to 50,000 and the session timeout to 1800 s, each sized from
+the run before it. It launched under heavy concurrent load after the maintainer
+waived the idle-window rule. It did not qualify: 34 of 36 cells completed and all 6
+aggregate defect cells produced evidence, but 5 of 6 assessed defect cells
+completed. One assessor request stalled until the timeout, and one discovery
+session cited past a file's end. No session overran its budget or failed the
+schema, and external spend was zero. No further schedule may run under that gate.
+
 Ordinary CI uses `--evidence-kind offline` and deterministic provider substitutions
 to verify orchestration and scoring. Offline metrics measure software behavior only.
 A real baseline requires explicit model jobs and completed independent human
