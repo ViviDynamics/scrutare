@@ -1,0 +1,674 @@
+[
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/aggregate/1",
+    "finding_id": "4d48a4cc39a16fd6d1c60d46155654529467ac63f9053488ef7ea7034da7d26d",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/aggregate/1",
+    "finding_id": "616a54036e5ef2f2adc6d921fd00f26ab1a4967e3ac6769abfdc6f9d70a9fe1c",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/aggregate/1",
+    "finding_id": "7ac23947e0b2949284285771beab9fbea7727c9dfc0a14bddb4159d70d17942f",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/aggregate/1",
+    "finding_id": "a87d6fd978e340a6ffbfd30de9b4ab28bcd8b2dfd0859c30e4b033fc257f73ae",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/aggregate/2",
+    "finding_id": "f701bf3428fd744ea8d72e3456bd6b197cdf789143b1d2f53e6602ddc933077c",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/aggregate/2",
+    "finding_id": "fcbabd5cf3361d69b9230560759021fce6a0dec3d637ebc33da1899f5eac6e49",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/aggregate/2",
+    "finding_id": "2331b5e60be6a35baec919604e2cf005564012f0e457e9707ca8f47532b0a742",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/aggregate/2",
+    "finding_id": "e6e72600abcf7ac2660461f574dfb1d4f164303f57338dc5a6e84f6e2fe0563a",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/aggregate/3",
+    "finding_id": "ba1e67996ac81ab01fe01fed7861f9e43c02676982fe2ae1f3c4121661f5fc62",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/aggregate/3",
+    "finding_id": "93217bd3d5a38c6919d6ec18d8d1473a7f3bd9610322cf895b0622aa118c0bde",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/aggregate/3",
+    "finding_id": "d15a33245d181eae417952a25c77ba6cd7930894cb0bbe9947783a53cc653218",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/aggregate/1",
+    "finding_id": "ef0e3430d60a674127d53d5e23c72043fea7f605983c497db40e00903050b329",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/aggregate/1",
+    "finding_id": "e2995ceab8ccc2cc441137825bd983b36bfec7b9fdd847a00599b4828cc7503a",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/aggregate/1",
+    "finding_id": "4e020c10122e795115ca89a68ec38b5288cb55099aeeefc4b599e13096afb85c",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/aggregate/2",
+    "finding_id": "722800dc1c2a3d3522a38943a54f3eb1d9c0a08487eb07879f55b8921da93135",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/aggregate/2",
+    "finding_id": "89d2ce5c820238cbd4aced9c3fa357397a736aa90ede10f1fc15ce633a1788b9",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/aggregate/2",
+    "finding_id": "72065267b6f745ee5701d756efd5da8501dbb176d373bc134b20f3504be3d184",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/aggregate/2",
+    "finding_id": "f8bef117fa4ecd9eae21306cc095a87f7fc0a8b95b6e9cba2f157d2272a14969",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/aggregate/3",
+    "finding_id": "48eac3681a6a896f6b8fe0bd2269562e56b1ee8c260cf4889e7a8ce77d6c9b6d",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/aggregate/3",
+    "finding_id": "639664253ed74f7898348349fc7e2bd8cd13bd5340ce2d6fe9c5708271d60073",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/aggregate/3",
+    "finding_id": "5570c93441454c736456318ca1de84ea712924e4a415f7a679f3aedeaffef7d8",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/aggregate/3",
+    "finding_id": "1365a2bd8b43ec50ea101efab9cebc655f1a10da1ae669b3264e4674805169ac",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/assessed/1",
+    "finding_id": "db797a776bb3056fffd5027d3fdcf58f36819ffce4a3cdd1920c7a0ca8bfb438",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/assessed/1",
+    "finding_id": "111e9d9d8e0845ec25476897c568552b42c1c71d8303700f2f71a1aba95dad4a",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/assessed/1",
+    "finding_id": "25342d9ab09698102e3719584d132f932975d3fa754ec2ec02d722ba54f5fbab",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/assessed/1",
+    "finding_id": "f5cb95d130ce1f4898cbe9cdc93a86fc61e6444a1463e5b96a6487ed95e59d9c",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/assessed/2",
+    "finding_id": "ff08fab21f64c7b2a89b8d6b7ba189127116a63ac69de88cbac88dfe66661a3b",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/assessed/2",
+    "finding_id": "4f695daae6d15c787c9fd904e088842f6b05310fe0eb7bf4c12c727829640e4f",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/assessed/2",
+    "finding_id": "36d5499171dc561b432c2de52183a39ad97411979a57d6b43bb636e676607951",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/assessed/2",
+    "finding_id": "88c2c30e4a996e250139c122d09e37e9ace6c63a310476b9d5d6b116af1ccefc",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/assessed/1",
+    "finding_id": "58588fcf46a4abd88b1d59beda1516e47032cc1aec675c11e9788b9631b2c5bd",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/assessed/1",
+    "finding_id": "51e20acc7fc2d7e8a8c59a94a6c5a6735eff18ce9693a31a6f94908e96009f97",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/assessed/1",
+    "finding_id": "1d8fec5afc1c35d2051b8ba3a1dbd96a138ed1ae3234cf4e8db6c2f639d21b90",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/assessed/1",
+    "finding_id": "6e19d917a3a2a6003e0d86823a784508532647d17d3e385307fb43ef807b9908",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/assessed/2",
+    "finding_id": "42049e7c4076aaaf727986dc3bea69377c4a0c76e2fea0bd07e3af85121032b2",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/assessed/2",
+    "finding_id": "c9714edb22956aa5cdc005f7a1182864491857edf91fa0a8c43ebd10d9d35718",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/assessed/2",
+    "finding_id": "def4379bd65ad66acb4191e7816d16b8504e05a9a9b83ca209d99f670fe90b48",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/assessed/2",
+    "finding_id": "cba6fa37b6ecedb2c345fba8de4f46d140877cc6c06d9a27fa4733e3c61399cc",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/assessed/3",
+    "finding_id": "52a6f2b6bbfe29e215c48a46be28d2be2acb3d10ed9265c995940d19db9ce963",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/assessed/3",
+    "finding_id": "6f0ee02fdafcec3e2bdd5435d239e7eb650709e6263796b045abb4d3907e6473",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/assessed/3",
+    "finding_id": "7a600c0d97a816bdc5649abdbe4efaa2818c47f0544bbfcfab1a19ef904e0d72",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/assessed/3",
+    "finding_id": "104a5b33e28229933489f1b3b5a26240192200a4197e106c5cf3c14ea7351bbf",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/focused1/1",
+    "finding_id": "4f5d7ea9910800098b7ec65f635046382bf6317286f8eadce7b74ada6acfe2e3",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/focused1/1",
+    "finding_id": "dbfee9db3e8917dfd85891638d44c1d59f08555ffa8d4feb7250912f0823c5a1",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/focused1/1",
+    "finding_id": "f306aa5e7e956876d6789659b90f57311cffdf9bfb9082e8f742f2ff35841cfa",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/focused1/1",
+    "finding_id": "ac8e326d2225ba50fef41382607ee4d92e94d3febf74c5c7627cf3366d4bb7ed",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/focused1/2",
+    "finding_id": "d39d905f828fa2de6817aec5950345bef9c6c5cce2c4b96e198fef7c66d3c98f",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/focused1/2",
+    "finding_id": "8d13ac0188d84ed921e481f8bcbc9bc3d3ce1fb1f399b348df59376e36222745",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/focused1/2",
+    "finding_id": "ab9adb30eaefb395c57cb1db3dcb228e0fecefe4ac2286d87198210233902611",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/focused1/2",
+    "finding_id": "aa7daf956aa6b53ab38f67bc1970179dce1ea14bdc88bd204fa72554cdc4f949",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/focused1/3",
+    "finding_id": "a9d8f520fc92a5fe28caa40ffc84e94efd60def54138e64c6874ff8506cc53e4",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/focused1/3",
+    "finding_id": "68d66971ad8aa55630f1fbf83983aa789c7a8299cb47b1ee7d9e24d26e1de63c",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/focused1/3",
+    "finding_id": "c5d19caa2e10219a5f32b10386c752cd655881c449d20117d33d2263d15b5de7",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused1/1",
+    "finding_id": "a693dbfffa609ba322f56a3c3434694e9499bd1a82b7ab4cda7a88cec06142b4",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused1/1",
+    "finding_id": "068f1e0517b4c29dd0343b5542066299c270afd3d19b36a298ac89221c060776",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused1/1",
+    "finding_id": "9d292a31bb3b372c0c04894f59b7d627e8c94f9b6073107aeb7287a8592ced82",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused1/1",
+    "finding_id": "257dfffc16379de23977ed90035f8eae6929d68a6f23109769b35b5002794eb2",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused1/2",
+    "finding_id": "149d366481ee826a3c326a075b89a0330a78b301ff62c912cf22499df08d3d1b",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused1/2",
+    "finding_id": "a6f50e94e0948395cdc0e865088c7a6681ed2e36430a88fd1fe77e673b89101f",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused1/2",
+    "finding_id": "cf221d7ef81a0d9d79887af4ac6cac3007deb352675aea8aafefb7e23d2fc307",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused1/2",
+    "finding_id": "59e119a9ca65248d66f3020412d787599819bb62ffa32286af067b2910230682",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused1/3",
+    "finding_id": "dbfd97f29b5a5441fcf597af8f9b1b1cbfc38532f15d86ebc554f9cba8f7de25",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused1/3",
+    "finding_id": "bdfce84c1e72ad2da4b9c30a83f5dcd659bc505f6b58d0eae90076ff4cede583",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused1/3",
+    "finding_id": "8e473e09468b122d64cf07fc031ec2c34a0c6838fce07a634de983d1085b8968",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused1/3",
+    "finding_id": "81602d655088d5e8da4040e8f704cc48c82d0148801609c1e0fcf22d79f5fd87",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/focused3/1",
+    "finding_id": "b2a45fefba06e636870f7e3b4019b4146f16d83ac5b5fcc80ce447763ccdbb6d",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/focused3/1",
+    "finding_id": "5a5af7b1f10e53d8cdc8668039b7457f67bc29c3c71943c7eb42661966823d68",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/focused3/1",
+    "finding_id": "0495a6d074ed8677ea1bf4fcdb2759d58e615f7e41ca18b4a3c794beb6e4e462",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/focused3/1",
+    "finding_id": "17ee7f67a4389a931fb8f9a67ed2214251768b575b70ba6637e407cc389bcbe4",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/focused3/3",
+    "finding_id": "8edf89be534706f5c97bb031fd011e1db8e721364dedee76b4c3d204ba8865ea",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/focused3/3",
+    "finding_id": "2df041140d95e58046df24865e6e899646933d69cd05e670d3b94315857dab24",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "security-auth-order/focused3/3",
+    "finding_id": "def044dbf4a1046ca37b6fb570d0b97beb26d8e417a2875c1bcb2429d4c78223",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused3/1",
+    "finding_id": "425bace9314892545517ce1777e38ceee4df8cf668d8004c2d420070dbd5c171",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused3/1",
+    "finding_id": "12989b51b4defd791aa6dc6d1899334d04ce8ff9ac374089e50a17edc2ac861a",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused3/1",
+    "finding_id": "a3cd4d6cf5c905473cc80c4c695a4c2c026ce1e18ca20eb51d0dc0f7ced5cfd8",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused3/1",
+    "finding_id": "fbfbcd184ee5f833c939c46af6c926c297c88bcaf0250e7ebe9d414c59afaee5",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused3/2",
+    "finding_id": "2043cdc9c1bf47290bc7bcade37f638de00bf64a6aaffcd2c7716ce166b6299f",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused3/2",
+    "finding_id": "8d489cdf46605ee1c9e2f52a571d0108237fdf7fd1e7df315d310db8adb51d61",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused3/2",
+    "finding_id": "bbbee959770ee01085df2acc15d469c1a873873158cd8adb65666221f504b9f2",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused3/2",
+    "finding_id": "c1c3e5db6764c99af9235323b8d4e86b756875e2cadf2a1f46af421d487cfacf",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused3/3",
+    "finding_id": "6943791ae5bddcb9cfd081c8663d10b9c5cec88ce2fc478025afbf0d0be66614",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused3/3",
+    "finding_id": "aea59b13d443c5c49f50470711312677e2929f11aa1d62715c86030835dbff4e",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused3/3",
+    "finding_id": "52d07089d4e90c96bccba04224085138a20d1cd3c2711b4fc13181b3bd8b0b5a",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s2",
+    "run_id": "tests-consumer-fixture/focused3/3",
+    "finding_id": "b007e0f41008ac3b752d5891e545b591998402c67e2dc9d05bcb5d6a4609e058",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  }
+]

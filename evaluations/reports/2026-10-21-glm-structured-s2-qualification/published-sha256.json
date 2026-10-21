@@ -1,0 +1,18 @@
+{
+  "README.md": "67de98694836cee87a352ea0c01c470b44f8982860a4365ba7fa8c2f2cf614f4",
+  "automated-decisions.json": "685574d97de46b8322b9569fd06218469d56312493aa15fe15109f7bb4bd7d04",
+  "freeze-record.json": "c621949fcf5c3f54e7491c8dac7f4930805d346cab028a5aa140377677c48508",
+  "provider-evidence.json": "ea7abf04737040d50d003e9205ead4a753edbd918b413f670727986899c6701a",
+  "reproduce.py": "e442af3fe0e7368ca2922e0e8a61a0e113b111b0d44e57aa2a525fde5624e4e3",
+  "s2/corpus-manifest.json": "644777d54911d59d440fc02c1494a5e22a9f9fa64d20bfde78bf3652db442556",
+  "s2/deviations.json": "c9d2c19b2e44ec2be297268edb2847421a5c9c413a401130dc8dd1a83cd826a9",
+  "s2/evaluation.json": "d8acb2f7486702b609aa057d1a487af458de7e46791d36fcce6c3ab22bee627a",
+  "s2/experiment.json": "0f8310727ea7fcb5041aabad9ea5e394c8b0b61ae8bd75a97130131b6d431198",
+  "s2/gate.json": "95ddc29f896f380d563ac008a7dbfebf3a9b967d1d8ddea2b4fe515ee04ca9a4",
+  "s2/mechanical-qualification.json": "415b2a6afb1df2cf5789cc6436b9704aca0cd6de63c6cc24c0ce64d30391f828",
+  "s2/original-artifact-sha256.json": "dfbfb865ad64298387c7453155c5602667b709b8159c9740c0ed48870b34ea53",
+  "s2/preparation.json": "360026406fa522c64784729c0438295f0ea7631119dd039df08cfd6d030a0e88",
+  "s2/session-diagnosis.json": "2eefdc1963d2a9b3b8ba2313e1dabb4f1ce88163123ce104007d63075dcf0795",
+  "s2/snapshot.json": "a739e1dc324c69a47907eb1d198729038fdfa0f266b893a10e907924245af0c1",
+  "summary.json": "381d48c0faf5a5c081fbbe78718e38987c8bea04cee4ec937e5c6249efa30bdf"
+}

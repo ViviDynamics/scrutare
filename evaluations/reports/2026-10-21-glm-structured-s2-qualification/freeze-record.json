@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "freezes": {
+    "s2": {
+      "label": "s2",
+      "recorded_utc": "2026-10-21T11:52:41Z",
+      "preparation_sha256": "360026406fa522c64784729c0438295f0ea7631119dd039df08cfd6d030a0e88",
+      "gate_sha256": "95ddc29f896f380d563ac008a7dbfebf3a9b967d1d8ddea2b4fe515ee04ca9a4",
+      "evaluation_sha256": "d8acb2f7486702b609aa057d1a487af458de7e46791d36fcce6c3ab22bee627a",
+      "wheel": "scrutare-2026.10.2-py3-none-any.whl",
+      "wheel_sha256": "acf0d147467ae68d09e737a55ceacabae0e0423d09b82854a9fb49d96fcb87ec",
+      "source_commit": "b0dfd0f8fed494c00ad1cf57c567d83c45546a08",
+      "release_tag": "2026.10.26",
+      "nare": "2026.10.12 96672e1",
+      "process_json_exists": false,
+      "experiment_exists": false,
+      "deviations_sha256": "ce3cd916c19fd8a242ba3651eb024c872e5739ca2aba7ddf5b7bc2579026958a",
+      "deviations_sha256_amended": "c9d2c19b2e44ec2be297268edb2847421a5c9c413a401130dc8dd1a83cd826a9",
+      "amended_utc": "2026-10-21T13:59:25Z"
+    }
+  },
+  "launch_ledger": [
+    {
+      "event": "launch",
+      "label": "s2",
+      "at_utc": "2026-10-21T13:59:42Z",
+      "method": "systemd-run --user transient unit scrutare-glm-s2, evaluator exec'd as main process",
+      "idle_rule": "waived by the maintainer 2026-10-21 (issue 51 comment 6317937750)"
+    },
+    {
+      "event": "launched",
+      "label": "s2",
+      "pid": 14915,
+      "pgid": 14915,
+      "sid": 14915,
+      "systemd_unit": "scrutare-glm-s2.service",
+      "cgroup": "app.slice/scrutare-glm-s2.service",
+      "started_utc": "2026-10-21T13:59:42Z"
+    },
+    {
+      "event": "exit",
+      "label": "s2",
+      "unit_result": "success",
+      "exec_main_status": 0,
+      "last_artifact_write_utc": "2026-10-21T16:35:09Z",
+      "observed_inactive_utc": "2026-10-21T16:36:07Z"
+    }
+  ],
+  "public_freeze_comments": {
+    "s2": "https://github.com/ViviDynamics/scrutare/issues/51#issuecomment-6315240876",
+    "s2_amendment": "https://github.com/ViviDynamics/scrutare/issues/51#issuecomment-6317937750"
+  },
+  "deviations": {
+    "label": "s2",
+    "recorded_utc": "2026-10-21T11:52:41Z",
+    "status": "frozen; idle requirement waived by the maintainer; launching under recorded concurrent load",
+    "authority": "user ruling 2026-10-21: run s2, the last schedule the frozen gate allows, configured for a realistic chance of passing",
+    "baselines": [
+      "s1 (glm-structured-2026-10-14/requal/s1, PR #80)",
+      "g2 (PR #77)"
+    ],
+    "identical_to_s1": [
+      "model alias, base URL (LAN), structured_output json_schema, nare 2026.10.12 (96672e1), source b0dfd0f / release 2026.10.26, byte-identical wheel",
+      "corpus (byte-identical), cases, comparison set focused, arms, 3 repeats, 36 cells, related paths, no line_counts, no Ruff capture",
+      "max_turns 6, concurrency 3, rounds.max 3, transient retry 3 per cell / 20 s / job budget 6 with a rerun counting as not accounted",
+      "checker, export, spend-verify and launcher scripts",
+      "launch method: transient systemd user unit, evaluator exec'd as main process"
+    ],
+    "deviations_from_s1": [
+      {
+        "what": "per-session timeout 120 s -> 1800 s (g2 and s1: 600 s)",
+        "why": "s1's 7 timeouts (g2: 23) were all still generating at 600 s; completed sessions took up to 478 s in s1 and 602 s in g2, and the larger grants below let sessions run up to 1.9x (discovery) and 2.5x (assessor) s1's tokens. Nothing upstream cuts a streamed request sooner: LiteLLM router timeout and litellm_settings.request_timeout are 3600 s (infrastructure c752f20, read live at freeze), the LAN WAF reverse proxy read/write timeouts are 3600 s, the vLLM serving role sets no request timeout, nare's 600 s httpx timeout applies per read on a stream (longest observed gap 62 s), and the evaluator has no timeout but this one. LAN path only (litellm.vividynamics.com), not Cloudflare"
+      },
+      {
+        "what": "total ceiling (per_persona_tokens and review_max_tokens) 100,000 -> 200,000, and the per-attempt bound in the pass rule with it",
+        "why": "s1's binding failure: 8 of 8 assessors and 10 discovery sessions overran their grants. The larger grants below cannot fit 100,000. The comparison set divides the ceiling, so the larger grants need it"
+      },
+      {
+        "what": "assessor reservation 20,000 (default fifth) -> 50,000 (--assessment-tokens 50000)",
+        "why": "every s1 assessor was under 20,000 before its final turn and ended at 25,200 to 33,468; 50,000 is 1.49x s1's maximum"
+      },
+      {
+        "what": "discovery grant 20,000 -> 37,500 in assessed arms (aggregate arm 25,000 -> 50,000), derived, not a separate setting",
+        "why": "(200,000 - 50,000) / 4 reviewers; s1's discovery maximum was 22,885 (all 10 overruns finished their answer and overshot by 339 to 2,885), so 37,500 is 1.64x it"
+      },
+      {
+        "what": "no overrun fallback (findings.assessment/discussion overrun stays void)",
+        "why": "bigger grants are preferred: a fallback degrades verdicts"
+      }
+    ],
+    "gate_changes_from_s1": {
+      "max_tokens_per_run": [
+        100000,
+        200000
+      ],
+      "timeout_seconds": [
+        600,
+        1800
+      ],
+      "assessment_tokens": [
+        null,
+        50000
+      ],
+      "pass_rule": "every attempt within 100,000 -> 200,000 tokens; all other words identical",
+      "fallback": "no further schedule after s2",
+      "profile, predecessor, changed/unchanged_from_reference": "descriptive",
+      "unchanged_criteria": [
+        "cases",
+        "clean_cases",
+        "arms",
+        "repeats",
+        "expected_runs",
+        "all_runs_complete_and_accounted",
+        "aggregate_defect_case_repeats_nonempty_valid_v2",
+        "assessed_defect_case_repeats_actual_complete_assessor",
+        "discussion_rounds_reported_not_forced",
+        "max_turns",
+        "concurrency",
+        "transient_retry",
+        "external_spend_usd_limit",
+        "holdout_used"
+      ]
+    },
+    "derived_grants_checked_with_frozen_wheel": {
+      "aggregate": "per reviewer 50,000 (no assessor)",
+      "assessed, focused1, focused3": "assessor 50,000; per reviewer (200,000 - 50,000) / 4 = 37,500 (per_persona cap 50,000)"
+    },
+    "upstream_timeouts_read": {
+      "litellm_router_timeout_live": 3600,
+      "litellm_request_timeout_configured": 3600,
+      "waf_reverse_proxy_read_write_timeout": "3600 s (infrastructure c752f20, #212, 2026-10-21)",
+      "vllm_serving_role": "no request timeout set",
+      "nare_openai_httpx": "600 s per read on a stream; longest observed inter-event gap 62 s",
+      "evaluator": "only --timeout-seconds",
+      "path": "https://litellm.vividynamics.com/v1 (private address, Caddy), not Cloudflare"
+    },
+    "nominal_estimate_note": "the attribution estimate in preparation.json doubles with the ceiling; external spend remains USD 0 by construction",
+    "amendments": [
+      {
+        "recorded_utc": "2026-10-21T13:59:25Z",
+        "what": "the idle-window launch requirement (30 min with no non-evaluator Spark traffic) is waived; s2 launches under concurrent load, which is recorded before and throughout the run",
+        "authority": "maintainer ruling 2026-10-21: launch s2 now, without waiting for an idle window",
+        "evidence": {
+          "waiter": "scrutare-glm-s2-wait.service, stopped at the ruling",
+          "polls": 26,
+          "first_poll_utc": "2026-10-21T11:53:14Z",
+          "last_poll_utc": "2026-10-21T13:58:20Z",
+          "polls_with_spark_traffic": 26,
+          "spark_rows_30min_range": [
+            6,
+            58
+          ],
+          "clients_seen": [
+            "opencode",
+            "python-httpx"
+          ],
+          "private_poll_log": "s2-wait.jsonl"
+        },
+        "frozen_files_changed": "none: preparation.json, gate.json, evaluation.json and the wheel are unchanged; only this deviations file (and its hash) changes",
+        "deviations_sha256_before": "ce3cd916c19fd8a242ba3651eb024c872e5739ca2aba7ddf5b7bc2579026958a"
+      }
+    ]
+  }
+}
