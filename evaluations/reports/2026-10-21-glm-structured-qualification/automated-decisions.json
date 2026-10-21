@@ -1,0 +1,130 @@
+[
+  {
+    "job": "s1",
+    "run_id": "security-auth-order/aggregate/1",
+    "finding_id": "358445ddf969d78b2d3f0a4b947b601d404fb36ba557e3d648645ac79a133427",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s1",
+    "run_id": "security-auth-order/aggregate/1",
+    "finding_id": "4ed1f1961fd1ab5691f50b645a6d5d9baef8ab6b52647e4e24312546b86380e5",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s1",
+    "run_id": "security-auth-order/aggregate/1",
+    "finding_id": "e7a3a141570b48eb63a6c584ea5df99e20da1479def74d29a6b6cb5d10d9b211",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s1",
+    "run_id": "security-auth-order/aggregate/1",
+    "finding_id": "b3852be694cae8b742ad9849b50b9a0bdce0eb63dc33c692ac14ce9185b85c23",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s1",
+    "run_id": "security-auth-order/aggregate/2",
+    "finding_id": "35552b3465693749cdbb95ff124197c4d2ea2e5cd73c3665ca056a4d1144c748",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s1",
+    "run_id": "security-auth-order/aggregate/2",
+    "finding_id": "94cbbcf178ba15f446dc34a271a6cdae343535095d5dbd56256c58c8b522a05d",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s1",
+    "run_id": "security-auth-order/aggregate/2",
+    "finding_id": "c315653b5b56c74c2d085a16073bd3f66bbf38ee56845f6863cd424b304b0edc",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s1",
+    "run_id": "security-auth-order/aggregate/2",
+    "finding_id": "03ad761e50a99e1d574251ae3650d95c590e0fb1e6724c47033144829385fb21",
+    "defect_id": "security-auth-order-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s1",
+    "run_id": "tests-consumer-fixture/aggregate/1",
+    "finding_id": "87ad5bef8a52c6f3e42355a6a1e976a7a4537c0c7a2cd279e3794139a6e75a2e",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s1",
+    "run_id": "tests-consumer-fixture/aggregate/1",
+    "finding_id": "0b3ddd9d3b72b8a451150d286baa3e7d2484f81d7f7aabb545fc0febd892189c",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s1",
+    "run_id": "tests-consumer-fixture/aggregate/1",
+    "finding_id": "c0d0871ca5a643663dc5a39e0b16549693e965c3c19ac61856aa62dfc9e574a9",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s1",
+    "run_id": "tests-consumer-fixture/aggregate/1",
+    "finding_id": "295cad884b60574eca23df27bf0d612e18ccf1f592197275cb103d1008239941",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s1",
+    "run_id": "tests-consumer-fixture/aggregate/3",
+    "finding_id": "620c16a773bd3ce63c04d27bbca78b4b356f71f4326ac2e45deb53f6a9e03767",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s1",
+    "run_id": "tests-consumer-fixture/aggregate/3",
+    "finding_id": "58aee64908583f339746f622f8fdcae0be1ea0de168861465b0f624097d893e1",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s1",
+    "run_id": "tests-consumer-fixture/aggregate/3",
+    "finding_id": "3ae969a98be8c0b906bc843678bc527f0aa08a9dbed8823e47b19bf928433dd3",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  },
+  {
+    "job": "s1",
+    "run_id": "tests-consumer-fixture/aggregate/3",
+    "finding_id": "78aa6f912301b390f2b46e5627bc4a4e66f82b7d5a3ffb05451037ac2428acfc",
+    "defect_id": "tests-consumer-fixture-defect",
+    "method": "automated",
+    "reviewer": "reproduce.py RULES"
+  }
+]
