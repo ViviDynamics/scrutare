@@ -1,9 +1,9 @@
 # Re-qualification of `spark/glm-5.3-flash` with schema-constrained output
 
 **Result: not qualified.** In the one frozen schedule (`s1`), 13 of 36 cells
-completed with complete accounting. Two of the three gate items that depend on the
+completed with complete accounting, and every gate item that depends on the
 defect cases failed. The constraint did what #78 asked of it: no session failed
-the findings schema (9 did in `g2`), and no constrained correction failed
+the findings schema (9 did in `g2`), and no constrained correction failed schema
 validation. The binding failure moved to token budgets. All 8 assessor sessions
 overran the default 20,000-token assessor reservation, so no assessed defect cell
 completed. External spend was US$0. Judgments are automated and provisional, with
@@ -59,8 +59,10 @@ result record and nare's result event (`s1/session-diagnosis.json`;
 | nare: "model emitted reasoning but no answer" | 1 | 0 |
 
 - **Assessor budget** is now decisive. Every `s1` assessor used 25,200 to 33,468
-  tokens against 20,000 (`assessor_tokens_vs_allocation` in `summary.json`). In
-  the one session inspected, input alone was 24,895 tokens. These overruns are
+  tokens against 20,000 (`assessor_tokens_input_vs_allocation` in `summary.json`).
+  In 4 of the 8, input alone (24,895 to 26,605) was already over the reservation.
+  In the other 4, input stayed under it (18,361 to 19,825) and the final answer
+  turn crossed it. These overruns are
   why all 8 cells ended `assessment_incomplete`. They include 5 of the 6 assessed
   defect cells; the sixth (`security-auth-order/assessed/1`) failed earlier, in
   discovery, on a budget overrun. None of the 8 assessor sessions used a
@@ -73,8 +75,11 @@ result record and nare's result event (`s1/session-diagnosis.json`;
   load was also much lower (below), so this package does not credit the drop to
   the constraint.
 - **The nare error** was a clean-case session whose constrained correction came
-  back as reasoning with no answer content: 373 output tokens, all reasoning.
-  This is the one correction in 31 that produced nothing usable. A plausible
+  back as reasoning with no answer content: 373 output tokens, all reasoning. Its
+  first answer had been prose followed by a valid `{"findings": []}`, so the
+  correction replaced an essentially correct answer with nothing. Of the 31
+  constrained sessions, 7 ended without a usable answer (below), but this is the
+  only one where the constrained turn itself produced no answer. A plausible
   reading is that the serving stack's reasoning parser and `json_schema` decoding
   interact, so the model never left its reasoning block. This package does not
   establish that.
@@ -93,8 +98,10 @@ on its tool-free schema correction turn, after a first answer fails its schema
 check. The count in each `result.json` equals the constrained-turn events in that
 session's stream. The 31 ended as follows: 24 complete, 5 over the discovery grant, 1 citation
 past a file's end, and 1 nare reasoning-without-answer. **None failed schema
-validation.** The other 121 sessions gave a valid first answer and were accepted
-unconstrained, as the accepted reading of #78 intends.
+validation.** The other 121 sessions never reached a correction. 100 of them
+completed on an unconstrained first answer, as the accepted reading of #78
+intends. The other 21 ended first: 7 timeouts, 8 assessor and 5 discovery budget
+overruns, and 1 citation past a file's end.
 
 ## Detection
 
@@ -116,8 +123,8 @@ anything about them.
 
 The proxy logged 501 requests from this evaluator in the `s1` window, totalling
 2,273,470 tokens (1,735,438 prompt, 538,032 completion), against 2,194,057
-recorded. Ten cells have incomplete accounting. Completed discovery sessions
-used a median 12,371 tokens, of which 2,704 were output. Wall clock: 03:55:25Z to
+recorded. Ten cells have incomplete accounting. Completed discovery sessions had
+a median 12,371 tokens and a median 2,704 output tokens (`g2`: 12,815 and 2,836). Wall clock: 03:55:25Z to
 05:33:21Z on 2026-10-21, 1 h 38 min for 36 cells.
 
 ## Spend, fallbacks and concurrent load
@@ -133,8 +140,10 @@ attributes a nominal US$0.69 at its configured rate, which no provider bills.
 Of the 516 rows, 501 are this evaluator and 15 are opencode (04:01 to 05:31Z;
 1.06 million prompt and 6,362 completion tokens). That is far below `g2`'s
 window, which had 113 opencode requests (about 7.0 million prompt tokens) and 95
-from Claude Code. `provider-evidence.json` also records the lighter load before
-launch. Backend identity and limits are as in the `g2` package. The model
+from Claude Code. Load was not light all day. In the 40 minutes before
+preparation (01:13 to 01:53Z), opencode sent 90 requests with 7.0 million prompt
+tokens, about `g2`'s whole window. The 45 minutes before launch were light. All of
+these windows are in `provider-evidence.json`. Backend identity and limits are as in the `g2` package. The model
 revision is not verified.
 
 ## Further schedule
@@ -167,13 +176,15 @@ difference, and it:
 - requires the mechanical summary to name that gate and experiment;
 - checks both session diagnoses, session by session, against the mechanical cells
   (persona, status, reason, tokens, and assessor reason and tokens);
-- recomputes the gate, the cause tables, the constraint counts, the automated
-  decisions and the side-by-side.
+- checks each session's recorded constraint mode against the frozen rail in
+  `evaluation.json`;
+- recomputes the gate, the cause tables, the constraint counts, the session
+  medians, the automated decisions and the side-by-side.
 
 It does not recompute figures that come from private captures or proxy reads:
-nare's error text and constrained-turn counts (it counts them, but cannot
-authenticate them), session medians, the proxy-logged tokens, spend-log counts
-and the per-client split. Those need the retained captures, whose hashes
+nare's error text, the constrained-turn counts and input tokens (it counts them
+but cannot authenticate them), the proxy-logged tokens, spend-log counts and the
+per-client split. Those need the retained captures, whose hashes
 `original-artifact-sha256.json` and each diagnosis's `private_records_sha256`
 record. Raw transcripts, credentials and raw provider responses are not
 published. `s1/preparation.json` is published byte-identical to the hash posted

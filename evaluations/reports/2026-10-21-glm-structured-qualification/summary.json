@@ -401,6 +401,7 @@
         "median": 481.69
       },
       "cells_accounting_incomplete": 10,
+      "clean_cells_complete": 9,
       "findings": 16,
       "findings_left_pending_for_a_person": 0,
       "first_attempt_status_counts": {
@@ -857,6 +858,7 @@
         "median": 595.77
       },
       "cells_accounting_incomplete": 19,
+      "clean_cells_complete": 12,
       "findings": 8,
       "findings_left_pending_for_a_person": 1,
       "first_attempt_status_counts": {
@@ -1315,6 +1317,7 @@
         "median": 40.88
       },
       "cells_accounting_incomplete": 0,
+      "clean_cells_complete": 12,
       "findings": 96,
       "findings_left_pending_for_a_person": 0,
       "first_attempt_status_counts": {
@@ -1751,6 +1754,7 @@
         "median": 36.58
       },
       "cells_accounting_incomplete": 0,
+      "clean_cells_complete": 12,
       "findings": 96,
       "findings_left_pending_for_a_person": 2,
       "first_attempt_status_counts": {
@@ -2187,6 +2191,7 @@
         "median": 36.61
       },
       "cells_accounting_incomplete": 0,
+      "clean_cells_complete": 12,
       "findings": 96,
       "findings_left_pending_for_a_person": 0,
       "first_attempt_status_counts": {
@@ -2237,24 +2242,29 @@
   "session_causes": {
     "g2": {
       "assessor_sessions": 3,
-      "assessor_tokens_vs_allocation": [
+      "assessor_tokens_input_vs_allocation": [
         [
           "tests-consumer-fixture/assessed/1",
           22042,
+          18185,
           20000
         ],
         [
           "tests-consumer-fixture/assessed/2",
           19214,
+          18648,
           20000
         ],
         [
           "tests-consumer-fixture/focused3/3",
           31977,
+          26284,
           20000
         ]
       ],
       "complete": 109,
+      "complete_discovery_median_output_tokens": 2836,
+      "complete_discovery_median_tokens": 12815,
       "constrained_sessions_by_outcome": {},
       "constrained_sessions_failing_schema": 0,
       "constrained_turns_total": 0,
@@ -2269,53 +2279,71 @@
       "private_records_sha256": "0bb01c0fed2bfdb090b220e976a4442486ec3a65521c6281428d4060bfa00e34",
       "sessions": 147,
       "sessions_requesting_constraint": 0,
-      "sessions_with_a_constrained_turn": 0
+      "sessions_with_a_constrained_turn": 0,
+      "unconstrained_sessions_by_outcome": {
+        "budget_overrun_assessor": 2,
+        "budget_overrun_discovery": 3,
+        "citation_past_file_end": 1,
+        "complete": 109,
+        "schema_failure": 9,
+        "timeout_600s": 23
+      }
     },
     "s1": {
       "assessor_sessions": 8,
-      "assessor_tokens_vs_allocation": [
+      "assessor_tokens_input_vs_allocation": [
         [
           "security-auth-order/assessed/2",
           28235,
+          24895,
           20000
         ],
         [
           "security-auth-order/assessed/3",
           26519,
+          18799,
           20000
         ],
         [
           "security-auth-order/focused1/2",
           32792,
+          26458,
           20000
         ],
         [
           "tests-consumer-fixture/assessed/1",
           32515,
+          25111,
           20000
         ],
         [
           "tests-consumer-fixture/assessed/2",
           27414,
+          19296,
           20000
         ],
         [
           "tests-consumer-fixture/assessed/3",
           25200,
+          19825,
           20000
         ],
         [
           "tests-consumer-fixture/focused3/1",
           33468,
+          26605,
           20000
         ],
         [
           "tests-consumer-fixture/focused3/2",
           25635,
+          18361,
           20000
         ]
       ],
       "complete": 124,
+      "complete_discovery_median_output_tokens": 2703.5,
+      "complete_discovery_median_tokens": 12371.0,
       "constrained_sessions_by_outcome": {
         "budget_overrun_discovery": 5,
         "citation_past_file_end": 1,
@@ -2335,7 +2363,14 @@
       "private_records_sha256": "1ea6d7daa5a1a7e70d8ccf94096c70083a16f26a14b5fe99c5cd6e5c2147bff3",
       "sessions": 152,
       "sessions_requesting_constraint": 152,
-      "sessions_with_a_constrained_turn": 31
+      "sessions_with_a_constrained_turn": 31,
+      "unconstrained_sessions_by_outcome": {
+        "budget_overrun_assessor": 8,
+        "budget_overrun_discovery": 5,
+        "citation_past_file_end": 1,
+        "complete": 100,
+        "timeout_600s": 7
+      }
     }
   },
   "side_by_side": {

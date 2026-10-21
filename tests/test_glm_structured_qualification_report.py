@@ -64,6 +64,8 @@ def test_public_package_reproduces_gate_causes_and_comparison(tmp_path, monkeypa
     assert causes['s1']['sessions_with_a_constrained_turn'] == 31
     assert causes['s1']['constrained_sessions_failing_schema'] == 0
     assert causes['g2']['sessions_requesting_constraint'] == 0
+    assert causes['s1']['unconstrained_sessions_by_outcome']['complete'] == 100
+    assert causes['s1']['complete_discovery_median_tokens'] == 12371
     side = summary['side_by_side']
     assert side['g2']['cells_complete_and_accounted'] == 14
     for name in ('sol-r1', 'sol-r2', 'sol-r3'):
@@ -152,4 +154,19 @@ def test_reproduction_refuses_changed_evidence(tmp_path, monkeypatch):
         run(monkeypatch, package, tmp_path / 'out.json')
     rehash(package, 's1/experiment.json')
     with pytest.raises(ValueError, match='disagrees|differ'):
+        run(monkeypatch, package, tmp_path / 'out.json')
+
+
+@pytest.mark.parametrize(('field', 'value', 'message'), [
+    ('structured_output_mode', None, 'frozen rail'),
+    ('attempt', 'attempt-0002', 'more than one attempt')])
+def test_reproduction_refuses_a_diagnosis_it_cannot_pair(tmp_path, monkeypatch, field, value,
+                                                        message):
+    package = copy(tmp_path, 'unpaired')
+    name = 's1/session-diagnosis.json'
+    document = json.loads((package / name).read_text())
+    document['sessions'][0][field] = value
+    (package / name).write_text(json.dumps(document))
+    rehash(package, name)
+    with pytest.raises(ValueError, match=message):
         run(monkeypatch, package, tmp_path / 'out.json')

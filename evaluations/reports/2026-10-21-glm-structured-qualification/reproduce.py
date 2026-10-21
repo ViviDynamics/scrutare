@@ -154,10 +154,19 @@ def cause(row):
     return f"other:{row['reason']}"
 
 
-def diagnosis(path, cells):
-    """Check a per-session diagnosis against the mechanical cells, then count causes."""
+def diagnosis(path, cells, evaluation):
+    """Check a per-session diagnosis against the mechanical cells and the frozen rail, then
+    count causes. Only one attempt per cell and per session is supported: a rerun or a
+    correction attempt would need its own pairing, so it is refused rather than pooled."""
     document = read(path)
     rows = document['sessions']
+    if any(len(c['attempts']) != 1 for c in cells) or any(
+            r['attempt'] != 'attempt-0001' for r in rows):
+        raise ValueError(f'session diagnosis with more than one attempt: {path.name}')
+    mode = evaluation['models']['default'].get('structured_output')
+    if evaluation['models'].get('overrides') or any(
+            r['structured_output_mode'] != mode for r in rows):
+        raise ValueError(f'session diagnosis disagrees with the frozen rail: {path.name}')
     by_cell = collections.defaultdict(list)
     for row in rows:
         by_cell[row['cell']].append(row)
@@ -177,6 +186,7 @@ def diagnosis(path, cells):
             raise ValueError(f"session diagnosis disagrees with cell {cell['run_id']}")
     constrained = [r for r in rows if (r['constrained_turns'] or 0) > 0]
     assessors = [r for r in rows if r['persona'] == ASSESSOR]
+    finished = [r for r in rows if r['persona'] != ASSESSOR and r['status'] == 'complete']
     return {
         'sessions': len(rows), 'discovery_sessions': len(rows) - len(assessors),
         'assessor_sessions': len(assessors),
@@ -191,9 +201,16 @@ def diagnosis(path, cells):
             'complete' if r['status'] == 'complete' else cause(r) for r in constrained).items())),
         'constrained_sessions_failing_schema': sum(cause(r) == 'schema_failure'
                                                    for r in constrained),
-        'assessor_tokens_vs_allocation': [
-            [c['run_id'], c['assessor_tokens'], c['assessor_allocation']]
-            for c in cells if c['assessor_actual']],
+        'unconstrained_sessions_by_outcome': dict(sorted(collections.Counter(
+            'complete' if r['status'] == 'complete' else cause(r)
+            for r in rows if not r['constrained_turns']).items())),
+        'complete_discovery_median_tokens': statistics.median(r['tokens'] for r in finished),
+        'complete_discovery_median_output_tokens': statistics.median(
+            r['output_tokens'] for r in finished),
+        'assessor_tokens_input_vs_allocation': [
+            [r['cell'], r['tokens'], r['input_tokens'], c['assessor_allocation']]
+            for c in cells if c['assessor_actual']
+            for r in by_cell[c['run_id']] if r['persona'] == ASSESSOR],
         'private_records_sha256': document['private_records_sha256']}
 
 
@@ -389,6 +406,9 @@ def summarize(directory, first_attempt_rule, retained_tests=True):
         'cell_latency_seconds': {'mean': round(sum(latency) / len(latency), 2),
                                  'median': round(statistics.median(latency), 2),
                                  'max': round(max(latency), 2)},
+        'clean_cells_complete': sum(
+            c['status'] == 'complete' and c['accounting_complete'] for c in cells
+            if c['run_id'].split('/')[0] in clean),
         'findings': sum(len(r['findings']) for r in runs.values()),
         'automated_matched_findings': len(decisions),
         'findings_left_pending_for_a_person': pending,
@@ -417,14 +437,15 @@ def build(package, reports=None):
         rows, jobs[job] = summarize(package / job, first_attempt_rule=True)
         decisions += [{'job': job, **row} for row in rows]
         causes[job] = diagnosis(package / job / 'session-diagnosis.json',
-                                read(package / job / 'mechanical-qualification.json')['cells'])
+                                read(package / job / 'mechanical-qualification.json')['cells'],
+                                read(package / job / 'evaluation.json'))
     predecessor = {}
     for name, (sibling, job) in PREDECESSOR.items():
         verify_hashes(reports / sibling)
         _, predecessor[name] = summarize(reports / sibling / job, first_attempt_rule=True)
         causes[name] = diagnosis(package / f'{name}-session-diagnosis.json',
                                  read(reports / sibling / job / 'mechanical-qualification.json')[
-                                     'cells'])
+                                     'cells'], read(reports / sibling / job / 'evaluation.json'))
     reference = {}
     for name, (sibling, job) in REFERENCE.items():
         verify_hashes(reports / sibling)
@@ -450,9 +471,7 @@ def build(package, reports=None):
                       'clean_cells_with_findings_by_arm': {
                           a: f"{r['clean_cells_with_findings']}/{r['clean_cells_usable']}"
                           for a, r in row['arms'].items()},
-                      'clean_cells_complete': sum(
-                          r['per_case'].get('contract-explicit-default-clean', {}).get(
-                              'complete', 0) for r in row['arms'].values())}
+                      'clean_cells_complete': row['clean_cells_complete']}
     return decisions, {
         'schema_version': 1, 'judgments': 'automated keyword filters, provisional',
         'actual_human_judgments': 0, 'holdout_used': False, 'defaults_promoted': False,

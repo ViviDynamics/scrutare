@@ -194,7 +194,7 @@ ran the same schedule and gate with `structured_output: json_schema`, nare
 2026.10.12 and the released #78 source. It did not qualify either: 13 of 36
 cells completed, 4 of 6 aggregate defect cells produced evidence, and no assessed
 defect cell completed. No session failed the findings schema (nine had in the
-earlier run), and none of the 31 constrained corrections failed validation. Every
+earlier run), and none of the 31 constrained corrections failed schema validation. Every
 assessor overran the default 20,000-token reservation, and seven sessions timed
 out. External spend was zero.
 
