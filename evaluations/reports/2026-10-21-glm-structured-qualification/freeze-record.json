@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "freezes": {
+    "s1": {
+      "label": "s1",
+      "recorded_utc": "2026-10-21T03:47:31Z",
+      "preparation_sha256": "8a35936426833c293ac5dfed3553b8c9967df97daa4c7028aba0cd6840fc2673",
+      "gate_sha256": "1b55a7bdcee3d95e62ed35d5381d27d59abf37fdb119732d02354418175c311e",
+      "evaluation_sha256": "ab0d1fe4f6f7ab387bea76ff1cdfc3afc008bd8bcec5083654acba73511d4847",
+      "wheel": "scrutare-2026.10.2-py3-none-any.whl",
+      "wheel_sha256": "acf0d147467ae68d09e737a55ceacabae0e0423d09b82854a9fb49d96fcb87ec",
+      "source_commit": "b0dfd0f8fed494c00ad1cf57c567d83c45546a08",
+      "release_tag": "2026.10.26",
+      "nare": "2026.10.12 96672e1",
+      "process_json_exists": false,
+      "experiment_exists": false,
+      "wheel_note": "built from git archive of the released commit, as g2 was; the unstamped source version 2026.10.2 is the wheel name, the release workflow stamps 2026.10.26"
+    }
+  },
+  "launch_ledger": [
+    {
+      "event": "launch",
+      "label": "s1",
+      "at_utc": "2026-10-21T03:55:25Z",
+      "method": "systemd-run --user transient unit scrutare-glm-s1, evaluator exec'd as main process"
+    },
+    {
+      "event": "launched",
+      "label": "s1",
+      "pid": 18650,
+      "pgid": 18650,
+      "sid": 18650,
+      "systemd_unit": "scrutare-glm-s1.service",
+      "cgroup": "app.slice/scrutare-glm-s1.service",
+      "started_utc": "2026-10-21T03:55:25Z"
+    },
+    {
+      "event": "exit",
+      "label": "s1",
+      "unit_result": "success",
+      "exec_main_status": 0,
+      "last_artifact_write_utc": "2026-10-21T05:33:21Z"
+    }
+  ],
+  "public_freeze_comments": {
+    "s1": "https://github.com/ViviDynamics/scrutare/issues/78#issuecomment-6307641005"
+  },
+  "deviations_from_g2_recorded_before_launch": {
+    "recorded_utc": "2026-10-21T01:58:00Z",
+    "identical_to_g2": [
+      "model alias spark/glm-5.3-flash at https://litellm.vividynamics.com/v1",
+      "corpus evaluations/pilot, development split, cases contract-explicit-default-clean, security-auth-order, tests-consumer-fixture",
+      "comparison set focused (aggregate, assessed, focused1, focused3), no variants, 3 repeats, 36 cells",
+      "100,000 per_persona_tokens and review_max_tokens; default assessor reservation (no --assessment-tokens)",
+      "max_turns 6, timeout 600 s, concurrency 3, rounds.max 3",
+      "context enabled with related paths client.py, policy.py, schema.py, formatting.py, test_formatting.py; no line_counts; no Ruff tool capture",
+      "transient retry: 3 per cell, 20 s delay, job budget 6; a rerun cell counts as not accounted",
+      "every gate criterion and the pass rule (make-gate.py asserts byte equality of each criterion key)",
+      "check-qualification.py, export-job.py, build-provider-evidence.py, spend-verify.py, load-probe.py: byte-identical to the g2 copies",
+      "launch method: transient systemd user unit, evaluator exec'd as the unit's main process (launch-detached.py)"
+    ],
+    "deviations": [
+      {
+        "what": "models.default.structured_output: json_schema in evaluation.json",
+        "why": "subject of the re-qualification (#78)"
+      },
+      {
+        "what": "nare runtime 2026.10.4 -> 2026.10.12 (96672e1, contract 2), frozen with its contract document, uv.lock and package hashes",
+        "why": "the release that carries --structured-output; contract 2 only changes refused ask handling, and sessions offer only read"
+      },
+      {
+        "what": "Scrutare source 5c4a8b6 -> the released commit that merges #78 (tag asserted equal to source at freeze)",
+        "why": "the run must measure the released code; intermediate commits since 5c4a8b6: #77 (report-only) and #78"
+      },
+      {
+        "what": "profile name glm53flash-structured-s1; further-schedule label s2 (g3 was never run)",
+        "why": "naming only"
+      },
+      {
+        "what": "date and engine load conditions differ from g2",
+        "why": "unavoidable; concurrent load is recorded at launch (spend-log client split) and over the run window"
+      }
+    ]
+  },
+  "release_wheel_check": {
+    "release": "2026.10.26",
+    "asset": "scrutare-2026.10.26-py3-none-any.whl",
+    "asset_sha256": "df8768c2de412881c1abaa5014ebebffbb4cd4cd314389d8e5d7fea5f99a48a8",
+    "differs_from_frozen_wheel_only_in": [
+      "dist-info/METADATA",
+      "dist-info/RECORD",
+      "scrutare/__init__.py (version stamp)"
+    ]
+  }
+}
