@@ -144,6 +144,8 @@ def _structured_output_issues(run_dir: Path, config_data: object) -> tuple[Audit
     invocations: list[tuple[Path, object]] = []
     for attempt in attempts:
         if not os.path.lexists(attempt / "invocation.json"):
+            if os.path.lexists(attempt / "stdout.jsonl"):
+                invocations.append((attempt, None))  # Ran without recording what it asked.
             continue  # Never launched (for example refused admission): nothing was sent.
         try:
             invocations.append((attempt, decode_artifact(
@@ -161,7 +163,7 @@ def _structured_output_issues(run_dir: Path, config_data: object) -> tuple[Audit
     opted_in = _opted_in(config_data)
     if not opted_in and not any(recorded(document) for _, document in invocations):
         return ()
-    if opted_in and not invocations:
+    if opted_in and not attempts:
         return (AuditIssue("structured_output_evidence_missing", "sessions", "incomplete"),)
     try:
         config = parse_config(json.dumps(config_data))
@@ -199,11 +201,16 @@ def _structured_output_issues(run_dir: Path, config_data: object) -> tuple[Audit
             issues.append(AuditIssue("structured_output_unrecorded",
                                      f"{where}/invocation.json", "invalid"))
             continue
+        # A launched session always writes its result, even when cancelled.
+        if not os.path.lexists(attempt / "result.json"):
+            issues.append(AuditIssue("structured_output_evidence_missing",
+                                     f"{where}/result.json", "incomplete"))
+            continue
         try:
             outcome = decode_artifact(read_artifact(attempt / "result.json"),
                                       artifact="result.json")
         except ReplayError:
-            continue  # An interrupted attempt may have no result; its invocation still binds.
+            outcome = None
         record = outcome.get("structured_output") if isinstance(outcome, dict) else None
         count = record.get("constrained_turns") if isinstance(record, dict) else None
         finished = isinstance(outcome, dict) and outcome.get("status") in ("complete", "partial")
@@ -213,14 +220,20 @@ def _structured_output_issues(run_dir: Path, config_data: object) -> tuple[Audit
             and record["mode"] == mode
             and (count is None or (type(count) is int and count >= 0))
             and not (finished and count is None))
-        if valid and mode is not None and count is not None:
+        if valid and mode is not None:
             from scrutare.engine.session_output import constrained_turns
             try:
                 retained = constrained_turns(read_artifact(attempt / "stdout.jsonl"), mode,
                                              strict=False)
             except ReplayError:
                 retained = None
-            valid = retained is None or retained == count
+            if retained is None and count is not None:
+                # A counted session started, so its event stream was captured.
+                issues.append(AuditIssue("structured_output_evidence_missing",
+                                         f"{where}/stdout.jsonl", "incomplete"))
+                continue
+            # No count means the session never started, so no constrained turn was recorded.
+            valid = retained is None or retained == (count or 0)
         if not valid:
             issues.append(AuditIssue("structured_output_result_disagrees",
                                      f"{where}/result.json", "invalid"))

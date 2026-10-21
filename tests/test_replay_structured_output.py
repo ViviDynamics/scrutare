@@ -35,7 +35,14 @@ def session(path, rail, *, persona="senior-dev", attempt="attempt-0001", flag=No
             record["structured_output"] = {"mode": rail["structured_output"],
                                            "constrained_turns": constrained}
         (directory / "result.json").write_text(json.dumps(record))
+    markers = constrained if type(constrained) is int else 0
+    (directory / "stdout.jsonl").write_text("".join(marker_line() + "\n" for _ in range(markers)))
     return directory
+
+
+def marker_line():
+    return json.dumps({"type": "progress", "text": "constrained", "timestamp": "now", "detail": {
+        "structured_output": {"mode": "json_schema", "tools_withheld": True}}})
 
 
 def codes(result):
@@ -158,11 +165,6 @@ def test_a_completed_session_must_record_an_integer_count(tmp_path):
         ("structured_output_result_disagrees", "sessions/senior-dev/attempt-0001/result.json")]
 
 
-def marker_line():
-    return json.dumps({"type": "progress", "text": "constrained", "timestamp": "now", "detail": {
-        "structured_output": {"mode": "json_schema", "tools_withheld": True}}})
-
-
 @pytest.mark.parametrize(("markers", "clean"), [(1, True), (0, False), (2, False)])
 def test_the_recorded_count_matches_the_retained_event_stream(tmp_path, markers, clean):
     bundle(tmp_path)
@@ -172,3 +174,55 @@ def test_the_recorded_count_matches_the_retained_event_stream(tmp_path, markers,
     expected = [] if clean else [
         ("structured_output_result_disagrees", "sessions/senior-dev/attempt-0001/result.json")]
     assert codes(replay_run(tmp_path)) == expected
+
+
+def test_an_opted_in_run_whose_attempts_never_launched_sent_nothing_to_audit(tmp_path):
+    bundle(tmp_path)
+    configure(tmp_path, {"default": ON})
+    refused = tmp_path / "sessions" / "senior-dev" / "attempt-0001"
+    refused.mkdir(parents=True)
+    (refused / "result.json").write_text(json.dumps({"status": "not_started",
+                                                    "reason": "review_budget"}))
+    result = replay_run(tmp_path)
+    assert codes(result) == [] and result.exit_code == 0
+
+
+def test_a_session_that_ran_without_its_invocation_record_is_invalid(tmp_path):
+    bundle(tmp_path)
+    configure(tmp_path, {"default": ON})
+    directory = session(tmp_path, ON)
+    (directory / "invocation.json").unlink()
+    assert codes(replay_run(tmp_path)) == [
+        ("structured_output_unrecorded", "sessions/senior-dev/attempt-0001/invocation.json")]
+
+
+def test_a_launched_session_without_its_result_record_is_incomplete(tmp_path):
+    bundle(tmp_path)
+    configure(tmp_path, {"default": ON})
+    directory = session(tmp_path, ON)
+    (directory / "result.json").unlink()
+    result = replay_run(tmp_path)
+    assert codes(result) == [
+        ("structured_output_evidence_missing", "sessions/senior-dev/attempt-0001/result.json")]
+    assert result.exit_code == 2
+
+
+def test_a_counted_session_without_its_event_stream_is_incomplete(tmp_path):
+    bundle(tmp_path)
+    configure(tmp_path, {"default": ON})
+    directory = session(tmp_path, ON)
+    (directory / "stdout.jsonl").unlink()
+    assert codes(replay_run(tmp_path)) == [
+        ("structured_output_evidence_missing", "sessions/senior-dev/attempt-0001/stdout.jsonl")]
+
+
+def test_a_never_started_session_cannot_have_constrained_turns_in_its_stream(tmp_path):
+    bundle(tmp_path)
+    configure(tmp_path, {"default": ON})
+    directory = session(tmp_path, ON, constrained=None)
+    record = json.loads((directory / "result.json").read_bytes())
+    record["status"] = "failed"
+    (directory / "result.json").write_text(json.dumps(record))
+    (directory / "stdout.jsonl").write_text(marker_line() + "\n")
+    assert codes(replay_run(tmp_path)) == [
+        ("structured_output_result_disagrees", "sessions/senior-dev/attempt-0001/result.json")]

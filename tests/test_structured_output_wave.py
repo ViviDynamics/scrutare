@@ -18,9 +18,9 @@ from scrutare.evaluation.runner import run_experiment
 ENABLED = {"default": {"provider": "openai", "model": "m", "structured_output": "json_schema"}}
 
 
-def configure(capture, models):
-    document = {"personas": ["senior-dev"], "models": models,
-                "budgets": {"per_persona_tokens": 40, "review_max_tokens": 40}}
+def configure(capture, models, personas=("senior-dev",)):
+    document = {"personas": list(personas), "models": models,
+                "budgets": {"per_persona_tokens": 40, "review_max_tokens": 40 * len(personas)}}
     config = parse_config(json.dumps(document))
     (capture / "config.yaml").write_text(json.dumps(document))
     (capture / "config.json").write_text(json.dumps(config.to_dict()))
@@ -70,6 +70,18 @@ def test_a_capable_runtime_receives_the_enabled_rail(capture, monkeypatch):
     assert [rail.structured_output for rail in launched] == ["json_schema"]
     manifest = json.loads((capture / "fanout.json").read_bytes())
     assert manifest["personas"][0]["rail"]["structured_output"] == "json_schema"
+
+
+def test_an_opted_in_manifest_records_the_field_on_every_rail_like_the_config(
+        capture, monkeypatch):
+    config = configure(capture, {**ENABLED, "overrides": {"security": {"structured_output": None}}},
+                       personas=("senior-dev", "security"))
+    wave(capture, monkeypatch, config, NareCapability("2026.10.12", 2, ("json_schema",)))
+    manifest = json.loads((capture / "fanout.json").read_bytes())
+    rails = {entry["name"]: entry["rail"] for entry in manifest["personas"]}
+    assert rails["security"]["structured_output"] is None
+    assert rails["senior-dev"]["structured_output"] == "json_schema"
+    assert rails["security"] == config.to_dict()["models"]["overrides"]["security"]
 
 
 def test_an_unconstrained_wave_never_needs_the_capability(capture, monkeypatch):

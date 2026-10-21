@@ -247,7 +247,8 @@ async def _run_initial_wave(context: _ExecutionContext) -> FanOutResult:
                                        *config.personas,
                                        *(r.persona for r in config.routing.rules))),
                     ),
-                    "rail": config.models.for_persona(d.persona.name).record(),
+                    "rail": config.models.for_persona(d.persona.name).record(
+                        structured_output=config.models.structured_output),
                 }
                 for d in descriptors
             ],

@@ -181,15 +181,16 @@ def _speaks(version: str, contract: object) -> bool:
 
 
 def _structured_output(contract: dict[str, object]) -> tuple[str, ...]:
-    """The json_schema modes nare advertises for its OpenAI rail, or none."""
-    if "structured_output" not in contract:
-        return ()
-    entry = contract["structured_output"]
+    """The json_schema modes nare advertises for its OpenAI rail, or none.
+
+    An unfamiliar entry advertises nothing rather than failing inspection: waves that never
+    ask for the constraint must not depend on it, and require_structured_output refuses one
+    that does.
+    """
+    entry = contract.get("structured_output")
     if (not isinstance(entry, dict) or not isinstance(entry.get("modes"), list)
             or not isinstance(entry.get("providers"), list)
-            or any(not isinstance(mode, str) for mode in entry["modes"])):
-        raise SessionRuntimeError("contract: invalid structured_output capability")
-    if entry.get("flag") != "--structured-output" or "openai" not in entry["providers"]:
+            or entry.get("flag") != "--structured-output" or "openai" not in entry["providers"]):
         return ()
     return tuple(mode for mode in entry["modes"] if mode == "json_schema")
 

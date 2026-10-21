@@ -62,8 +62,10 @@ or silent gaps are fixed generally.
 A rail with [`structured_output: json_schema`](config.md#schema-constrained-output-opt-in)
 adds `--structured-output json_schema` to each of its sessions. Inspection reads
 the capability from `nare contract` (`structured_output`, nare 2026.10.12 or
-newer), and a wave whose configuration asks for it on a runtime that does not
-advertise it fails before any session launches. Each session
+newer); an entry of unfamiliar shape advertises nothing. A wave whose
+configuration asks for it on a runtime that does not advertise it fails before
+any session launches. When any rail opts in, every rail in `fanout.json`
+records `structured_output`, with `null` where it is off, as in `config.json`. Each session
 counts nare's constrained-turn `progress` records into `result.json`; such a
 record on a session that did not ask for the constraint is a protocol failure.
 Scrutare passes `--contract` equal to the inspected contract: 1 for releases

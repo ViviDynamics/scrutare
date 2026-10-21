@@ -50,14 +50,13 @@ def test_the_advertised_structured_output_modes_are_read(tmp_path):
 
 @pytest.mark.parametrize("structured", [
     "json_schema", {**STRUCTURED, "modes": "json_schema"},
+    {**STRUCTURED, "modes": [{"name": "json_schema"}]}, {**STRUCTURED, "providers": {}},
     {**STRUCTURED, "flag": "--other"}, {**STRUCTURED, "providers": ["anthropic"]}])
 def test_a_malformed_or_foreign_structured_output_entry_is_not_a_capability(tmp_path, structured):
+    # An unfamiliar shape must not break inspection for waves that never ask for the
+    # constraint; a wave that asks is refused by require_structured_output instead.
     path = advertised(tmp_path, version="2026.10.12", contract=2, structured=structured)
-    if isinstance(structured, dict) and isinstance(structured["modes"], list):
-        assert inspect(path).structured_output == ()
-    else:
-        with pytest.raises(module().SessionRuntimeError, match="^contract:"):
-            inspect(path)
+    assert inspect(path) == NareCapability("2026.10.12", 2)
 
 
 def streaming(path):

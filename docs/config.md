@@ -146,7 +146,8 @@ When any rail sets it, every rail in `config.to_dict()` records
 reported). [Replay](replay.md) reports `structured_output_unrecorded` or
 `structured_output_result_disagrees` as invalid when a session's record does not
 match a configured rail, and `structured_output_evidence_missing` as incomplete
-when an opted-in run has no session evidence.
+when a launched session's record is missing or an opted-in run has no session
+attempt.
 
 ## Category partition
 
