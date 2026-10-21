@@ -137,9 +137,10 @@ def cross_hashes(package):
                 or frozen['deviations_sha256'] != posted['deviations_before_amendment']
                 or [a['deviations_sha256_before'] for a in deviations['amendments']]
                 != [posted['deviations_before_amendment']]
-                or frozen['wheel_sha256'] != posted['wheel']
                 or read(package / 'freeze-record.json')['deviations'] != deviations):
             raise ValueError(f'{job} deviations differ from the amended hash posted on #51')
+        if frozen['wheel_sha256'] != posted['wheel']:
+            raise ValueError(f'{job} wheel differs from the hash posted on #51')
         frozen_settings_agree(directory)
         if frozen['wheel_sha256'] != next(
                 v for k, v in prep['input_sha256'].items() if k.endswith('.whl')):
@@ -452,8 +453,8 @@ def proxy_tokens(package):
     provider-evidence.json (derived from private spend-log reads; not recomputable here)."""
     reread = read(package / 'provider-evidence.json')['spend_rows_s2_window_reread']
     row = reread['by_client_and_key'][
-        'python-httpx2 | proxy master key (this evaluator and opencode) | '
-        'http://192.168.3.40:8045/v1']
+        'python-httpx2 | proxy master key (shared by this evaluator, opencode and the '
+        'unidentified python-httpx client) | http://192.168.3.40:8045/v1']
     return {'requests': row['rows'], 'prompt_tokens': row['prompt_tokens'],
             'completion_tokens': row['completion_tokens'],
             'total_tokens': row['prompt_tokens'] + row['completion_tokens'],

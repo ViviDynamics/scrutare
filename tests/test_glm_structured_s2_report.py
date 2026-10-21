@@ -160,15 +160,23 @@ def test_reproduction_refuses_changed_evidence(tmp_path, monkeypatch):
         run(monkeypatch, package, tmp_path / 'out.json')
 
 
-@pytest.mark.parametrize(('name', 'key', 'value'), [
-    ('gate.json', 'assessment_tokens', 40000), ('gate.json', 'timeout_seconds', 600),
-    ('gate.json', 'max_tokens_per_run', 100000)])
-def test_frozen_files_must_agree_on_the_changed_settings(tmp_path, name, key, value):
+@pytest.mark.parametrize(('name', 'path', 'value'), [
+    ('gate.json', ('assessment_tokens',), 40000), ('gate.json', ('timeout_seconds',), 600),
+    ('gate.json', ('max_tokens_per_run',), 100000),
+    ('preparation.json', ('configured_max_tokens',), 100000),
+    ('preparation.json', ('timeout_seconds',), 600),
+    ('preparation.json', ('assessment_tokens',), None),
+    ('evaluation.json', ('budgets', 'review_max_tokens'), 100000),
+    ('evaluation.json', ('budgets', 'per_persona_tokens'), 100000)])
+def test_frozen_files_must_agree_on_the_changed_settings(tmp_path, name, path, value):
     reproduce = module()
     package = copy(tmp_path, 'settings')
     reproduce.frozen_settings_agree(package / 's2')
     document = json.loads((package / 's2' / name).read_text())
-    document[key] = value
+    target = document
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = value
     (package / 's2' / name).write_text(json.dumps(document))
     with pytest.raises(ValueError, match='disagree on the changed settings'):
         reproduce.frozen_settings_agree(package / 's2')
@@ -182,3 +190,15 @@ def test_the_cut_off_request_accounts_for_the_proxy_evaluator_rows():
         'spend_rows_s2_window_reread']['stalled_assessor_request']
     assert proxy['prompt_tokens'] == usage['input'] + stalled['prompt_tokens']
     assert proxy['completion_tokens'] == usage['output'] + stalled['completion_tokens']
+
+
+@pytest.mark.parametrize(('field', 'message'), [
+    ('deviations_sha256', 'deviations differ'), ('wheel_sha256', 'wheel differs')])
+def test_reproduction_refuses_a_broken_freeze_chain(tmp_path, monkeypatch, field, message):
+    package = copy(tmp_path, field)
+    record = json.loads((package / 'freeze-record.json').read_text())
+    record['freezes']['s2'][field] = '0' * 64
+    (package / 'freeze-record.json').write_text(json.dumps(record))
+    rehash(package, 'freeze-record.json')
+    with pytest.raises(ValueError, match=message):
+        run(monkeypatch, package, tmp_path / 'out.json')

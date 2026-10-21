@@ -17,8 +17,9 @@ those hashes:
 - `gate.json`'s `unchanged_from_reference` keeps `s1`'s line "every gate criterion
   and the pass rule, byte-identical to g2". The next line and the changed list
   correctly say the per-attempt bound changed.
-- The timeout entry reads "120 s -> 1800 s (g2 and s1: 600 s)". The 120 s is the
-  Sol reference profile; the change from `s1` is 600 s to 1800 s.
+- `deviations.json`'s `deviations_from_s1` copies the gate's timeout entry, "120 s
+  -> 1800 s (g2 and s1: 600 s)". In the gate, the baseline is the Sol reference
+  profile, so 120 s is correct there. As a change from `s1`, it is 600 s to 1800 s.
 
 The table below states the changes as they were:
 

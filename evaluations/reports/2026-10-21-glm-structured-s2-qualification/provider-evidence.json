@@ -42,7 +42,7 @@
         "2026-10-21 14:01:35"
       ]
     },
-    "note": "python-httpx2 is nare (this evaluator); opencode is another client of the same proxy and engine; python-httpx is an unidentified client",
+    "note": "read before the run ended, without separating keys. Superseded for client counts by spend_rows_s2_window_reread: run_window python-httpx2 (541 rows) is this evaluator (537, proxy master key) plus 4 rows from another nare client on another key; that client's 5th row ended after this read. opencode is another client of the same proxy and engine; python-httpx is an unidentified client",
     "run_window": {
       "by_client_group_base": {
         "opencode | spark/glm-5.3-flash | http://192.168.3.40:8045/v1": {
@@ -350,7 +350,7 @@
   },
   "schema_version": 1,
   "spend_log_s2_window": {
-    "note": "every spend-log row in the window. this_key_paid_provider_rows counts 12 rows whose api_base is the same Spark host with a trailing slash (http://192.168.3.40:8045/v1/, the unidentified python-httpx client); they are the self-hosted deployment, not a paid provider. attributed_spend_usd is LiteLLM applying its configured rate to a self-hosted model; no provider bills it. Superseded for client counts by spend_rows_s2_window_reread, which separates keys: python-httpx2 here includes 5 rows from another nare client on another key.",
+    "note": "every spend-log row in the window. this_key_paid_provider_rows counts 12 rows whose api_base is the same Spark host with a trailing slash (http://192.168.3.40:8045/v1/, the unidentified python-httpx client); they are the self-hosted deployment, not a paid provider. attributed_spend_usd is LiteLLM applying its configured rate to a self-hosted model; no provider bills it.",
     "other_keys_by_model_group": {
       "spark/glm-5.3-flash": 11
     },
@@ -389,12 +389,12 @@
         "prompt_tokens": 727394,
         "rows": 7
       },
-      "opencode | proxy master key (this evaluator and opencode) | http://192.168.3.40:8045/v1": {
+      "opencode | proxy master key (shared by this evaluator, opencode and the unidentified python-httpx client) | http://192.168.3.40:8045/v1": {
         "completion_tokens": 134192,
         "prompt_tokens": 17429637,
         "rows": 202
       },
-      "python-httpx | proxy master key (this evaluator and opencode) | http://192.168.3.40:8045/v1/": {
+      "python-httpx | proxy master key (shared by this evaluator, opencode and the unidentified python-httpx client) | http://192.168.3.40:8045/v1/": {
         "completion_tokens": 37771,
         "prompt_tokens": 1858420,
         "rows": 12
@@ -404,7 +404,7 @@
         "prompt_tokens": 72750,
         "rows": 5
       },
-      "python-httpx2 | proxy master key (this evaluator and opencode) | http://192.168.3.40:8045/v1": {
+      "python-httpx2 | proxy master key (shared by this evaluator, opencode and the unidentified python-httpx client) | http://192.168.3.40:8045/v1": {
         "completion_tokens": 606962,
         "prompt_tokens": 1967175,
         "rows": 537
