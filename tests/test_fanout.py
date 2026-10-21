@@ -82,6 +82,9 @@ def test_wave_admits_all_before_tasks_overlap_and_preserves_order(capture, monke
     assert manifest["nare_version"] == "2026.10.0" and manifest["contract"] == 1
     assert manifest["personas"][1]["system_prompt"] == "Custom SYSTEM"
     assert manifest["personas"][1]["rail"]["model"] == "default-model"
+    # An unset opt-in leaves the rail record byte-identical to earlier manifests.
+    assert manifest["personas"][1]["rail"] == {
+        "provider": "anthropic", "base_url": None, "model": "default-model"}
     assert manifest["inputs_sha256"] == {
         p.name: sha256(p.read_bytes()).hexdigest() for p in inputs.root.iterdir()
     }

@@ -717,7 +717,10 @@ def test_streaming_argv_preserves_older_and_anthropic_runtimes(
 ):
     descriptor, ledger, lease, attempt = setup(capture)
     path = running_executable(tmp_path)
-    body = path.read_text().replace("2026.10.0", version)
+    # Each release speaks its own contract: 2 from nare 2026.10.7.
+    contract = 2 if tuple(map(int, version.split("."))) >= (2026, 10, 7) else 1
+    body = path.read_text().replace("2026.10.0", version).replace(
+        '"contract": 1', f'"contract": {contract}')
     if stream:
         body = body.replace('a = parser.parse_args()',
                             'parser.add_argument("--stream", action="store_true")\n'
@@ -726,7 +729,7 @@ def test_streaming_argv_preserves_older_and_anthropic_runtimes(
     outcome = asyncio.run(module().run_persona_session(
         descriptor, ModelRail(provider, None, "fixture-model"), lease,
         ledger=ledger, artifact_directory=attempt, runtime=NareRuntime(path, 7, 5),
-        capability=NareCapability(version, 1)))
+        capability=NareCapability(version, contract)))
     assert outcome.status == "complete"
     observed = json.loads((attempt / "cwd" / "observed.json").read_bytes())
     assert ("--stream" in observed["argv"]) is stream

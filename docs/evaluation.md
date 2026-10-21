@@ -90,7 +90,7 @@ fresh frozen job after development decisions; do not tune prompts from holdout r
 
 ## Recorded reruns after upstream HTTP 5xx
 
-nare 2026.10.4 does not retry on its OpenAI-compatible rail, and the review engine
+nare (2026.10.4 through 2026.10.12) does not retry on its OpenAI-compatible rail, and the review engine
 deliberately seals a review after any provider failure because that call's billing
 is unknown. One upstream overload therefore ends a whole cell. `run
 --transient-retries N` (0 to 5, default 0) lets the evaluator rerun such a cell

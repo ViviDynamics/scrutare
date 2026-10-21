@@ -80,7 +80,7 @@ def installed():
         env={"PATH": "/usr/bin:/bin"},
         timeout=10,
     )
-    assert result.returncode == 0 and result.stdout.strip() == "2026.10.4", result.stderr
+    assert result.returncode == 0 and result.stdout.strip() == "2026.10.12", result.stderr
     return console, interpreter
 
 
@@ -108,7 +108,7 @@ def observations(outcome, *, http_sse=False):
     assert result["guard_violations"] == []
     assert result["credential_names"] == (["OPENAI_API_KEY"] if http_sse else [])
     assert result["nare_controls"] == {}
-    assert result["version"] == "2026.10.4"
+    assert result["version"] == "2026.10.12"
     assert result["python"].startswith("3.14.")
     assert all(Path(path).is_relative_to(outcome.artifact_directory) for path in result["writes"])
     return result
@@ -386,13 +386,17 @@ def direct_cli(
     document["observation_name"] = observation_name
     spec.write_text(json.dumps(document))
     session = artifact / "session.json" if resume is None else resume
+    # The proof speaks whichever contract the installed release does, as the engine does.
+    contract = json.loads(subprocess.run(
+        [str(installed[0]), "contract"], capture_output=True, check=True,
+        env={"PATH": "/usr/bin:/bin"}, timeout=10).stdout)["contract"]
     argv = [
         str(runtime.executable),
         "run",
         "--jsonl",
         "--yes",
         "--contract",
-        "1",
+        str(contract),
         "--tools",
         "read",
         "--root",
@@ -537,9 +541,16 @@ def test_actual_read_only_tool_dispatch_refuses_fabricated_tools_and_path_escape
         tool(args={"path": "escape-link"}, call_id="symlink"),
         tool("ask", {"questions": ["unsafe"]}, call_id="ask"),
     ]
+    contract = json.loads(subprocess.run(
+        [str(installed[0]), "contract"], capture_output=True, check=True,
+        env={"PATH": "/usr/bin:/bin"}, timeout=10).stdout)["contract"]
+    if contract >= 2:
+        # Contract 2: an ask the policy refuses is an error result and never blocks.
+        replies.append(text({"findings": []}))
     process, decoded, observed, session = direct_cli(tmp_path, installed, replies, root=root)
-    assert process.returncode == 0 and decoded.status == "blocked"
-    assert len(observed["calls"]) == 7
+    assert process.returncode == 0
+    assert decoded.status == ("blocked" if contract == 1 else "done")
+    assert len(observed["calls"]) == len(replies)
     results = [
         block
         for message in load(session)["messages"]
@@ -549,7 +560,7 @@ def test_actual_read_only_tool_dispatch_refuses_fabricated_tools_and_path_escape
     assert len(results) == 7 and all(block["is_error"] for block in results)
     assert all("not allowed" in block["content"] for block in [*results[:3], results[-1]])
     assert all("outside the root" in block["content"] for block in results[3:6])
-    assert load(session)["questions"] == ["unsafe"]
+    assert load(session)["questions"] == (["unsafe"] if contract == 1 else [])
     assert "OUTSIDE_SENTINEL" not in json.dumps(observed["calls"])
     assert source.read_bytes() == (inputs.root / "diff.patch").read_bytes()
     assert all(p.read_bytes() == contents for p, contents in before.items())

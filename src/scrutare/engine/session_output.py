@@ -1,4 +1,4 @@
-"""Strict contract-1 decoding of nare evidence and caller-attributed candidates."""
+"""Strict contract-1/2 decoding of nare evidence and caller-attributed candidates."""
 
 from __future__ import annotations
 
@@ -190,6 +190,34 @@ def _envelope(document: dict[str, Any]) -> str:
     return kind
 
 
+def constrained_turns(stdout: bytes, mode: str | None, *, strict: bool = True) -> int:
+    """Count nare's schema-constrained answer turns, which an unconstrained session never has.
+
+    Strict decoding refuses a malformed record or one on a session that did not ask for the
+    constraint. Tolerant counting, for evidence a failed session leaves, skips unreadable lines.
+    """
+    count = 0
+    for line in stdout.split(b"\n"):
+        if not line.strip():
+            continue
+        try:
+            document = _json(line)
+            if _envelope(document) != "progress" or "structured_output" not in document["detail"]:
+                continue
+            record = document["detail"]["structured_output"]
+            # Additive fields are ignored, as nare's contract asks of callers.
+            if (mode is None or not isinstance(record, dict) or not {
+                    "mode", "tools_withheld"} <= set(record) or record["mode"] != mode
+                    or type(record["tools_withheld"]) is not bool):
+                _fail()
+            count += 1
+        except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
+            if strict:
+                raise SessionProtocolError(
+                    "Invalid constrained-answer evidence; inspect private capture.") from None
+    return count
+
+
 def decode_cost_event(line: bytes) -> TokenUsage | None:
     """Decode a single event's disjoint turn counters, ignoring additive event types."""
     try:
@@ -280,7 +308,7 @@ def _decode_evidence(
         if stop is not None:
             stop = _text(stop)
         contract = _integer(result["contract"], positive=True)
-        if contract != 1:
+        if contract not in (1, 2):
             _fail()
         version = _text(result["nare"])
         count = _integer(result["turns"])
@@ -313,7 +341,8 @@ def _decode_evidence(
             _fail()
         saved = _json(session_document)
         if (_text(saved["id"]) != identity or _text(saved["status"]) != status
-                or saved["stop_reason"] != stop or _integer(saved["contract"], positive=True) != 1
+                or saved["stop_reason"] != stop
+                or _integer(saved["contract"], positive=True) != contract
                 or _text(saved["nare"]) != version or saved["output"] != output):
             _fail()
         saved_usage, saved_cost = _usage(saved["usage"])

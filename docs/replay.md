@@ -64,6 +64,26 @@ not executed or validated as a live review configuration. Replay does not apply
 path filters, reverify diff anchors, rerun re-anchoring, launch model sessions,
 or reassess whether a finding is correct.
 
+When `config.json` opts any model rail in to
+[schema-constrained output](config.md#schema-constrained-output-opt-in), or any
+session's `invocation.json` records the constraint, replay also audits every
+`sessions/<persona>/attempt-NNNN/` record under the run that was launched (has
+an `invocation.json` or a `stdout.jsonl`); an attempt that was never launched
+(for example, refused admission) sent nothing and is skipped. A configured
+persona's recorded rail, including `structured_output`, must equal that
+persona's configured rail; a reserved executor (assessor, chair) must use one
+of the configured rails. Argv must carry `--structured-output json_schema`
+exactly when that rail does, and a launched session without `invocation.json`
+cannot show either (`structured_output_unrecorded`, invalid). Its `result.json`
+must carry `{"mode", "constrained_turns"}` exactly when the rail does, with an
+integer count for a complete or partial session that equals the constrained-turn
+records in the retained `stdout.jsonl`; a null count (a session that never
+started) allows none (`structured_output_result_disagrees`, invalid). A
+launched session without `result.json`, a counted session without
+`stdout.jsonl`, or an opted-in run without any session attempt is
+`structured_output_evidence_missing` (incomplete). Runs that
+never touch the setting are not audited, so earlier bundles replay as before.
+
 Known formats must be structurally valid UTF-8 JSON. Duplicate object keys,
 nonfinite numbers, malformed fields, unsupported verdict or delivery schema
 versions, and required leaf symlinks or nonregular files cannot support a clean
