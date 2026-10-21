@@ -170,3 +170,19 @@ def test_reproduction_refuses_a_diagnosis_it_cannot_pair(tmp_path, monkeypatch, 
     rehash(package, name)
     with pytest.raises(ValueError, match=message):
         run(monkeypatch, package, tmp_path / 'out.json')
+
+
+def test_diagnosis_refuses_persona_overrides_and_rerun_cells():
+    reproduce = module()
+    path = PACKAGE / 's1/session-diagnosis.json'
+    cells = json.loads((PACKAGE / 's1/mechanical-qualification.json').read_text())['cells']
+    evaluation = json.loads((PACKAGE / 's1/evaluation.json').read_text())
+    assert reproduce.diagnosis(path, cells, evaluation)['sessions'] == 152
+    overridden = json.loads(json.dumps(evaluation))
+    overridden['models']['overrides'] = {'security': {'structured_output': None}}
+    with pytest.raises(ValueError, match='frozen rail'):
+        reproduce.diagnosis(path, cells, overridden)
+    rerun = json.loads(json.dumps(cells))
+    rerun[0]['attempts'].append(dict(rerun[0]['attempts'][0]))
+    with pytest.raises(ValueError, match='more than one attempt'):
+        reproduce.diagnosis(path, rerun, evaluation)
