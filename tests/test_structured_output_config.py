@@ -1,5 +1,7 @@
 """Opt-in schema-constrained output on model rails: parsing, refusal and canonical bytes."""
 
+from typing import Any, cast
+
 import pytest
 import yaml
 
@@ -76,7 +78,7 @@ def test_programmatic_rails_refuse_an_unsupported_backend():
     with pytest.raises(ConfigError, match="structured_output: requires provider openai"):
         ModelRail("anthropic", None, "m", "json_schema")
     with pytest.raises(ConfigError, match="structured_output: expected one of json_schema"):
-        ModelRail("openai", None, "m", "grammar")  # type: ignore[arg-type]
+        ModelRail("openai", None, "m", cast(Any, "grammar"))
 
 
 def test_an_inherited_constraint_on_an_anthropic_override_says_how_to_clear_it():
