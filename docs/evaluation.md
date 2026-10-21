@@ -189,6 +189,15 @@ twice (model or serving stack; not separated). One earlier schedule was
 interrupted by the operator's session ending and is retained unjudged. External
 spend was zero.
 
+The [constrained re-qualification](../evaluations/reports/2026-10-21-glm-structured-qualification/README.md)
+ran the same schedule and gate with `structured_output: json_schema`, nare
+2026.10.12 and the released #78 source. It did not qualify either: 13 of 36
+cells completed, 4 of 6 aggregate defect cells produced evidence, and no assessed
+defect cell completed. No session failed the findings schema (nine had in the
+earlier run), and none of the 31 constrained corrections failed validation. Every
+assessor overran the default 20,000-token reservation, and seven sessions timed
+out. External spend was zero.
+
 Ordinary CI uses `--evidence-kind offline` and deterministic provider substitutions
 to verify orchestration and scoring. Offline metrics measure software behavior only.
 A real baseline requires explicit model jobs and completed independent human

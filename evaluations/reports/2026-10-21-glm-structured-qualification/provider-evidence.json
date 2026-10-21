@@ -1,0 +1,243 @@
+{
+  "concurrent_load": {
+    "at_preparation": {
+      "by_client_group_base": {
+        "opencode | spark/glm-5.3-flash | http://192.168.3.40:8045/v1": {
+          "completion_tokens": 43165,
+          "fallbacks": {
+            "0": 90
+          },
+          "first": "2026-10-21T01:14:52.186+00:00",
+          "last": "2026-10-21T01:52:55.864+00:00",
+          "prompt_tokens": 7020323,
+          "rows": 90
+        },
+        "python-httpx | claude-haiku-5-5 | https://api.anthropic.com/v1/messages": {
+          "completion_tokens": 102477,
+          "fallbacks": {
+            "0": 26
+          },
+          "first": "2026-10-21T01:19:36.798+00:00",
+          "last": "2026-10-21T01:52:46.146+00:00",
+          "prompt_tokens": 6843108,
+          "rows": 26
+        }
+      },
+      "label": "the 40 minutes before preparation",
+      "private_sha256": "68531226cfd4fbc19301c139a599f8afa4f91418a2163492d883479e762eead0",
+      "rows": 116,
+      "window_utc": [
+        "2026-10-21 01:13:10",
+        "2026-10-21 01:53:10"
+      ]
+    },
+    "before_launch": {
+      "by_client_group_base": {
+        "opencode | spark/glm-5.3-flash | http://192.168.3.40:8045/v1": {
+          "completion_tokens": 8559,
+          "fallbacks": {
+            "0": 13
+          },
+          "first": "2026-10-21T03:16:28.313+00:00",
+          "last": "2026-10-21T03:46:40.512+00:00",
+          "prompt_tokens": 1460289,
+          "rows": 13
+        },
+        "python-httpx | spark/glm-5.3-flash | http://192.168.3.40:8045/v1": {
+          "completion_tokens": 0,
+          "fallbacks": {
+            "0": 1
+          },
+          "first": "2026-10-21T03:13:23.289+00:00",
+          "last": "2026-10-21T03:13:23.289+00:00",
+          "prompt_tokens": 191312,
+          "rows": 1
+        }
+      },
+      "label": "the 45 minutes before launch",
+      "private_sha256": "aca4a79c50fdc3994e4ef510f27cf05cf8c6f03340f4d3112c2d1d451dc5b704",
+      "rows": 14,
+      "window_utc": [
+        "2026-10-21 03:10:05",
+        "2026-10-21 03:55:05"
+      ]
+    },
+    "mid_wait": {
+      "by_client_group_base": {
+        "opencode | spark/glm-5.3-flash | http://192.168.3.40:8045/v1": {
+          "completion_tokens": 1412,
+          "fallbacks": {
+            "0": 7
+          },
+          "first": "2026-10-21T02:46:25.721+00:00",
+          "last": "2026-10-21T03:16:39.257+00:00",
+          "prompt_tokens": 799673,
+          "rows": 7
+        },
+        "python-httpx | spark/glm-5.3-flash | http://192.168.3.40:8045/v1/": {
+          "completion_tokens": 35983,
+          "fallbacks": {
+            "0": 7
+          },
+          "first": "2026-10-21T02:36:40.946+00:00",
+          "last": "2026-10-21T02:49:10.640+00:00",
+          "prompt_tokens": 1282724,
+          "rows": 7
+        }
+      },
+      "label": "while #79 merged",
+      "private_sha256": "000708721dca489fc057866c9876268ebdd11adb58e16ca60ce7a32e39011164",
+      "rows": 14,
+      "window_utc": [
+        "2026-10-21 02:32:01",
+        "2026-10-21 03:17:01"
+      ]
+    },
+    "note": "python-httpx2 is nare (this evaluator); opencode is another client of the same proxy and engine; python-httpx is an unidentified client; claude-haiku rows are served by Anthropic, not the Spark engine, on another client",
+    "run_window": {
+      "by_client_group_base": {
+        "opencode | spark/glm-5.3-flash | http://192.168.3.40:8045/v1": {
+          "completion_tokens": 6362,
+          "fallbacks": {
+            "0": 15
+          },
+          "first": "2026-10-21T04:01:32.689+00:00",
+          "last": "2026-10-21T05:31:50.923+00:00",
+          "prompt_tokens": 1059047,
+          "rows": 15
+        },
+        "python-httpx2 | spark/glm-5.3-flash | http://192.168.3.40:8045/v1": {
+          "completion_tokens": 538032,
+          "fallbacks": {
+            "0": 501
+          },
+          "first": "2026-10-21T03:55:29.839+00:00",
+          "last": "2026-10-21T05:28:46.289+00:00",
+          "prompt_tokens": 1735438,
+          "rows": 501
+        }
+      },
+      "label": "s1 run window",
+      "private_sha256": "f8bc3e5e71287c6b8aea214e0352de5d400052dd3a31fc4a131485fcebbd0a33",
+      "rows": 516,
+      "window_utc": [
+        "2026-10-21 03:55:00",
+        "2026-10-21 05:34:00"
+      ]
+    }
+  },
+  "first_minutes_after_launch": {
+    "by_client_group_base": {
+      "python-httpx2 | spark/glm-5.3-flash | http://192.168.3.40:8045/v1": {
+        "completion_tokens": 2758,
+        "fallbacks": {
+          "0": 22
+        },
+        "first": "2026-10-21T03:55:29.839+00:00",
+        "last": "2026-10-21T03:55:54.527+00:00",
+        "prompt_tokens": 52867,
+        "rows": 22
+      }
+    },
+    "label": "first 2 minutes of s1",
+    "private_sha256": "8b227ac8d2d3690dc0eafcea54c8e6ae513fd5c57bcd1e76cdd7057e74405ea2",
+    "rows": 22,
+    "window_utc": [
+      "2026-10-21 03:55:00",
+      "2026-10-21 03:57:07"
+    ]
+  },
+  "router_2026-10-21T01:54Z_preparation": {
+    "fallback_fields": {
+      "content_policy_fallbacks": null,
+      "context_window_fallbacks": null,
+      "fallbacks": null
+    },
+    "model_group_alias": {
+      "claude-haiku": {
+        "hidden": true,
+        "model": "claude-haiku-5-5"
+      },
+      "claude-haiku-4-5": {
+        "hidden": true,
+        "model": "claude-haiku-5-5"
+      },
+      "claude-sonnet": {
+        "hidden": true,
+        "model": "claude-sonnet-5-5"
+      }
+    },
+    "num_retries": 2,
+    "ok": true,
+    "private_sha256": "5a7706d9f1cbfef8c96e5d08b48397dbe1d17ad376442adbedb8b93eb4deb668",
+    "read_utc": "2026-10-21T01:53:15Z",
+    "spark_glm_deployments": [
+      {
+        "api_base": "http://192.168.3.40:8045/v1",
+        "db_model": false,
+        "model": "openai/glm-5.3-flash"
+      }
+    ],
+    "timeout": 600,
+    "wildcard_groups": []
+  },
+  "router_2026-10-21T03:55Z_before_launch": {
+    "fallback_fields": {
+      "content_policy_fallbacks": null,
+      "context_window_fallbacks": null,
+      "fallbacks": null
+    },
+    "model_group_alias": {
+      "claude-haiku": {
+        "hidden": true,
+        "model": "claude-haiku-5-5"
+      },
+      "claude-haiku-4-5": {
+        "hidden": true,
+        "model": "claude-haiku-5-5"
+      },
+      "claude-sonnet": {
+        "hidden": true,
+        "model": "claude-sonnet-5-5"
+      }
+    },
+    "num_retries": 2,
+    "ok": true,
+    "private_sha256": "24246428c867fffe318b8981a37d3e7921e5935115e9d6ac354ef6de6d15dac9",
+    "read_utc": "2026-10-21T03:55:05Z",
+    "spark_glm_deployments": [
+      {
+        "api_base": "http://192.168.3.40:8045/v1",
+        "db_model": false,
+        "model": "openai/glm-5.3-flash"
+      }
+    ],
+    "timeout": 600,
+    "wildcard_groups": []
+  },
+  "schema_version": 1,
+  "spend_log_s1_window": {
+    "note": "every spend-log row in the window, all keys; the proxy master key is shared by this evaluator and opencode. attributed_spend_usd is LiteLLM applying its configured rate to a self-hosted model; no provider bills it.",
+    "other_keys_by_model_group": {},
+    "private_sha256": "bcd3b86e9764de18c8a1eb44d9b51bb9fbb7fe39dd2fcf3422b6e69cd2b8c145",
+    "rows_all_keys": 516,
+    "rows_this_key": 516,
+    "this_key_attempted_fallbacks": {
+      "0": 516
+    },
+    "this_key_attempted_retries": {
+      "0": 516
+    },
+    "this_key_attributed_spend_usd": 0.69137,
+    "this_key_by_model_group_model_api_base_provider_status": {
+      "spark/glm-5.3-flash | openai/glm-5.3-flash | http://192.168.3.40:8045/v1 | openai | success": 516
+    },
+    "this_key_completion_tokens": 544394,
+    "this_key_paid_provider_rows": 0,
+    "this_key_prompt_tokens": 2794485,
+    "window_utc": [
+      "2026-10-21 03:55:00",
+      "2026-10-21 05:34:00"
+    ]
+  }
+}
