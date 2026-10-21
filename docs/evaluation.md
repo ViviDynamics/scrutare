@@ -204,8 +204,8 @@ assessor reservation to 50,000 and the session timeout to 1800 s, each sized fro
 the run before it. It launched under heavy concurrent load after the maintainer
 waived the idle-window rule. It did not qualify: 34 of 36 cells completed and all 6
 aggregate defect cells produced evidence, but 5 of 6 assessed defect cells
-completed. One assessor request stalled until the timeout, and one discovery
-session cited past a file's end. No session overran its budget or failed the
+completed. One assessor request generated for 30 minutes without an answer
+until the timeout, and one discovery session cited past a file's end. No session overran its budget or failed the
 schema, and external spend was zero. No further schedule may run under that gate.
 
 Ordinary CI uses `--evidence-kind offline` and deterministic provider substitutions

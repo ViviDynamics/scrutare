@@ -11,7 +11,16 @@ is not promoted, and `evaluations/holdout-v1` was not opened or used.
 
 `s2` is `s1` ([PR #80](../2026-10-21-glm-structured-qualification/README.md)) with
 changes sized from `s1`'s data and recorded before launch in
-`s2/deviations.json`. Its hashes were posted on #51, and so was the amendment:
+`s2/deviations.json`. Its hashes were posted on #51, and so was the amendment.
+Two lines in the frozen files are inaccurate and cannot be edited without breaking
+those hashes:
+- `gate.json`'s `unchanged_from_reference` keeps `s1`'s line "every gate criterion
+  and the pass rule, byte-identical to g2". The next line and the changed list
+  correctly say the per-attempt bound changed.
+- The timeout entry reads "120 s -> 1800 s (g2 and s1: 600 s)". The 120 s is the
+  Sol reference profile; the change from `s1` is 600 s to 1800 s.
+
+The table below states the changes as they were:
 
 | Setting | `s1` | `s2` | Why |
 | --- | --- | --- | --- |
@@ -60,12 +69,15 @@ The largest attempt (106,800 tokens) would not have fit `s1`'s ceiling.
 
 - **`security-auth-order/assessed/3`, assessor timeout.** After one `read` at
   14:42:36Z, the assessor's second request ran until the 1800 s timeout killed the
-  session at 15:12:32Z. LiteLLM logged that request as generating 45,217 completion
-  tokens before the client disconnected (HTTP 499). None of them reached nare's
-  event stream, which holds nothing after the tool call: no reasoning, text or
-  answer. This package does not establish why. A runaway generation that the
-  serving stack buffered (for example inside a tool call) would fit. The request
-  alone would also have passed the 50,000 reservation. This is the cell that fails
+  session at 15:12:32Z. LiteLLM logged that request (retained and published in
+  `provider-evidence.json`, `stalled_assessor_request`) as 6,352 prompt and 45,217
+  completion tokens, ending in a client disconnect (499) at the kill. nare's event
+  stream holds nothing after the tool call: no reasoning, text or answer. Bytes were
+  still reaching nare, because its 600 s per-read stream timeout never fired. So
+  the request was generating, not stalled: about 45,000 tokens in 30 minutes that
+  nare did not surface as events (for example, tool-call arguments). This package
+  does not establish what the model was generating. The request alone would also
+  have passed the 50,000 reservation. This is the cell that fails
   the assessed criterion.
 - **`security-auth-order/focused3/2`, citation past a file's end.** One discovery
   session (`senior-dev`, after a constrained correction) cited beyond the end of a
@@ -87,10 +99,10 @@ From `s2/session-diagnosis.json`; `s1` and `g2` come from the `s1` package:
 | nare: reasoning but no answer | 0 | 1 | 0 |
 
 - **Budgets held.** The 16 completed assessors used 21,145 to 45,017 tokens
-  against 50,000. Discovery reached at most 33,110 against 37,500 (50,000 in the
-  aggregate arm).
-- **The longer timeout mattered.** Completed sessions took a median 318 s, a p90
-  of 540 s and at most 1,123 s. 13 of them ran past 600 s and would have timed out
+  against 50,000. Discovery reached at most 25,500 against 37,500 in the assessed
+  arms, and 33,110 against 50,000 in the aggregate arm.
+- **The longer timeout mattered.** Completed sessions took a median 318 s, a
+  nearest-rank p90 of 547 s and at most 1,123 s, from first to last stream event. 13 of them ran past 600 s and would have timed out
   under `s1`'s setting. None passed 1200 s.
 - **The constraint fired** in 42 sessions, one constrained correction each: 41
   completed and 1 was the citation refusal above. No session failed the findings
@@ -116,13 +128,20 @@ focused3 5/6. No discussion round started.
 | Mean cell latency | 733 s | 485 s | 504 s | 38.6 s | 34.5 s | 34.7 s |
 | Median cell latency | 731 s | 482 s | 596 s | 40.9 s | 36.6 s | 36.6 s |
 
-The proxy logged 541 requests from this evaluator in the `s2` window (2,672,212
-tokens). Wall clock: 13:59:42Z to 16:35:09Z, 2 h 35 min for 36 cells.
+The proxy logged 537 requests from this evaluator (nare on the proxy master key)
+in the `s2` window. That is the 536 turns in the session streams, whose 1,960,823
+input and 561,745 output tokens equal recorded cell usage, plus the cut-off
+assessor request. Wall clock: 13:59:42Z to 16:35:09Z, 2 h 35 min for 36 cells.
 
-Concurrent load was the heaviest of any schedule here. In the run window, opencode
-sent 205 requests (17.7 million prompt tokens, 136,240 completion tokens), and the
-unidentified `python-httpx` client sent 12 (1.86 million prompt tokens). Both were
-served by the same Spark engine. In the hour before launch, opencode alone sent 90
+Concurrent load was the heaviest of any schedule here. Re-read after the run
+(`spend_rows_s2_window_reread`), the window had 763 rows:
+- opencode: 209 requests on two keys (18.2 million prompt tokens, 138,639
+  completion tokens);
+- the unidentified `python-httpx` client: 12 requests (1.86 million prompt tokens);
+- another nare client on another key, not this evaluator: 5 requests from 15:47Z
+  (54,694 completion tokens).
+
+All were served by the same Spark engine. In the hour before launch, opencode alone sent 90
 requests (7.5 million prompt tokens). The `s2` result was obtained under that
 load, not on an idle engine.
 
@@ -130,9 +149,9 @@ load, not on an idle engine.
 
 The router was read at 13:59:42Z, immediately before launch: no `fallbacks`,
 `context_window_fallbacks` or `content_policy_fallbacks`, no wildcard groups, and
-one deployment for `spark/glm-5.3-flash`. From 13:59 to 16:37Z, all 758 spend-log
-rows were served by `openai/glm-5.3-flash` on the Spark host, with 0 attempted
-fallbacks and 0 retries. The spend script's count of "12 paid-provider rows" is a
+one deployment for `spark/glm-5.3-flash`. All 763 spend-log rows that started from
+13:59 to 16:37Z, on every key, were served by `openai/glm-5.3-flash` on the Spark
+host, with 0 attempted fallbacks and 0 retries. The spend script's count of "12 paid-provider rows" is a
 string comparison: those rows give the same Spark base URL with a trailing slash
 (the `python-httpx` client). No paid provider was called. LiteLLM's nominal
 attribution, which no provider bills, is in `provider-evidence.json`.
@@ -155,18 +174,20 @@ Python 3.10 or newer, standard library only, no network. It fails on any
 difference, and it:
 - checks every published hash here and in the `s1`, `g2` and Sol packages, and
   refuses files outside the manifest;
-- requires `s2`'s `preparation.json`, `gate.json`, `evaluation.json` and the
-  amended `deviations.json` to match the hashes posted on #51 and the freeze
-  record;
-- requires the gate's changed settings (ceiling, timeout, assessor reservation) to
-  equal the preparation's, and the constraint to be frozen;
+- requires `s2`'s `preparation.json`, `gate.json`, `evaluation.json`, the wheel
+  hash and the amended `deviations.json` to match the hashes posted on #51 and the
+  freeze record, and requires the amendment to name the deviations hash posted
+  before it;
+- requires the frozen files to agree on the changed settings (one ceiling in the
+  gate, preparation and evaluation budgets; timeout; assessor reservation), and the
+  constraint to be frozen;
 - checks every session diagnosis against its mechanical cells and frozen rail;
 - recomputes the gate, the cause tables, the constraint counts, the medians, the
   automated decisions and the side-by-side.
 
 Not recomputed are figures that come from private captures or proxy reads: nare's
 error text, the constrained-turn counts and each session's input and output split
-(counted, but not authenticated), session durations, the stalled request's proxy
+(counted, but not authenticated), session durations, the cut-off request's proxy
 row, the proxy-logged tokens, spend-log counts and the per-client load. The
 retained captures' hashes are in `original-artifact-sha256.json` and each
 diagnosis's `private_records_sha256`. `s2/preparation.json` is published
@@ -175,7 +196,7 @@ nare console.
 
 ## What this does not establish
 
-- Why the assessor's stalled request produced no stream events.
+- What the cut-off assessor request was generating, and why nare saw no events.
 - Behavior on an idle engine. `s2` ran under the heaviest load of these schedules.
 - Review quality beyond the automated keyword decisions. Human adjudication is
   still outstanding.

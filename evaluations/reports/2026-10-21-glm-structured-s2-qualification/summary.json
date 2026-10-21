@@ -1363,11 +1363,11 @@
     }
   },
   "proxy_logged_evaluator_tokens_s2_window": {
-    "completion_tokens": 646890,
-    "note": "exceeds recorded cell usage because turns cut off by the session timeout or past a budget are logged by the proxy but not all are counted in cell accounting",
-    "prompt_tokens": 2025322,
-    "requests": 541,
-    "total_tokens": 2672212
+    "completion_tokens": 606962,
+    "note": "the evaluator is nare (python-httpx2) on the proxy master key: 537 rows = 536 turns in the 161 session streams (1,960,823 input and 561,745 output tokens, equal to recorded cell usage) + 1 request cut off by the session timeout (below)",
+    "prompt_tokens": 1967175,
+    "requests": 537,
+    "total_tokens": 2574137
   },
   "qualified": false,
   "reference_gpt_6_1_sol": {

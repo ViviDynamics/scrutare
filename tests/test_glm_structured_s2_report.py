@@ -110,8 +110,12 @@ def test_s2_differs_from_s1_only_in_the_recorded_settings():
 
 def test_frozen_files_are_the_ones_posted_on_issue_51():
     for job, posted in module().POSTED_ON_51.items():
-        for name, digest in posted.items():
-            assert hashlib.sha256((PACKAGE / job / name).read_bytes()).hexdigest() == digest
+        for name in ('preparation.json', 'gate.json', 'evaluation.json', 'deviations.json'):
+            digest = hashlib.sha256((PACKAGE / job / name).read_bytes()).hexdigest()
+            assert digest == posted[name]
+        freeze = json.loads((PACKAGE / 'freeze-record.json').read_text())['freezes'][job]
+        assert freeze['wheel_sha256'] == posted['wheel']
+        assert freeze['deviations_sha256'] == posted['deviations_before_amendment']
 
 
 def test_reproduction_refuses_regenerated_freeze_deviation_or_extra_files(tmp_path, monkeypatch):
@@ -154,3 +158,27 @@ def test_reproduction_refuses_changed_evidence(tmp_path, monkeypatch):
     rehash(package, 's2/experiment.json')
     with pytest.raises(ValueError, match='disagrees|differ'):
         run(monkeypatch, package, tmp_path / 'out.json')
+
+
+@pytest.mark.parametrize(('name', 'key', 'value'), [
+    ('gate.json', 'assessment_tokens', 40000), ('gate.json', 'timeout_seconds', 600),
+    ('gate.json', 'max_tokens_per_run', 100000)])
+def test_frozen_files_must_agree_on_the_changed_settings(tmp_path, name, key, value):
+    reproduce = module()
+    package = copy(tmp_path, 'settings')
+    reproduce.frozen_settings_agree(package / 's2')
+    document = json.loads((package / 's2' / name).read_text())
+    document[key] = value
+    (package / 's2' / name).write_text(json.dumps(document))
+    with pytest.raises(ValueError, match='disagree on the changed settings'):
+        reproduce.frozen_settings_agree(package / 's2')
+
+
+def test_the_cut_off_request_accounts_for_the_proxy_evaluator_rows():
+    summary = json.loads((PACKAGE / 'summary.json').read_text())
+    proxy = summary['proxy_logged_evaluator_tokens_s2_window']
+    usage = summary['jobs']['s2']['usage_all_attempts']
+    stalled, = json.loads((PACKAGE / 'provider-evidence.json').read_text())[
+        'spend_rows_s2_window_reread']['stalled_assessor_request']
+    assert proxy['prompt_tokens'] == usage['input'] + stalled['prompt_tokens']
+    assert proxy['completion_tokens'] == usage['output'] + stalled['completion_tokens']

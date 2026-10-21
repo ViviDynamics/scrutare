@@ -25,7 +25,10 @@ POSTED_ON_51 = {
     's2': {'preparation.json': '360026406fa522c64784729c0438295f0ea7631119dd039df08cfd6d030a0e88',
            'gate.json': '95ddc29f896f380d563ac008a7dbfebf3a9b967d1d8ddea2b4fe515ee04ca9a4',
            'evaluation.json': 'd8acb2f7486702b609aa057d1a487af458de7e46791d36fcce6c3ab22bee627a',
-           'deviations.json': 'c9d2c19b2e44ec2be297268edb2847421a5c9c413a401130dc8dd1a83cd826a9'},
+           'deviations.json': 'c9d2c19b2e44ec2be297268edb2847421a5c9c413a401130dc8dd1a83cd826a9',
+           'deviations_before_amendment': (
+               'ce3cd916c19fd8a242ba3651eb024c872e5739ca2aba7ddf5b7bc2579026958a'),
+           'wheel': 'acf0d147467ae68d09e737a55ceacabae0e0423d09b82854a9fb49d96fcb87ec'},
 }
 # Earlier schedules, read from their published packages and checked against those
 # packages' own hashes: s1 (constraint on, 100,000 ceiling, 600 s) and g2 (constraint off).
@@ -128,16 +131,16 @@ def cross_hashes(package):
             if (digest != posted[name] or digest != original[name]
                     or digest != frozen[name.replace('.json', '_sha256')]):
                 raise ValueError(f'{job}/{name} differs from the hash posted on #51')
+        deviations = read(directory / 'deviations.json')
         if (sha(directory / 'deviations.json') != posted['deviations.json']
                 or sha(directory / 'deviations.json') != frozen['deviations_sha256_amended']
-                or read(package / 'freeze-record.json')['deviations'] != read(
-                    directory / 'deviations.json')):
+                or frozen['deviations_sha256'] != posted['deviations_before_amendment']
+                or [a['deviations_sha256_before'] for a in deviations['amendments']]
+                != [posted['deviations_before_amendment']]
+                or frozen['wheel_sha256'] != posted['wheel']
+                or read(package / 'freeze-record.json')['deviations'] != deviations):
             raise ValueError(f'{job} deviations differ from the amended hash posted on #51')
-        gate = read(directory / 'gate.json')
-        if (gate['max_tokens_per_run'] != prep['configured_max_tokens']
-                or gate['timeout_seconds'] != prep['timeout_seconds']
-                or gate['assessment_tokens'] != prep['assessment_tokens']):
-            raise ValueError(f'{job} gate and preparation disagree on the changed settings')
+        frozen_settings_agree(directory)
         if frozen['wheel_sha256'] != next(
                 v for k, v in prep['input_sha256'].items() if k.endswith('.whl')):
             raise ValueError(f'{job} wheel differs from its freeze record')
@@ -148,6 +151,19 @@ def cross_hashes(package):
         if (mechanical['gate_sha256'] != sha(directory / 'gate.json')
                 or mechanical['experiment_sha256'] != original['experiment/experiment.json']):
             raise ValueError(f'{job} mechanical summary is not bound to its gate and experiment')
+
+
+def frozen_settings_agree(directory):
+    """The frozen files must agree with each other on every setting s2 changed. Their
+    hashes are posted, so this checks the frozen record itself, not later edits."""
+    gate = read(directory / 'gate.json')
+    prep = read(directory / 'preparation.json')
+    budgets = read(directory / 'evaluation.json')['budgets']
+    ceilings = {gate['max_tokens_per_run'], prep['configured_max_tokens'],
+                budgets['review_max_tokens'], budgets['per_persona_tokens']}
+    if (len(ceilings) != 1 or gate['timeout_seconds'] != prep['timeout_seconds']
+            or gate['assessment_tokens'] != prep['assessment_tokens']):
+        raise ValueError(f'{directory.name}: frozen files disagree on the changed settings')
 
 
 ASSESSOR = 'evidence-assessor'
@@ -434,15 +450,14 @@ def summarize(directory, first_attempt_rule, retained_tests=True):
 def proxy_tokens(package):
     """The proxy's own count of this evaluator's requests in the s2 window, from
     provider-evidence.json (derived from private spend-log reads; not recomputable here)."""
-    rows = read(package / 'provider-evidence.json')['concurrent_load']['run_window'][
-        'by_client_group_base']
-    row = rows['python-httpx2 | spark/glm-5.3-flash | http://192.168.3.40:8045/v1']
+    reread = read(package / 'provider-evidence.json')['spend_rows_s2_window_reread']
+    row = reread['by_client_and_key'][
+        'python-httpx2 | proxy master key (this evaluator and opencode) | '
+        'http://192.168.3.40:8045/v1']
     return {'requests': row['rows'], 'prompt_tokens': row['prompt_tokens'],
             'completion_tokens': row['completion_tokens'],
             'total_tokens': row['prompt_tokens'] + row['completion_tokens'],
-            'note': 'exceeds recorded cell usage because turns cut off by the session timeout '
-                    'or past a budget are logged by the proxy but not all are counted in cell '
-                    'accounting'}
+            'note': reread['evaluator_accounting']}
 
 
 def build(package, reports=None):
@@ -455,18 +470,18 @@ def build(package, reports=None):
         causes[job] = diagnosis(package / job / 'session-diagnosis.json',
                                 read(package / job / 'mechanical-qualification.json')['cells'],
                                 read(package / job / 'evaluation.json'))
+    for sibling in sorted({p for p, _ in (*PREDECESSOR.values(), *REFERENCE.values(),
+                                           *PREDECESSOR_DIAGNOSIS.values())}):
+        verify_hashes(reports / sibling)
     predecessor = {}
     for name, (sibling, job) in PREDECESSOR.items():
-        verify_hashes(reports / sibling)
         _, predecessor[name] = summarize(reports / sibling / job, first_attempt_rule=True)
         where, path = PREDECESSOR_DIAGNOSIS[name]
-        verify_hashes(reports / where)
         causes[name] = diagnosis(reports / where / path,
                                  read(reports / sibling / job / 'mechanical-qualification.json')[
                                      'cells'], read(reports / sibling / job / 'evaluation.json'))
     reference = {}
     for name, (sibling, job) in REFERENCE.items():
-        verify_hashes(reports / sibling)
         _, reference[name] = summarize(reports / sibling / job, first_attempt_rule=True,
                                        retained_tests=False)
     side = {}
