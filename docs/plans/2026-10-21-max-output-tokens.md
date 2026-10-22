@@ -34,16 +34,16 @@ separate steps and a separate publication PR, like #79 and #80/#81.
   tool turn carried a schema-valid document.
 
 ## Tasks
-- [ ] 1. Configuration: parse, inherit, clear, refuse invalid values, record only
+- [x] 1. Configuration: parse, inherit, clear, refuse invalid values, record only
   when used: `tests/test_max_output_tokens_config.py`.
-- [ ] 2. Session: `--max-tokens` in argv, rail and result records; a capped session
+- [x] 2. Session: `--max-tokens` in argv, rail and result records; a capped session
   fails as `output_cap` with complete accounting and no findings; off unchanged:
   `tests/test_max_output_tokens_session.py`.
-- [ ] 3. Fan-out manifest records the cap on every rail when any rail opts in, and
+- [x] 3. Fan-out manifest records the cap on every rail when any rail opts in, and
   the off bytes are unchanged: `tests/test_max_output_tokens_session.py`.
-- [ ] 4. Replay audits the recorded cap against the configuration and the retained
+- [x] 4. Replay audits the recorded cap against the configuration and the retained
   stream: `tests/test_replay_max_output_tokens.py`.
-- [ ] 5. Installed native nare 2026.10.12 proofs over HTTP SSE: cap on (every
+- [x] 5. Installed native nare 2026.10.12 proofs over HTTP SSE: cap on (every
   request carries `max_tokens`), off (none does), a request cut off at the cap, and
   replay of each: `tests/test_installed_max_output_tokens.py`.
-- [ ] 6. Documentation: `docs/config.md`, `docs/replay.md`, `docs/session-fanout.md`.
+- [x] 6. Documentation: `docs/config.md`, `docs/replay.md`, `docs/session-fanout.md`.
