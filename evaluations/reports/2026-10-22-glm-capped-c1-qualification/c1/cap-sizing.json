@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-10-22T03:29:40Z",
+  "cap": 20000,
+  "source": "s2 retained session streams (nare cost events, one per model request) and the s2 spend-log rows (python-httpx2 on the proxy master key), cross-checked",
+  "s2_requests_in_session_streams": 536,
+  "s2_requests_in_completed_sessions": 531,
+  "largest_request_in_a_completed_session": {
+    "completion_tokens": 12387,
+    "session": "tests-consumer-fixture/assessed/3/sessions/evidence-assessor/attempt-0001",
+    "proxy_seconds": 1102,
+    "proxy_tokens_per_second": 11.2
+  },
+  "completed_sessions_request_distribution": {
+    "p50": 325,
+    "p95": 4355,
+    "p99": 5882,
+    "max": 12387,
+    "top10": [
+      12387,
+      8224,
+      7881,
+      6561,
+      6090,
+      5882,
+      5812,
+      5765,
+      5744,
+      5724
+    ]
+  },
+  "by_persona_max_in_completed_sessions": {
+    "devops": 7881,
+    "evidence-assessor": 12387,
+    "junior-dev": 5499,
+    "security": 5812,
+    "senior-dev": 8224
+  },
+  "spend_log_cross_check": {
+    "evaluator_rows": 537,
+    "largest_two_completion_tokens": [
+      45217,
+      12387
+    ],
+    "agrees_with_streams": true
+  },
+  "runaway_request": {
+    "completion_tokens": 45217,
+    "prompt_tokens": 6352,
+    "proxy_seconds": 1796,
+    "proxy_tokens_per_second": 25.2,
+    "outcome": "session timeout at 1800 s (LiteLLM 499)"
+  },
+  "headroom_over_largest_completed": 1.61,
+  "fraction_of_runaway": 0.44,
+  "runaway_seconds_to_cap_at_its_measured_rate": 794,
+  "reasoning": [
+    "above every request in a completed s2 session (largest 12,387) with 1.61x headroom, in line with the 1.49x to 1.64x headroom s2 gave its budgets over s1 maxima",
+    "well below the runaway request (45,217); at its measured 25.2 tok/s it would be cut off after about 794 s, inside the unchanged 1800 s session timeout, so a repeat fails as output_cap instead of timeout",
+    "completion tokens include reasoning tokens (vLLM bounds both with max_tokens)",
+    "limit: a legitimate request this large at the slowest loaded rate seen in s2 (about 7 to 10 tok/s for requests over 2,000 tokens) would reach the 1800 s timeout before the cap; no s2 request came close"
+  ],
+  "private_inputs_sha256": {
+    "s2-turn-outputs.json": "09232e6afac5095b87bf0b71d0faa3b1dcb863718959198d5ab1ad344415b8f8",
+    "spend-rows-s2-window.json": "02911662d52fd1a705ace134b9e0f35efa7521a49d3dca709690c72927114b9e"
+  }
+}
