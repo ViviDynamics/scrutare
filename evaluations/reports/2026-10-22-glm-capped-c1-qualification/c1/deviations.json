@@ -1,0 +1,37 @@
+{
+  "label": "c1",
+  "recorded_utc": "2026-10-22T03:30:34Z",
+  "status": "frozen; waiting for a 30-minute idle on-prem host window (binding)",
+  "authority": "maintainer decision 2026-10-21 recorded in #82: add a per-request output cap, then qualify onprem/glm-5.3-flash again under a new gate frozen before any run",
+  "baselines": [
+    "s2 (glm-structured-2026-10-14/requal/s2, PR #81)",
+    "s1 (PR #80)",
+    "g2 (PR #77)"
+  ],
+  "identical_to_s2": [
+    "model alias, LAN base URL, structured_output json_schema, nare 2026.10.12 (96672e1)",
+    "corpus (byte-identical input hashes), cases, comparison set focused, 3 repeats, 36 cells, related paths, no line_counts, no Ruff capture",
+    "ceiling 200,000, assessor 50,000, max_turns 6, concurrency 3, timeout 1800 s, rounds.max 3, retry policy 3/20 s/6, no overrun fallback",
+    "every gate criterion and the pass rule, byte-identical strings",
+    "checker, export and spend scripts; launcher adapted only to take the label and assert the cap",
+    "launch method: transient systemd user unit, evaluator exec'd as main process"
+  ],
+  "deviations_from_s2": [
+    {
+      "what": "max_output_tokens absent -> 20000",
+      "why": "the subject of this gate (#82); sizing in cap-sizing.json"
+    },
+    {
+      "what": "source 2026.10.26 (b0dfd0f) -> 2026.10.29 (9b77c9b)",
+      "why": "carries the cap; no other source change"
+    },
+    {
+      "what": "launch condition: stated as binding (s2 waived it)",
+      "why": "s2 ran under the heaviest concurrent load of any schedule because the rule was waived; #82 requires it to be enforced by the waiter"
+    }
+  ],
+  "cap_sizing_sha256": "54e54d867fb9f3a6b3aebdbeb5c183573d3b26f3d69064c14ea4c313fb05ba7a",
+  "citation_past_file_end": "unchanged from s2 and every earlier schedule: Scrutare's citation validation is authoritative. A session whose answer cites past a file's last line (after its one constrained correction) fails as citation_validation, its cell is not complete, and the cell counts against all 36 complete. No exclusion, retry or relaxation. Justification for not changing it: it is a correctness check on the model's evidence, s2 had one such session in 161, and relaxing it would admit invalid evidence",
+  "launch_condition": "launch only after at least 30 consecutive minutes with no on-prem host spend-log row (any client), enforced by the waiter (idle-launch.py, 5-minute polls of /spend/logs/v2), followed by a router fallback re-check. Concurrent load is recorded before launch and over the run window either way. Waiving needs a dated maintainer ruling recorded before launch; the operator may not waive it. If no idle window appears within 6 hours of waiting, nothing launches and the operator reports back",
+  "schedules_allowed": "1 (c1), plus at most 1 re-test (c2). c2 may run only if c1 fails for a diagnosable reason that a documented, prospectively frozen change addresses, under a gate frozen and posted on #51 before it launches, and only on a maintainer decision. Both are published; no post-hoc exclusion; otherwise stop and report not qualified"
+}

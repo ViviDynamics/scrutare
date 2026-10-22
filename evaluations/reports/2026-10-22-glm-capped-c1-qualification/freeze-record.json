@@ -1,0 +1,124 @@
+{
+  "amendment": {
+    "authority": "maintainer ruling dated 2026-10-22, relayed via chat by the coordinator",
+    "evidence": {
+      "clients_seen": [
+        "opencode",
+        "python-httpx",
+        "python-httpx2"
+      ],
+      "deadline_utc": "2026-10-22T09:31:16Z",
+      "first_poll_utc": "2026-10-22T03:30:58Z",
+      "last_poll_utc": "2026-10-22T09:26:16Z",
+      "note": "python-httpx2 in the first poll is this operator's live cap smoke (03:25 to 03:28Z), before the freeze",
+      "polls": 72,
+      "polls_with_onprem_traffic": 72,
+      "private_poll_log": "c1-wait.jsonl",
+      "onprem_rows_30min_range": [
+        4,
+        46
+      ],
+      "waiter": "scrutare-glm-c1-wait.service, exited at its 6 h deadline without launching"
+    },
+    "freeze_hashes_verified": {
+      "cap_sizing_sha256": "54e54d867fb9f3a6b3aebdbeb5c183573d3b26f3d69064c14ea4c313fb05ba7a",
+      "deviations_sha256": "3ff3fdf0ae936e8d36d3473ca4b03ed0260e3e7e9f5f086c430b17112b351e2d",
+      "evaluation_sha256": "a46c0b59be03043aa3408f1542c63605d4a2a7b4d216e93926364bcfff9c7fec",
+      "gate_sha256": "e80ca72cf8fca370d45fad60f99ca93bd3e2767e9c0b208f1adc44b99b6ec49c",
+      "preparation_sha256": "cf02dfdc9e476f238e6a68805f6a8fc700adfe63511314bc451952daea5b51df",
+      "wheel_sha256": "401d1801e9e4b027ed4d1a32cff2809ddc89657224f045cd71bae8da522ac3e9"
+    },
+    "frozen_files_changed": "none: preparation.json, gate.json, evaluation.json, the wheel, c1-deviations.json and cap-sizing.json keep the hashes posted on #51 (verified before this record)",
+    "label": "c1",
+    "recorded_utc": "2026-10-22T12:15:55Z",
+    "ruling_text": "The 30-minute idle launch condition for c1 is waived. Other on-prem host traffic is outside the maintainer's control: opencode/1.19.2 and python-httpx clients on the default key, the client-b and client-a keys, from 10.244.x pod addresses. Launch c1 immediately and record concurrent load throughout.",
+    "what": "the binding idle-window launch condition (30 min with no on-prem host spend-log row) is waived; c1 launches under concurrent load, recorded before and throughout the run"
+  },
+  "deviations": {
+    "authority": "maintainer decision 2026-10-21 recorded in #82: add a per-request output cap, then qualify onprem/glm-5.3-flash again under a new gate frozen before any run",
+    "baselines": [
+      "s2 (glm-structured-2026-10-14/requal/s2, PR #81)",
+      "s1 (PR #80)",
+      "g2 (PR #77)"
+    ],
+    "cap_sizing_sha256": "54e54d867fb9f3a6b3aebdbeb5c183573d3b26f3d69064c14ea4c313fb05ba7a",
+    "citation_past_file_end": "unchanged from s2 and every earlier schedule: Scrutare's citation validation is authoritative. A session whose answer cites past a file's last line (after its one constrained correction) fails as citation_validation, its cell is not complete, and the cell counts against all 36 complete. No exclusion, retry or relaxation. Justification for not changing it: it is a correctness check on the model's evidence, s2 had one such session in 161, and relaxing it would admit invalid evidence",
+    "deviations_from_s2": [
+      {
+        "what": "max_output_tokens absent -> 20000",
+        "why": "the subject of this gate (#82); sizing in cap-sizing.json"
+      },
+      {
+        "what": "source 2026.10.26 (b0dfd0f) -> 2026.10.29 (9b77c9b)",
+        "why": "carries the cap; no other source change"
+      },
+      {
+        "what": "launch condition: stated as binding (s2 waived it)",
+        "why": "s2 ran under the heaviest concurrent load of any schedule because the rule was waived; #82 requires it to be enforced by the waiter"
+      }
+    ],
+    "identical_to_s2": [
+      "model alias, LAN base URL, structured_output json_schema, nare 2026.10.12 (96672e1)",
+      "corpus (byte-identical input hashes), cases, comparison set focused, 3 repeats, 36 cells, related paths, no line_counts, no Ruff capture",
+      "ceiling 200,000, assessor 50,000, max_turns 6, concurrency 3, timeout 1800 s, rounds.max 3, retry policy 3/20 s/6, no overrun fallback",
+      "every gate criterion and the pass rule, byte-identical strings",
+      "checker, export and spend scripts; launcher adapted only to take the label and assert the cap",
+      "launch method: transient systemd user unit, evaluator exec'd as main process"
+    ],
+    "label": "c1",
+    "launch_condition": "launch only after at least 30 consecutive minutes with no on-prem host spend-log row (any client), enforced by the waiter (idle-launch.py, 5-minute polls of /spend/logs/v2), followed by a router fallback re-check. Concurrent load is recorded before launch and over the run window either way. Waiving needs a dated maintainer ruling recorded before launch; the operator may not waive it. If no idle window appears within 6 hours of waiting, nothing launches and the operator reports back",
+    "recorded_utc": "2026-10-22T03:30:34Z",
+    "schedules_allowed": "1 (c1), plus at most 1 re-test (c2). c2 may run only if c1 fails for a diagnosable reason that a documented, prospectively frozen change addresses, under a gate frozen and posted on #51 before it launches, and only on a maintainer decision. Both are published; no post-hoc exclusion; otherwise stop and report not qualified",
+    "status": "frozen; waiting for a 30-minute idle on-prem host window (binding)"
+  },
+  "freezes": {
+    "c1": {
+      "cap_sizing_sha256": "54e54d867fb9f3a6b3aebdbeb5c183573d3b26f3d69064c14ea4c313fb05ba7a",
+      "deviations_sha256": "3ff3fdf0ae936e8d36d3473ca4b03ed0260e3e7e9f5f086c430b17112b351e2d",
+      "evaluation_sha256": "a46c0b59be03043aa3408f1542c63605d4a2a7b4d216e93926364bcfff9c7fec",
+      "experiment_exists": false,
+      "gate_sha256": "e80ca72cf8fca370d45fad60f99ca93bd3e2767e9c0b208f1adc44b99b6ec49c",
+      "label": "c1",
+      "nare": "2026.10.12 96672e1",
+      "preparation_sha256": "cf02dfdc9e476f238e6a68805f6a8fc700adfe63511314bc451952daea5b51df",
+      "process_json_exists": false,
+      "recorded_utc": "2026-10-22T03:30:34Z",
+      "release_tag": "2026.10.29",
+      "source_commit": "9b77c9bfe395b0b8b5f46471205620bed4826df7",
+      "wheel": "scrutare-2026.10.2-py3-none-any.whl",
+      "wheel_sha256": "401d1801e9e4b027ed4d1a32cff2809ddc89657224f045cd71bae8da522ac3e9"
+    }
+  },
+  "launch_ledger": [
+    {
+      "at_utc": "2026-10-22T12:16:16Z",
+      "event": "launch",
+      "idle_rule": "waived by the maintainer 2026-10-22 (issue 51 comment 6340502541, c1-amendment.json)",
+      "label": "c1",
+      "method": "systemd-run --user transient unit scrutare-glm-c1, evaluator exec'd as main process"
+    },
+    {
+      "cgroup": "app.slice/scrutare-glm-c1.service",
+      "event": "launched",
+      "label": "c1",
+      "pgid": 67099,
+      "pid": 67099,
+      "sid": 67099,
+      "started_utc": "2026-10-22T12:16:16Z",
+      "systemd_unit": "scrutare-glm-c1.service"
+    },
+    {
+      "event": "exit",
+      "exec_main_status": 0,
+      "label": "c1",
+      "last_artifact_write_utc": "2026-10-22T14:30:20Z",
+      "observed_inactive_utc": "2026-10-22T14:30:43Z",
+      "unit_result": "success"
+    }
+  ],
+  "public_freeze_comments": {
+    "amendment": "https://github.com/ViviDynamics/scrutare/issues/51#issuecomment-6340502541",
+    "freeze": "https://github.com/ViviDynamics/scrutare/issues/51#issuecomment-6331986053"
+  },
+  "schema_version": 1
+}
