@@ -370,9 +370,13 @@ def decode_session(
     expected_limit: int, expected_root: Path,
     descriptor: DebateInput | AssessmentInput | None = None,
     evidence_version: int = 1, candidate_namespace: str = "",
-
+    discard_on_stop: str | None = None,
 ) -> DecodedSession:
-    """Reconcile fresh findings evidence, attributing candidates only to the caller."""
+    """Reconcile fresh findings evidence, attributing candidates only to the caller.
+
+    A session whose stop reason is ``discard_on_stop`` (a response cut off at the configured
+    output cap) yields no answer: whatever document nare kept is not parsed or validated.
+    """
     try:
         if (not isinstance(persona, str)
                 or not re.fullmatch(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*", persona)):
@@ -383,13 +387,15 @@ def decode_session(
                   else lambda value: _findings(value, persona, evidence_version=evidence_version,
                                              expected_root=expected_root,
                                              candidate_namespace=candidate_namespace))
-        findings = () if evidence.output is None else parser(evidence.output)
+        discarded = discard_on_stop is not None and evidence.stop_reason == discard_on_stop
+        findings = () if evidence.output is None or discarded else parser(evidence.output)
         # Validate saved semantics independently: bool/int equality can conceal corruption.
-        if evidence.saved_output is not None:
+        if evidence.saved_output is not None and not discarded:
             parser(evidence.saved_output)
         return DecodedSession(
             evidence.session_id, evidence.status, evidence.stop_reason, evidence.exit_code,
-            evidence.usage, findings, evidence.output_available, evidence.budget_limit,
+            evidence.usage, findings, evidence.output_available and not discarded,
+            evidence.budget_limit,
             evidence.partial, evidence.nare_version, evidence.contract, evidence.turns,
         )
     except CitationValidationError:
@@ -402,7 +408,7 @@ def decode_session(
 
 def decode_reanchor_session(
     stdout: bytes, session_document: bytes | None, *, descriptor: PersonaReanchorInput,
-    exit_code: int, expected_limit: int,
+    exit_code: int, expected_limit: int, discard_on_stop: str | None = None,
 ) -> DecodedReanchorSession:
     """Reconcile fresh anchor-only evidence against the descriptor's exact originals."""
     try:
@@ -413,14 +419,16 @@ def decode_reanchor_session(
             stdout, session_document, exit_code=exit_code, expected_limit=expected_limit,
             expected_root=descriptor.inputs.root,
         )
-        corrections = () if evidence.output is None else parse_reanchor_output(
+        discarded = discard_on_stop is not None and evidence.stop_reason == discard_on_stop
+        corrections = () if evidence.output is None or discarded else parse_reanchor_output(
             evidence.output, descriptor.requests,
         )
-        if evidence.saved_output is not None:
+        if evidence.saved_output is not None and not discarded:
             parse_reanchor_output(evidence.saved_output, descriptor.requests)
         return DecodedReanchorSession(
             evidence.session_id, evidence.status, evidence.stop_reason, evidence.exit_code,
-            evidence.usage, corrections, evidence.output_available, evidence.budget_limit,
+            evidence.usage, corrections, evidence.output_available and not discarded,
+            evidence.budget_limit,
             evidence.partial, evidence.nare_version, evidence.contract, evidence.turns,
         )
     except (ValueError, TypeError, KeyError, OverflowError, RecursionError):

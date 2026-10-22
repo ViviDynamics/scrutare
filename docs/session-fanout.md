@@ -68,6 +68,11 @@ any session launches. When any rail opts in, every rail in `fanout.json`
 records `structured_output`, with `null` where it is off, as in `config.json`. Each session
 counts nare's constrained-turn `progress` records into `result.json`; such a
 record on a session that did not ask for the constraint is a protocol failure.
+A rail with [`max_output_tokens: N`](config.md#per-request-output-token-cap-opt-in)
+adds `--max-tokens N` to each of its sessions, and records the cap in
+`fanout.json` like `structured_output`. A session whose nare stop reason is
+`max_tokens` on a capped rail fails as `output_cap`, with complete accounting
+and no findings or corrections.
 Scrutare passes `--contract` equal to the inspected contract: 1 for releases
 before 2026.10.7, 2 from then. Contract 2 only changes when `ask` blocks, and
 these sessions offer only `read`.
