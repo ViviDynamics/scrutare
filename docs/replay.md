@@ -95,7 +95,7 @@ exactly once with the same value exactly when the rail sets a cap
 exactly when the session failed as `output_cap`, a cut-off session must carry no
 findings, corrections or available output, and `reached` must agree with the
 stop reason in the retained `stdout.jsonl` (`max_output_tokens_result_disagrees`,
-invalid). A launched session without `result.json`, a cut-off session without
+invalid). A launched session without `result.json`, a started session without
 `stdout.jsonl`, or a capped run without any session attempt is
 `max_output_tokens_evidence_missing` (incomplete). Runs that never set a cap
 are not audited.
