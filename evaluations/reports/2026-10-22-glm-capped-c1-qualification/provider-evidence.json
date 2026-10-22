@@ -49,6 +49,7 @@
     },
     "samples_every_15_minutes": {
       "by": "user agent | key alias or proxy master key | model group | base URL",
+      "limits": "each sample is read at its window close, so in-flight requests are missed (a lower bound); c1_running is the unit state at read time, so the first sample (12:02-12:17Z) is mostly pre-launch and the last (14:17-14:32Z) reads false although the run ended at 14:30:20Z; the run-window re-read is authoritative",
       "private_sha256": "653dc0266493fec7da2a6a61fbfcbfe24742b6947c831a5bedcc903d2f7255a7",
       "samples": [
         {
@@ -1044,6 +1045,8 @@
     ],
     "attempted_fallbacks_nonzero": 0,
     "attempted_retries_nonzero": 0,
+    "base_url_note": "all_rows_served_by strips a trailing slash: the python-httpx client sends the same Spark base URL with one, which the spend script counts as \"paid provider rows\" by string comparison",
+    "base_url_with_trailing_slash_rows": 45,
     "by_client_and_key": {
       "opencode | proxy master key (shared by this evaluator, opencode and the unidentified python-httpx client) | http://192.168.3.40:8045/v1": {
         "completion_tokens": 3689,
@@ -1100,7 +1103,21 @@
       "status": "success",
       "user_agent": "python-httpx2"
     },
-    "rows": 604
+    "rows": 604,
+    "spend_script_summary": {
+      "rows_all_keys": 604,
+      "rows_this_key": 604,
+      "this_key_attempted_fallbacks": {
+        "0": 604
+      },
+      "this_key_by_model_group_model_api_base_provider_status": {
+        "spark/glm-5.3-flash | openai/glm-5.3-flash | http://192.168.3.40:8045/v1 | openai | failure": 1,
+        "spark/glm-5.3-flash | openai/glm-5.3-flash | http://192.168.3.40:8045/v1 | openai | success": 558,
+        "spark/glm-5.3-flash | openai/glm-5.3-flash | http://192.168.3.40:8045/v1/ | openai | success": 45
+      },
+      "this_key_paid_provider_rows": 45
+    },
+    "spend_script_summary_sha256": "a547a2386edc335d44e5c37e49e54156f5ea13082c9ade182b5669220ffb6947"
   },
   "upstream_timeouts": "unchanged from s2 (LiteLLM router and request timeouts and the LAN WAF proxy 3600 s; vLLM role none; nare 600 s per stream read); not re-read for c1"
 }

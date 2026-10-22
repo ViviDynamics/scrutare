@@ -206,3 +206,7 @@ def test_every_spend_row_was_served_by_the_spark_deployment_without_fallback():
     assert reread['all_rows_served_by'] == ['openai/glm-5.3-flash at http://192.168.3.40:8045/v1']
     assert reread['model_groups'] == {'spark/glm-5.3-flash': reread['rows']}
     assert reread['attempted_fallbacks_nonzero'] == 0 and reread['attempted_retries_nonzero'] == 0
+    # The spend script's "paid provider" count is the trailing-slash string mismatch, nothing else.
+    assert reread['spend_script_summary']['this_key_paid_provider_rows'] == (
+        reread['base_url_with_trailing_slash_rows'])
+    assert reread['spend_script_summary']['this_key_attempted_fallbacks'] == {'0': reread['rows']}

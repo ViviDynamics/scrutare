@@ -7,7 +7,7 @@
 - **Aggregate defect cells:** only 4 of 6 produced valid evidence (this item failed; `s2` had 6).
 - **Five sessions out of 161 decided it.** Each was in a different cell, and they had four different causes:
   - two discovery citations past a file's end;
-  - one discovery answer whose citation metadata Scrutare refused;
+  - one discovery answer with a placeholder citation content hash, which Scrutare refused;
   - one stream that LiteLLM aborted for repetition;
   - one assessor that overran its budget on a request cut off at the cap.
 - **No session timed out.**
@@ -35,13 +35,14 @@ The gate also states the following up front:
 - **Citation past a file's end:** treated as in `s2`. The session fails citation validation, and its cell counts against 36 of 36.
 - **Schedules allowed:** one, plus at most one re-test (`c2`). `c2` may run only on a maintainer decision, under a gate posted before it launches.
 
-**Cap sizing** (`c1/cap-sizing.json`). In `s2`'s retained session streams there are 536 model requests, one per nare cost event. They agree with the 537 spend-log rows `s2` logged for this evaluator.
+**Cap sizing** (`c1/cap-sizing.json`). In `s2`'s retained session streams there are 536 model requests, one per nare cost event. `s2` logged 537 spend-log rows for this evaluator: the same 536, plus the runaway request, which produced no cost event because the timeout killed its session.
 - The largest request in any completed session was 12,387 completion tokens (an assessor). p99 was 5,882 and p50 was 325. 20,000 is 1.61x that maximum.
 - The runaway request decoded at 25.2 tok/s. At that rate a repeat would reach the cap after about 794 s, inside the 1800 s timeout.
 
 **The launch rule was waived again.** The waiter (`scrutare-glm-c1-wait.service`) polled the spend log 72 times, from 03:30:58Z to its 6 h deadline at 09:31:16Z. It never launched: every poll saw 4 to 46 Spark rows in the previous 30 minutes, mostly from opencode and an unidentified `python-httpx` client.
 - The maintainer then waived the rule, in a ruling dated 2026-10-22. It was recorded in `c1/amendment.json` and posted on #51 before launch ([comment](https://github.com/ViviDynamics/scrutare/issues/51#issuecomment-6340502541)).
 - The amendment is a separate file, so every frozen file keeps its posted hash.
+- One correction to its evidence note: this operator's pre-freeze cap smoke (`python-httpx2`, 03:25 to 03:28Z) appears in the first five polls, not only the first. The amendment's hash is posted, so the file is left as it is.
 - `c1` launched at 12:16:16Z as `scrutare-glm-c1.service`.
 
 ## Gate
@@ -63,12 +64,12 @@ The gate also states the following up front:
 | Cell | Session | Cause |
 | --- | --- | --- |
 | `security-auth-order/aggregate/3` | discovery `junior-dev` | **Citation past a file's end** (by 1 line). This is an aggregate defect cell, so it fails that item. |
-| `tests-consumer-fixture/aggregate/3` | discovery `devops` | **Stream aborted for repetition.** LiteLLM ended the request mid-stream with HTTP 500, "The model is repeating the same chunk", after 2,328 completion tokens. nare reported a provider error. This is not an upstream-unavailability 5xx, so it is not eligible for a rerun. This is an aggregate defect cell, so it fails that item. |
-| `security-auth-order/focused3/3` | discovery `senior-dev` | **Answer evidence refused.** nare accepted the JSON shape, but a citation lacked the complete revision and content hash that Scrutare's evidence parser requires, so the session failed as `protocol`. |
+| `tests-consumer-fixture/aggregate/3` | discovery `devops` | **Stream aborted for repetition.** LiteLLM ended the request mid-stream with HTTP 500, "The model is repeating the same chunk", after 2,328 completion tokens. nare reported `stream provider error` with code 500. The gate's wording makes a retained provider 5xx eligible for a rerun, but Scrutare's transient classifier matches only nare's `chat completion failed with HTTP 5xx` form, so no rerun was offered (#86). A rerun could not have changed the outcome: the gate also requires every cell to complete on its first attempt. This is an aggregate defect cell, so it fails that item. |
+| `security-auth-order/focused3/3` | discovery `senior-dev` | **Answer evidence refused.** nare accepted the JSON shape, and the citation's revision was the correct head revision. But its content hash was a placeholder string, not a SHA-256, so Scrutare's evidence parser refused it and the session failed as `protocol`. No constrained correction was involved. |
 | `tests-consumer-fixture/focused3/1` | discovery `devops` | **Citation past a file's end** (by 2 lines). |
 | `tests-consumer-fixture/focused1/2` | assessor | **Assessor overrun, on a request cut off at the cap.** See below. |
 
-The two aggregate cells decide the aggregate item. The other three cells break 36 of 36.
+All five cells break 36 of 36, and the two aggregate cells also fail the aggregate item. Four of the five are accounting-incomplete, which is the usual record for a failed discovery session. The exception is the assessor cell, whose accounting is complete.
 
 ## The cap
 
@@ -96,7 +97,7 @@ From `c1/session-diagnosis.json`. The other columns come from the `s2` and `s1` 
 | Discovery over its grant | 0 | 0 | 10 | 3 |
 | Findings schema failure | 0 | 0 | 0 | 9 |
 | Citation past a file's end | 2 | 1 | 2 | 1 |
-| Answer evidence refused (citation metadata) | 1 | 0 | 0 | 0 |
+| Answer evidence refused (placeholder content hash) | 1 | 0 | 0 | 0 |
 | Stream aborted for repetition (LiteLLM) | 1 | 0 | 0 | 0 |
 | nare: reasoning but no answer | 0 | 0 | 1 | 0 |
 
@@ -104,7 +105,7 @@ From `c1/session-diagnosis.json`. The other columns come from the `s2` and `s1` 
   - The 16 completed assessors used 20,989 to 43,139 tokens against 50,000.
   - The largest attempt used 104,505 tokens against 200,000.
 - **Sessions finished sooner than in `s2`.** Measured from the first to the last stream event, completed sessions took a median of 290 s, a nearest-rank p90 of 530 s, and at most 1,034 s. 9 ran past 600 s and none passed 1200 s.
-- **The constraint fired** in 38 sessions, one constrained correction each: 37 completed and 1 was a citation refusal. No session failed the findings schema.
+- **The constraint fired** in 38 sessions, one constrained correction each: 37 completed and 1 cited past a file's end. No session failed the findings schema.
 
 ## Detection
 
@@ -131,7 +132,7 @@ The run took 2 h 14 min of wall clock for 36 cells, from 12:16:16Z to 14:30:20Z.
 
 The proxy logged 533 requests from this evaluator (nare on the proxy master key) in the window:
 - the 532 turns in the session streams, whose 1,924,990 input and 574,191 output tokens equal recorded cell usage;
-- plus the aborted request, whose 3,824 prompt and 2,328 completion tokens nare never received as usage. Its cell is marked accounting-incomplete.
+- plus the aborted request, whose 3,824 prompt and 2,328 completion tokens nare never received as usage.
 
 **Concurrent load** was recorded before launch, every 15 minutes during the run (by user agent, key alias and base URL), and in a full re-read of the window after exit (`provider-evidence.json`).
 - **The hour before launch:** 45 other Spark requests, 36 from `python-httpx` and 9 from opencode.
@@ -140,6 +141,7 @@ The proxy logged 533 requests from this evaluator (nare on the proxy master key)
   - the unidentified `python-httpx` client: 45 requests (3.64 million prompt and 121,580 completion tokens);
   - opencode: 26 requests (2.61 million prompt tokens).
 - Every 15-minute sample during the run saw other clients.
+- The samples are a lower bound. Each was read when its window closed, so requests still in flight were missed: they count 474 evaluator rows against the re-read's 533. The first sample (12:02 to 12:17Z) is mostly from before launch. The full re-read after exit is the authoritative count.
 - The load was lighter than in `s2`'s window, where opencode alone sent 209 requests, but `c1` still did not run on an idle engine.
 
 ## Spend and fallbacks
@@ -148,7 +150,7 @@ The proxy logged 533 requests from this evaluator (nare on the proxy master key)
 
 **Run window.** All 604 spend-log rows that started from 12:16 to 14:32Z, on every key, were served by that deployment, with 0 attempted fallbacks and 0 retries. One row is a failure: the aborted request above.
 
-No paid provider was called. LiteLLM's nominal attribution for the self-hosted group is not billed by any provider.
+No paid provider was called. One caveat about the spend script: its "paid provider rows" count (45) is a string comparison against the base URL without a trailing slash. Those 45 rows are the `python-httpx` client's, which use the same Spark base URL with a trailing slash. `provider-evidence.json` normalizes the slash and reports the count separately (`base_url_with_trailing_slash_rows`). LiteLLM's nominal attribution for the self-hosted group is not billed by any provider.
 
 **Live smoke of the cap** (released wheel 2026.10.29, 03:25 to 03:28Z, before the freeze). The smoke used two personas:
 - one on the default rail with the cap at 20,000, which completed;
