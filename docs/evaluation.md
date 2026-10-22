@@ -208,6 +208,19 @@ completed. One assessor request generated for 30 minutes without an answer
 until the timeout, and one discovery session cited past a file's end. No session overran its budget or failed the
 schema, and external spend was zero. No further schedule may run under that gate.
 
+A [new gate, schedule c1](../evaluations/reports/2026-10-22-glm-capped-c1-qualification/README.md),
+kept s2's profile and #51's criteria and added a per-request output cap
+(`max_output_tokens: 20000`, #82), sized from s2's largest completed request
+(12,387 tokens). It launched under concurrent load after the maintainer waived
+the idle-window rule, following 6 hours without an idle window. It did not
+qualify: 31 of 36 cells completed and all 6 assessed defect cells completed their
+assessor, but 4 of 6 aggregate defect cells produced evidence. No session timed
+out. The failures were two citations past a file's end, one refused citation
+record, one stream that LiteLLM aborted for repetition, and one assessor whose
+request was cut off at the cap as its budget ran out (recorded as a budget
+overrun; #84). External spend was zero. The gate allows one re-test only on a
+maintainer decision.
+
 Ordinary CI uses `--evidence-kind offline` and deterministic provider substitutions
 to verify orchestration and scoring. Offline metrics measure software behavior only.
 A real baseline requires explicit model jobs and completed independent human

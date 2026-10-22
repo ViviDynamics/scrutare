@@ -1,0 +1,35 @@
+{
+  "label": "c1",
+  "recorded_utc": "2026-10-22T12:15:55Z",
+  "what": "the binding idle-window launch condition (30 min with no Spark spend-log row) is waived; c1 launches under concurrent load, recorded before and throughout the run",
+  "authority": "maintainer ruling dated 2026-10-22, relayed via chat by the coordinator",
+  "ruling_text": "The 30-minute idle launch condition for c1 is waived. Other Spark traffic is outside the maintainer's control: opencode/1.19.2 and python-httpx clients on the default key, the dettmore-ci-qare and odysseus keys, from 10.244.x pod addresses. Launch c1 immediately and record concurrent load throughout.",
+  "evidence": {
+    "waiter": "scrutare-glm-c1-wait.service, exited at its 6 h deadline without launching",
+    "polls": 72,
+    "first_poll_utc": "2026-10-22T03:30:58Z",
+    "last_poll_utc": "2026-10-22T09:26:16Z",
+    "deadline_utc": "2026-10-22T09:31:16Z",
+    "polls_with_spark_traffic": 72,
+    "spark_rows_30min_range": [
+      4,
+      46
+    ],
+    "clients_seen": [
+      "opencode",
+      "python-httpx",
+      "python-httpx2"
+    ],
+    "note": "python-httpx2 in the first poll is this operator's live cap smoke (03:25 to 03:28Z), before the freeze",
+    "private_poll_log": "c1-wait.jsonl"
+  },
+  "frozen_files_changed": "none: preparation.json, gate.json, evaluation.json, the wheel, c1-deviations.json and cap-sizing.json keep the hashes posted on #51 (verified before this record)",
+  "freeze_hashes_verified": {
+    "preparation_sha256": "cf02dfdc9e476f238e6a68805f6a8fc700adfe63511314bc451952daea5b51df",
+    "gate_sha256": "e80ca72cf8fca370d45fad60f99ca93bd3e2767e9c0b208f1adc44b99b6ec49c",
+    "evaluation_sha256": "a46c0b59be03043aa3408f1542c63605d4a2a7b4d216e93926364bcfff9c7fec",
+    "wheel_sha256": "401d1801e9e4b027ed4d1a32cff2809ddc89657224f045cd71bae8da522ac3e9",
+    "deviations_sha256": "3ff3fdf0ae936e8d36d3473ca4b03ed0260e3e7e9f5f086c430b17112b351e2d",
+    "cap_sizing_sha256": "54e54d867fb9f3a6b3aebdbeb5c183573d3b26f3d69064c14ea4c313fb05ba7a"
+  }
+}
