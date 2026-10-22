@@ -124,23 +124,17 @@ def _session_records(run_dir: Path) -> list[Path]:
     return sorted(found)
 
 
-def _opted_in(config_data: object) -> bool:
+def _opted_in(config_data: object, field: str = "structured_output") -> bool:
     models = config_data.get("models") if isinstance(config_data, dict) else None
     if not isinstance(models, dict):
         return False
     overrides = models.get("overrides")
     rails = [models.get("default"), *(overrides.values() if isinstance(overrides, dict) else ())]
-    return any(isinstance(rail, dict) and rail.get("structured_output") is not None
-               for rail in rails)
+    return any(isinstance(rail, dict) and rail.get(field) is not None for rail in rails)
 
 
-def _structured_output_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
-    """Check that each session recorded exactly the constraint its configured rail asked for.
-
-    Runs that never opted in and whose sessions never recorded a constraint are not audited,
-    so earlier bundles replay as before.
-    """
-    attempts = _session_records(run_dir)
+def _invocations(attempts: list[Path]) -> list[tuple[Path, object]]:
+    """Each launched attempt with its decoded invocation, or None when it is unreadable."""
     invocations: list[tuple[Path, object]] = []
     for attempt in attempts:
         if not os.path.lexists(attempt / "invocation.json"):
@@ -152,6 +146,129 @@ def _structured_output_issues(run_dir: Path, config_data: object) -> tuple[Audit
                 read_artifact(attempt / "invocation.json"), artifact="invocation.json")))
         except ReplayError:
             invocations.append((attempt, None))
+    return invocations
+
+
+def _terminal_stop(stdout: bytes) -> tuple[bool, object]:
+    """Whether the retained stream ended in nare's result record, and its stop reason."""
+    terminal: object = None
+    for line in stdout.split(b"\n"):
+        if line.strip():
+            try:
+                terminal = json.loads(line)
+            except ValueError:
+                terminal = None
+    if isinstance(terminal, dict) and terminal.get("type") == "result":
+        return True, terminal.get("stop_reason")
+    return False, None
+
+
+def _max_output_tokens_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
+    """Check that each session passed and recorded exactly the cap its configured rail set.
+
+    Runs that never set a cap and whose sessions never recorded one are not audited, so
+    earlier bundles replay as before. A cut-off session must say so, and carry no answer.
+    """
+    attempts = _session_records(run_dir)
+    invocations = _invocations(attempts)
+
+    def recorded(document: object) -> bool:
+        if not isinstance(document, dict):
+            return False
+        rail, argv = document.get("rail"), document.get("argv")
+        return ((isinstance(rail, dict) and "max_output_tokens" in rail)
+                or (isinstance(argv, list) and "--max-tokens" in argv))
+
+    opted_in = _opted_in(config_data, "max_output_tokens")
+    if not opted_in and not any(recorded(document) for _, document in invocations):
+        return ()
+    if opted_in and not attempts:
+        return (AuditIssue("max_output_tokens_evidence_missing", "sessions", "incomplete"),)
+    try:
+        config = parse_config(json.dumps(config_data))
+    except (ConfigError, TypeError, ValueError):
+        return (AuditIssue("max_output_tokens_config_invalid", "config.json.models", "invalid"),)
+
+    def key(rail: Any) -> tuple[object, ...]:
+        return (rail.provider, rail.model, rail.base_url, rail.max_output_tokens)
+
+    configured = {key(rail)
+                  for rail in (config.models.default, *(r for _, r in config.models.overrides))}
+    personas = {p if isinstance(p, str) else p.name for p in config.personas}
+    issues = []
+    for attempt, document in invocations:
+        where = attempt.relative_to(run_dir).as_posix()
+        try:
+            if not isinstance(document, dict):
+                raise ValueError
+            rail, argv = document["rail"], document["argv"]
+            if not isinstance(rail, dict) or not isinstance(argv, list):
+                raise ValueError
+            cap = rail.get("max_output_tokens")
+            if "max_output_tokens" in rail and (type(cap) is not int or cap <= 0):
+                raise ValueError
+            recorded_rail = (rail.get("provider"), rail.get("model"), rail.get("base_url"), cap)
+            persona = document.get("persona")
+            if recorded_rail not in ({key(config.models.for_persona(persona))}
+                                     if persona in personas else configured):
+                raise ValueError
+            flags = [index for index, value in enumerate(argv) if value == "--max-tokens"]
+            if (len(flags) != (cap is not None)
+                    or any(argv[index + 1:index + 2] != [str(cap)] for index in flags)):
+                raise ValueError
+        except (ValueError, KeyError, TypeError):
+            issues.append(AuditIssue("max_output_tokens_unrecorded",
+                                     f"{where}/invocation.json", "invalid"))
+            continue
+        if not os.path.lexists(attempt / "result.json"):
+            issues.append(AuditIssue("max_output_tokens_evidence_missing",
+                                     f"{where}/result.json", "incomplete"))
+            continue
+        try:
+            outcome = decode_artifact(read_artifact(attempt / "result.json"),
+                                      artifact="result.json")
+        except ReplayError:
+            outcome = None
+        if not isinstance(outcome, dict):
+            valid = False
+        elif cap is None:
+            valid = "max_output_tokens" not in outcome and outcome.get("reason") != "output_cap"
+        else:
+            record = outcome.get("max_output_tokens")
+            reached = record.get("reached") if isinstance(record, dict) else None
+            valid = (isinstance(record, dict) and set(record) == {"limit", "reached"}
+                     and type(record["limit"]) is int and record["limit"] == cap
+                     and type(reached) is bool
+                     and reached == (outcome.get("reason") == "output_cap")
+                     and (not reached or (outcome.get("status") == "failed"
+                                          and outcome.get("output_available") is False
+                                          and outcome.get("findings", []) == []
+                                          and outcome.get("corrections", []) == [])))
+            if valid:
+                try:
+                    finished, stop = _terminal_stop(read_artifact(attempt / "stdout.jsonl"))
+                except ReplayError:
+                    if reached:
+                        # A cut-off session reached nare's result, so its stream was captured.
+                        issues.append(AuditIssue("max_output_tokens_evidence_missing",
+                                                 f"{where}/stdout.jsonl", "incomplete"))
+                        continue
+                    finished, stop = False, None
+                valid = (stop == "max_tokens") == bool(reached) if finished else not reached
+        if not valid:
+            issues.append(AuditIssue("max_output_tokens_result_disagrees",
+                                     f"{where}/result.json", "invalid"))
+    return tuple(issues)
+
+
+def _structured_output_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
+    """Check that each session recorded exactly the constraint its configured rail asked for.
+
+    Runs that never opted in and whose sessions never recorded a constraint are not audited,
+    so earlier bundles replay as before.
+    """
+    attempts = _session_records(run_dir)
+    invocations = _invocations(attempts)
 
     def recorded(document: object) -> bool:
         if not isinstance(document, dict):
@@ -335,7 +452,8 @@ def replay_run(run_dir: Path) -> ReplayResult:
         except (OSError, ValueError, TypeError, KeyError):
             raise ReplayError("findings: captured citation validation disagrees") from None
     issues = (findings_issues + _yaml_issues(run_dir, policy) + _context_issues(run_dir, policy)
-              + _structured_output_issues(run_dir, config_data))
+              + _structured_output_issues(run_dir, config_data)
+              + _max_output_tokens_issues(run_dir, config_data))
     posting = inspect_posting(run_dir)
     posted_sha256 = posting.verdict_sha256
     raw = None
