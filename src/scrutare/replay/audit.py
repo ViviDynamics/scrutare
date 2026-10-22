@@ -151,13 +151,11 @@ def _invocations(attempts: list[Path]) -> list[tuple[Path, object]]:
 
 def _terminal_stop(stdout: bytes) -> tuple[bool, object]:
     """Whether the retained stream ended in nare's result record, and its stop reason."""
-    terminal: object = None
-    for line in stdout.split(b"\n"):
-        if line.strip():
-            try:
-                terminal = json.loads(line)
-            except ValueError:
-                terminal = None
+    lines = [line for line in stdout.split(b"\n") if line.strip()]
+    try:
+        terminal = decode_artifact(lines[-1], artifact="stdout.jsonl") if lines else None
+    except (ReplayError, RecursionError):
+        terminal = None
     if isinstance(terminal, dict) and terminal.get("type") == "result":
         return True, terminal.get("stop_reason")
     return False, None
@@ -248,8 +246,9 @@ def _max_output_tokens_issues(run_dir: Path, config_data: object) -> tuple[Audit
                 try:
                     finished, stop = _terminal_stop(read_artifact(attempt / "stdout.jsonl"))
                 except ReplayError:
-                    if reached:
-                        # A cut-off session reached nare's result, so its stream was captured.
+                    if reached or outcome.get("nare_status") is not None or outcome.get(
+                            "status") in ("complete", "partial"):
+                        # A session that reached nare's result had its stream captured.
                         issues.append(AuditIssue("max_output_tokens_evidence_missing",
                                                  f"{where}/stdout.jsonl", "incomplete"))
                         continue

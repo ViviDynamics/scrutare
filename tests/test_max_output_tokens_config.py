@@ -14,7 +14,7 @@ def test_the_cap_is_off_by_default_and_absent_from_every_rail_record():
     config = parse_config(OPENAI + "}\n  overrides:\n    security: {model: other}\n")
     assert config.models.default.max_output_tokens is None
     assert config.models.for_persona("security").max_output_tokens is None
-    assert not config.models.max_output_tokens
+    assert not config.models.caps_output
     assert config.to_dict()["models"] == {
         "default": {"provider": "openai", "base_url": "http://localhost:8000/v1", "model": "m"},
         "overrides": {"security": {"provider": "openai", "base_url": "http://localhost:8000/v1",

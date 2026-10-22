@@ -84,7 +84,7 @@ class ModelSettings:
                    for rail in (self.default, *(rail for _, rail in self.overrides)))
 
     @property
-    def max_output_tokens(self) -> bool:
+    def caps_output(self) -> bool:
         """Whether any rail caps its output; then every rail records the field explicitly."""
         return any(rail.max_output_tokens is not None
                    for rail in (self.default, *(rail for _, rail in self.overrides)))
@@ -92,7 +92,7 @@ class ModelSettings:
     def rail_record(self, rail: ModelRail) -> dict[str, Any]:
         """One rail recorded with every opt-in field any rail of these settings uses."""
         return rail.record(structured_output=self.structured_output,
-                           max_output_tokens=self.max_output_tokens)
+                           max_output_tokens=self.caps_output)
 
     def record(self) -> dict[str, Any]:
         return {"default": self.rail_record(self.default),

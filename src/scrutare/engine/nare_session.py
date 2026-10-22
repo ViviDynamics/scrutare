@@ -12,7 +12,7 @@ import stat
 import tempfile
 from collections.abc import Iterator
 from contextlib import ExitStack, contextmanager
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 from typing import BinaryIO, Literal, TypedDict, TypeVar
@@ -535,6 +535,8 @@ async def _run_session(
             if evidence.corrupt:
                 raise SessionProtocolError("session: corrupted event evidence")
             constrained = constrained_turns(evidence.stdout, rail.structured_output)
+            # Nothing nare kept from a session cut off at the cap is parsed or validated.
+            cap_stop = "max_tokens" if rail.max_output_tokens is not None else None
             if isinstance(descriptor, PersonaReanchorInput):
                 try:
                     validate_prepared_inputs(descriptor.inputs)
@@ -544,6 +546,7 @@ async def _run_session(
                 decoded = decode_reanchor_session(
                     evidence.stdout, saved, descriptor=descriptor,
                     exit_code=exit_code, expected_limit=lease.limit_tokens,
+                    discard_on_stop=cap_stop,
                 )
             else:
                 decoded = decode_session(evidence.stdout, saved, persona=lease.persona,
@@ -554,7 +557,8 @@ async def _run_session(
                                                                    (DebateInput, AssessmentInput))
                                                      else None),
                                          evidence_version=evidence_version(prepared_root),
-                                         candidate_namespace=str(artifact_directory))
+                                         candidate_namespace=str(artifact_directory),
+                                         discard_on_stop=cap_stop)
             if decoded.status is not None and (
                     decoded.nare_version != capability.version
                     or decoded.contract != capability.contract):
@@ -567,11 +571,8 @@ async def _run_session(
             complete = decoded.status != "error" or decoded.stop_reason == "budget"
             if rail.max_output_tokens is not None and decoded.stop_reason == "max_tokens":
                 # A response cut off at the configured cap is never an answer, whatever nare
-                # kept from earlier turns. It completed and reported its usage.
+                # kept from earlier turns (decoding discarded it). It reported its usage.
                 status, reason, complete = "failed", "output_cap", True
-                decoded = (replace(decoded, corrections=(), output_available=False)
-                           if isinstance(decoded, DecodedReanchorSession)
-                           else replace(decoded, findings=(), output_available=False))
             elif decoded.status == "done":
                 status, reason = ("partial", "budget") if decoded.partial else ("complete", "done")
             elif decoded.status == "error" and decoded.stop_reason == "budget":

@@ -167,3 +167,30 @@ def test_a_capped_configuration_without_session_evidence_is_incomplete(tmp_path)
     result = replay_run(tmp_path)
     assert codes(result) == [("max_output_tokens_evidence_missing", "sessions")]
     assert result.exit_code == 2
+
+
+def test_a_started_session_without_its_stream_is_incomplete(tmp_path):
+    bundle(tmp_path)
+    configure(tmp_path, {"default": CAP})
+    directory = session(tmp_path, CAP)
+    record = json.loads((directory / "result.json").read_bytes())
+    record.update(status="failed", reason="provider", nare_status="error")
+    (directory / "result.json").write_text(json.dumps(record))
+    (directory / "stdout.jsonl").unlink()
+    assert codes(replay_run(tmp_path)) == [
+        ("max_output_tokens_evidence_missing", f"{WHERE}/stdout.jsonl")]
+
+
+def test_a_deeply_nested_stream_line_is_an_audit_issue_not_a_crash(tmp_path):
+    bundle(tmp_path)
+    configure(tmp_path, {"default": CAP})
+    directory = session(tmp_path, CAP)
+    (directory / "stdout.jsonl").write_text("[" * 100000 + "]" * 100000 + "\n")
+    # No readable result record, as after a timeout: nothing contradicts reached=false.
+    assert codes(replay_run(tmp_path)) == []
+    record = json.loads((directory / "result.json").read_bytes())
+    record.update(status="failed", reason="output_cap", output_available=False, findings=[])
+    record["max_output_tokens"]["reached"] = True
+    (directory / "result.json").write_text(json.dumps(record))
+    assert codes(replay_run(tmp_path)) == [
+        ("max_output_tokens_result_disagrees", f"{WHERE}/result.json")]

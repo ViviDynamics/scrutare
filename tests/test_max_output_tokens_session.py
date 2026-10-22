@@ -172,3 +172,18 @@ def test_a_cut_off_anchor_correction_yields_no_corrections(capture, tmp_path):
     assert outcome.accounting_complete and ledger.usage.total == 60 + 14 + 6
     assert recorded(attempt, "result.json")["max_output_tokens"] == {"limit": 50,
                                                                      "reached": True}
+
+
+def test_a_stale_document_nare_kept_is_never_parsed_when_the_cap_cut_off(capture, tmp_path):
+    # An earlier tool turn's document that would fail validation must not mask the cap.
+    stale = {"findings": [{"file": "src/app.py", "line": "not a line"}]}
+    outcome, ledger, attempt = launch(capture, cut_off(tmp_path, output=stale), CAPPED)
+    assert (outcome.status, outcome.reason) == ("failed", "output_cap")
+    assert outcome.accounting_complete and ledger.usage == outcome.usage
+    assert recorded(attempt, "result.json")["max_output_tokens"]["reached"] is True
+
+
+def test_without_the_cap_a_stale_document_is_still_validated(capture, tmp_path):
+    stale = {"findings": [{"file": "src/app.py", "line": "not a line"}]}
+    outcome, _, _ = launch(capture, cut_off(tmp_path, output=stale), OFF)
+    assert (outcome.status, outcome.reason) == ("failed", "protocol")
