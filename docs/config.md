@@ -32,6 +32,7 @@ Errors identify a field path or YAML location without echoing field values.
 | `models.default.base_url` | HTTP or HTTPS URL with a host, or `null` | `null` |
 | `models.default.model` | Explicit nonempty string | Required |
 | `models.default.structured_output` | `json_schema` (requires `provider: openai`), or `null` | `null` (off) |
+| `models.default.max_output_tokens` | Positive integer, or `null` | `null` (off) |
 | `models.overrides` | Mapping from a configured persona name to partial model settings | `{}` |
 | `verdict.blocking_categories` | List drawn from the fixed vocabulary | `correctness`, `security`, `regression` |
 | `verdict.advisory_categories` | List drawn from the fixed vocabulary | `style`, `consistency`, `docs` |
@@ -148,6 +149,51 @@ reported). [Replay](replay.md) reports `structured_output_unrecorded` or
 match a configured rail, and `structured_output_evidence_missing` as incomplete
 when a launched session's record is missing or an opted-in run has no session
 attempt.
+
+## Per-request output token cap (opt-in)
+
+Without a cap, a single model request can generate until the session timeout
+kills it: nare's OpenAI transport sends no `max_tokens` unless it is asked to,
+and an OpenAI-compatible server such as vLLM then bounds the request only by
+the context window. A rail can cap every request instead:
+
+```yaml
+models:
+  default:
+    provider: openai
+    base_url: https://litellm.example/v1
+    model: onprem/glm-5.3-flash
+    max_output_tokens: 12000
+```
+
+Every nare session on that rail is launched with `--max-tokens 12000`, and nare
+sends `max_tokens: 12000` on every request of the session, tool turns included.
+The session's token budget (`budgets`) still bounds the whole session; the cap
+bounds each request.
+
+A request cut off at the cap (OpenAI `finish_reason: length`, which nare reports
+as stop reason `max_tokens`) fails its session with reason `output_cap`. nare
+does not run tool calls from a cut-off turn, and Scrutare never uses any answer
+from a capped session, including a schema-valid document an earlier tool turn
+carried. The cut-off response reported its usage, so the session's tokens stay
+in the review's shared accounting in full (`accounting_complete: true`). A
+capped session is then handled like any other failed session of its phase
+(for discovery or assessment, the review ends without a verdict). It is not a
+budget overrun, so an opt-in overrun
+`fallback` never applies to it. It is never a silent partial answer.
+
+The setting is off by default, accepted on either provider, and inherited by
+overrides like the other rail fields; an override can set it alone or clear an
+inherited value with `null`. Every supported nare release (2026.10.0 and newer)
+accepts `--max-tokens`, so no capability check is needed. With the cap off, a
+backend's own length stop remains a `provider` failure, as before.
+
+When no rail sets it, the canonical configuration, rail records,
+`invocation.json` and `result.json` are byte-identical to earlier releases.
+When any rail sets it, every rail in `config.to_dict()` and `fanout.json`
+records `max_output_tokens` (with `null` where it is off), each session's
+`invocation.json` records it in `rail` and its argv, and `result.json` records
+`{"limit": N, "reached": true|false}`. [Replay](replay.md) audits these records.
 
 ## Category partition
 
