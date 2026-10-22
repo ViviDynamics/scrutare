@@ -50,16 +50,22 @@ class ModelRail:
     model: str
     # Opt-in decode-time schema constraint, sent through nare's OpenAI rail only.
     structured_output: StructuredOutput | None = None
+    # Opt-in per-request output token cap, passed to nare as --max-tokens on every request.
+    max_output_tokens: int | None = None
 
     def __post_init__(self) -> None:
         _structured_output(self.structured_output, self.provider, "structured_output")
+        _max_output_tokens(self.max_output_tokens, "max_output_tokens")
 
-    def record(self, *, structured_output: bool = False) -> dict[str, Any]:
-        """The rail as recorded; the opt-in field appears only when it is set or requested."""
+    def record(self, *, structured_output: bool = False,
+               max_output_tokens: bool = False) -> dict[str, Any]:
+        """The rail as recorded; each opt-in field appears only when it is set or requested."""
         record: dict[str, Any] = {"provider": self.provider, "base_url": self.base_url,
                                   "model": self.model}
         if structured_output or self.structured_output is not None:
             record["structured_output"] = self.structured_output
+        if max_output_tokens or self.max_output_tokens is not None:
+            record["max_output_tokens"] = self.max_output_tokens
         return record
 
 
@@ -77,11 +83,20 @@ class ModelSettings:
         return any(rail.structured_output is not None
                    for rail in (self.default, *(rail for _, rail in self.overrides)))
 
+    @property
+    def max_output_tokens(self) -> bool:
+        """Whether any rail caps its output; then every rail records the field explicitly."""
+        return any(rail.max_output_tokens is not None
+                   for rail in (self.default, *(rail for _, rail in self.overrides)))
+
+    def rail_record(self, rail: ModelRail) -> dict[str, Any]:
+        """One rail recorded with every opt-in field any rail of these settings uses."""
+        return rail.record(structured_output=self.structured_output,
+                           max_output_tokens=self.max_output_tokens)
+
     def record(self) -> dict[str, Any]:
-        explicit = self.structured_output
-        return {"default": self.default.record(structured_output=explicit),
-                "overrides": {name: rail.record(structured_output=explicit)
-                              for name, rail in self.overrides}}
+        return {"default": self.rail_record(self.default),
+                "overrides": {name: self.rail_record(rail) for name, rail in self.overrides}}
 
 
 @dataclass(frozen=True)
@@ -471,8 +486,14 @@ def _structured_output(value: object, provider: str, path: str) -> None:
         raise ConfigError(f"{path}: requires provider openai")
 
 
+def _max_output_tokens(value: object, path: str) -> None:
+    if value is not None and (type(value) is not int or value <= 0):
+        raise ConfigError(f"{path}: expected a positive integer or null")
+
+
 def _rail(value: object, path: str, default: ModelRail | None = None) -> ModelRail:
-    fields = _mapping(value, path, ("provider", "base_url", "model", "structured_output"))
+    fields = _mapping(value, path, ("provider", "base_url", "model", "structured_output",
+                                    "max_output_tokens"))
     provider = cast(
         Provider,
         _choice(
@@ -505,7 +526,10 @@ def _rail(value: object, path: str, default: ModelRail | None = None) -> ModelRa
             raise
         raise ConfigError(f"{error} (inherited from models.default; set it to null "
                           "to clear it)") from None
-    return ModelRail(provider, base_url, model, cast("StructuredOutput | None", structured))
+    cap = fields.get("max_output_tokens", default.max_output_tokens if default else None)
+    _max_output_tokens(cap, f"{path}.max_output_tokens")
+    return ModelRail(provider, base_url, model, cast("StructuredOutput | None", structured),
+                     cast("int | None", cap))
 
 
 def _models(value: object, personas: tuple[str | PersonaDefinition, ...]) -> ModelSettings:
