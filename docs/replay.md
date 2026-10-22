@@ -84,6 +84,22 @@ launched session without `result.json`, a counted session without
 `structured_output_evidence_missing` (incomplete). Runs that
 never touch the setting are not audited, so earlier bundles replay as before.
 
+The [output token cap](config.md#per-request-output-token-cap-opt-in) is audited
+the same way when `config.json` sets `max_output_tokens` on any rail or any
+session's `invocation.json` records it. Each launched session's recorded rail,
+including `max_output_tokens`, must equal its configured rail (a reserved
+executor may use any configured rail), and argv must carry `--max-tokens N`
+exactly once with the same value exactly when the rail sets a cap
+(`max_output_tokens_unrecorded`, invalid). Its `result.json` must carry
+`{"limit": N, "reached": bool}` exactly when the rail does, with `reached` true
+exactly when the session failed as `output_cap`, a cut-off session must carry no
+findings, corrections or available output, and `reached` must agree with the
+stop reason in the retained `stdout.jsonl` (`max_output_tokens_result_disagrees`,
+invalid). A launched session without `result.json`, a cut-off session without
+`stdout.jsonl`, or a capped run without any session attempt is
+`max_output_tokens_evidence_missing` (incomplete). Runs that never set a cap
+are not audited.
+
 Known formats must be structurally valid UTF-8 JSON. Duplicate object keys,
 nonfinite numbers, malformed fields, unsupported verdict or delivery schema
 versions, and required leaf symlinks or nonregular files cannot support a clean
