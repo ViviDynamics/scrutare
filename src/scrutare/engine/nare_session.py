@@ -12,7 +12,7 @@ import stat
 import tempfile
 from collections.abc import Iterator
 from contextlib import ExitStack, contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from hashlib import sha256
 from pathlib import Path
 from typing import BinaryIO, Literal, TypedDict, TypeVar
@@ -236,6 +236,9 @@ def _rail(rail: ModelRail) -> None:
     if rail.structured_output is not None and (
             rail.structured_output != "json_schema" or rail.provider != "openai"):
         raise SessionRuntimeError("rail.structured_output: expected json_schema on openai")
+    if rail.max_output_tokens is not None and (
+            type(rail.max_output_tokens) is not int or rail.max_output_tokens <= 0):
+        raise SessionRuntimeError("rail.max_output_tokens: expected a positive integer or null")
     if rail.base_url is not None:
         if not isinstance(rail.base_url, str):
             raise SessionRuntimeError("rail.base_url: expected an HTTP(S) URL or null")
@@ -498,6 +501,8 @@ async def _run_session(
                          "--max-turns", str(runtime.max_turns)))
             if rail.structured_output is not None:
                 argv.extend(("--structured-output", rail.structured_output))
+            if rail.max_output_tokens is not None:
+                argv.extend(("--max-tokens", str(rail.max_output_tokens)))
             write_owned_json(artifact_directory / schema_name, schema,
                              prepared_root=prepared_root)
             write_owned_json(artifact_directory / "invocation.json", {
@@ -509,7 +514,9 @@ async def _run_session(
                 "argv": argv, "rail": {"provider": rail.provider, "model": rail.model,
                                         "base_url": rail.base_url,
                                         **({"structured_output": rail.structured_output}
-                                           if rail.structured_output is not None else {})},
+                                           if rail.structured_output is not None else {}),
+                                        **({"max_output_tokens": rail.max_output_tokens}
+                                           if rail.max_output_tokens is not None else {})},
                 "allocated_tokens": lease.allocated_tokens, "invocation_limit": lease.limit_tokens,
                 "max_turns": runtime.max_turns, "timeout_seconds": runtime.timeout_seconds,
             }, prepared_root=prepared_root)
@@ -558,7 +565,14 @@ async def _run_session(
             ledger.observe(lease, decoded.usage)
             evidence.usage = decoded.usage
             complete = decoded.status != "error" or decoded.stop_reason == "budget"
-            if decoded.status == "done":
+            if rail.max_output_tokens is not None and decoded.stop_reason == "max_tokens":
+                # A response cut off at the configured cap is never an answer, whatever nare
+                # kept from earlier turns. It completed and reported its usage.
+                status, reason, complete = "failed", "output_cap", True
+                decoded = (replace(decoded, corrections=(), output_available=False)
+                           if isinstance(decoded, DecodedReanchorSession)
+                           else replace(decoded, findings=(), output_available=False))
+            elif decoded.status == "done":
                 status, reason = ("partial", "budget") if decoded.partial else ("complete", "done")
             elif decoded.status == "error" and decoded.stop_reason == "budget":
                 status, reason = "partial", "budget"
@@ -610,6 +624,9 @@ async def _run_session(
                                                     strict=False)
                 structured = {"structured_output": {"mode": rail.structured_output,
                                                     "constrained_turns": constrained}}
+            if isinstance(rail, ModelRail) and rail.max_output_tokens is not None:
+                structured["max_output_tokens"] = {"limit": rail.max_output_tokens,
+                                                   "reached": outcome.reason == "output_cap"}
             write_owned_json(artifact_directory / "result.json", {
                 "schema_version": 1, "scrutare_version": __version__,
                 "nare_version": capability.version, "contract": capability.contract,
