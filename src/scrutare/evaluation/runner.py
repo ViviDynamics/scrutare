@@ -36,7 +36,10 @@ from scrutare.engine.static_analysis import capture_static_analysis, read_captur
 from scrutare.engine.strategy import run_review
 from scrutare.evaluation.corpus import Case, parse_json, read_json, source_contents
 from scrutare.evaluation.focused_trace import discussion_trace
-from scrutare.evaluation.transient import transient_provider_failures
+from scrutare.evaluation.transient import (
+    model_repetition_failures,
+    transient_provider_failures,
+)
 from scrutare.personas import PersonaDefinition, load_persona, resolve_personas
 from scrutare.personas.registry import procedure_record
 from scrutare.provenance import write_artifact_manifest
@@ -451,6 +454,12 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                     'accounting_complete': record['accounting_complete'],
                     'usage': record['usage'], 'latency_seconds': record['latency_seconds'],
                     'transient_provider_failures': transient})
+                # A repetition abort is a model failure, never rerun; it is named apart.
+                repeated = (model_repetition_failures(directory)
+                            if transient is None and record['status'] != 'complete'
+                            and record['error'] is None else [])
+                if repeated:
+                    attempts[-1]['model_repetition'] = repeated
                 earlier = [TokenUsage(**{key: a['usage'][key] for key in (
                     'input', 'output', 'cache_read', 'cache_write')}) for a in attempts[:-1]]
                 record.update(attempt=len(attempts), attempts=list(attempts),
