@@ -187,3 +187,68 @@ def test_without_the_cap_a_stale_document_is_still_validated(capture, tmp_path):
     stale = {"findings": [{"file": "src/app.py", "line": "not a line"}]}
     outcome, _, _ = launch(capture, cut_off(tmp_path, output=stale), OFF)
     assert (outcome.status, outcome.reason) == ("failed", "protocol")
+
+
+# nare 2026.10.12: after a cut-off turn, the after-turn budget check can also fire. It appends
+# its own error event and replaces the terminal stop reason with "budget" (#84).
+CUT_OFF_EVENT = ('print(json.dumps({"type": "error", "text": '
+                 '"the model\'s turn was cut off at max_tokens", "detail": {}, '
+                 '"timestamp": "now"}), flush=True)\n')
+BUDGET_EVENT = ('print(json.dumps({"type": "error", "text": "token budget exhausted", '
+                '"detail": {"budget": {"tokens": int(a.budget_tokens), "used_tokens": '
+                'sum(USAGE[k] for k in ("input", "output", "cache_read", "cache_write")), '
+                '"used_usd": None}, "usage": USAGE}, "timestamp": "now"}), flush=True)\n')
+
+
+def cut_off_over_budget(tmp_path, *, extra=CUT_OFF_EVENT + BUDGET_EVENT, output=None):
+    return capped(tmp_path, input_tokens=5, status="error", stop="budget", exit_code=1,
+                  extra=extra, output=output)
+
+
+def test_a_cut_off_request_that_also_exhausts_the_budget_fails_as_the_cap(capture, tmp_path):
+    outcome, ledger, attempt = launch(capture, cut_off_over_budget(tmp_path, output=FINDING),
+                                      CAPPED)
+    assert (outcome.status, outcome.reason) == ("failed", "output_cap")
+    # nare's terminal record still says budget, and the overrun is still measured.
+    assert (outcome.nare_status, outcome.stop_reason) == ("error", "budget")
+    assert outcome.overshoot_tokens == 1
+    assert outcome.findings == () and not outcome.output_available
+    assert outcome.accounting_complete and ledger.usage == outcome.usage
+    result = recorded(attempt, "result.json")
+    assert (result["status"], result["reason"], result["stop_reason"]) == (
+        "failed", "output_cap", "budget")
+    assert result["max_output_tokens"] == {"limit": 12000, "reached": True}
+    assert result["findings"] == [] and result["output_available"] is False
+
+
+def test_a_cut_off_over_budget_is_not_an_overrun_so_no_fallback_applies(capture, tmp_path):
+    from scrutare.engine.overrun import overran, phase_degradation
+    outcome, _, _ = launch(capture, cut_off_over_budget(tmp_path), CAPPED)
+    assert not overran(outcome.to_dict())
+    assert phase_degradation("assessment", (outcome.to_dict(),), round_number=None,
+                             allowance=10) is None
+
+
+def test_a_budget_stop_without_a_cut_off_stays_a_budget_overrun_on_a_capped_rail(
+        capture, tmp_path):
+    outcome, _, attempt = launch(capture, cut_off_over_budget(tmp_path, extra=BUDGET_EVENT),
+                                 CAPPED)
+    assert (outcome.status, outcome.reason) == ("partial", "budget")
+    assert recorded(attempt, "result.json")["max_output_tokens"] == {"limit": 12000,
+                                                                     "reached": False}
+
+
+def test_a_cut_off_event_before_other_events_is_not_the_stopping_turn(capture, tmp_path):
+    # Only nare's last turn can have been cut off: the cut-off ends the session.
+    extra = CUT_OFF_EVENT + ('print(json.dumps({"type": "progress", "text": "x", "detail": {}, '
+                             '"timestamp": "now"}), flush=True)\n') + BUDGET_EVENT
+    outcome, _, _ = launch(capture, cut_off_over_budget(tmp_path, extra=extra), CAPPED)
+    assert (outcome.status, outcome.reason) == ("partial", "budget")
+
+
+def test_without_the_cap_a_cut_off_over_budget_is_unchanged(capture, tmp_path):
+    outcome, _, attempt = launch(capture, cut_off_over_budget(tmp_path), OFF)
+    assert (outcome.status, outcome.reason, outcome.stop_reason) == (
+        "partial", "budget", "budget")
+    assert outcome.accounting_complete
+    assert "max_output_tokens" not in recorded(attempt, "result.json")
