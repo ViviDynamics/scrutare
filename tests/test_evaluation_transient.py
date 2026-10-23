@@ -155,6 +155,23 @@ def test_a_repetition_abort_is_a_model_failure_classified_apart_and_never_rerun(
     assert transient_provider_failures(tmp_path) is None
 
 
+@pytest.mark.parametrize('error', [
+    REPETITION.replace("'code': '500'", "'code': None"),
+    REPETITION.replace(", 'code': '500'", ''),
+])
+def test_a_repetition_abort_without_a_status_is_still_recorded(tmp_path, error):
+    session(tmp_path, 'devops', status='failed', reason='provider', error=error)
+    assert transient_provider_failures(tmp_path) is None
+    assert model_repetition_failures(tmp_path) == [
+        {'session_key': 'devops/attempt-0001', 'http_status': None}]
+
+
+def test_repetition_text_outside_nare_s_provider_reports_is_not_classified(tmp_path):
+    session(tmp_path, 'devops', status='failed', reason='provider',
+            error='ValueError: The model is repeating the same chunk')
+    assert model_repetition_failures(tmp_path) == []
+
+
 def test_only_a_provider_failure_is_classified_as_repetition(tmp_path):
     session(tmp_path, 'devops', status='failed', reason='protocol', error=REPETITION)
     assert model_repetition_failures(tmp_path) == []

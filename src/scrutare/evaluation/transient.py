@@ -10,11 +10,13 @@ from typing import Any, Literal
 from scrutare.evaluation.corpus import parse_json
 
 # Server-side unavailability only; 501 and 505 describe requests that would fail again.
+# A retained 500 is assumed to be unavailability unless it is a known model failure below.
 _UNAVAILABLE = (500, 502, 503, 504, 529)
 # The request failed before any response: nare's HTTP status report.
-_HTTP_5XX = re.compile(r'RuntimeError: chat completion failed with HTTP (500|502|503|504|529):')
-# The response stream ended in an error frame (streaming OpenAI rail, nare 2026.10.4 and
-# newer): nare reports the provider's error object as its Python repr.
+_HTTP_STATUS = re.compile(r'RuntimeError: chat completion failed with HTTP ([0-9]{3}):')
+# The response stream ended in an error frame (the streaming OpenAI rail, which Scrutare
+# uses from nare 2026.10.4): nare reports the provider's error object as its Python repr.
+# A frame without a numeric code (OpenAI's own server_error has none) has no retained status.
 _MID_STREAM = re.compile(r'RuntimeError: stream provider error: (\{.*\})', re.DOTALL)
 # LiteLLM aborts a stream whose model keeps emitting the same chunk, and reports it as an
 # HTTP 500. That is the model looping on its own output, not the server being unavailable.
@@ -26,38 +28,42 @@ _INTERRUPTIBLE = ('initial', 'correction', 'discovery_incomplete', 'assessment_i
 ProviderFailure = Literal['unavailable', 'model_repetition']
 
 
-def _mid_stream_status(error: str) -> int | None:
-    """The 5xx code of nare's mid-stream provider error object, or None."""
+def _mid_stream_status(error: str) -> tuple[bool, int | None]:
+    """Whether this is nare's mid-stream provider error object, and its numeric code."""
     match = _MID_STREAM.fullmatch(error)
     if match is None:
-        return None
+        return False, None
     try:
         frame = ast.literal_eval(match.group(1))
     except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
-        return None
-    code = frame.get('code') if isinstance(frame, dict) else None
+        return False, None
+    if not isinstance(frame, dict):
+        return False, None
+    code = frame.get('code')
     if isinstance(code, str) and code.isascii() and code.isdigit():
         code = int(code)
-    return code if type(code) is int and code in _UNAVAILABLE else None
+    return True, code if type(code) is int else None
 
 
-def classify_provider_error(error: object) -> tuple[ProviderFailure, int] | None:
-    """Classify nare's terminal provider error as a server 5xx, either form, or None.
+def classify_provider_error(error: object) -> tuple[ProviderFailure, int | None] | None:
+    """Classify nare's terminal provider error report, in either form, or return None.
 
-    A retained 5xx is ``unavailable`` (the upstream could not serve the request) unless its
-    message is LiteLLM's repetition abort, which is ``model_repetition``: a model failure,
-    never an interruption.
+    LiteLLM's repetition abort is ``model_repetition`` whatever status it carries: a model
+    failure, never an interruption. Otherwise a retained 500, 502, 503, 504 or 529 is
+    ``unavailable`` (the upstream could not serve the request); anything else is None.
     """
     if not isinstance(error, str):
         return None
-    match = _HTTP_5XX.match(error)
-    code = int(match.group(1)) if match else _mid_stream_status(error)
-    if code is None:
+    match = _HTTP_STATUS.match(error)
+    reported, code = (True, int(match.group(1))) if match else _mid_stream_status(error)
+    if not reported:
         return None
-    return ('model_repetition' if _REPETITION in error else 'unavailable'), code
+    if _REPETITION in error:
+        return 'model_repetition', code
+    return ('unavailable', code) if code in _UNAVAILABLE else None
 
 
-def _provider_failure(stdout: Path) -> tuple[ProviderFailure, int] | None:
+def _provider_failure(stdout: Path) -> tuple[ProviderFailure, int | None] | None:
     """Read the native terminal result; only its own HTTP 5xx report qualifies."""
     if stdout.is_symlink() or not stdout.is_file():
         return None
