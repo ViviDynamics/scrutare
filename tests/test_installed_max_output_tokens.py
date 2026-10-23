@@ -131,3 +131,30 @@ def test_a_request_cut_off_at_the_cap_fails_the_review_with_its_usage(
         "limit": CAP, "reached": True}
     # A failed review has no verdict to replay; its retained sessions still audit clean.
     assert _max_output_tokens_issues(capture, load(capture / "config.json")) == ()
+
+
+def test_a_cut_off_that_also_exhausts_the_budget_fails_as_the_cap(capture, tmp_path, installed):
+    # The c1 assessor (#84): the cut-off turn's usage passes the session budget, so nare's
+    # after-turn budget check also fires and replaces the terminal stop reason with budget.
+    turns = [read_turn(content=json.dumps(FINDING)),
+             cut_off(json.dumps(FINDING) + " and more",
+                     {"prompt_tokens": 200, "completion_tokens": CAP})]
+    result = review(capture, tmp_path, installed, turns, cap=CAP)
+    outcome = result.initial.outcomes[0]
+    observed = observations(outcome, http_sse=True)
+    assert [call["payload"]["max_tokens"] for call in observed["calls"]] == [CAP, CAP]
+    assert (outcome.nare_status, outcome.stop_reason) == ("error", "budget")
+    assert (outcome.status, outcome.reason) == ("failed", "output_cap")
+    assert outcome.findings == () and not outcome.output_available
+    assert outcome.accounting_complete and outcome.overshoot_tokens > 0
+    assert outcome.usage.total == 12 + 3 + 200 + CAP == result.usage.total
+    assert result.status == "failed" and result.verdict is None
+    events = [json.loads(line) for line in
+              (outcome.artifact_directory / "stdout.jsonl").read_text().splitlines()]
+    assert [event["text"] for event in events if event["type"] == "error"][0] == (
+        "the model's turn was cut off at max_tokens")
+    assert events[-1]["stop_reason"] == "budget"
+    recorded = load(outcome.artifact_directory / "result.json")
+    assert (recorded["reason"], recorded["max_output_tokens"]) == (
+        "output_cap", {"limit": CAP, "reached": True})
+    assert _max_output_tokens_issues(capture, load(capture / "config.json")) == ()

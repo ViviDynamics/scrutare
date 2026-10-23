@@ -194,3 +194,52 @@ def test_a_deeply_nested_stream_line_is_an_audit_issue_not_a_crash(tmp_path):
     (directory / "result.json").write_text(json.dumps(record))
     assert codes(replay_run(tmp_path)) == [
         ("max_output_tokens_result_disagrees", f"{WHERE}/result.json")]
+
+
+CUT_OFF = {"type": "error", "text": "the model's turn was cut off at max_tokens", "detail": {},
+           "timestamp": "now"}
+BUDGET = {"type": "error", "text": "token budget exhausted", "timestamp": "now",
+          "detail": {"budget": {"tokens": 50000, "used_tokens": 56946, "used_usd": 0.0}}}
+
+
+def over_budget(directory, events):
+    """The stream nare 2026.10.12 leaves when its budget check fires after the turn (#84)."""
+    (directory / "stdout.jsonl").write_text("".join(
+        json.dumps(event) + "\n" for event in events) + json.dumps(
+        {"type": "result", "status": "error", "stop_reason": "budget"}) + "\n")
+
+
+def test_a_cut_off_that_also_exhausted_the_budget_replays_clean_as_the_cap(tmp_path):
+    bundle(tmp_path)
+    configure(tmp_path, {"default": CAP})
+    over_budget(session(tmp_path, CAP, reached=True), [CUT_OFF, BUDGET])
+    assert codes(replay_run(tmp_path)) == []
+
+
+@pytest.mark.parametrize("events", [
+    [CUT_OFF, BUDGET],
+    # The released c1 bundle shape: nare's own cut-off record, before the budget record.
+    [{"type": "cost", "text": "7442 in / 20000 out", "detail": {}, "timestamp": "now"},
+     CUT_OFF, BUDGET],
+])
+def test_a_cut_off_recorded_as_a_budget_overrun_disagrees_with_its_stream(tmp_path, events):
+    bundle(tmp_path)
+    configure(tmp_path, {"default": CAP})
+    directory = session(tmp_path, CAP)
+    record = json.loads((directory / "result.json").read_bytes())
+    record.update(status="partial", reason="budget")
+    (directory / "result.json").write_text(json.dumps(record))
+    over_budget(directory, events)
+    assert codes(replay_run(tmp_path)) == [
+        ("max_output_tokens_result_disagrees", f"{WHERE}/result.json")]
+
+
+@pytest.mark.parametrize("events", [[BUDGET], [CUT_OFF, {**BUDGET, "detail": {}}],
+                                    [CUT_OFF, {"type": "progress", "text": "", "detail": {},
+                                               "timestamp": "now"}, BUDGET]])
+def test_a_budget_stop_the_stream_does_not_show_as_a_cut_off_is_not_the_cap(tmp_path, events):
+    bundle(tmp_path)
+    configure(tmp_path, {"default": CAP})
+    over_budget(session(tmp_path, CAP, reached=True), events)
+    assert codes(replay_run(tmp_path)) == [
+        ("max_output_tokens_result_disagrees", f"{WHERE}/result.json")]

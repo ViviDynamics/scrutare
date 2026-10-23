@@ -172,7 +172,12 @@ The session's token budget (`budgets`) still bounds the whole session; the cap
 bounds each request.
 
 A request cut off at the cap (OpenAI `finish_reason: length`, which nare reports
-as stop reason `max_tokens`) fails its session with reason `output_cap`. nare
+as stop reason `max_tokens`) fails its session with reason `output_cap`. When
+the cut-off turn also exhausts the session's token budget, nare's after-turn
+budget check replaces the terminal stop reason with `budget`; Scrutare then
+reads the cut-off from nare's error event "the model's turn was cut off at
+max_tokens" in the stream, and still records `output_cap` (with `reached: true`;
+`stop_reason` and `overshoot_tokens` keep nare's budget record). nare
 does not run tool calls from a cut-off turn, and Scrutare never uses any answer
 from a capped session, including a schema-valid document an earlier tool turn
 carried. The cut-off response reported its usage, so the session's tokens stay

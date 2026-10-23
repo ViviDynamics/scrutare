@@ -149,16 +149,26 @@ def _invocations(attempts: list[Path]) -> list[tuple[Path, object]]:
     return invocations
 
 
-def _terminal_stop(stdout: bytes) -> tuple[bool, object]:
-    """Whether the retained stream ended in nare's result record, and its stop reason."""
-    lines = [line for line in stdout.split(b"\n") if line.strip()]
-    try:
-        terminal = decode_artifact(lines[-1], artifact="stdout.jsonl") if lines else None
-    except (ReplayError, RecursionError):
-        terminal = None
+def _terminal_cut_off(stdout: bytes) -> tuple[bool, bool]:
+    """Whether the retained stream ended in nare's result record, and in a cut-off turn.
+
+    A cut-off reads from the stop reason, or from nare's cut-off error event when the
+    budget check fired after that turn; only the last three records are decoded.
+    """
+    from scrutare.engine.session_output import cut_off_at_max_tokens
+
+    def decoded(line: bytes) -> object:
+        try:
+            return decode_artifact(line, artifact="stdout.jsonl")
+        except (ReplayError, RecursionError):
+            return None
+
+    records = [decoded(line) for line in
+               [line for line in stdout.split(b"\n") if line.strip()][-3:]]
+    terminal = records[-1] if records else None
     if isinstance(terminal, dict) and terminal.get("type") == "result":
-        return True, terminal.get("stop_reason")
-    return False, None
+        return True, cut_off_at_max_tokens(records[:-1], terminal.get("stop_reason"))
+    return False, False
 
 
 def _max_output_tokens_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
@@ -244,7 +254,8 @@ def _max_output_tokens_issues(run_dir: Path, config_data: object) -> tuple[Audit
                                           and outcome.get("corrections", []) == [])))
             if valid:
                 try:
-                    finished, stop = _terminal_stop(read_artifact(attempt / "stdout.jsonl"))
+                    finished, cut_off = _terminal_cut_off(
+                        read_artifact(attempt / "stdout.jsonl"))
                 except ReplayError:
                     if reached or outcome.get("nare_status") is not None or outcome.get(
                             "status") in ("complete", "partial"):
@@ -252,8 +263,8 @@ def _max_output_tokens_issues(run_dir: Path, config_data: object) -> tuple[Audit
                         issues.append(AuditIssue("max_output_tokens_evidence_missing",
                                                  f"{where}/stdout.jsonl", "incomplete"))
                         continue
-                    finished, stop = False, None
-                valid = (stop == "max_tokens") == bool(reached) if finished else not reached
+                    finished, cut_off = False, False
+                valid = cut_off == bool(reached) if finished else not reached
         if not valid:
             issues.append(AuditIssue("max_output_tokens_result_disagrees",
                                      f"{where}/result.json", "invalid"))
