@@ -99,10 +99,22 @@ from the start, in a fresh directory prepared from the same frozen bytes, after
 
 A cell is eligible only when the attempt did not complete, the evaluator raised no
 error, and every native session in it either completed, never started, or failed
-with reason `provider` and a retained `chat completion failed with HTTP` 500, 502,
-503, 504 or 529 result. Budget, protocol, citation, timeout, 4xx, other 5xx and
+with reason `provider` and a retained HTTP 500, 502, 503, 504 or 529 result. nare
+reports that status in one of two forms: `chat completion failed with HTTP <code>`
+when the request failed before a response, or, on the streaming OpenAI rail
+(nare 2026.10.4 and newer), `stream provider error: {...}` whose error object
+carries that `code` (a string or an integer) when the stream ended in an error
+frame. Budget, protocol, citation, timeout, 4xx, other 5xx and
 unreadable outcomes are never rerun, nor is a review that stopped for changed
-inputs or evidence. A rerun whose prepared input hashes differ from the frozen snapshot is
+inputs or evidence.
+
+LiteLLM's repetition abort is excluded although it is reported as HTTP 500 in
+either form. LiteLLM ends a stream with "The model is repeating the same chunk"
+when the model emits the same chunk over and over: the model is looping on its
+own output, and the upstream was serving it. That is a model failure, not an
+interruption, so the cell is never rerun for it. With reruns on, the attempt
+record names such sessions in `model_repetition` (session key and HTTP status);
+attempts without one keep their existing shape. A rerun whose prepared input hashes differ from the frozen snapshot is
 refused and recorded as `RetryInputsDiffer`.
 
 Nothing is hidden. The first attempt stays at `<case>/<arm>/<repeat>`; reruns go to

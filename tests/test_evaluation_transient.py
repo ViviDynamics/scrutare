@@ -10,7 +10,10 @@ from test_evaluation_runner import config, corpus
 
 from scrutare.engine.session_models import NareRuntime, TokenUsage
 from scrutare.evaluation.runner import comparison_configs, run_experiment
-from scrutare.evaluation.transient import transient_provider_failures
+from scrutare.evaluation.transient import (
+    model_repetition_failures,
+    transient_provider_failures,
+)
 
 OVERLOAD = ('RuntimeError: chat completion failed with HTTP 500: {"error":{"message":'
             '"InternalServerError: Our servers are currently overloaded."}}')
@@ -91,6 +94,70 @@ def test_each_server_unavailability_status_is_reported(tmp_path, code):
             error=OVERLOAD.replace('HTTP 500', f'HTTP {code}'))
     assert transient_provider_failures(tmp_path) == [
         {'session_key': 'security/attempt-0001', 'http_status': code}]
+
+
+# nare 2026.10.4+ streaming rail: an error frame mid-stream (#86). The provider's error
+# object is reported as its Python repr, and its code may be a string or an integer.
+def mid_stream(code="'500'", message='litellm.InternalServerError: upstream connection lost'):
+    return ("RuntimeError: stream provider error: {'message': " + repr(message)
+            + ", 'type': 'internal_server_error', 'param': None, 'code': " + code + "}")
+
+
+# The exact c1 record (tests-consumer-fixture/aggregate/3, 2026-10-22): LiteLLM aborted a
+# stream whose model had finished its answer and then emitted " {HEAD} |" over and over.
+REPETITION = ("RuntimeError: stream provider error: {'message': 'litellm.InternalServerError: "
+              "The model is repeating the same chunk =  {HEAD} | .', 'type': "
+              "'internal_server_error', 'param': None, 'code': '500'}")
+
+
+@pytest.mark.parametrize('code,status', [
+    ("'500'", 500), ("'502'", 502), ("'503'", 503), ("'504'", 504), ("'529'", 529),
+    ('503', 503),
+])
+def test_a_mid_stream_server_unavailability_is_transient(tmp_path, code, status):
+    session(tmp_path, 'security', status='failed', reason='provider', error=mid_stream(code))
+    assert transient_provider_failures(tmp_path) == [
+        {'session_key': 'security/attempt-0001', 'http_status': status}]
+    assert model_repetition_failures(tmp_path) == []
+
+
+@pytest.mark.parametrize('error', [
+    mid_stream("'400'"), mid_stream("'429'"), mid_stream("'501'"), mid_stream("'505'"),
+    mid_stream('None'), mid_stream('True'), mid_stream("'5OO'"), mid_stream("' 500'"),
+    "RuntimeError: stream provider error: 'upstream went away'",
+    "RuntimeError: stream provider error: {'message': 'x'}",
+    "RuntimeError: stream provider error: {'code': '500'",
+    "RuntimeError: stream provider error: {'code': __import__('os')}",
+    "ValueError: stream provider error: {'code': '500'}",
+    mid_stream() + ' trailing',
+])
+def test_other_mid_stream_errors_are_not_transient(tmp_path, error):
+    session(tmp_path, 'security', status='failed', reason='provider', error=error)
+    assert transient_provider_failures(tmp_path) is None
+    assert model_repetition_failures(tmp_path) == []
+
+
+@pytest.mark.parametrize('error', [
+    REPETITION,
+    REPETITION.replace("'code': '500'", "'code': 500"),
+    'RuntimeError: chat completion failed with HTTP 500: {"error":{"message":"litellm.'
+    'InternalServerError: The model is repeating the same chunk = x."}}',
+])
+def test_a_repetition_abort_is_a_model_failure_classified_apart_and_never_rerun(
+        tmp_path, error):
+    session(tmp_path, 'senior-dev')
+    session(tmp_path, 'devops', status='failed', reason='provider', error=error)
+    assert transient_provider_failures(tmp_path) is None
+    assert model_repetition_failures(tmp_path) == [
+        {'session_key': 'devops/attempt-0001', 'http_status': 500}]
+    # A genuine interruption beside it does not make the attempt eligible.
+    session(tmp_path, 'security', status='failed', reason='provider', error=mid_stream())
+    assert transient_provider_failures(tmp_path) is None
+
+
+def test_only_a_provider_failure_is_classified_as_repetition(tmp_path):
+    session(tmp_path, 'devops', status='failed', reason='protocol', error=REPETITION)
+    assert model_repetition_failures(tmp_path) == []
 
 
 def overloaded(directory):
@@ -411,3 +478,27 @@ def test_cli_passes_explicit_arms_and_retry_policy(tmp_path, monkeypatch):
     cli.main()
     assert seen['variant_names'] is None and seen['transient_retries'] == 0
     assert seen['transient_retry_budget'] is None
+
+
+def test_a_repetition_abort_is_recorded_and_not_rerun(tmp_path, monkeypatch):
+    cases = corpus(tmp_path / 'corpus')
+    calls = []
+    async def execute(directory, conf, *, runtime):
+        calls.append(directory)
+        if directory.name == '1':
+            session(directory, 'senior-dev', status='failed', reason='provider',
+                    error=REPETITION)
+            return SimpleNamespace(status='failed', accounting_complete=False,
+                                   usage=TokenUsage(input=7), verdict=None)
+        return complete()
+    patch_engine(monkeypatch, execute)
+    result = run(cases, tmp_path / 'out', transient_retries=3, variant_names=('senior',))
+    assert len(calls) == 3 and not (tmp_path / 'out/_retries').exists()
+    first, *others = result['runs']
+    assert first['status'] == 'failed' and len(first['attempts']) == 1
+    attempt = first['attempts'][0]
+    assert attempt['transient_provider_failures'] is None
+    assert attempt['model_repetition'] == [
+        {'session_key': 'senior-dev/attempt-0001', 'http_status': 500}]
+    # Attempts without a repetition abort keep the existing record shape.
+    assert all('model_repetition' not in a for run in others for a in run['attempts'])
