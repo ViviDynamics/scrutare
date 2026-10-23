@@ -77,26 +77,29 @@ class _DecodedEvidence:
     cut_off: bool = False
 
 
-# nare's error event for a turn cut off at max_tokens. A cut-off ends the session.
+# nare's error event for a turn cut off at max_tokens (nare 2026.10.12 loop._UNFINISHED; the
+# exact text is nare's contract, not provider text). A cut-off ends the session.
 CUT_OFF = "the model's turn was cut off at max_tokens"
 
 
-def cut_off_at_max_tokens(events: list[Any], stop: object) -> bool:
+def cut_off_at_max_tokens(events: list[Any], status: object, stop: object) -> bool:
     """Whether nare's last turn was cut off at max_tokens; ``events`` precede the result.
 
     A cut-off session stops with ``max_tokens``. When the cut-off turn also exhausts the
     token budget, nare's after-turn budget check appends its own error event and replaces
     the stop with ``budget`` (nare 2026.10.12), so the cut-off is read from the stream:
-    its error event immediately followed by the budget error event.
+    its error event immediately followed by nare's budget error record, in status error.
+    nare writes nothing between or after the two.
     """
     if stop == "max_tokens":
         return True
-    if stop != "budget" or len(events) < 2:
+    if stop != "budget" or status != "error" or len(events) < 2:
         return False
     cut, budget = events[-2:]
+    detail = budget.get("detail") if isinstance(budget, dict) else None
     return (isinstance(cut, dict) and cut.get("type") == "error" and cut.get("text") == CUT_OFF
-            and isinstance(budget, dict) and budget.get("type") == "error"
-            and isinstance(budget.get("detail"), dict) and "budget" in budget["detail"])
+            and isinstance(detail, dict) and budget.get("type") == "error"
+            and isinstance(detail.get("budget"), dict) and isinstance(detail.get("usage"), dict))
 
 
 def findings_schema(*, evidence_version: int = 1) -> dict[str, object]:
@@ -384,7 +387,7 @@ def _decode_evidence(
                                 (status == "error" and stop == "budget")
                                 or total_usage.total > expected_limit,
                                 version, contract, count, output, saved["output"],
-                                cut_off_at_max_tokens(records[:-1], stop))
+                                cut_off_at_max_tokens(records[:-1], status, stop))
     except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
         raise SessionProtocolError(
             "Session evidence is invalid or inconsistent; inspect private capture."

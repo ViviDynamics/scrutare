@@ -167,7 +167,8 @@ def _terminal_cut_off(stdout: bytes) -> tuple[bool, bool]:
                [line for line in stdout.split(b"\n") if line.strip()][-3:]]
     terminal = records[-1] if records else None
     if isinstance(terminal, dict) and terminal.get("type") == "result":
-        return True, cut_off_at_max_tokens(records[:-1], terminal.get("stop_reason"))
+        return True, cut_off_at_max_tokens(records[:-1], terminal.get("status"),
+                                           terminal.get("stop_reason"))
     return False, False
 
 
