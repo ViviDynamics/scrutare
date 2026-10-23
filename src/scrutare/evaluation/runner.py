@@ -456,7 +456,8 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                     'transient_provider_failures': transient})
                 # A repetition abort is a model failure, never rerun; it is named apart.
                 repeated = (model_repetition_failures(directory)
-                            if transient is None and record['status'] != 'complete' else [])
+                            if transient is None and record['status'] != 'complete'
+                            and record['error'] is None else [])
                 if repeated:
                     attempts[-1]['model_repetition'] = repeated
                 earlier = [TokenUsage(**{key: a['usage'][key] for key in (

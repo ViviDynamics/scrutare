@@ -124,6 +124,7 @@ def test_a_mid_stream_server_unavailability_is_transient(tmp_path, code, status)
 @pytest.mark.parametrize('error', [
     mid_stream("'400'"), mid_stream("'429'"), mid_stream("'501'"), mid_stream("'505'"),
     mid_stream('None'), mid_stream('True'), mid_stream("'5OO'"), mid_stream("' 500'"),
+    mid_stream("'0500'"), mid_stream("'" + '5' * 5000 + "'"),
     "RuntimeError: stream provider error: 'upstream went away'",
     "RuntimeError: stream provider error: {'message': 'x'}",
     "RuntimeError: stream provider error: {'code': '500'",
@@ -170,6 +171,16 @@ def test_repetition_text_outside_nare_s_provider_reports_is_not_classified(tmp_p
     session(tmp_path, 'devops', status='failed', reason='provider',
             error='ValueError: The model is repeating the same chunk')
     assert model_repetition_failures(tmp_path) == []
+
+
+def test_one_unreadable_session_does_not_hide_another_s_repetition(tmp_path):
+    session(tmp_path, 'devops', status='failed', reason='provider', error=REPETITION)
+    broken = session(tmp_path, 'security', status='failed', reason='provider',
+                     error=mid_stream())
+    (broken / 'stdout.jsonl').write_bytes(b'\xff not json\n')
+    assert transient_provider_failures(tmp_path) is None
+    assert model_repetition_failures(tmp_path) == [
+        {'session_key': 'devops/attempt-0001', 'http_status': 500}]
 
 
 def test_only_a_provider_failure_is_classified_as_repetition(tmp_path):
@@ -519,3 +530,18 @@ def test_a_repetition_abort_is_recorded_and_not_rerun(tmp_path, monkeypatch):
         {'session_key': 'senior-dev/attempt-0001', 'http_status': 500}]
     # Attempts without a repetition abort keep the existing record shape.
     assert all('model_repetition' not in a for run in others for a in run['attempts'])
+
+
+def test_an_evaluator_error_is_not_recorded_as_a_repetition(tmp_path, monkeypatch):
+    cases = corpus(tmp_path / 'corpus')
+    async def execute(directory, conf, *, runtime):
+        if directory.name == '1':
+            session(directory, 'senior-dev', status='failed', reason='provider',
+                    error=REPETITION)
+            raise RuntimeError('evaluator defect')
+        return complete()
+    patch_engine(monkeypatch, execute)
+    result = run(cases, tmp_path / 'out', transient_retries=3, variant_names=('senior',))
+    first = result['runs'][0]
+    assert first['error'] == 'RuntimeError'
+    assert 'model_repetition' not in first['attempts'][0]

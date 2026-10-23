@@ -1,4 +1,7 @@
-"""Classify one retained attempt as an upstream HTTP 5xx interruption, or not at all."""
+"""Classify one retained attempt as an upstream HTTP 5xx interruption, or not at all.
+
+A repetition abort is a model failure: it is never an interruption, and is named apart.
+"""
 from __future__ import annotations
 
 import ast
@@ -40,7 +43,7 @@ def _mid_stream_status(error: str) -> tuple[bool, int | None]:
     if not isinstance(frame, dict):
         return False, None
     code = frame.get('code')
-    if isinstance(code, str) and code.isascii() and code.isdigit():
+    if isinstance(code, str) and re.fullmatch(r'[0-9]{3}', code):
         code = int(code)
     return True, code if type(code) is int else None
 
@@ -64,7 +67,7 @@ def classify_provider_error(error: object) -> tuple[ProviderFailure, int | None]
 
 
 def _provider_failure(stdout: Path) -> tuple[ProviderFailure, int | None] | None:
-    """Read the native terminal result; only its own HTTP 5xx report qualifies."""
+    """Classify the native terminal result's own provider error report, or return None."""
     if stdout.is_symlink() or not stdout.is_file():
         return None
     terminal: Any = None
@@ -121,17 +124,23 @@ def transient_provider_failures(directory: Path) -> list[dict[str, Any]] | None:
 
 
 def model_repetition_failures(directory: Path) -> list[dict[str, Any]]:
-    """Return every provider failure that was LiteLLM's repetition abort, for the record."""
+    """Return every provider failure that was LiteLLM's repetition abort, for the record.
+
+    An unreadable session is skipped; it does not hide another session's abort.
+    """
     failures = []
-    try:
-        for saved, attempt in _sessions(directory):
+    for result in sorted(directory.glob('sessions/*/attempt-*/result.json')):
+        try:
+            if result.is_symlink() or not result.is_file():
+                continue
+            saved = parse_json(result.read_bytes())
             key = saved['session_key']
             if (saved['status'] != 'failed' or saved['reason'] != 'provider'
                     or not isinstance(key, str)):
                 continue
-            failure = _provider_failure(attempt / 'stdout.jsonl')
-            if failure is not None and failure[0] == 'model_repetition':
-                failures.append({'session_key': key, 'http_status': failure[1]})
-    except (OSError, ValueError, KeyError, TypeError, RecursionError):
-        return []
+            failure = _provider_failure(result.parent / 'stdout.jsonl')
+        except (OSError, ValueError, KeyError, TypeError, RecursionError):
+            continue
+        if failure is not None and failure[0] == 'model_repetition':
+            failures.append({'session_key': key, 'http_status': failure[1]})
     return failures
