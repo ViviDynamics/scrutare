@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from test_nare_cli_integration import installed as installed
 from test_nare_cli_integration import offline_runtime, text, tool
+from test_review_inputs import capture as capture
 
 from scrutare.config import parse_config
 from scrutare.evaluation.corpus import load_corpus
@@ -86,3 +87,52 @@ def test_actual_nare_http_500_reruns_the_cell_and_retains_the_failed_attempt(
         assert len(list(first.glob('sessions/*/attempt-0001/stdout.jsonl'))) == 4
         assert json.loads((first / 'evaluation.json').read_text())['status'] == 'failed'
         assert (Path(rerun['run_dir']) / 'verdict.json').is_file()
+
+
+@pytest.mark.parametrize('message,classified', [
+    ('litellm.InternalServerError: upstream connection lost', 'unavailable'),
+    # The c1 abort (#86): the model finished its answer, then repeated one chunk.
+    ('litellm.InternalServerError: The model is repeating the same chunk =  {HEAD} | .',
+     'model_repetition'),
+])
+def test_actual_nare_mid_stream_5xx_is_classified_from_its_own_report(
+    tmp_path, installed, capture, message, classified,
+):
+    from test_fanout import configure
+    from test_nare_cli_integration import sse_choice
+
+    from scrutare.engine.strategy import run_review
+    from scrutare.evaluation.transient import (
+        model_repetition_failures,
+        transient_provider_failures,
+    )
+    config = configure(capture, personas=['senior-dev'], review=100, per=100)
+    document = config.to_dict()
+    document['models']['default'] = {'provider': 'openai', 'model': 'offline-model',
+                                      'base_url': 'https://offline.invalid/v1'}
+    config = parse_config(json.dumps(document))
+    (capture / 'config.yaml').write_text(json.dumps(document))
+    (capture / 'config.json').write_text(json.dumps(config.to_dict()))
+    # LiteLLM's mid-stream error frame, after some streamed content.
+    frames = [sse_choice({'content': '{"findings": []} | HEAD | HEAD'}),
+              {'error': {'message': message, 'type': 'internal_server_error', 'param': None,
+                         'code': '500'}}]
+    runtime = offline_runtime(tmp_path, installed,
+                              default={'http_sse': {'turns': [{'frames': frames}]}})
+    spec_path = tmp_path / 'offline-spec.json'
+    spec = json.loads(spec_path.read_text())
+    spec['environment'] = {'OPENAI_API_KEY': 'offline-test-key'}
+    spec_path.write_text(json.dumps(spec))
+    result = asyncio.run(run_review(capture, config, runtime=runtime))
+    outcome = result.initial.outcomes[0]
+    assert (outcome.status, outcome.reason) == ('failed', 'provider')
+    events = [json.loads(line) for line in
+              (outcome.artifact_directory / 'stdout.jsonl').read_text().splitlines()]
+    assert events[-1]['error'].startswith('RuntimeError: stream provider error: {')
+    failure = [{'session_key': 'senior-dev/attempt-0001', 'http_status': 500}]
+    if classified == 'unavailable':
+        assert transient_provider_failures(capture) == failure
+        assert model_repetition_failures(capture) == []
+    else:
+        assert transient_provider_failures(capture) is None
+        assert model_repetition_failures(capture) == failure
