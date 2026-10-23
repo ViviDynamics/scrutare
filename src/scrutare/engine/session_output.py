@@ -39,6 +39,7 @@ class DecodedSession:
     nare_version: str | None
     contract: int | None
     turns: int | None
+    cut_off: bool = False
 
 
 @dataclass(frozen=True)
@@ -55,6 +56,7 @@ class DecodedReanchorSession:
     nare_version: str | None
     contract: int | None
     turns: int | None
+    cut_off: bool = False
 
 
 @dataclass(frozen=True)
@@ -72,6 +74,32 @@ class _DecodedEvidence:
     turns: int | None
     output: object
     saved_output: object
+    cut_off: bool = False
+
+
+# nare's error event for a turn cut off at max_tokens (nare 2026.10.12 loop._UNFINISHED; the
+# exact text is nare's contract, not provider text). A cut-off ends the session.
+CUT_OFF = "the model's turn was cut off at max_tokens"
+
+
+def cut_off_at_max_tokens(events: list[Any], status: object, stop: object) -> bool:
+    """Whether nare's last turn was cut off at max_tokens; ``events`` precede the result.
+
+    A cut-off session stops with ``max_tokens``. When the cut-off turn also exhausts the
+    token budget, nare's after-turn budget check appends its own error event and replaces
+    the stop with ``budget`` (nare 2026.10.12), so the cut-off is read from the stream:
+    its error event immediately followed by nare's budget error record, in status error.
+    nare writes nothing between or after the two.
+    """
+    if stop == "max_tokens":
+        return True
+    if stop != "budget" or status != "error" or len(events) < 2:
+        return False
+    cut, budget = events[-2:]
+    detail = budget.get("detail") if isinstance(budget, dict) else None
+    return (isinstance(cut, dict) and cut.get("type") == "error" and cut.get("text") == CUT_OFF
+            and isinstance(detail, dict) and budget.get("type") == "error"
+            and isinstance(detail.get("budget"), dict) and isinstance(detail.get("usage"), dict))
 
 
 def findings_schema(*, evidence_version: int = 1) -> dict[str, object]:
@@ -358,7 +386,8 @@ def _decode_evidence(
                                 output is not None, expected_limit,
                                 (status == "error" and stop == "budget")
                                 or total_usage.total > expected_limit,
-                                version, contract, count, output, saved["output"])
+                                version, contract, count, output, saved["output"],
+                                cut_off_at_max_tokens(records[:-1], status, stop))
     except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
         raise SessionProtocolError(
             "Session evidence is invalid or inconsistent; inspect private capture."
@@ -370,12 +399,13 @@ def decode_session(
     expected_limit: int, expected_root: Path,
     descriptor: DebateInput | AssessmentInput | None = None,
     evidence_version: int = 1, candidate_namespace: str = "",
-    discard_on_stop: str | None = None,
+    discard_cut_off: bool = False,
 ) -> DecodedSession:
     """Reconcile fresh findings evidence, attributing candidates only to the caller.
 
-    A session whose stop reason is ``discard_on_stop`` (a response cut off at the configured
-    output cap) yields no answer: whatever document nare kept is not parsed or validated.
+    With ``discard_cut_off`` (a rail with an output cap), a session whose last turn was cut
+    off at max_tokens yields no answer: whatever document nare kept is not parsed or
+    validated.
     """
     try:
         if (not isinstance(persona, str)
@@ -387,7 +417,7 @@ def decode_session(
                   else lambda value: _findings(value, persona, evidence_version=evidence_version,
                                              expected_root=expected_root,
                                              candidate_namespace=candidate_namespace))
-        discarded = discard_on_stop is not None and evidence.stop_reason == discard_on_stop
+        discarded = discard_cut_off and evidence.cut_off
         findings = () if evidence.output is None or discarded else parser(evidence.output)
         # Validate saved semantics independently: bool/int equality can conceal corruption.
         if evidence.saved_output is not None and not discarded:
@@ -397,6 +427,7 @@ def decode_session(
             evidence.usage, findings, evidence.output_available and not discarded,
             evidence.budget_limit,
             evidence.partial, evidence.nare_version, evidence.contract, evidence.turns,
+            evidence.cut_off,
         )
     except CitationValidationError:
         raise
@@ -408,7 +439,7 @@ def decode_session(
 
 def decode_reanchor_session(
     stdout: bytes, session_document: bytes | None, *, descriptor: PersonaReanchorInput,
-    exit_code: int, expected_limit: int, discard_on_stop: str | None = None,
+    exit_code: int, expected_limit: int, discard_cut_off: bool = False,
 ) -> DecodedReanchorSession:
     """Reconcile fresh anchor-only evidence against the descriptor's exact originals."""
     try:
@@ -419,7 +450,7 @@ def decode_reanchor_session(
             stdout, session_document, exit_code=exit_code, expected_limit=expected_limit,
             expected_root=descriptor.inputs.root,
         )
-        discarded = discard_on_stop is not None and evidence.stop_reason == discard_on_stop
+        discarded = discard_cut_off and evidence.cut_off
         corrections = () if evidence.output is None or discarded else parse_reanchor_output(
             evidence.output, descriptor.requests,
         )
@@ -430,6 +461,7 @@ def decode_reanchor_session(
             evidence.usage, corrections, evidence.output_available and not discarded,
             evidence.budget_limit,
             evidence.partial, evidence.nare_version, evidence.contract, evidence.turns,
+            evidence.cut_off,
         )
     except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
         raise SessionProtocolError(

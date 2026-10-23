@@ -536,7 +536,7 @@ async def _run_session(
                 raise SessionProtocolError("session: corrupted event evidence")
             constrained = constrained_turns(evidence.stdout, rail.structured_output)
             # Nothing nare kept from a session cut off at the cap is parsed or validated.
-            cap_stop = "max_tokens" if rail.max_output_tokens is not None else None
+            capped = rail.max_output_tokens is not None
             if isinstance(descriptor, PersonaReanchorInput):
                 try:
                     validate_prepared_inputs(descriptor.inputs)
@@ -546,7 +546,7 @@ async def _run_session(
                 decoded = decode_reanchor_session(
                     evidence.stdout, saved, descriptor=descriptor,
                     exit_code=exit_code, expected_limit=lease.limit_tokens,
-                    discard_on_stop=cap_stop,
+                    discard_cut_off=capped,
                 )
             else:
                 decoded = decode_session(evidence.stdout, saved, persona=lease.persona,
@@ -558,7 +558,7 @@ async def _run_session(
                                                      else None),
                                          evidence_version=evidence_version(prepared_root),
                                          candidate_namespace=str(artifact_directory),
-                                         discard_on_stop=cap_stop)
+                                         discard_cut_off=capped)
             if decoded.status is not None and (
                     decoded.nare_version != capability.version
                     or decoded.contract != capability.contract):
@@ -569,9 +569,11 @@ async def _run_session(
             ledger.observe(lease, decoded.usage)
             evidence.usage = decoded.usage
             complete = decoded.status != "error" or decoded.stop_reason == "budget"
-            if rail.max_output_tokens is not None and decoded.stop_reason == "max_tokens":
+            if capped and decoded.cut_off:
                 # A response cut off at the configured cap is never an answer, whatever nare
-                # kept from earlier turns (decoding discarded it). It reported its usage.
+                # kept from earlier turns (decoding discarded it). It reported its usage. The
+                # cap is the reason even when the same turn also exhausted the budget: the
+                # cut-off is not an overrun, so no overrun fallback applies to it.
                 status, reason, complete = "failed", "output_cap", True
             elif decoded.status == "done":
                 status, reason = ("partial", "budget") if decoded.partial else ("complete", "done")

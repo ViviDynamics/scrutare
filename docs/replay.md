@@ -94,11 +94,15 @@ exactly once with the same value exactly when the rail sets a cap
 `{"limit": N, "reached": bool}` exactly when the rail does, with `reached` true
 exactly when the session failed as `output_cap`, a cut-off session must carry no
 findings, corrections or available output, and `reached` must agree with the
-stop reason in the retained `stdout.jsonl` (`max_output_tokens_result_disagrees`,
-invalid). A launched session without `result.json`, a started session without
-`stdout.jsonl`, or a capped run without any session attempt is
-`max_output_tokens_evidence_missing` (incomplete). Runs that never set a cap
-are not audited.
+retained `stdout.jsonl`: true exactly when its terminal stop reason is
+`max_tokens`, or is `budget` in status `error` right after nare's cut-off error
+event and its budget error record, whose usage and budget equal the result's
+(`max_output_tokens_result_disagrees`, invalid). A capped bundle recorded before this check (2026.10.29 and 2026.10.30)
+that holds a cut-off whose turn also exhausted its budget recorded that session
+as a budget overrun, and now replays with this issue for it. A launched session
+without `result.json`, a started session without `stdout.jsonl`, or a capped
+run without any session attempt is `max_output_tokens_evidence_missing`
+(incomplete). Runs that never set a cap are not audited.
 
 Known formats must be structurally valid UTF-8 JSON. Duplicate object keys,
 nonfinite numbers, malformed fields, unsupported verdict or delivery schema
