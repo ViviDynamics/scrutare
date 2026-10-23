@@ -252,3 +252,24 @@ def test_without_the_cap_a_cut_off_over_budget_is_unchanged(capture, tmp_path):
         "partial", "budget", "budget")
     assert outcome.accounting_complete
     assert "max_output_tokens" not in recorded(attempt, "result.json")
+
+
+def test_a_cut_off_anchor_correction_over_budget_yields_no_corrections(capture, tmp_path):
+    from test_reanchor_session import correction_setup
+    descriptor, ledger, lease, _, attempt = correction_setup(capture)
+    path = capped(tmp_path, input_tokens=14, status="error", stop="budget", exit_code=1,
+                  extra=CUT_OFF_EVENT + BUDGET_EVENT,
+                  output={"corrections": [{"request_id": "r0001", "file": "src/app.py",
+                                           "line": 2, "side": "RIGHT"}]})
+    path.write_text(path.read_text().replace('"contract": 2', '"contract": 1')
+                    .replace('"2026.10.12"', '"2026.10.0"'))
+    outcome = asyncio.run(module().run_reanchor_session(
+        descriptor, ModelRail("openai", None, "m", max_output_tokens=50), lease, ledger=ledger,
+        artifact_directory=attempt, runtime=NareRuntime(path, 7, 5),
+        capability=NareCapability("2026.10.0", 1)))
+    assert (outcome.status, outcome.reason, outcome.stop_reason) == (
+        "failed", "output_cap", "budget")
+    assert outcome.corrections == () and not outcome.output_available
+    assert outcome.accounting_complete
+    assert recorded(attempt, "result.json")["max_output_tokens"] == {"limit": 50,
+                                                                     "reached": True}

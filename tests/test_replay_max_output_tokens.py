@@ -208,7 +208,8 @@ def over_budget(directory, events, status="error"):
     """The stream nare 2026.10.12 leaves when its budget check fires after the turn (#84)."""
     (directory / "stdout.jsonl").write_text("".join(
         json.dumps(event) + "\n" for event in events) + json.dumps(
-        {"type": "result", "status": status, "stop_reason": "budget"}) + "\n")
+        {"type": "result", "status": status, "stop_reason": "budget",
+         "usage": BUDGET["detail"]["usage"], "budget": BUDGET["detail"]["budget"]}) + "\n")
 
 
 def test_a_cut_off_that_also_exhausted_the_budget_replays_clean_as_the_cap(tmp_path):
@@ -252,6 +253,10 @@ def test_a_budget_stop_the_stream_does_not_show_as_a_cut_off_is_not_the_cap(tmp_
      "error"),
     ([CUT_OFF, {**BUDGET, "detail": {"budget": BUDGET["detail"]["budget"]}}], "error"),
     ([CUT_OFF, ["not", "a", "record"]], "error"),
+    # The budget record must be nare's own: the result's usage and budget, not made up.
+    ([CUT_OFF, {**BUDGET, "detail": {"budget": {}, "usage": {}}}], "error"),
+    ([CUT_OFF, {**BUDGET, "detail": {**BUDGET["detail"], "budget": {
+        **BUDGET["detail"]["budget"], "tokens": 1}}}], "error"),
     # nare ends a cut-off, and the budget check after it, in status error only.
     ([CUT_OFF, BUDGET], "done"),
 ])

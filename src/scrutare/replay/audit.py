@@ -166,10 +166,17 @@ def _terminal_cut_off(stdout: bytes) -> tuple[bool, bool]:
     records = [decoded(line) for line in
                [line for line in stdout.split(b"\n") if line.strip()][-3:]]
     terminal = records[-1] if records else None
-    if isinstance(terminal, dict) and terminal.get("type") == "result":
-        return True, cut_off_at_max_tokens(records[:-1], terminal.get("status"),
-                                           terminal.get("stop_reason"))
-    return False, False
+    if not isinstance(terminal, dict) or terminal.get("type") != "result":
+        return False, False
+    cut_off = cut_off_at_max_tokens(records[:-1], terminal.get("status"),
+                                    terminal.get("stop_reason"))
+    if cut_off and terminal.get("stop_reason") == "budget":
+        # The engine reconciles the budget record with the result; replay checks the same.
+        budget = records[-2]
+        detail = budget.get("detail") if isinstance(budget, dict) else None
+        cut_off = (isinstance(detail, dict) and detail.get("usage") == terminal.get("usage")
+                   and detail.get("budget") == terminal.get("budget"))
+    return True, cut_off
 
 
 def _max_output_tokens_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
