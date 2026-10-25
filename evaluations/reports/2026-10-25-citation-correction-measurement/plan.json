@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "kind": "development-corpus measurement for #91; not a qualification and not a gate",
+  "question": "Does context.line_counts, and then line_counts plus findings.citation_correction, change how many discovery sessions are lost to citation defects, at what token cost?",
+  "jobs": {
+    "base": "c1 profile: structured_output json_schema, max_output_tokens 20000, line_counts off, citation_correction off",
+    "lines": "base plus context.line_counts: true",
+    "lines-correct": "lines plus findings.citation_correction: true"
+  },
+  "model": "spark/glm-5.3-flash only, LAN LiteLLM path; no paid model",
+  "corpus": "evaluations/pilot, development split only; evaluations/holdout-v1 is not opened",
+  "cases": ["security-auth-order", "tests-consumer-fixture", "contract-null-zero", "operations-flush-loss"],
+  "comparison_set": "focused",
+  "variants": ["aggregate"],
+  "repeats": 3,
+  "expected_runs_per_job": 12,
+  "expected_runs_total": 36,
+  "discovery_sessions_total": 144,
+  "budgets": "ceiling 200000 per cell, so a 50000 grant per reviewer, as c1's aggregate arm; 1800 s session timeout; 6 turns",
+  "concurrency": "1 cell per job, the three jobs launched together: 3 cells and 12 streams in flight, c1's peak, with each job seeing the same engine load",
+  "transient_retries": 0,
+  "sizing_rationale": [
+    "Citation defects are rare: g2, s1, s2 and c1 lost 1 to 3 of about 144 discovery sessions each (about 1 to 2 percent).",
+    "Detecting a change in a rate that low needs thousands of sessions, which is days of the shared engine. This measurement does not try to; it sizes for the mechanism and for cost.",
+    "The aggregate arm is the cheapest cell with four evidence-v2 discovery sessions and no assessor, so it gives the most citations per token. Four defect cases, two of which (security-auth-order, tests-consumer-fixture) produced every recent past-end and placeholder-hash refusal, maximise citations per cell.",
+    "36 cells at c1's measured cell latency (about 600 s at this concurrency under load) is about 2 to 2.5 h of wall clock and about 2 million tokens, comparable to one c1 schedule.",
+    "Any correction offered will be observed with its outcome and token cost; the refusal-rate comparison between jobs is reported as counts with uncertainty, not as an effect."
+  ],
+  "launch": "no idle-window rule (a measurement); concurrent load recorded before, every 15 minutes during, and in a full spend-log re-read after",
+  "spend_check": "0 LiteLLM fallbacks and every row served by the Spark deployment, from the spend log over the whole window"
+}

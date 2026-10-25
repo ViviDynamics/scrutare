@@ -243,6 +243,17 @@ request was cut off at the cap as its budget ran out (recorded as a budget
 overrun; #84). External spend was zero. The gate allows one re-test only on a
 maintainer decision.
 
+A [development measurement of line counts and the citation correction](../evaluations/reports/2026-10-25-citation-correction-measurement/README.md)
+(#91) ran three jobs at the same time on the released 2026.10.34: c1's profile,
+then `context.line_counts`, then line counts plus `findings.citation_correction`.
+Each covered the aggregate arm on four pilot defect cases with three repeats, for
+48 discovery sessions per job. No discovery answer in any job was refused for its
+citations (0 of 144), so no correction was offered, and the settings could not
+show an effect. One live transport smoke with a synthetic defect resumed a
+retained session for the tool-free, schema-constrained correction turn on
+`spark/glm-5.3-flash`. The base job lost two sessions to the output cap. It is a
+measurement, not a qualification, and external spend was zero.
+
 Ordinary CI uses `--evidence-kind offline` and deterministic provider substitutions
 to verify orchestration and scoring. Offline metrics measure software behavior only.
 A real baseline requires explicit model jobs and completed independent human
