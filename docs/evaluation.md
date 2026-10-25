@@ -188,6 +188,12 @@ the citation bound reduces `line_range_outside_capture` refusals. It changes the
 manifest and prompts the reviewers see, so compare it only against the same arms
 without it.
 
+`findings: {evidence: v2, citation_correction: true}` in the evaluation
+configuration passes the [citation correction](config.md#citation-correction-turn-opt-in)
+through to every evidence-v2 arm (the arms without evidence have no citations).
+It adds a model turn to sessions it fires in, so compare it only against the
+same arms without it, and report how often it was offered and each outcome.
+
 The [tools, reliability and separating-case measurements](../evaluations/reports/2026-10-13-tools-reliability-separating/README.md)
 retain 321 cells in thirteen jobs and four withdrawn freezes. The unchanged profile
 passed 3 of the 4 qualification schedules run; captured Ruff evidence changed no
