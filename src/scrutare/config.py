@@ -309,6 +309,13 @@ class ReviewConfig:
         if self.findings.discussion.enabled and (
                 self.strategy != "debate" or not self.findings.assessment.enabled):
             raise ConfigError("findings.discussion: requires assessed v2 debate")
+        if self.findings.citation_correction and any(
+                rail.provider != "openai"
+                for rail in (self.models.default, *(rail for _, rail in self.models.overrides))):
+            # The correction resumes a transcript holding tool_use blocks with no tools offered,
+            # which Anthropic refuses; nare's OpenAI rail omits the empty tool list.
+            raise ConfigError("findings.citation_correction: requires provider openai on every "
+                              "model rail")
 
     def to_dict(self) -> dict[str, Any]:
         result: dict[str, Any] = {

@@ -10,7 +10,7 @@ from test_repository_context import contextual
 from test_review_inputs import capture as capture
 from test_review_inputs import save_json
 
-from scrutare.config import FindingSettings
+from scrutare.config import FindingSettings, parse_config
 from scrutare.engine.review_inputs import prepare_review_inputs
 from scrutare.engine.session_output import _findings
 from scrutare.findings.citation_correction import (
@@ -23,12 +23,14 @@ from scrutare.findings.evidence import CitationValidationError
 from scrutare.findings.models import FindingError
 
 CALLER = b"one\ntwo\nthree\n"
+OPENAI_MODELS = parse_config(b"models: {default: {provider: openai, model: test-model}}\n").models
 PLACEHOLDER = "334e0..placeholder"
 
 
 def prepared(capture, *, caller=CALLER):
     config, _ = contextual(capture, caller=caller)
-    config = replace(config, findings=FindingSettings("v2", citation_correction=True))
+    config = replace(config, models=OPENAI_MODELS,
+                     findings=FindingSettings("v2", citation_correction=True))
     for name in ("config.yaml", "config.json"):
         save_json(capture / name, config.to_dict())
     return prepare_review_inputs(capture, config)

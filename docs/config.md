@@ -40,7 +40,7 @@ Errors identify a field path or YAML location without echoing field values.
 | `github.human_reviewers` | List of nonempty reviewer-name strings for escalation | `[]` |
 | `github.paths.include` | List of nonempty glob strings | `[]` |
 | `github.paths.exclude` | List of nonempty glob strings | `["docs/**", "*.md"]` |
-| `findings.citation_correction` | Boolean; `true` requires `findings.evidence: v2` | `false` (off) |
+| `findings.citation_correction` | Boolean; `true` requires `findings.evidence: v2` and `provider: openai` on every rail | `false` (off) |
 | `replies.enabled` | Boolean; `true` requires `strategy: iterative` | `false` |
 | `replies.trust` | `write` (verified write access), `anyone` (any non-bot account) | `write` |
 
@@ -217,8 +217,12 @@ findings:
   citation_correction: true
 ```
 
-It applies only to discovery sessions (the reviewers of the initial wave), and
-only to these deterministic defects:
+It requires `provider: openai` on every model rail. The correction resumes a
+transcript that holds the session's tool calls with no tools offered; nare's
+OpenAI rail then omits the tool list, which OpenAI-compatible servers such as
+vLLM accept, while Anthropic's API refuses tool blocks in a request that defines
+no tools. It applies only to discovery sessions (the reviewers of the initial
+wave), and only to these deterministic defects:
 
 - `line_range_outside_capture` on a captured file with at least one line. The
   correction prompt states the file's last citeable line, which is the bound the
@@ -271,8 +275,12 @@ byte-identical to earlier releases. With it on, `config.to_dict()` records
 `result.json` records `{"offered": bool, "defects": N, "outcome": ...,
 "exit_code": ...}` (`outcome` and the correction run's `exit_code` are `null`
 when nothing was offered, and `exit_code` also when the run did not finish).
-The session's own fields (`exit_code`, `nare_status`, `stop_reason`) still
-describe its first run. An offered session's attempt
+For a corrected session, the session's own `nare_status`, `stop_reason`,
+`exit_code` and cumulative `usage` are those of the correction run; for a
+refused or unanswered one they are `null`, as for any refused answer today.
+The `structured_output` and `max_output_tokens` records count the first run's
+stream only; the correction's constrained turn and any cut-off are in
+`correction.stdout.jsonl`. An offered session's attempt
 directory also keeps `citation-correction.json` (the original refusal, the named
 defects, the exact prompt and its SHA-256, and the argv), the correction schema,
 and the turn's `correction.stdout.jsonl`, `correction.stderr.txt` and

@@ -218,3 +218,28 @@ def test_first_evidence_that_does_not_reconcile_owed_no_correction(capture, tmp_
     assert outcome.reason == "protocol"
     assert load(attempt / "result.json")["citation_correction"]["offered"] is False
     assert issues(capture) == []
+
+
+def test_a_corrected_session_recorded_as_failed_disagrees(capture, tmp_path):
+    attempt = corrected(capture, tmp_path)
+    edit(attempt / "result.json", lambda d: d.update(
+        status="failed", reason="protocol", findings=[], output_available=False,
+        citation_correction={**d["citation_correction"], "outcome": "failed"}))
+    assert ("citation_correction_disagrees", where(attempt, capture, "result.json")) in issues(
+        capture)
+
+
+@pytest.mark.parametrize("change", ["extra", "no-jsonl"])
+def test_a_correction_argv_with_other_flags_disagrees(capture, tmp_path, change):
+    attempt = corrected(capture, tmp_path)
+
+    def alter(document):
+        argv = document["argv"]
+        if change == "extra":
+            argv.extend(["--image-input"])
+        else:
+            argv.remove("--jsonl")
+
+    edit(attempt / "citation-correction.json", alter)
+    assert issues(capture) == [("citation_correction_disagrees",
+                                where(attempt, capture, "citation-correction.json"))]

@@ -7,7 +7,14 @@ from dataclasses import replace
 from hashlib import sha256
 
 import pytest
-from test_citation_correction_defects import CALLER, PLACEHOLDER, answer, citation, finding
+from test_citation_correction_defects import (
+    CALLER,
+    OPENAI_MODELS,
+    PLACEHOLDER,
+    answer,
+    citation,
+    finding,
+)
 from test_repository_context import contextual
 from test_review_inputs import capture as capture
 from test_review_inputs import save_json
@@ -103,7 +110,7 @@ def fake_nare(tmp_path, first, correction=None, *, first_step=None):
 def prepared(capture, *, correction=True, limit=1000):
     config, _ = contextual(capture, caller=CALLER)
     config = replace(config, findings=FindingSettings("v2", citation_correction=correction),
-                     budgets=BudgetSettings(limit, limit))
+                     budgets=BudgetSettings(limit, limit), models=OPENAI_MODELS)
     for name in ("config.yaml", "config.json"):
         save_json(capture / name, config.to_dict())
     inputs = prepare_review_inputs(capture, config)
@@ -394,3 +401,13 @@ def test_the_prompt_spells_out_the_answer_shape_and_both_line_bounds(capture, tm
     prompt = load(attempt / "citation-correction.json")["prompt"]
     assert '{"citations": [{"id": ' in prompt
     assert "start_line and end_line must both be at most 3" in prompt
+
+
+def test_a_saved_correction_with_a_different_type_is_refused(capture, tmp_path):
+    # bool/int equality would conceal it: the saved answer is parsed on its own as well.
+    saved = {"citations": [dict(id="c0001", revision="a" * 40, sha256=GOOD, start_line=True,
+                                end_line=3)]}
+    outcome, _, attempt = launch(capture, tmp_path, PAST_END, {
+        "output": fix(("c0001", GOOD, 1, 3)), "saved_output": saved})
+    assert outcome.status == "failed" and outcome.findings == ()
+    assert load(attempt / "result.json")["citation_correction"]["outcome"] != "corrected"

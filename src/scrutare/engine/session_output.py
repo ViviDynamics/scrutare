@@ -531,6 +531,11 @@ def decode_citation_correction(
             findings = _findings(corrected, persona, evidence_version=2,
                                  expected_root=expected_root,
                                  candidate_namespace=candidate_namespace)
+            # Validate saved semantics independently: bool/int equality can conceal corruption.
+            _findings(apply_citation_correction(first.saved_output, offered.defects,
+                                                evidence.saved_output),
+                      persona, evidence_version=2, expected_root=expected_root,
+                      candidate_namespace=candidate_namespace)
         except (CitationValidationError, FindingError):
             raise
         except (ValueError, TypeError, KeyError, OverflowError, RecursionError):

@@ -8,7 +8,8 @@ from test_review_inputs import CONFIG
 
 from scrutare.config import ConfigError, parse_config
 
-V2 = CONFIG + b"context: {enabled: true}\n"
+V2 = (b"models: {default: {provider: openai, model: test-model}}\n"
+      b"context: {enabled: true}\n")
 
 
 def test_the_setting_is_off_by_default_and_absent_from_the_record():
@@ -36,7 +37,8 @@ def test_a_non_boolean_is_refused(value):
 
 def test_it_requires_evidence_v2_because_only_v2_findings_carry_citations():
     with pytest.raises(ConfigError, match="findings.citation_correction: requires evidence v2"):
-        parse_config(CONFIG + b"findings: {citation_correction: true}\n")
+        parse_config(V2.replace(b"context: {enabled: true}\n", b"")
+                     + b"findings: {citation_correction: true}\n")
     with pytest.raises(ConfigError, match="requires evidence v2"):
         parse_config(V2 + b"findings: {evidence: legacy, citation_correction: true}\n")
 
@@ -45,7 +47,8 @@ def test_evaluation_arms_with_evidence_inherit_the_setting():
     from scrutare.evaluation.runner import comparison_configs
 
     config = parse_config(
-        CONFIG + b"budgets: {per_persona_tokens: 100, review_max_tokens: 100}\n"
+        V2.replace(b"context: {enabled: true}\n", b"")
+        + b"budgets: {per_persona_tokens: 100, review_max_tokens: 100}\n"
         b"context: {enabled: true, line_counts: true}\n"
         b"findings: {evidence: v2, citation_correction: true}\n")
     for comparison_set in ("architectures", "focused"):
@@ -62,3 +65,19 @@ def test_evaluation_arms_with_evidence_inherit_the_setting():
     # Arms without the opt-in keep their earlier canonical bytes.
     for arm in comparison_configs(plain, comparison_set="focused").values():
         assert "citation_correction" not in json.dumps(arm.to_dict())
+
+
+@pytest.mark.parametrize("models", [
+    b"models: {default: {model: test-model}}\n",
+    b"models: {default: {provider: anthropic, model: test-model}}\n",
+    b"models: {default: {provider: openai, model: m}, overrides: {senior-dev: {provider: anthropic,"
+    b" model: other}}}\n",
+], ids=["default-anthropic", "anthropic", "anthropic-override"])
+def test_it_requires_openai_rails_because_anthropic_refuses_a_tool_free_resumed_turn(models):
+    # A resumed transcript holds tool_use blocks; Anthropic refuses them without tools, and a
+    # correction turn offers none (nare's Anthropic transport sends tools=[]).
+    with pytest.raises(ConfigError, match="citation_correction: requires provider openai"):
+        parse_config(models + b"personas: [senior-dev]\ncontext: {enabled: true}\n"
+                     b"findings: {evidence: v2, citation_correction: true}\n")
+    assert parse_config(models + b"personas: [senior-dev]\ncontext: {enabled: true}\n"
+                        b"findings: {evidence: v2}\n")

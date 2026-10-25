@@ -308,6 +308,12 @@ def _flag(argv: list[Any], name: str) -> object:
     return argv[index] if index < len(argv) else None
 
 
+def _names(argv: list[Any]) -> list[str]:
+    """Every flag name in argv, with an inline `--name=value` reduced to its name."""
+    return [item.split("=", 1)[0] for item in argv[2:]
+            if isinstance(item, str) and item.startswith("--")]
+
+
 def _prefixed(argv: list[Any], prefix: str) -> list[str]:
     return [item for item in argv if isinstance(item, str) and item.startswith(prefix)]
 
@@ -457,6 +463,8 @@ def _citation_correction_issues(run_dir: Path, config_data: object) -> tuple[Aud
                          and len(_prefixed(argv, prefix)) == 1
                          for prefix in ("--model=", "--system="))
                  and ("--stream" in argv) == ("--stream" in first_argv)
+                 # Exactly the session's own flags, plus the resume: nothing added or dropped.
+                 and sorted(_names(argv)) == sorted([*_names(first_argv), "--resume"])
                  and _flag(argv, "--resume") == str(Path(namespace) / "session.json")
                  and _flag(argv, "--session") == str(Path(namespace) / "correction-session.json")
                  and _flag(argv, "--schema")
@@ -492,6 +500,8 @@ def _citation_correction_issues(run_dir: Path, config_data: object) -> tuple[Aud
                 try:
                     corrected = parse(apply_citation_correction(first.output, defects,
                                                                 second.output))
+                    parse(apply_citation_correction(first.saved_output, defects,
+                                                    second.saved_output))
                     expected, findings = "corrected", [finding_wire(f) for f in corrected]
                 except CitationValidationError:
                     expected, rejected = "refused", "citation_validation"
@@ -513,9 +523,11 @@ def _citation_correction_issues(run_dir: Path, config_data: object) -> tuple[Aud
                      and outcome.get("findings") == []
                      and same_usage)
         else:
-            # The session's own handling decided it (timeout, cancellation, inputs,
-            # inconsistent evidence); a usable corrected answer was not used.
-            valid = status == "failed" and outcome.get("findings") == []
+            # The session's own handling decided it (timeout, cancellation, inconsistent
+            # evidence), or a usable correction was answered and the session's later checks
+            # (changed inputs, artifacts) failed it; it never used an answer.
+            valid = (status == "failed" and outcome.get("findings") == []
+                     and (expected == "failed" or reason in ("inputs", "artifacts")))
         if not valid:
             issues.append(AuditIssue("citation_correction_disagrees", f"{where}/result.json",
                                      "invalid"))
