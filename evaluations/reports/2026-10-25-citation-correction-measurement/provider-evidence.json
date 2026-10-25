@@ -1,5 +1,9 @@
 {
- "last_job_ended_utc": "2026-10-25T06:14:00Z",
+ "jobs_ended_utc": {
+  "base": "2026-10-25T06:13:46Z",
+  "lines": "2026-10-25T05:51:59Z",
+  "lines-correct": "2026-10-25T05:48:11Z"
+ },
  "launched_utc": "2026-10-25T04:17:49Z",
  "live_resume_smoke": {
   "answer_matches_schema_shape": true,
@@ -157,8 +161,21 @@
     "2026-10-25 05:47:57",
     "2026-10-25 06:02:57"
    ]
+  },
+  {
+   "by": {
+    "opencode | proxy master key | spark/glm-5.3-flash | http://192.168.3.40:8045/v1": 52,
+    "python-httpx2 | proxy master key | spark/glm-5.3-flash | http://192.168.3.40:8045/v1": 13
+   },
+   "rows": 65,
+   "units_running": [],
+   "window_utc": [
+    "2026-10-25 06:02:57",
+    "2026-10-25 06:17:57"
+   ]
   }
  ],
+ "load_samples_note": "each sample is the 15 minutes before it was read; the first is almost entirely before launch, and the last covers the end of base",
  "router_after": {
   "fallback_fields": {
    "content_policy_fallbacks": null,
@@ -198,18 +215,22 @@
   "wildcard_groups": []
  },
  "schema_version": 1,
+ "smoke_utc": [
+  "2026-10-25T06:04:51Z",
+  "2026-10-25T06:05:19Z"
+ ],
  "spend_log": {
   "attempted_fallbacks": {
-   "0": 677
+   "0": 697
   },
   "attempted_retries": {
-   "0": 677
+   "0": 697
   },
   "by_client_and_key": {
    "opencode | proxy master key": {
-    "completion_tokens": 127978,
-    "prompt_tokens": 17555975,
-    "rows": 197
+    "completion_tokens": 146654,
+    "prompt_tokens": 19605920,
+    "rows": 217
    },
    "python-httpx2 | proxy master key": {
     "completion_tokens": 527719,
@@ -219,15 +240,16 @@
   },
   "note": "python-httpx2 is nare: these three jobs plus the one smoke request. LiteLLM attribution for the self-hosted group is nominal and not billed.",
   "paid_provider_rows": 0,
-  "raw_rows_sha256_private": "fdf921ab550a24bfbb37ae701a2d95e7acb4f9f3e04a911659be977e98be5228",
-  "rows_all_keys": 677,
+  "raw_rows_sha256_private": "874fa02dccff55b95991c27919ea87e17aacc9bdc74a87f965327199e25b6fc9",
+  "rows_all_keys": 697,
   "served_by": {
-   "spark/glm-5.3-flash | openai/glm-5.3-flash | http://192.168.3.40:8045/v1": 677
+   "spark/glm-5.3-flash | openai/glm-5.3-flash | http://192.168.3.40:8045/v1": 697
   },
   "statuses": {
-   "success": 677
+   "success": 697
   }
  },
+ "spend_log_read_utc": "2026-10-25T06:26:03Z",
  "window_utc": [
   "2026-10-25 04:17:00",
   "2026-10-25 06:20:00"

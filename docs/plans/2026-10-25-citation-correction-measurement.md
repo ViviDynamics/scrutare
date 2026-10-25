@@ -11,7 +11,7 @@ Out: a frozen qualification, which is a maintainer decision; any default change 
 - Sizing, written in `plan.json` before any call:
   - 4 pilot development defect cases, the aggregate arm and 3 repeats, so 48 discovery sessions per job;
   - about one `c1` schedule of traffic.
-  - At a 1 to 2% refusal rate, this sees the mechanism fire. It does not estimate an effect.
+  - It does not estimate an effect. At a 1 to 2% refusal rate, the 48 sessions that can offer a correction had a 38 to 62% prior chance of offering none. That gives a fair chance, not an assurance, of seeing the mechanism fire. `plan.json` overstated this, and the package README says so.
 - A refusal counts as a citation refusal when the released diagnoser classifies the session's first answer that way, over the private stream.
 
 ## Tasks
