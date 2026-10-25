@@ -2,9 +2,8 @@
 
 Standard library only, no network. Fails on any difference from summary.json. It checks
 every published hash and refuses files outside the manifest; requires the three jobs to
-differ only in
-the settings under test; checks each session diagnosis against its job's cells and
-frozen rail; and recomputes the cell, session-cause, citation-defect and correction
+differ only in the settings under test; checks each session diagnosis against its job's
+cells and frozen rail; and recomputes the cell, session-cause, citation-defect and correction
 tables and the token cost.
 """
 import argparse
