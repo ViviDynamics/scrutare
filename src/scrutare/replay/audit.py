@@ -279,6 +279,261 @@ def _max_output_tokens_issues(run_dir: Path, config_data: object) -> tuple[Audit
     return tuple(issues)
 
 
+def _stream(stdout: bytes) -> tuple[list[Any], dict[str, Any] | None]:
+    """A retained stream's events and its terminal result record, read tolerantly."""
+    records = []
+    for line in stdout.split(b"\n"):
+        if line.strip():
+            try:
+                records.append(decode_artifact(line, artifact="stdout.jsonl"))
+            except (ReplayError, RecursionError):
+                return [], None
+    if records and isinstance(records[-1], dict) and records[-1].get("type") == "result":
+        return records[:-1], records[-1]
+    return records, None
+
+
+_UNOFFERED = {"offered": False, "defects": 0, "outcome": None, "exit_code": None}
+_OUTCOMES = ("corrected", "refused", "no_answer", "failed")
+# Flags the correction turn must share with its session's own invocation.
+_SHARED_FLAGS = ("--root", "--provider", "--base-url", "--contract", "--budget-tokens",
+                 "--structured-output", "--max-tokens")
+
+
+def _flag(argv: list[Any], name: str) -> object:
+    """The value of a flag given at most once, or None; a repeated flag matches nothing."""
+    if argv.count(name) > 1:
+        return ()
+    index = argv.index(name) + 1 if name in argv else len(argv)
+    return argv[index] if index < len(argv) else None
+
+
+def _names(argv: list[Any]) -> list[str]:
+    """Every flag name in argv, with an inline `--name=value` reduced to its name."""
+    return [item.split("=", 1)[0] for item in argv[2:]
+            if isinstance(item, str) and item.startswith("--")]
+
+
+def _prefixed(argv: list[Any], prefix: str) -> list[str]:
+    return [item for item in argv if isinstance(item, str) and item.startswith(prefix)]
+
+
+def _citation_correction_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
+    """Recompute each discovery session's citation correction from its retained evidence.
+
+    Whether a correction was owed, which defects it named, its prompt, schema and argv, and
+    what the corrected answer became all follow from the first stream and saved session,
+    the retained review inputs, and the correction stream and saved session, reconciled as
+    the runtime reconciles them. Runs that never opted in and carry no record are not
+    audited, so earlier bundles replay as before.
+    """
+    from scrutare.engine.session_output import _decode_evidence, _findings, findings_schema
+    from scrutare.findings.citation_correction import (
+        apply_citation_correction,
+        citation_correction_prompt,
+        citation_correction_schema,
+        citation_defects,
+    )
+    from scrutare.findings.evidence import CitationValidationError
+    from scrutare.findings.models import finding_wire
+
+    attempts = _session_records(run_dir)
+    names = ("citation-correction.json", "correction.stdout.jsonl")
+
+    def document(path: Path) -> object:
+        try:
+            return decode_artifact(read_artifact(path), artifact=path.name)
+        except ReplayError:
+            return None
+
+    def raw(path: Path) -> bytes | None:
+        try:
+            return read_artifact(path)
+        except ReplayError:
+            return None
+
+    def has_record(attempt: Path) -> bool:
+        result = document(attempt / "result.json")
+        return (any(os.path.lexists(attempt / name) for name in names)
+                or (isinstance(result, dict) and "citation_correction" in result))
+
+    try:
+        config = parse_config(json.dumps(config_data))
+        opted_in: bool | None = config.findings.citation_correction
+    except (ConfigError, TypeError, ValueError):
+        opted_in = None
+    if not opted_in:
+        recorded = [attempt for attempt in attempts if has_record(attempt)]
+        if opted_in is None and recorded:
+            return (AuditIssue("citation_correction_config_invalid", "config.json.findings",
+                               "invalid"),)
+        return tuple(AuditIssue("citation_correction_unconfigured",
+                                f"{attempt.relative_to(run_dir).as_posix()}/result.json",
+                                "invalid") for attempt in recorded)
+    root = run_dir / "review-inputs"
+    discovery_schema = findings_schema(evidence_version=2)
+    capped = any(rail.max_output_tokens is not None for rail in
+                 (config.models.default, *(r for _, r in config.models.overrides)))
+    fields = ("input", "output", "cache_read", "cache_write")
+    issues = []
+    for attempt in attempts:
+        where = attempt.relative_to(run_dir).as_posix()
+        invocation = document(attempt / "invocation.json")
+        outcome = document(attempt / "result.json")
+        if not isinstance(invocation, dict) or not isinstance(outcome, dict):
+            continue
+        discovery = ("purpose" not in invocation
+                     and document(attempt / "findings.schema.json") == discovery_schema)
+        record = outcome.get("citation_correction")
+        if not discovery:
+            if record is not None or any(os.path.lexists(attempt / name) for name in names):
+                issues.append(AuditIssue("citation_correction_unrecorded",
+                                         f"{where}/result.json", "invalid"))
+            continue
+        persona, namespace = outcome.get("persona"), outcome.get("artifact_directory")
+        first_argv = invocation.get("argv")
+        limit, first_exit = outcome.get("invocation_limit"), outcome.get("exit_code")
+        if (not isinstance(record, dict) or set(record) != set(_UNOFFERED)
+                or type(record["offered"]) is not bool or type(record["defects"]) is not int
+                or (record["outcome"] is None) == record["offered"]
+                or (record["offered"] and record["outcome"] not in _OUTCOMES)
+                or (not record["offered"] and record != _UNOFFERED)
+                or not (record["exit_code"] is None or type(record["exit_code"]) is int)
+                or not isinstance(persona, str) or not isinstance(namespace, str)
+                or not isinstance(first_argv, list) or type(limit) is not int):
+            issues.append(AuditIssue("citation_correction_unrecorded",
+                                     f"{where}/result.json", "invalid"))
+            continue
+        recorded_root = _flag(first_argv, "--root")
+
+        def parse(value: object, persona: str = persona, namespace: str = namespace) -> Any:
+            return _findings(value, persona, evidence_version=2, expected_root=root,
+                             candidate_namespace=namespace)
+
+        # What the first stream owed, reconciled exactly as the runtime does: a finished
+        # answer with budget left, not cut off, refused only for correctable defects.
+        first = None
+        stdout, saved = raw(attempt / "stdout.jsonl"), raw(attempt / "session.json")
+        if isinstance(recorded_root, str) and stdout is not None and type(first_exit) is int:
+            try:
+                first = _decode_evidence(stdout, saved, exit_code=first_exit,
+                                         expected_limit=limit, expected_root=Path(recorded_root))
+            except (ValueError, TypeError, KeyError):
+                first = None
+        defects = None
+        refusal: dict[str, object] | None = None
+        if (first is not None and first.status == "done" and first.usage.total < limit
+                and not (capped and first.cut_off)):
+            try:
+                parse(first.output)
+            except CitationValidationError as error:
+                refusal = {"reason": "citation_validation", "citation_reason": error.reason}
+            except (ValueError, TypeError, KeyError):
+                refusal = {"reason": "protocol", "citation_reason": None}
+            if refusal is not None:
+                defects = citation_defects(first.output, root, parse=parse)
+        if not record["offered"]:
+            if defects is not None or any(os.path.lexists(attempt / name) for name in names):
+                issues.append(AuditIssue("citation_correction_disagrees",
+                                         f"{where}/result.json", "invalid"))
+            continue
+        if defects is None or first is None or record["defects"] != len(defects):
+            issues.append(AuditIssue("citation_correction_disagrees",
+                                     f"{where}/result.json", "invalid"))
+            continue
+        missing = next((name for name in ("citation-correction.json",
+                                          "citation-correction.schema.json")
+                        if not os.path.lexists(attempt / name)), None)
+        if missing is not None:
+            issues.append(AuditIssue("citation_correction_evidence_missing",
+                                     f"{where}/{missing}", "incomplete"))
+            continue
+        request = document(attempt / "citation-correction.json")
+        prompt = citation_correction_prompt(defects)
+        argv = request.get("argv") if isinstance(request, dict) else None
+        valid = (isinstance(request, dict) and isinstance(argv, list)
+                 and request.get("defects") == [defect.to_dict() for defect in defects]
+                 and request.get("refusal") == refusal and request.get("prompt") == prompt
+                 and request.get("prompt_sha256") == sha256(prompt.encode()).hexdigest()
+                 and request.get("max_turns") == 1 and request.get("invocation_limit") == limit
+                 and argv[:3] == [first_argv[0], "run", prompt]
+                 and _flag(argv, "--tools") == "none" and _flag(argv, "--max-turns") == "1"
+                 and all(_flag(argv, name) == _flag(first_argv, name) for name in _SHARED_FLAGS)
+                 and all(_prefixed(argv, prefix) == _prefixed(first_argv, prefix)
+                         and len(_prefixed(argv, prefix)) == 1
+                         for prefix in ("--model=", "--system="))
+                 and ("--stream" in argv) == ("--stream" in first_argv)
+                 # Exactly the session's own flags, plus the resume: nothing added or dropped.
+                 and sorted(_names(argv)) == sorted([*_names(first_argv), "--resume"])
+                 and _flag(argv, "--resume") == str(Path(namespace) / "session.json")
+                 and _flag(argv, "--session") == str(Path(namespace) / "correction-session.json")
+                 and _flag(argv, "--schema")
+                 == str(Path(namespace) / "citation-correction.schema.json")
+                 and document(attempt / "citation-correction.schema.json")
+                 == citation_correction_schema(defects))
+        if not valid:
+            issues.append(AuditIssue("citation_correction_disagrees",
+                                     f"{where}/citation-correction.json", "invalid"))
+            continue
+        # What the correction stream supports. A turn that failed before its capture
+        # existed (out of time, or an artifact write failure) has none.
+        correction = raw(attempt / "correction.stdout.jsonl")
+        if correction is None:
+            if record["outcome"] != "failed" or record["exit_code"] is not None:
+                issues.append(AuditIssue("citation_correction_evidence_missing",
+                                         f"{where}/correction.stdout.jsonl", "incomplete"))
+            continue
+        expected, findings, rejected, usage = "failed", None, None, None
+        second = None
+        if record["exit_code"] is not None:
+            try:
+                second = _decode_evidence(
+                    correction, raw(attempt / "correction-session.json"),
+                    exit_code=record["exit_code"], expected_limit=limit,
+                    expected_root=Path(str(recorded_root)), baseline=first)
+            except (ValueError, TypeError, KeyError):
+                second = None
+        if second is not None:
+            usage = first.usage if second.status is None else second.usage
+            expected = "no_answer"
+            if second.status == "done" and not (capped and second.cut_off):
+                try:
+                    corrected = parse(apply_citation_correction(first.output, defects,
+                                                                second.output))
+                    parse(apply_citation_correction(first.saved_output, defects,
+                                                    second.saved_output))
+                    expected, findings = "corrected", [finding_wire(f) for f in corrected]
+                except CitationValidationError:
+                    expected, rejected = "refused", "citation_validation"
+                except (ValueError, TypeError, KeyError):
+                    expected, rejected = "refused", "protocol"
+        status, reason = outcome.get("status"), outcome.get("reason")
+        recorded_usage = outcome.get("usage")
+        same_usage = (usage is not None and isinstance(recorded_usage, dict)
+                      and all(recorded_usage.get(f) == getattr(usage, f) for f in fields))
+        if record["outcome"] == "corrected":
+            valid = (expected == "corrected" and status in ("complete", "partial")
+                     and outcome.get("findings") == findings and same_usage)
+        elif record["outcome"] == "refused":
+            valid = (expected == "refused" and status == "failed" and reason == rejected
+                     and outcome.get("findings") == [] and same_usage)
+        elif record["outcome"] == "no_answer":
+            valid = (expected == "no_answer" and status == "failed"
+                     and reason == (refusal or {}).get("reason")
+                     and outcome.get("findings") == []
+                     and same_usage)
+        else:
+            # The session's own handling decided it (timeout, cancellation, inconsistent
+            # evidence), or a usable correction was answered and the session's later checks
+            # (changed inputs, artifacts) failed it; it never used an answer.
+            valid = (status == "failed" and outcome.get("findings") == []
+                     and (expected == "failed" or reason in ("inputs", "artifacts")))
+        if not valid:
+            issues.append(AuditIssue("citation_correction_disagrees", f"{where}/result.json",
+                                     "invalid"))
+    return tuple(issues)
+
+
 def _structured_output_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
     """Check that each session recorded exactly the constraint its configured rail asked for.
 
@@ -471,7 +726,8 @@ def replay_run(run_dir: Path) -> ReplayResult:
             raise ReplayError("findings: captured citation validation disagrees") from None
     issues = (findings_issues + _yaml_issues(run_dir, policy) + _context_issues(run_dir, policy)
               + _structured_output_issues(run_dir, config_data)
-              + _max_output_tokens_issues(run_dir, config_data))
+              + _max_output_tokens_issues(run_dir, config_data)
+              + _citation_correction_issues(run_dir, config_data))
     posting = inspect_posting(run_dir)
     posted_sha256 = posting.verdict_sha256
     raw = None

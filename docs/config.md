@@ -40,6 +40,7 @@ Errors identify a field path or YAML location without echoing field values.
 | `github.human_reviewers` | List of nonempty reviewer-name strings for escalation | `[]` |
 | `github.paths.include` | List of nonempty glob strings | `[]` |
 | `github.paths.exclude` | List of nonempty glob strings | `["docs/**", "*.md"]` |
+| `findings.citation_correction` | Boolean; `true` requires `findings.evidence: v2` and `provider: openai` on every rail | `false` (off) |
 | `replies.enabled` | Boolean; `true` requires `strategy: iterative` | `false` |
 | `replies.trust` | `write` (verified write access), `anyone` (any non-bot account) | `write` |
 
@@ -200,6 +201,93 @@ When any rail sets it, every rail in `config.to_dict()` and `fanout.json`
 records `max_output_tokens` (with `null` where it is off), each session's
 `invocation.json` records it in `rail` and its argv, and `result.json` records
 `{"limit": N, "reached": true|false}`. [Replay](replay.md) audits these records.
+
+## Citation correction turn (opt-in)
+
+With [evidence v2](findings.md), one citation that does not match the captured
+bytes fails a reviewer's whole session (`citation_validation`), or, for a
+malformed revision or content hash, `protocol`. A review can instead give such
+a session one bounded chance to fix it:
+
+```yaml
+context:
+  enabled: true
+findings:
+  evidence: v2
+  citation_correction: true
+```
+
+It requires `provider: openai` on every model rail. The correction resumes a
+transcript that holds the session's tool calls with no tools offered; nare's
+OpenAI rail then omits the tool list, which OpenAI-compatible servers such as
+vLLM accept, while Anthropic's API refuses tool blocks in a request that defines
+no tools. It applies only to discovery sessions (the reviewers of the initial
+wave), and only to these deterministic defects:
+
+- `line_range_outside_capture` on a captured file with at least one line. The
+  correction prompt states the file's last citeable line, which is the bound the
+  unchanged validator enforces.
+- A `revision` that is not 40 lowercase hexadecimal characters, or a `sha256`
+  that is not 64, including an empty one or a non-hexadecimal placeholder. The
+  prompt states the expected form and where `repository-context.json` records
+  the value; it never states the value. (A placeholder of the right shape, such
+  as 64 zeros, is well-formed and wrong, so it is not offered.)
+
+A correction is offered only when every refusal in the answer is one of these.
+A well-formed but wrong revision or hash, an uncaptured path, a reversed range,
+an empty file, a schema failure or any other refusal fails the session exactly
+as before. To decide this, Scrutare checks the answer once with each named
+defect hypothetically satisfied, and discards that check. The session must have
+finished with an answer, with some of its token budget left (nare does not start
+a turn once usage reaches the limit), and not been cut off at an
+[output cap](#per-request-output-token-cap-opt-in).
+
+The correction is one more turn of the same nare session: Scrutare resumes it
+(`--resume`) with no tools (`--tools none`), `--max-turns 1`, the same
+`--budget-tokens` and the rail's other settings. The model keeps everything it
+read. nare's budget is cumulative, so the turn counts in the session's budget,
+and its usage counts in the review's shared accounting. On a
+[`structured_output: json_schema`](#schema-constrained-output-opt-in) rail,
+nare constrains every turn of a run with no tools, so the correction answer is
+decoded under its schema. The turn gets whatever is left of the session's
+timeout.
+
+The answer is citation-only, like anchor correction: exactly one entry per named
+citation, with its `revision`, `sha256`, `start_line` and `end_line`; the prompt
+spells out that shape, because nare does not restate a schema in a resumed
+session. The
+corrected answer is the original findings document with those values in those
+citations, and nothing else changes. It goes through the same parser, identity,
+hash and line checks. Scrutare never clamps a range or fills in a value. The
+session's outcome is one of:
+
+- `corrected`: the corrected answer is valid, and the session completes with it;
+- `refused`: the corrected answer is refused, and the session fails for that
+  refusal (`citation_validation` or `protocol`), as an uncorrected answer would;
+- `no_answer`: nare ended without a correction answer (for example its budget
+  or turn limit), and the session fails with its original refusal;
+- `failed`: the turn did not finish (timeout, cancellation, unreadable or
+  inconsistent evidence), and the session fails as such a session does today.
+
+With the setting off, the canonical configuration and every artifact are
+byte-identical to earlier releases. With it on, `config.to_dict()` records
+`findings.citation_correction: true`, and every discovery session's
+`result.json` records `{"offered": bool, "defects": N, "outcome": ...,
+"exit_code": ...}` (`outcome` and the correction run's `exit_code` are `null`
+when nothing was offered, and `exit_code` also when the run did not finish).
+For a corrected session, the session's own `nare_status`, `stop_reason`,
+`exit_code` and cumulative `usage` are those of the correction run; for a
+refused or unanswered one they are `null`, as for any refused answer today.
+The `structured_output` and `max_output_tokens` records count the first run's
+stream only; the correction's constrained turn and any cut-off are in
+`correction.stdout.jsonl`. An offered session's attempt
+directory also keeps `citation-correction.json` (the original refusal, the named
+defects, the exact prompt and its SHA-256, and the argv), the correction schema,
+and the turn's `correction.stdout.jsonl`, `correction.stderr.txt` and
+`correction-session.json`; nare's original `session.json` and `stdout.jsonl` are
+left as they were. [Replay](replay.md) recomputes these records from the
+retained streams and inputs. The evaluator
+passes the setting to every evidence-v2 arm.
 
 ## Category partition
 

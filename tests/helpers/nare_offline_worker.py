@@ -270,6 +270,8 @@ try:
     runpy.run_path(console, run_name="__main__")
 finally:
     if artifact is not None:
-        (artifact / spec.get("observation_name", "offline-observations.json")).write_text(
-            json.dumps(observations, indent=2) + "\n"
-        )
+        name = spec.get("observation_name", "offline-observations.json")
+        if option("--resume") is not None and option("--session") not in (None, option("--resume")):
+            # A resumed session written elsewhere (a correction turn) keeps both records.
+            name = name.replace(".json", ".resume.json")
+        (artifact / name).write_text(json.dumps(observations, indent=2) + "\n")

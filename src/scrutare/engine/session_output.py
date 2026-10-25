@@ -16,8 +16,13 @@ from scrutare.engine.debate_inputs import DebateInput
 from scrutare.engine.persona_inputs import PersonaReanchorInput
 from scrutare.engine.reanchor import parse_reanchor_output
 from scrutare.engine.session_models import TokenUsage
+from scrutare.findings.citation_correction import (
+    CitationDefect,
+    apply_citation_correction,
+    citation_defects,
+)
 from scrutare.findings.evidence import CitationValidationError
-from scrutare.findings.models import Finding, parse_finding
+from scrutare.findings.models import Finding, FindingError, parse_finding
 from scrutare.findings.verification import ReanchorCorrection
 
 
@@ -75,6 +80,23 @@ class _DecodedEvidence:
     output: object
     saved_output: object
     cut_off: bool = False
+    cost: float | None = None
+
+
+class CitationCorrectionOffered(Exception):
+    """A discovery answer refused only for correctable citation defects (opt-in, #91).
+
+    Not a ValueError, so no decoding path mistakes it for a refusal. It carries the
+    session's first evidence, so the correction can continue that session's accounting.
+    """
+
+    def __init__(self, defects: tuple[CitationDefect, ...], reason: str,
+                 citation_reason: str | None, evidence: _DecodedEvidence) -> None:
+        super().__init__("citation correction offered")
+        self.defects = defects
+        self.reason = reason
+        self.citation_reason = citation_reason
+        self.evidence = evidence
 
 
 # nare's error event for a turn cut off at max_tokens (nare 2026.10.12 loop._UNFINISHED; the
@@ -302,9 +324,13 @@ def _findings(
 
 def _decode_evidence(
     stdout: bytes, session_document: bytes | None, *, exit_code: int,
-    expected_limit: int, expected_root: Path,
+    expected_limit: int, expected_root: Path, baseline: _DecodedEvidence | None = None,
 ) -> _DecodedEvidence:
-    """Reconcile fresh execution and saved evidence independently of the typed payload."""
+    """Reconcile fresh execution and saved evidence independently of the typed payload.
+
+    With ``baseline``, the stream continues that session (a resumed, tool-free correction
+    turn): nare's usage is cumulative, so the result equals the baseline plus this stream.
+    """
     try:
         _integer(expected_limit, positive=True)
         if (type(exit_code) is not int or exit_code not in (0, 1, 2)
@@ -353,6 +379,12 @@ def _decode_evidence(
             turn[1] for turn in turns if turn[1] is not None
         )
         # With no reported turns nare starts with known zero dollar usage.
+        if baseline is not None:
+            summed = TokenUsage(*(getattr(summed, field) + getattr(baseline.usage, field)
+                                  for field in ("input", "output", "cache_read",
+                                                "cache_write")))
+            summed_cost = (None if summed_cost is None or baseline.cost is None
+                           else summed_cost + baseline.cost)
         if total_usage != summed or not _same_cost(cost, summed_cost):
             _fail()
         _budget(result["budget"], expected_limit, total_usage, cost)
@@ -378,16 +410,24 @@ def _decode_evidence(
             _fail()
         _budget(saved["budget"], expected_limit)
         policy = _object(saved["policy"])
-        if policy["tools"] != ["read"] or policy["root"] != str(expected_root):
+        # A correction turn continues the same session with no tools at all.
+        if (policy["tools"] != ([] if baseline is not None else ["read"])
+                or policy["root"] != str(expected_root)):
             _fail()
         if "turns" in saved and _integer(saved["turns"]) != count:
+            _fail()
+        # One correction turn at most (--max-turns 1), continuing exactly that session.
+        if baseline is not None and (
+                identity != baseline.session_id or version != baseline.nare_version
+                or contract != baseline.contract or baseline.turns is None
+                or not baseline.turns <= count <= baseline.turns + 1):
             _fail()
         return _DecodedEvidence(identity, status, stop, exit_code, total_usage,
                                 output is not None, expected_limit,
                                 (status == "error" and stop == "budget")
                                 or total_usage.total > expected_limit,
                                 version, contract, count, output, saved["output"],
-                                cut_off_at_max_tokens(records[:-1], status, stop))
+                                cut_off_at_max_tokens(records[:-1], status, stop), cost)
     except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
         raise SessionProtocolError(
             "Session evidence is invalid or inconsistent; inspect private capture."
@@ -399,13 +439,17 @@ def decode_session(
     expected_limit: int, expected_root: Path,
     descriptor: DebateInput | AssessmentInput | None = None,
     evidence_version: int = 1, candidate_namespace: str = "",
-    discard_cut_off: bool = False,
+    discard_cut_off: bool = False, offer_citation_correction: bool = False,
 ) -> DecodedSession:
     """Reconcile fresh findings evidence, attributing candidates only to the caller.
 
     With ``discard_cut_off`` (a rail with an output cap), a session whose last turn was cut
     off at max_tokens yields no answer: whatever document nare kept is not parsed or
     validated.
+
+    With ``offer_citation_correction`` (opt-in discovery), a finished answer within its
+    budget whose only refusals are correctable citation defects raises
+    CitationCorrectionOffered instead of failing; every other outcome is unchanged.
     """
     try:
         if (not isinstance(persona, str)
@@ -418,7 +462,22 @@ def decode_session(
                                              expected_root=expected_root,
                                              candidate_namespace=candidate_namespace))
         discarded = discard_cut_off and evidence.cut_off
-        findings = () if evidence.output is None or discarded else parser(evidence.output)
+        try:
+            findings = () if evidence.output is None or discarded else parser(evidence.output)
+        except (ValueError, TypeError, KeyError) as error:
+            # nare refuses to start a turn once usage reaches the limit, so a session with no
+            # budget left is never offered one.
+            if (offer_citation_correction and descriptor is None and evidence_version == 2
+                    and evidence.status == "done" and not discarded
+                    and evidence.usage.total < expected_limit):
+                defects = citation_defects(evidence.output, expected_root, parse=parser)
+                if defects is not None:
+                    refused = isinstance(error, CitationValidationError)
+                    raise CitationCorrectionOffered(
+                        defects, "citation_validation" if refused else "protocol",
+                        error.reason if isinstance(error, CitationValidationError) else None,
+                        evidence) from None
+            raise
         # Validate saved semantics independently: bool/int equality can conceal corruption.
         if evidence.saved_output is not None and not discarded:
             parser(evidence.saved_output)
@@ -435,6 +494,57 @@ def decode_session(
         raise SessionProtocolError(
             "Session evidence is invalid or inconsistent; inspect private capture."
         ) from None
+
+
+def decode_citation_correction(
+    stdout: bytes, session_document: bytes | None, *, offered: CitationCorrectionOffered,
+    persona: str, exit_code: int, expected_limit: int, expected_root: Path,
+    candidate_namespace: str = "", discard_cut_off: bool = False,
+) -> DecodedSession:
+    """Reconcile a resumed correction turn and validate the corrected answer as before.
+
+    A correction that ended without an answer (nare not done, or cut off at the cap)
+    yields no findings. Otherwise the corrected answer is the original document with the
+    model's values in exactly the named citations; its refusal raises CitationValidationError
+    or FindingError, exactly as an uncorrected answer's would.
+    """
+    try:
+        if (not isinstance(persona, str)
+                or not re.fullmatch(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*", persona)):
+            _fail()
+        first = offered.evidence
+        evidence = _decode_evidence(stdout, session_document, exit_code=exit_code,
+                                    expected_limit=expected_limit, expected_root=expected_root,
+                                    baseline=first)
+    except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
+        raise SessionProtocolError(
+            "Session evidence is invalid or inconsistent; inspect private capture."
+        ) from None
+    # A correction run that never started reported nothing; the session's usage stands.
+    usage = first.usage if evidence.status is None else evidence.usage
+    answered = evidence.status == "done" and not (discard_cut_off and evidence.cut_off)
+    findings: tuple[Finding, ...] = ()
+    if answered:
+        try:
+            corrected = apply_citation_correction(first.output, offered.defects,
+                                                  evidence.output)
+            findings = _findings(corrected, persona, evidence_version=2,
+                                 expected_root=expected_root,
+                                 candidate_namespace=candidate_namespace)
+            # Validate saved semantics independently: bool/int equality can conceal corruption.
+            _findings(apply_citation_correction(first.saved_output, offered.defects,
+                                                evidence.saved_output),
+                      persona, evidence_version=2, expected_root=expected_root,
+                      candidate_namespace=candidate_namespace)
+        except (CitationValidationError, FindingError):
+            raise
+        except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
+            raise FindingError("citation correction: corrected answer is invalid") from None
+    return DecodedSession(
+        evidence.session_id, evidence.status, evidence.stop_reason, evidence.exit_code,
+        usage, findings, answered, evidence.budget_limit, evidence.partial,
+        evidence.nare_version, evidence.contract, evidence.turns, evidence.cut_off,
+    )
 
 
 def decode_reanchor_session(
