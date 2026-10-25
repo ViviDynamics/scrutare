@@ -19,7 +19,7 @@ Publish one new, prospectively frozen 36-cell qualification, schedule g3, using 
 
 - [x] 1. Copy and adapt private c1 scripts; assert unchanged gate criteria and corpus bytes; freeze hashes on #51 before launch.
 - [x] 2. Smoke the released wheel; assert both settings in prepared inputs and provenance, and verify spend.
-- [ ] 3. Run g3 as scrutare-glm-g3.service with periodic load evidence; retain every attempt.
-- [ ] 4. Export the report and offline reproducer; verify hashes, gate decisions, cause totals, correction accounting and spend/load evidence. Add meaningful mutation checks for the report verifier.
+- [x] 3. Run g3 as scrutare-glm-g3.service with periodic load evidence; retain every attempt.
+- [x] 4. Export the report and offline reproducer; verify hashes, gate decisions, cause totals, correction accounting and spend/load evidence. Add meaningful mutation checks for the report verifier.
 - [ ] 5. Commit, run both Python 3.10 and 3.14 preflight lanes under systemd, independent review, quality guard, push, green CI and merge.
 - [ ] 6. Verify #96 closed and #51 open; post result on #51. Remove temporary token and worktree.
