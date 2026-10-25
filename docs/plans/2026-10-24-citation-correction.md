@@ -48,8 +48,8 @@ is run, and no default changes.
 - Outcomes: `corrected` (the session completes with the corrected findings),
   `refused` (the corrected answer fails validation, and the session fails for that
   refusal as it would today), `no_answer` (nare ended without a correction answer; the
-  session fails with its original refusal) and `interrupted` (timeout, cancellation or
-  a capture failure, which fail the session as they do today).
+  session fails with its original refusal) and `failed` (timeout, cancellation, or
+  unreadable or inconsistent evidence, which fail the session as they do today).
 - Records: `citation-correction.json` (refusal, defects, prompt, schema, argv) written
   before the correction starts; `correction.stdout.jsonl`, `correction.stderr.txt` and
   `correction-session.json` retained; `result.json` gains
