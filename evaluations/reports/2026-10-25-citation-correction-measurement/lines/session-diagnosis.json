@@ -1,0 +1,1465 @@
+{
+ "job": "lines",
+ "private_records": 48,
+ "private_records_sha256": "b714214b41e8d5a762a7d1e2341beb124c8bb867c847a8b2bf65ea292f846f67",
+ "schema_version": 1,
+ "sessions": [
+  {
+   "attempt": "attempt-0001",
+   "cell": "contract-null-zero/aggregate/1",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 12341,
+   "input_tokens": 9454,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 2887,
+   "persona": "devops",
+   "reason": "done",
+   "request_output_tokens": [
+    66,
+    114,
+    2707
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 12341
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "contract-null-zero/aggregate/1",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 12387,
+   "input_tokens": 9518,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 2869,
+   "persona": "junior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    71,
+    265,
+    2533
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 12387
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "contract-null-zero/aggregate/1",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 1,
+   "correction_terminal": null,
+   "first_run_tokens": 17901,
+   "input_tokens": 14600,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 4,
+   "output_tokens": 3301,
+   "persona": "security",
+   "reason": "done",
+   "request_output_tokens": [
+    69,
+    315,
+    1915,
+    1002
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 17901
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "contract-null-zero/aggregate/1",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 11762,
+   "input_tokens": 9442,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 2320,
+   "persona": "senior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    66,
+    247,
+    2007
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 11762
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "contract-null-zero/aggregate/2",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 1,
+   "correction_terminal": null,
+   "first_run_tokens": 17516,
+   "input_tokens": 14654,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 4,
+   "output_tokens": 2862,
+   "persona": "devops",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    240,
+    1484,
+    1068
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 17516
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "contract-null-zero/aggregate/2",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 11906,
+   "input_tokens": 9493,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 2413,
+   "persona": "junior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    127,
+    2216
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 11906
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "contract-null-zero/aggregate/2",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 11404,
+   "input_tokens": 9448,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 1956,
+   "persona": "security",
+   "reason": "done",
+   "request_output_tokens": [
+    69,
+    337,
+    1550
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 11404
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "contract-null-zero/aggregate/2",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 11349,
+   "input_tokens": 9442,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 1907,
+   "persona": "senior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    127,
+    1710
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 11349
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "contract-null-zero/aggregate/3",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 11186,
+   "input_tokens": 9454,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 1732,
+   "persona": "devops",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    114,
+    1548
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 11186
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "contract-null-zero/aggregate/3",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 19926,
+   "input_tokens": 13893,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 4,
+   "output_tokens": 6033,
+   "persona": "junior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    67,
+    251,
+    3367,
+    2348
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 19926
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "contract-null-zero/aggregate/3",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 11433,
+   "input_tokens": 9448,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 1985,
+   "persona": "security",
+   "reason": "done",
+   "request_output_tokens": [
+    69,
+    127,
+    1789
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 11433
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "contract-null-zero/aggregate/3",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 12985,
+   "input_tokens": 9521,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 3464,
+   "persona": "senior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    69,
+    926,
+    2469
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 12985
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "operations-flush-loss/aggregate/1",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 12048,
+   "input_tokens": 9392,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 2656,
+   "persona": "devops",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    254,
+    2332
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 12048
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "operations-flush-loss/aggregate/1",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 12353,
+   "input_tokens": 9431,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 2922,
+   "persona": "junior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    127,
+    2725
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 12353
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "operations-flush-loss/aggregate/1",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 1,
+   "correction_terminal": null,
+   "first_run_tokens": 20475,
+   "input_tokens": 15438,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 4,
+   "output_tokens": 5037,
+   "persona": "security",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    319,
+    3839,
+    809
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 20475
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "operations-flush-loss/aggregate/1",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 1,
+   "correction_terminal": null,
+   "first_run_tokens": 17948,
+   "input_tokens": 14512,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 4,
+   "output_tokens": 3436,
+   "persona": "senior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    129,
+    2359,
+    878
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 17948
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "operations-flush-loss/aggregate/2",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 1,
+   "correction_terminal": null,
+   "first_run_tokens": 18801,
+   "input_tokens": 14429,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 4,
+   "output_tokens": 4372,
+   "persona": "devops",
+   "reason": "done",
+   "request_output_tokens": [
+    68,
+    228,
+    2953,
+    1123
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 18801
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "operations-flush-loss/aggregate/2",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 1,
+   "correction_terminal": null,
+   "first_run_tokens": 18926,
+   "input_tokens": 14488,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 4,
+   "output_tokens": 4438,
+   "persona": "junior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    66,
+    127,
+    3051,
+    1194
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 18926
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "operations-flush-loss/aggregate/2",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 11758,
+   "input_tokens": 9386,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 2372,
+   "persona": "security",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    245,
+    2057
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 11758
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "operations-flush-loss/aggregate/2",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 1,
+   "correction_terminal": null,
+   "first_run_tokens": 19158,
+   "input_tokens": 14656,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 4,
+   "output_tokens": 4502,
+   "persona": "senior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    265,
+    3158,
+    1009
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 19158
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "operations-flush-loss/aggregate/3",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 11669,
+   "input_tokens": 9392,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 2277,
+   "persona": "devops",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    162,
+    2045
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 11669
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "operations-flush-loss/aggregate/3",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 12829,
+   "input_tokens": 9431,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 3398,
+   "persona": "junior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    114,
+    3214
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 12829
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "operations-flush-loss/aggregate/3",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 11623,
+   "input_tokens": 9386,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 2237,
+   "persona": "security",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    127,
+    2040
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 11623
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "operations-flush-loss/aggregate/3",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 13044,
+   "input_tokens": 9380,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 3664,
+   "persona": "senior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    66,
+    230,
+    3368
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 13044
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "security-auth-order/aggregate/1",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 12652,
+   "input_tokens": 10069,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 2583,
+   "persona": "devops",
+   "reason": "done",
+   "request_output_tokens": [
+    68,
+    241,
+    2274
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 12652
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "security-auth-order/aggregate/1",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 13532,
+   "input_tokens": 10108,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 3424,
+   "persona": "junior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    69,
+    239,
+    3116
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 13532
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "security-auth-order/aggregate/1",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 1,
+   "correction_terminal": null,
+   "first_run_tokens": 20656,
+   "input_tokens": 15681,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 4,
+   "output_tokens": 4975,
+   "persona": "security",
+   "reason": "done",
+   "request_output_tokens": [
+    68,
+    189,
+    2600,
+    2118
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 20656
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "security-auth-order/aggregate/1",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 1,
+   "correction_terminal": null,
+   "first_run_tokens": 20680,
+   "input_tokens": 15882,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 4,
+   "output_tokens": 4798,
+   "persona": "senior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    66,
+    389,
+    2535,
+    1808
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 20680
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "security-auth-order/aggregate/2",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 14426,
+   "input_tokens": 10118,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 4308,
+   "persona": "devops",
+   "reason": "done",
+   "request_output_tokens": [
+    81,
+    487,
+    3740
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 14426
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "security-auth-order/aggregate/2",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 1,
+   "correction_terminal": null,
+   "first_run_tokens": 19641,
+   "input_tokens": 15740,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 4,
+   "output_tokens": 3901,
+   "persona": "junior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    478,
+    2101,
+    1252
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 19641
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "security-auth-order/aggregate/2",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 14104,
+   "input_tokens": 10091,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 4013,
+   "persona": "security",
+   "reason": "done",
+   "request_output_tokens": [
+    72,
+    507,
+    3434
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 14104
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "security-auth-order/aggregate/2",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 1,
+   "correction_terminal": null,
+   "first_run_tokens": 19501,
+   "input_tokens": 15741,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 4,
+   "output_tokens": 3760,
+   "persona": "senior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    66,
+    267,
+    2654,
+    773
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 19501
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "security-auth-order/aggregate/3",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 1,
+   "correction_terminal": null,
+   "first_run_tokens": 19414,
+   "input_tokens": 15595,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 4,
+   "output_tokens": 3819,
+   "persona": "devops",
+   "reason": "done",
+   "request_output_tokens": [
+    57,
+    245,
+    2687,
+    830
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 19414
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "security-auth-order/aggregate/3",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 1,
+   "correction_terminal": null,
+   "first_run_tokens": 19656,
+   "input_tokens": 15545,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 4,
+   "output_tokens": 4111,
+   "persona": "junior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    212,
+    2413,
+    1416
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 19656
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "security-auth-order/aggregate/3",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 1,
+   "correction_terminal": null,
+   "first_run_tokens": 19925,
+   "input_tokens": 15704,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 4,
+   "output_tokens": 4221,
+   "persona": "security",
+   "reason": "done",
+   "request_output_tokens": [
+    69,
+    239,
+    2347,
+    1566
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 19925
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "security-auth-order/aggregate/3",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 13948,
+   "input_tokens": 10057,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 3891,
+   "persona": "senior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    446,
+    3375
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 13948
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "tests-consumer-fixture/aggregate/1",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 12062,
+   "input_tokens": 9450,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 2612,
+   "persona": "devops",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    249,
+    2293
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 12062
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "tests-consumer-fixture/aggregate/1",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 12286,
+   "input_tokens": 9489,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 2797,
+   "persona": "junior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    66,
+    241,
+    2490
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 12286
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "tests-consumer-fixture/aggregate/1",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 15188,
+   "input_tokens": 9444,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 5744,
+   "persona": "security",
+   "reason": "done",
+   "request_output_tokens": [
+    67,
+    261,
+    5416
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 15188
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "tests-consumer-fixture/aggregate/1",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 14888,
+   "input_tokens": 9438,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 5450,
+   "persona": "senior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    69,
+    252,
+    5129
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 14888
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "tests-consumer-fixture/aggregate/2",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 11831,
+   "input_tokens": 9374,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 2457,
+   "persona": "devops",
+   "reason": "done",
+   "request_output_tokens": [
+    71,
+    287,
+    2099
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 11831
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "tests-consumer-fixture/aggregate/2",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 15599,
+   "input_tokens": 9498,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 6101,
+   "persona": "junior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    255,
+    5776
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 15599
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "tests-consumer-fixture/aggregate/2",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 12235,
+   "input_tokens": 9477,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 2758,
+   "persona": "security",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    528,
+    2160
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 12235
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "tests-consumer-fixture/aggregate/2",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 11925,
+   "input_tokens": 9467,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 2458,
+   "persona": "senior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    67,
+    261,
+    2130
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 11925
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "tests-consumer-fixture/aggregate/3",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 10609,
+   "input_tokens": 9450,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 1159,
+   "persona": "devops",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    256,
+    833
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 10609
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "tests-consumer-fixture/aggregate/3",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 1,
+   "correction_terminal": null,
+   "first_run_tokens": 19754,
+   "input_tokens": 15225,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 4,
+   "output_tokens": 4529,
+   "persona": "junior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    554,
+    2213,
+    1692
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 19754
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "tests-consumer-fixture/aggregate/3",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 13811,
+   "input_tokens": 9414,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 4397,
+   "persona": "security",
+   "reason": "done",
+   "request_output_tokens": [
+    70,
+    307,
+    4020
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 13811
+  },
+  {
+   "attempt": "attempt-0001",
+   "cell": "tests-consumer-fixture/aggregate/3",
+   "citation_correction": null,
+   "citation_correction_request": null,
+   "citation_validation_reason": null,
+   "constrained_turns": 0,
+   "correction_terminal": null,
+   "first_run_tokens": 13747,
+   "input_tokens": 9471,
+   "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+   },
+   "nare_error": null,
+   "nare_status": "done",
+   "nare_stop_reason": "end_turn",
+   "nare_turns": 3,
+   "output_tokens": 4276,
+   "persona": "senior-dev",
+   "reason": "done",
+   "request_output_tokens": [
+    66,
+    324,
+    3886
+   ],
+   "status": "complete",
+   "structured_output_mode": "json_schema",
+   "tokens": 13747
+  }
+ ],
+ "source": "each session result.json and the nare result event in its stdout.jsonl (private)"
+}
