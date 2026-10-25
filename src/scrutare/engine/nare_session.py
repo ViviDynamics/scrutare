@@ -473,6 +473,8 @@ async def _correct_citations(
             "--resume", str(artifact_directory / "session.json"),
             "--session", str(artifact_directory / "correction-session.json"),
             "--max-turns", "1", *_rail_options(rail)]
+    # Recorded as offered before anything is written, so any later failure says so.
+    record.update(offered=True, defects=len(defects), outcome="failed")
     write_owned_json(artifact_directory / "citation-correction.schema.json",
                      citation_correction_schema(defects), prepared_root=root)
     write_owned_json(artifact_directory / "citation-correction.json", {
@@ -483,7 +485,6 @@ async def _correct_citations(
         "prompt": prompt, "prompt_sha256": sha256(prompt.encode("utf-8")).hexdigest(),
         "argv": argv, "max_turns": 1, "invocation_limit": lease.limit_tokens,
     }, prepared_root=root)
-    record.update(offered=True, defects=len(defects), outcome="failed")
     remaining = deadline - asyncio.get_running_loop().time()
     if remaining <= 0:
         raise asyncio.TimeoutError
@@ -497,6 +498,7 @@ async def _correct_citations(
                                    rail.provider), artifact_directory / "cwd",
                 replace(runtime, timeout_seconds=remaining), stdout, stderr, correction,
                 ledger, lease)
+        record["exit_code"] = exit_code
     finally:
         # Usage is cumulative across both turns of the session, whatever happened.
         evidence.usage = correction.usage
@@ -504,6 +506,8 @@ async def _correct_citations(
     saved = _session_document(directory, "correction-session.json")
     if correction.corrupt:
         raise SessionProtocolError("session: corrupted correction evidence")
+    # A constrained-turn record must match the rail, as in the first stream.
+    constrained_turns(correction.stdout, rail.structured_output)
     validate_prepared_inputs(descriptor.inputs)
     try:
         decoded = decode_citation_correction(
@@ -517,13 +521,13 @@ async def _correct_citations(
     except FindingError:
         record["outcome"] = "refused"
         raise SessionProtocolError("citation correction: refused corrected answer") from None
+    evidence.usage = decoded.usage
     if decoded.status != "done" or not decoded.output_available:
         record["outcome"] = "no_answer"
-        evidence.usage = decoded.usage
         if offered.citation_reason is not None:
             raise CitationValidationError(offered.citation_reason)
         raise SessionProtocolError("citation correction: no corrected answer")
-    record["outcome"] = "corrected"
+    # "corrected" is recorded by the caller once the session has completed with it.
     return decoded
 
 
@@ -553,6 +557,7 @@ async def _run_session(
     binding: dict[str, object] = {}
     constrained: int | None = None
     correction: dict[str, object] | None = None
+    answered = False
     deadline = asyncio.get_running_loop().time() + getattr(runtime, "timeout_seconds", 0)
     try:
         expected_descriptor = PersonaReanchorInput if purpose == "reanchor" else PersonaReviewInput
@@ -586,7 +591,7 @@ async def _run_session(
         if purpose == "reanchor" and lease.session_key != f"{lease.persona}/attempt-0002":
             raise SessionRuntimeError("session_key: expected the fresh correction identity")
         if purpose == "review" and _offers_citation_correction(descriptor):
-            correction = {"offered": False, "defects": 0, "outcome": None}
+            correction = {"offered": False, "defects": 0, "outcome": None, "exit_code": None}
         reason = "artifacts"
         if purpose == "reanchor" and artifact_directory.name != "attempt-0002":
             raise SessionArtifactError("artifact_directory: expected the correction attempt")
@@ -677,7 +682,7 @@ async def _run_session(
                         artifact_directory=artifact_directory, executable=executable,
                         runtime=runtime, capability=capability, evidence=evidence,
                         deadline=deadline, record=correction)
-                    reason = "protocol"
+                    reason, answered = "protocol", True
             if decoded.status is not None and (
                     decoded.nare_version != capability.version
                     or decoded.contract != capability.contract):
@@ -703,6 +708,8 @@ async def _run_session(
             else:
                 reason = "not_started" if decoded.status is None else "provider"
             validate_prepared_inputs(descriptor.inputs)
+            if answered and correction is not None and status in ("complete", "partial"):
+                correction["outcome"] = "corrected"
     except asyncio.CancelledError:
         cancelled, reason, complete = True, "cancelled", not evidence.started
     except asyncio.TimeoutError:

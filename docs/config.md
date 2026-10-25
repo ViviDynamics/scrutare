@@ -224,16 +224,18 @@ only to these deterministic defects:
   correction prompt states the file's last citeable line, which is the bound the
   unchanged validator enforces.
 - A `revision` that is not 40 lowercase hexadecimal characters, or a `sha256`
-  that is not 64, including an empty one or a placeholder. The prompt states the
-  expected form and where `repository-context.json` records the value; it never
-  states the value.
+  that is not 64, including an empty one or a non-hexadecimal placeholder. The
+  prompt states the expected form and where `repository-context.json` records
+  the value; it never states the value. (A placeholder of the right shape, such
+  as 64 zeros, is well-formed and wrong, so it is not offered.)
 
 A correction is offered only when every refusal in the answer is one of these.
 A well-formed but wrong revision or hash, an uncaptured path, a reversed range,
 an empty file, a schema failure or any other refusal fails the session exactly
 as before. To decide this, Scrutare checks the answer once with each named
 defect hypothetically satisfied, and discards that check. The session must have
-finished with an answer within its token budget, and not been cut off at an
+finished with an answer, with some of its token budget left (nare does not start
+a turn once usage reaches the limit), and not been cut off at an
 [output cap](#per-request-output-token-cap-opt-in).
 
 The correction is one more turn of the same nare session: Scrutare resumes it
@@ -247,7 +249,9 @@ decoded under its schema. The turn gets whatever is left of the session's
 timeout.
 
 The answer is citation-only, like anchor correction: exactly one entry per named
-citation, with its `revision`, `sha256`, `start_line` and `end_line`. The
+citation, with its `revision`, `sha256`, `start_line` and `end_line`; the prompt
+spells out that shape, because nare does not restate a schema in a resumed
+session. The
 corrected answer is the original findings document with those values in those
 citations, and nothing else changes. It goes through the same parser, identity,
 hash and line checks. Scrutare never clamps a range or fills in a value. The
@@ -264,13 +268,17 @@ session's outcome is one of:
 With the setting off, the canonical configuration and every artifact are
 byte-identical to earlier releases. With it on, `config.to_dict()` records
 `findings.citation_correction: true`, and every discovery session's
-`result.json` records `{"offered": bool, "defects": N, "outcome": ...}`
-(`outcome` is `null` when nothing was offered). An offered session's attempt
+`result.json` records `{"offered": bool, "defects": N, "outcome": ...,
+"exit_code": ...}` (`outcome` and the correction run's `exit_code` are `null`
+when nothing was offered, and `exit_code` also when the run did not finish).
+The session's own fields (`exit_code`, `nare_status`, `stop_reason`) still
+describe its first run. An offered session's attempt
 directory also keeps `citation-correction.json` (the original refusal, the named
 defects, the exact prompt and its SHA-256, and the argv), the correction schema,
 and the turn's `correction.stdout.jsonl`, `correction.stderr.txt` and
 `correction-session.json`; nare's original `session.json` and `stdout.jsonl` are
-left as they were. [Replay](replay.md) recomputes all of this. The evaluator
+left as they were. [Replay](replay.md) recomputes these records from the
+retained streams and inputs. The evaluator
 passes the setting to every evidence-v2 arm.
 
 ## Category partition

@@ -44,6 +44,11 @@ for flag in ("yes", "jsonl", "stream"):
     parser.add_argument("--" + flag, action="store_true")
 a = parser.parse_args()
 step = SCRIPT["correction" if a.resume else "first"]
+if a.resume and step.get("never_start"):
+    sys.exit(2)
+if a.resume and step.get("sleep"):
+    import time
+    time.sleep(step["sleep"])
 Path("observed-resume.json" if a.resume else "observed.json").write_text(json.dumps({
     "argv": sys.argv[1:], "schema": json.loads(Path(a.schema).read_text()),
     "resumed": json.loads(Path(a.resume).read_text()) if a.resume else None}))
@@ -59,6 +64,8 @@ if a.structured_output and a.tools == "none":
                                          "tools_withheld": False}}}), flush=True)
 print(json.dumps({"type": "cost", "text": "", "detail": usage, "timestamp": "now"}),
       flush=True)
+if a.resume and step.get("corrupt"):
+    print("not-json", flush=True)
 total = {k: before[k] + usage[k] for k in fields}
 total["cost"] = None
 status, stop = step.get("status", "done"), step.get("stop", "end_turn")
@@ -72,7 +79,8 @@ result = {"type": "result", "session_id": identity, "status": status, "questions
     "nare": "2026.10.12", "output": output,
     "budget": {"tokens": int(a.budget_tokens), "used_tokens": spent, "used_usd": None},
     "error": None if status == "done" else "stopped"}
-Path(a.session).write_text(json.dumps({"id": identity, "usage": total, "output": output,
+Path(a.session).write_text(json.dumps({"id": identity, "usage": total,
+    "output": step.get("saved_output", output),
     "status": status, "stop_reason": stop, "turns": turns + 1,
     "policy": {"tools": [] if a.tools == "none" else [a.tools], "root": a.root},
     "budget": {"tokens": int(a.budget_tokens)}, "contract": 2, "nare": "2026.10.12"}))
@@ -82,8 +90,8 @@ sys.exit(0 if status == "done" else 1)
 '''
 
 
-def fake_nare(tmp_path, first, correction=None):
-    script = {"first": {"usage": FIRST, "output": first},
+def fake_nare(tmp_path, first, correction=None, *, first_step=None):
+    script = {"first": {"usage": FIRST, "output": first, **(first_step or {})},
               "correction": {"usage": SECOND, "output": None, **(correction or {})}}
     path = tmp_path / "fake-nare"
     path.write_text(f"#!{sys.executable}\nimport json, os, sys\nfrom pathlib import Path\n"
@@ -107,11 +115,12 @@ def prepared(capture, *, correction=True, limit=1000):
 
 
 def launch(capture, tmp_path, first, correction=None, *, enabled=True, rail=RAIL, limit=1000,
-           timeout=10):
+           timeout=10, first_step=None):
     descriptor, ledger, lease, attempt = prepared(capture, correction=enabled, limit=limit)
     outcome = asyncio.run(run_persona_session(
         descriptor, rail, lease, ledger=ledger, artifact_directory=attempt,
-        runtime=NareRuntime(fake_nare(tmp_path, first, correction), 6, timeout),
+        runtime=NareRuntime(fake_nare(tmp_path, first, correction, first_step=first_step), 6,
+                            timeout),
         capability=RUNTIME))
     return outcome, ledger, attempt
 
@@ -175,7 +184,7 @@ def test_a_past_end_citation_is_corrected_in_one_tool_free_resumed_turn(capture,
                                  "citation_reason": "line_range_outside_capture"}
     result = load(attempt / "result.json")
     assert result["citation_correction"] == {"offered": True, "defects": 1,
-                                             "outcome": "corrected"}
+                                             "outcome": "corrected", "exit_code": 0}
     assert (result["status"], result["reason"]) == ("complete", "done")
     assert result["usage"]["total"] == TOTAL.total
     assert result["findings"][0]["evidence"]["citations"][0]["end_line"] == 3
@@ -205,7 +214,7 @@ def test_a_correction_that_fails_again_fails_the_session_for_the_new_refusal(cap
     assert outcome.findings == () and not outcome.accounting_complete
     assert load(attempt / "citation-validation.json")["reason"] == "content_hash_mismatch"
     assert load(attempt / "result.json")["citation_correction"] == {
-        "offered": True, "defects": 1, "outcome": "refused"}
+        "offered": True, "defects": 1, "outcome": "refused", "exit_code": 0}
     assert outcome.usage == TOTAL == ledger.usage
 
 
@@ -258,7 +267,7 @@ def test_a_non_citation_or_undescribable_refusal_is_not_offered(capture, tmp_pat
     assert not (attempt / "cwd" / "observed-resume.json").exists()
     assert not (attempt / "citation-correction.json").exists()
     assert load(attempt / "result.json")["citation_correction"] == {
-        "offered": False, "defects": 0, "outcome": None}
+        "offered": False, "defects": 0, "outcome": None, "exit_code": None}
 
 
 def test_a_valid_answer_records_that_nothing_was_offered(capture, tmp_path):
@@ -266,7 +275,7 @@ def test_a_valid_answer_records_that_nothing_was_offered(capture, tmp_path):
     assert outcome.status == "complete"
     assert not (attempt / "cwd" / "observed-resume.json").exists()
     assert load(attempt / "result.json")["citation_correction"] == {
-        "offered": False, "defects": 0, "outcome": None}
+        "offered": False, "defects": 0, "outcome": None, "exit_code": None}
 
 
 def test_a_session_with_no_budget_left_is_not_offered(capture, tmp_path):
@@ -316,3 +325,72 @@ def test_only_discovery_sessions_are_offered_a_correction(capture):
         AssessmentInput(assessor_persona("evidence-assessor"), descriptor.inputs, ()))
     assert not _offers_citation_correction(
         DiscussionInput(descriptor.persona, descriptor.inputs, (), (), False, ()))
+
+
+def test_a_correction_run_that_never_starts_keeps_the_first_usage(capture, tmp_path):
+    outcome, ledger, attempt = launch(capture, tmp_path, PAST_END, {"never_start": True})
+    assert (outcome.status, outcome.reason) == ("failed", "citation_validation")
+    assert outcome.usage == TokenUsage(40, 10) == ledger.usage
+    assert ledger.snapshot()["active_reservations"] == []
+    assert load(attempt / "result.json")["citation_correction"] == {
+        "offered": True, "defects": 1, "outcome": "no_answer", "exit_code": 2}
+
+
+def test_a_correction_that_times_out_fails_the_session_as_a_timeout(capture, tmp_path):
+    outcome, ledger, attempt = launch(capture, tmp_path, PAST_END,
+                                      {"sleep": 30, "output": fix(("c0001", GOOD, 1, 3))},
+                                      timeout=3)
+    assert (outcome.status, outcome.reason) == ("failed", "timeout")
+    assert not outcome.accounting_complete and outcome.findings == ()
+    assert outcome.usage == TokenUsage(40, 10) == ledger.usage
+    assert ledger.snapshot()["active_reservations"] == []
+    assert load(attempt / "result.json")["citation_correction"] == {
+        "offered": True, "defects": 1, "outcome": "failed", "exit_code": None}
+
+
+def test_a_corrupt_correction_stream_fails_as_protocol_with_uncertain_usage(capture, tmp_path):
+    outcome, ledger, attempt = launch(capture, tmp_path, PAST_END,
+                                      {"corrupt": True, "output": fix(("c0001", GOOD, 1, 3))})
+    assert (outcome.status, outcome.reason) == ("failed", "protocol")
+    assert not outcome.accounting_complete
+    assert outcome.usage == TOTAL == ledger.usage
+    assert load(attempt / "result.json")["citation_correction"]["outcome"] == "failed"
+
+
+def test_a_session_exactly_at_its_budget_is_not_offered(capture, tmp_path):
+    # nare refuses to start a turn once usage reaches the limit.
+    outcome, _, attempt = launch(capture, tmp_path, PAST_END,
+                                 {"output": fix(("c0001", GOOD, 1, 3))}, limit=50)
+    assert outcome.reason == "citation_validation"
+    assert not (attempt / "cwd" / "observed-resume.json").exists()
+
+
+def test_the_outcome_is_corrected_only_once_the_session_completes(capture, tmp_path,
+                                                                  monkeypatch):
+    from scrutare.engine import nare_session
+
+    calls = []
+    original = nare_session.validate_prepared_inputs
+
+    def changed(inputs):
+        resumed = inputs.root.parent / "sessions/security/attempt-0001/correction-session.json"
+        if resumed.exists():
+            calls.append(inputs)
+            if len(calls) == 2:  # the session's final check, after the corrected answer
+                raise nare_session.ReviewInputError("inputs changed")
+        return original(inputs)
+
+    monkeypatch.setattr(nare_session, "validate_prepared_inputs", changed)
+    outcome, _, attempt = launch(capture, tmp_path, PAST_END,
+                                 {"output": fix(("c0001", GOOD, 1, 3))})
+    assert (outcome.status, outcome.reason) == ("failed", "inputs")
+    assert load(attempt / "result.json")["citation_correction"]["outcome"] == "failed"
+
+
+def test_the_prompt_spells_out_the_answer_shape_and_both_line_bounds(capture, tmp_path):
+    _, _, attempt = launch(capture, tmp_path, answer(finding(citation(start_line=5,
+                                                                      end_line=6))),
+                           {"output": fix(("c0001", GOOD, 1, 3))})
+    prompt = load(attempt / "citation-correction.json")["prompt"]
+    assert '{"citations": [{"id": ' in prompt
+    assert "start_line and end_line must both be at most 3" in prompt

@@ -108,21 +108,28 @@ The [citation correction](config.md#citation-correction-turn-opt-in) is
 recomputed when `config.json` sets `findings.citation_correction`. A discovery
 session is a launched review attempt whose schema is the evidence-v2 findings
 schema. Each must record `{"offered", "defects", "outcome"}` in `result.json`,
-and no other session may (`citation_correction_unrecorded`, invalid). From the
-retained `stdout.jsonl` and `review-inputs`, replay decides whether a correction
-was owed (a finished answer within its budget, not cut off, refused only for
-correctable defects) and which defects it named. An offered session's
+and no other session may (`citation_correction_unrecorded`, invalid). Replay
+reconciles the retained `stdout.jsonl` with `session.json` as the runtime does
+and, from that and `review-inputs`, decides whether a correction was owed (a
+finished answer with budget left, not cut off, refused only for correctable
+defects) and which defects it named. An offered session's
 `citation-correction.json` must carry exactly those defects, the original
 refusal, the prompt and its SHA-256 as Scrutare generates them, and an argv that
 resumes this attempt's `session.json` into `correction-session.json` with no
-tools and one turn; the schema file must be the generated correction schema.
-The recorded outcome must follow from `correction.stdout.jsonl`: a corrected
-session's findings and cumulative usage must equal what the correction answer
-yields, a refused or unanswered one must have failed with no findings, for the
-right reason. Any disagreement, including a session recorded as not offered
-that was owed one, is `citation_correction_disagrees` (invalid); a missing
-request, schema or correction stream is `citation_correction_evidence_missing`
-(incomplete). A run that did not opt in but holds such records is
+tools and one turn, and otherwise shares the session's own rail flags, root,
+contract and budget; the schema file must be the generated correction schema.
+`correction.stdout.jsonl` and `correction-session.json` are reconciled as a
+continuation of that same session (same session id and release, at most one
+more turn, cumulative usage) under the recorded `exit_code`, and the recorded
+outcome must follow from them: a corrected session's findings, and every
+answered or unanswered session's cumulative usage, must equal what they yield,
+and a refused or unanswered session must have failed with no findings, for the
+right reason. A correction recorded as `failed` (timeout, cancellation,
+inconsistent evidence) must have failed with no findings. Any disagreement, including a session recorded as not offered
+that was owed one, is `citation_correction_disagrees` (invalid). A missing
+request or schema, or a missing correction stream for a turn that started, is
+`citation_correction_evidence_missing` (incomplete); a `failed` turn with no
+exit code may have stopped before its stream existed. A run that did not opt in but holds such records is
 `citation_correction_unconfigured` (invalid). Runs that never opted in are not
 audited.
 

@@ -55,6 +55,7 @@ class CitationDefect:
                 "sha256 is not a full content hash: 64 lowercase hexadecimal characters, as "
                 "repository-context.json records it for this side and path"),
             LINE_RANGE: (f"end_line {self.end_line} is past the file's last line, "
+                         f"{self.last_line}; start_line and end_line must both be at most "
                          f"{self.last_line}"),
         }
         return [text[problem] for problem in self.problems]
@@ -159,7 +160,9 @@ def citation_correction_prompt(defects: tuple[CitationDefect, ...]) -> str:
         "Scrutare could not accept the evidence citations in your findings answer, for the "
         "mechanical reasons listed below. This is one correction turn, and no tools are "
         "available. Return only a JSON object whose citations array holds exactly one entry "
-        "per listed id, with that citation's revision, sha256, start_line and end_line. Your "
+        "per listed id, with that citation's revision, sha256, start_line and end_line, in "
+        'the form {"citations": [{"id": <listed id>, "revision": <string>, "sha256": '
+        '<string>, "start_line": <integer>, "end_line": <integer>}]}. Your '
         "findings and every other citation stay exactly as you gave them, and side and path "
         "cannot change. Take each value from the captured inputs you have read; do not guess "
         "one. revision is the full commit SHA that repository-context.json records for the "

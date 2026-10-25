@@ -416,10 +416,11 @@ def _decode_evidence(
             _fail()
         if "turns" in saved and _integer(saved["turns"]) != count:
             _fail()
+        # One correction turn at most (--max-turns 1), continuing exactly that session.
         if baseline is not None and (
                 identity != baseline.session_id or version != baseline.nare_version
                 or contract != baseline.contract or baseline.turns is None
-                or count < baseline.turns):
+                or not baseline.turns <= count <= baseline.turns + 1):
             _fail()
         return _DecodedEvidence(identity, status, stop, exit_code, total_usage,
                                 output is not None, expected_limit,
@@ -464,8 +465,11 @@ def decode_session(
         try:
             findings = () if evidence.output is None or discarded else parser(evidence.output)
         except (ValueError, TypeError, KeyError) as error:
+            # nare refuses to start a turn once usage reaches the limit, so a session with no
+            # budget left is never offered one.
             if (offer_citation_correction and descriptor is None and evidence_version == 2
-                    and evidence.status == "done" and not evidence.partial and not discarded):
+                    and evidence.status == "done" and not discarded
+                    and evidence.usage.total < expected_limit):
                 defects = citation_defects(evidence.output, expected_root, parse=parser)
                 if defects is not None:
                     refused = isinstance(error, CitationValidationError)
@@ -516,6 +520,8 @@ def decode_citation_correction(
         raise SessionProtocolError(
             "Session evidence is invalid or inconsistent; inspect private capture."
         ) from None
+    # A correction run that never started reported nothing; the session's usage stands.
+    usage = first.usage if evidence.status is None else evidence.usage
     answered = evidence.status == "done" and not (discard_cut_off and evidence.cut_off)
     findings: tuple[Finding, ...] = ()
     if answered:
@@ -531,7 +537,7 @@ def decode_citation_correction(
             raise FindingError("citation correction: corrected answer is invalid") from None
     return DecodedSession(
         evidence.session_id, evidence.status, evidence.stop_reason, evidence.exit_code,
-        evidence.usage, findings, answered, evidence.budget_limit, evidence.partial,
+        usage, findings, answered, evidence.budget_limit, evidence.partial,
         evidence.nare_version, evidence.contract, evidence.turns, evidence.cut_off,
     )
 

@@ -173,7 +173,8 @@ def test_the_prompt_names_each_defect_and_never_echoes_model_text(capture):
          "problems": [
              "sha256 is not a full content hash: 64 lowercase hexadecimal characters, as "
              "repository-context.json records it for this side and path",
-             "end_line 7 is past the file's last line, 3"]},
+             "end_line 7 is past the file's last line, 3; start_line and end_line must "
+             "both be at most 3"]},
         {"id": "c0002", "finding": 2, "citation": 1, "side": "head", "path": "src/caller.py",
          "problems": [
              "revision is not a full commit SHA: 40 lowercase hexadecimal characters, as "

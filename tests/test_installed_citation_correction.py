@@ -123,7 +123,7 @@ def test_installed_a_past_end_citation_is_corrected_and_replays(tmp_path, instal
     assert (cited["end_line"], cited["validation"]) == (1, "valid")
     outcome = load(attempt / "result.json")
     assert outcome["citation_correction"] == {"offered": True, "defects": 1,
-                                              "outcome": "corrected"}
+                                              "outcome": "corrected", "exit_code": 0}
     record = load(attempt / "citation-correction.json")
     assert record["defects"][0]["last_line"] == 1 and record["defects"][0]["end_line"] == 2
     # Real nare resumed the same session for one turn with no tools and the correction schema.
@@ -202,7 +202,27 @@ def test_installed_an_undescribable_refusal_is_not_offered(tmp_path, installed, 
         correction=lambda p: fixed(p), succeeds=False)
     outcome = load(attempt / "result.json")
     assert outcome["status"] == "failed"
-    assert outcome["citation_correction"] == {"offered": False, "defects": 0, "outcome": None}
+    assert outcome["citation_correction"] == {"offered": False, "defects": 0, "outcome": None,
+                                              "exit_code": None}
     assert not (attempt / "offline-observations.resume.json").exists()
     assert not (attempt / "citation-correction.json").exists()
     assert Path(attempt).is_dir()
+
+
+def test_installed_a_correction_with_no_valid_answer_keeps_the_original_refusal(
+        tmp_path, installed, wheel_cli):
+    # Off the constraint, a schema-invalid answer needs nare's schema retry, a second turn
+    # that --max-turns 1 does not allow: nare stops, and the original refusal stands.
+    _, run, attempt, _, _ = review(
+        tmp_path, installed, wheel_cli, answer=lambda p: first_answer(p, end_line=2),
+        correction=lambda p: {"corrections": []}, succeeds=False)
+    outcome = load(attempt / "result.json")
+    assert (outcome["status"], outcome["reason"]) == ("failed", "citation_validation")
+    assert outcome["citation_correction"] == {"offered": True, "defects": 1,
+                                              "outcome": "no_answer", "exit_code": 1}
+    terminal = json.loads((attempt / "correction.stdout.jsonl").read_text().splitlines()[-1])
+    assert (terminal["status"], terminal["stop_reason"]) == ("error", "max_turns")
+    assert len(resumed(attempt)["calls"]) == 1
+    assert outcome["usage"]["total"] == terminal["usage"]["input"] + terminal["usage"]["output"]
+    from scrutare.replay.audit import _citation_correction_issues
+    assert _citation_correction_issues(run, load(run / "config.json")) == ()
