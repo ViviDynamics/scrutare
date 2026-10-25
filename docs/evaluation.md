@@ -254,6 +254,17 @@ retained session for the tool-free, schema-constrained correction turn on
 `spark/glm-5.3-flash`. The base job lost two sessions to the output cap. It is a
 measurement, not a qualification, and external spend was zero.
 
+The [self-hosted model inventory and shortlist](../evaluations/reports/2026-10-25-self-hosted-inventory/README.md)
+(#92, phase 1) is read-only. It records what the Spark box and the ADA GPUs serve
+and probes each deployed self-hosted group through the LAN LiteLLM path. Only
+`spark/glm-5.3-flash` returned real tool calls: the ADA and Arc groups, on
+LiteLLM's `ollama/` route, return a tool call as text. One of the two ADA GPUs
+now serves WhisperX, and the live proxy still routes to its removed Ollama
+endpoint. No other model can run a review today. The package
+shortlists three candidates that would need the Sparks and proposes the
+infrastructure change for the maintainer's decision. Nothing was screened or
+changed.
+
 Ordinary CI uses `--evidence-kind offline` and deterministic provider substitutions
 to verify orchestration and scoring. Offline metrics measure software behavior only.
 A real baseline requires explicit model jobs and completed independent human
