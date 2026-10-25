@@ -1,0 +1,113 @@
+{
+ "defaults_changed": false,
+ "holdout_used": false,
+ "jobs": {
+  "base": {
+   "cells": 12,
+   "cells_complete_and_accounted": 10,
+   "corrections": {
+    "by_outcome": {},
+    "offered": 0,
+    "tokens": 0
+   },
+   "discovery_sessions": 48,
+   "discovery_sessions_complete": 46,
+   "findings_in_cells": 41,
+   "first_answers_refused_for_citations": {
+    "answered_sessions": 46,
+    "by_kind": {},
+    "correctable": 0,
+    "sessions": 0,
+    "sessions_list": [],
+    "wilson_95": [
+     0.0,
+     0.0771
+    ]
+   },
+   "mean_cell_latency_seconds": 579.5,
+   "not_complete_by_cause": {
+    "output_cap": 2
+   },
+   "tokens": {
+    "cells_total": 749613,
+    "discovery_sessions_total": 749613,
+    "output": 205802
+   },
+   "valid_citations_in_cell_findings": 113
+  },
+  "lines": {
+   "cells": 12,
+   "cells_complete_and_accounted": 12,
+   "corrections": {
+    "by_outcome": {},
+    "offered": 0,
+    "tokens": 0
+   },
+   "discovery_sessions": 48,
+   "discovery_sessions_complete": 48,
+   "findings_in_cells": 48,
+   "first_answers_refused_for_citations": {
+    "answered_sessions": 48,
+    "by_kind": {},
+    "correctable": 0,
+    "sessions": 0,
+    "sessions_list": [],
+    "wilson_95": [
+     0.0,
+     0.0741
+    ]
+   },
+   "mean_cell_latency_seconds": 470.6,
+   "not_complete_by_cause": {},
+   "tokens": {
+    "cells_total": 714798,
+    "discovery_sessions_total": 714798,
+    "output": 167582
+   },
+   "valid_citations_in_cell_findings": 131
+  },
+  "lines-correct": {
+   "cells": 12,
+   "cells_complete_and_accounted": 12,
+   "corrections": {
+    "by_outcome": {},
+    "offered": 0,
+    "tokens": 0
+   },
+   "discovery_sessions": 48,
+   "discovery_sessions_complete": 48,
+   "findings_in_cells": 49,
+   "first_answers_refused_for_citations": {
+    "answered_sessions": 48,
+    "by_kind": {},
+    "correctable": 0,
+    "sessions": 0,
+    "sessions_list": [],
+    "wilson_95": [
+     0.0,
+     0.0741
+    ]
+   },
+   "mean_cell_latency_seconds": 451.6,
+   "not_complete_by_cause": {},
+   "tokens": {
+    "cells_total": 681047,
+    "discovery_sessions_total": 681047,
+    "output": 153880
+   },
+   "valid_citations_in_cell_findings": 129
+  }
+ },
+ "kind": "development-corpus measurement for #91; not a qualification and not a gate",
+ "model": "onprem/glm-5.3-flash",
+ "pooled_citation_refusals": {
+  "answered_sessions": 142,
+  "sessions": 0,
+  "wilson_95": [
+   0.0,
+   0.0263
+  ]
+ },
+ "qualification": false,
+ "schema_version": 1
+}
