@@ -60,6 +60,13 @@ class CitationDefect:
         return [text[problem] for problem in self.problems]
 
 
+def citation_correction_enabled(root: Path) -> bool:
+    """Read the opt-in from the caller-captured configuration, as evidence_version does."""
+    from scrutare.config import load_config
+
+    return load_config(root.parent / "config.yaml").findings.citation_correction
+
+
 def _hex(value: object, size: int) -> bool:
     return isinstance(value, str) and re.fullmatch(rf"[0-9a-f]{{{size}}}", value) is not None
 

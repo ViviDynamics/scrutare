@@ -12,7 +12,7 @@ import stat
 import tempfile
 from collections.abc import Iterator
 from contextlib import ExitStack, contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from hashlib import sha256
 from pathlib import Path
 from typing import BinaryIO, Literal, TypedDict, TypeVar
@@ -36,16 +36,24 @@ from scrutare.engine.session_models import (
     TokenUsage,
 )
 from scrutare.engine.session_output import (
+    CitationCorrectionOffered,
     DecodedReanchorSession,
     DecodedSession,
     SessionProtocolError,
     constrained_turns,
+    decode_citation_correction,
     decode_cost_event,
     decode_reanchor_session,
     decode_session,
     findings_schema,
 )
+from scrutare.findings.citation_correction import (
+    citation_correction_enabled,
+    citation_correction_prompt,
+    citation_correction_schema,
+)
 from scrutare.findings.evidence import CitationValidationError, evidence_version
+from scrutare.findings.models import FindingError
 from scrutare.findings.models import artifact_data as asdict
 
 
@@ -284,9 +292,9 @@ def _new_capture(directory: int, name: str) -> BinaryIO:
     return os.fdopen(descriptor, "wb", buffering=0)
 
 
-def _session_document(directory: int) -> bytes | None:
+def _session_document(directory: int, name: str = "session.json") -> bytes | None:
     try:
-        descriptor = os.open("session.json", os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
+        descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
                              dir_fd=directory)
     except FileNotFoundError:
         return None
@@ -417,6 +425,108 @@ def _outcome(lease: BudgetLease, path: Path, evidence: _Evidence, *, status: Ses
     return SessionOutcome(findings=() if decoded is None else decoded.findings, **metadata)
 
 
+def _offers_citation_correction(descriptor: object) -> bool:
+    """Only an opted-in discovery session: never an assessor, discussion, chair or reanchor."""
+    return (type(descriptor) is PersonaReviewInput
+            and citation_correction_enabled(descriptor.inputs.root))
+
+
+def _rail_argv(rail: ModelRail, capability: NareCapability) -> list[str]:
+    argv = ["--provider", rail.provider, "--model=" + rail.model]
+    if (rail.provider == "openai"
+            and tuple(map(int, capability.version.split("."))) >= (2026, 10, 4)):
+        argv.append("--stream")
+    if rail.base_url is not None:
+        argv.extend(("--base-url", rail.base_url))
+    return argv
+
+
+def _rail_options(rail: ModelRail) -> list[str]:
+    argv: list[str] = []
+    if rail.structured_output is not None:
+        argv.extend(("--structured-output", rail.structured_output))
+    if rail.max_output_tokens is not None:
+        argv.extend(("--max-tokens", str(rail.max_output_tokens)))
+    return argv
+
+
+async def _correct_citations(
+    offered: CitationCorrectionOffered, descriptor: PersonaReviewInput, rail: ModelRail,
+    lease: BudgetLease, *, ledger: ReviewBudgetLedger, directory: int, artifact_directory: Path,
+    executable: Path, runtime: NareRuntime, capability: NareCapability, evidence: _Evidence,
+    deadline: float, record: dict[str, object],
+) -> DecodedSession:
+    """Resume the refused session for one tool-free correction turn within its own budget.
+
+    The turn is recorded before it starts. Its answer is validated exactly as the original
+    was; a correction that gives no answer leaves the original refusal standing.
+    """
+    root = descriptor.inputs.root
+    defects = offered.defects
+    prompt = citation_correction_prompt(defects)
+    system = descriptor.persona.system_prompt
+    argv = [str(executable), "run", prompt, "--tools", "none", "--root", str(root),
+            "--system=" + system, *_rail_argv(rail, capability),
+            "--jsonl", "--yes", "--contract", str(capability.contract),
+            "--schema", str(artifact_directory / "citation-correction.schema.json"),
+            "--budget-tokens", str(lease.limit_tokens),
+            "--resume", str(artifact_directory / "session.json"),
+            "--session", str(artifact_directory / "correction-session.json"),
+            "--max-turns", "1", *_rail_options(rail)]
+    write_owned_json(artifact_directory / "citation-correction.schema.json",
+                     citation_correction_schema(defects), prepared_root=root)
+    write_owned_json(artifact_directory / "citation-correction.json", {
+        "schema_version": 1, "scrutare_version": __version__,
+        "session_key": lease.session_key,
+        "refusal": {"reason": offered.reason, "citation_reason": offered.citation_reason},
+        "defects": [defect.to_dict() for defect in defects],
+        "prompt": prompt, "prompt_sha256": sha256(prompt.encode("utf-8")).hexdigest(),
+        "argv": argv, "max_turns": 1, "invocation_limit": lease.limit_tokens,
+    }, prepared_root=root)
+    record.update(offered=True, defects=len(defects), outcome="failed")
+    remaining = deadline - asyncio.get_running_loop().time()
+    if remaining <= 0:
+        raise asyncio.TimeoutError
+    correction = _Evidence(evidence.usage, started=True)
+    try:
+        with ExitStack() as stack:
+            stdout = stack.enter_context(_new_capture(directory, "correction.stdout.jsonl"))
+            stderr = stack.enter_context(_new_capture(directory, "correction.stderr.txt"))
+            exit_code = await _execute(
+                argv, _environment(artifact_directory / "home", artifact_directory / "tmp",
+                                   rail.provider), artifact_directory / "cwd",
+                replace(runtime, timeout_seconds=remaining), stdout, stderr, correction,
+                ledger, lease)
+    finally:
+        # Usage is cumulative across both turns of the session, whatever happened.
+        evidence.usage = correction.usage
+        evidence.corrupt = evidence.corrupt or correction.corrupt
+    saved = _session_document(directory, "correction-session.json")
+    if correction.corrupt:
+        raise SessionProtocolError("session: corrupted correction evidence")
+    validate_prepared_inputs(descriptor.inputs)
+    try:
+        decoded = decode_citation_correction(
+            correction.stdout, saved, offered=offered, persona=lease.persona,
+            exit_code=exit_code, expected_limit=lease.limit_tokens, expected_root=root,
+            candidate_namespace=str(artifact_directory),
+            discard_cut_off=rail.max_output_tokens is not None)
+    except CitationValidationError:
+        record["outcome"] = "refused"
+        raise
+    except FindingError:
+        record["outcome"] = "refused"
+        raise SessionProtocolError("citation correction: refused corrected answer") from None
+    if decoded.status != "done" or not decoded.output_available:
+        record["outcome"] = "no_answer"
+        evidence.usage = decoded.usage
+        if offered.citation_reason is not None:
+            raise CitationValidationError(offered.citation_reason)
+        raise SessionProtocolError("citation correction: no corrected answer")
+    record["outcome"] = "corrected"
+    return decoded
+
+
 async def _run_session(
     descriptor: PersonaReviewInput | PersonaReanchorInput, rail: ModelRail, lease: BudgetLease, *,
     ledger: ReviewBudgetLedger, artifact_directory: Path, runtime: NareRuntime,
@@ -442,6 +552,8 @@ async def _run_session(
     prepared_root: Path | None = None
     binding: dict[str, object] = {}
     constrained: int | None = None
+    correction: dict[str, object] | None = None
+    deadline = asyncio.get_running_loop().time() + getattr(runtime, "timeout_seconds", 0)
     try:
         expected_descriptor = PersonaReanchorInput if purpose == "reanchor" else PersonaReviewInput
         if (not isinstance(descriptor, expected_descriptor)
@@ -473,6 +585,8 @@ async def _run_session(
                 f"{rail.structured_output}")
         if purpose == "reanchor" and lease.session_key != f"{lease.persona}/attempt-0002":
             raise SessionRuntimeError("session_key: expected the fresh correction identity")
+        if purpose == "review" and _offers_citation_correction(descriptor):
+            correction = {"offered": False, "defects": 0, "outcome": None}
         reason = "artifacts"
         if purpose == "reanchor" and artifact_directory.name != "attempt-0002":
             raise SessionArtifactError("artifact_directory: expected the correction attempt")
@@ -482,12 +596,7 @@ async def _run_session(
             for name in ("cwd", "home", "tmp"):
                 os.mkdir(name, mode=0o700, dir_fd=directory)
             argv = [str(executable), "run", *input_args, "--system=" + system,
-                    "--provider", rail.provider, "--model=" + rail.model]
-            if (rail.provider == "openai"
-                    and tuple(map(int, capability.version.split("."))) >= (2026, 10, 4)):
-                argv.append("--stream")
-            if rail.base_url is not None:
-                argv.extend(("--base-url", rail.base_url))
+                    *_rail_argv(rail, capability)]
             schema_name = ("reanchor.schema.json" if purpose == "reanchor"
                            else "findings.schema.json")
             schema = (descriptor.output_schema()
@@ -499,10 +608,7 @@ async def _run_session(
                          str(lease.limit_tokens), "--session",
                          str(artifact_directory / "session.json"),
                          "--max-turns", str(runtime.max_turns)))
-            if rail.structured_output is not None:
-                argv.extend(("--structured-output", rail.structured_output))
-            if rail.max_output_tokens is not None:
-                argv.extend(("--max-tokens", str(rail.max_output_tokens)))
+            argv.extend(_rail_options(rail))
             write_owned_json(artifact_directory / schema_name, schema,
                              prepared_root=prepared_root)
             write_owned_json(artifact_directory / "invocation.json", {
@@ -525,6 +631,7 @@ async def _run_session(
                 stderr = stack.enter_context(_new_capture(directory, "stderr.txt"))
                 reason = "launch"
                 complete = False
+                deadline = asyncio.get_running_loop().time() + runtime.timeout_seconds
                 exit_code = await _execute(
                     argv, _environment(artifact_directory / "home", artifact_directory / "tmp",
                                        rail.provider), artifact_directory / "cwd", runtime,
@@ -549,16 +656,28 @@ async def _run_session(
                     discard_cut_off=capped,
                 )
             else:
-                decoded = decode_session(evidence.stdout, saved, persona=lease.persona,
-                                         exit_code=exit_code, expected_limit=lease.limit_tokens,
-                                         expected_root=prepared_root,
-                                         descriptor=(descriptor
-                                                     if isinstance(descriptor,
-                                                                   (DebateInput, AssessmentInput))
-                                                     else None),
-                                         evidence_version=evidence_version(prepared_root),
-                                         candidate_namespace=str(artifact_directory),
-                                         discard_cut_off=capped)
+                try:
+                    decoded = decode_session(
+                        evidence.stdout, saved, persona=lease.persona, exit_code=exit_code,
+                        expected_limit=lease.limit_tokens, expected_root=prepared_root,
+                        descriptor=(descriptor if isinstance(descriptor,
+                                                             (DebateInput, AssessmentInput))
+                                    else None),
+                        evidence_version=evidence_version(prepared_root),
+                        candidate_namespace=str(artifact_directory), discard_cut_off=capped,
+                        offer_citation_correction=correction is not None)
+                except CitationCorrectionOffered as offered:
+                    assert correction is not None
+                    # Every usage seen so far is in the ledger; the turn continues from it.
+                    ledger.observe(lease, offered.evidence.usage)
+                    evidence.usage = offered.evidence.usage
+                    reason, complete = "launch", False
+                    decoded = await _correct_citations(
+                        offered, descriptor, rail, lease, ledger=ledger, directory=directory,
+                        artifact_directory=artifact_directory, executable=executable,
+                        runtime=runtime, capability=capability, evidence=evidence,
+                        deadline=deadline, record=correction)
+                    reason = "protocol"
             if decoded.status is not None and (
                     decoded.nare_version != capability.version
                     or decoded.contract != capability.contract):
@@ -630,6 +749,8 @@ async def _run_session(
             if isinstance(rail, ModelRail) and rail.max_output_tokens is not None:
                 structured["max_output_tokens"] = {"limit": rail.max_output_tokens,
                                                    "reached": outcome.reason == "output_cap"}
+            if correction is not None:
+                structured["citation_correction"] = correction
             write_owned_json(artifact_directory / "result.json", {
                 "schema_version": 1, "scrutare_version": __version__,
                 "nare_version": capability.version, "contract": capability.contract,
