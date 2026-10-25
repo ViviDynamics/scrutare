@@ -48,6 +48,8 @@ def test_public_package_reproduces_the_measurement(tmp_path, monkeypatch):
     jobs = summary['jobs']
     assert [jobs[job]['discovery_sessions'] for job in JOBS] == [48, 48, 48]
     assert [jobs[job]['cells_complete_and_accounted'] for job in JOBS] == [10, 12, 12]
+    assert summary['pooled_citation_refusals'] == {'sessions': 0, 'answered_sessions': 142,
+                                                   'wilson_95': [0.0, 0.0263]}
     assert all(jobs[job]['first_answers_refused_for_citations']['sessions'] == 0
                for job in JOBS)
     assert jobs['base']['not_complete_by_cause'] == {'output_cap': 2}

@@ -248,7 +248,7 @@ A [development measurement of line counts and the citation correction](../evalua
 then `context.line_counts`, then line counts plus `findings.citation_correction`.
 Each covered the aggregate arm on four pilot defect cases with three repeats, for
 48 discovery sessions per job. No discovery answer in any job was refused for its
-citations (0 of 144), so no correction was offered, and the settings could not
+citations (0 of the 142 that returned an answer), so no correction was offered, and the settings could not
 show an effect. One live transport smoke with a synthetic defect resumed a
 retained session for the tool-free, schema-constrained correction turn on
 `spark/glm-5.3-flash`. The base job lost two sessions to the output cap. It is a

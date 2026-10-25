@@ -146,6 +146,20 @@ def job_summary(package, job, evaluation):
         corrected = record is not None and record['outcome'] == 'corrected'
         offered = record is not None and record['offered']
         refused = first not in (None, 'valid')
+        correctable = answer.get('correctable') is not None
+        # A citation refusal: the validator refused a citation, or a malformed citation field
+        # (a protocol refusal) that the released diagnoser names as correctable.
+        citation_refused = (first or '').startswith('citation:') or (refused and correctable)
+        if correctable and not refused:
+            raise ValueError(f'{job}: correctable defects on a valid first answer {key}')
+        if record is not None and offered != (refused and correctable):
+            raise ValueError(f'{job}: a correction offered where none was owed, or missing {key}')
+        if offered and record['outcome'] == 'corrected' and row['tokens'] <= (
+                row['first_run_tokens'] or 0):
+            raise ValueError(f'{job}: a corrected session with no correction tokens {key}')
+        if record is None and row['first_run_tokens'] is not None and (
+                row['tokens'] != row['first_run_tokens']):
+            raise ValueError(f'{job}: session tokens beyond its own run with the setting off {key}')
         # Every recorded outcome must agree with how the first answer was classified.
         if ((offered and not refused)
                 or (row['status'] == 'complete' and refused and not corrected)
@@ -160,7 +174,7 @@ def job_summary(package, job, evaluation):
                                      and row['tokens'] != row['first_run_tokens']
                                      and row['first_run_tokens'] is not None):
             raise ValueError(f'{job}: correction tokens disagree {key}')
-        discovery.append({**row, 'first_answer': first,
+        discovery.append({**row, 'first_answer': first, 'citation_refused': citation_refused,
                           'correctable': answer.get('correctable') if answer else None,
                           'correction_tokens': correction_tokens, 'key': key})
     if len(discovery) != 48 or len(answers) != 48:
@@ -173,9 +187,29 @@ def job_summary(package, job, evaluation):
             raise ValueError(f'{job}: cell {cell} does not hold the four reviewers once each')
         if cells[cell]['usage']['total'] != sum(r['tokens'] for r in members):
             raise ValueError(f'{job}: cell {cell} usage disagrees with its sessions')
+        if (cells[cell]['status'] == 'complete') != all(r['status'] == 'complete'
+                                                        for r in members):
+            raise ValueError(f'{job}: cell {cell} status disagrees with its sessions')
+    # The frozen snapshot must schedule exactly this arm with exactly this job's settings.
+    snapshot = read(directory / 'snapshot.json')
+    configs = snapshot['configs']
+    arm = configs.get('aggregate') if set(configs) == {'aggregate'} else None
+    if (arm is None or sorted(r['run_id'] for r in snapshot['expected_runs']) != sorted(cells)
+            or arm.get('context', {}).get('line_counts', False)
+            != evaluation['context'].get('line_counts', False)
+            or arm.get('findings', {}).get('citation_correction', False)
+            != ('findings' in evaluation)
+            or {k: v for k, v in arm['models']['default'].items() if v is not None}
+            != evaluation['models']['default']):
+        raise ValueError(f'{job}: snapshot disagrees with the job')
+    manifest = read(directory / 'corpus-manifest.json')
+    prepared = read(directory / 'preparation.json')['cases']
+    if sorted(c['id'] for c in manifest['cases']) != sorted(prepared):
+        raise ValueError(f'{job}: corpus manifest names other cases')
     complete = [r for r in discovery if r['status'] == 'complete']
     causes = collections.Counter(cause(r) for r in discovery if r['status'] != 'complete')
-    refused_first = [r for r in discovery if r['first_answer'] not in (None, 'valid')]
+    refused_first = [r for r in discovery if r['citation_refused']]
+    answered = [r for r in discovery if r['first_answer'] is not None]
     corrections = collections.Counter(
         r['citation_correction']['outcome'] for r in discovery
         if r['citation_correction'] and r['citation_correction']['offered'])
@@ -187,8 +221,8 @@ def job_summary(package, job, evaluation):
         'discovery_sessions': len(discovery), 'discovery_sessions_complete': len(complete),
         'not_complete_by_cause': dict(sorted(causes.items())),
         'first_answers_refused_for_citations': {
-            'sessions': len(refused_first),
-            'wilson_95': wilson(len(refused_first), len(discovery)),
+            'sessions': len(refused_first), 'answered_sessions': len(answered),
+            'wilson_95': wilson(len(refused_first), len(answered)),
             'by_kind': dict(sorted(collections.Counter(
                 r['first_answer'] for r in refused_first).items())),
             'correctable': sum(1 for r in refused_first if r['correctable'] is not None),
@@ -217,9 +251,14 @@ def main():
     check_hashes(args.package)
     plan, evaluations = check_jobs(args.package)
     jobs = {job: job_summary(args.package, job, evaluations[job]) for job in JOBS}
+    refused = sum(j['first_answers_refused_for_citations']['sessions'] for j in jobs.values())
+    answered = sum(j['first_answers_refused_for_citations']['answered_sessions']
+                   for j in jobs.values())
     summary = {'schema_version': 1, 'kind': plan['kind'], 'model': 'spark/glm-5.3-flash',
                'holdout_used': False, 'qualification': False, 'defaults_changed': False,
-               'jobs': jobs}
+               'jobs': jobs,
+               'pooled_citation_refusals': {'sessions': refused, 'answered_sessions': answered,
+                                            'wilson_95': wilson(refused, answered)}}
     text = json.dumps(summary, indent=1, sort_keys=True) + '\n'
     published = args.package / 'summary.json'
     if published.exists() and published.read_text() != text:

@@ -14,13 +14,14 @@
    "discovery_sessions_complete": 46,
    "findings_in_cells": 41,
    "first_answers_refused_for_citations": {
+    "answered_sessions": 46,
     "by_kind": {},
     "correctable": 0,
     "sessions": 0,
     "sessions_list": [],
     "wilson_95": [
      0.0,
-     0.0741
+     0.0771
     ]
    },
    "mean_cell_latency_seconds": 579.5,
@@ -46,6 +47,7 @@
    "discovery_sessions_complete": 48,
    "findings_in_cells": 48,
    "first_answers_refused_for_citations": {
+    "answered_sessions": 48,
     "by_kind": {},
     "correctable": 0,
     "sessions": 0,
@@ -76,6 +78,7 @@
    "discovery_sessions_complete": 48,
    "findings_in_cells": 49,
    "first_answers_refused_for_citations": {
+    "answered_sessions": 48,
     "by_kind": {},
     "correctable": 0,
     "sessions": 0,
@@ -97,6 +100,14 @@
  },
  "kind": "development-corpus measurement for #91; not a qualification and not a gate",
  "model": "spark/glm-5.3-flash",
+ "pooled_citation_refusals": {
+  "answered_sessions": 142,
+  "sessions": 0,
+  "wilson_95": [
+   0.0,
+   0.0263
+  ]
+ },
  "qualification": false,
  "schema_version": 1
 }

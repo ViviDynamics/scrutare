@@ -30,7 +30,7 @@ Each job ran the focused set's `aggregate` arm only (four evidence-v2 reviewers,
 **Sizing.** `g2`, `s1`, `s2` and `c1` lost 7 of 576 discovery sessions to citation defects, about 1.2%. Measuring a change in a rate that low takes thousands of sessions, which would mean days of a shared engine. This measurement does not attempt that. It is sized to give a fair chance of seeing the mechanism fire and pricing it.
 - **The chance was only fair.** `plan.json`, written before any call, says the size suffices "for the mechanism", which overstated it. Only the 48 `lines-correct` sessions can offer a correction. At a 1 to 2% rate, the prior chance that none would was 38 to 62%, and line counts, which are on in that job, aim to lower the rate further. More `lines-correct` repeats, or a correction-only job, would have raised the chance. `plan.json` keeps its words, because the preparations bind its hash.
 - The aggregate arm gives the most citations per token: four discovery sessions and no assessor per cell.
-- The four cases include the two (`security-auth-order`, 6 of the 7; `tests-consumer-fixture`, 1) behind every earlier citation refusal.
+- The four cases include the two (`security-auth-order`, 6 of the 7; `tests-consumer-fixture`, 1) behind every earlier citation refusal. But 5 of those 7 were in the `focused3` arm, and only 2 in `aggregate`, the arm run here. `contract-null-zero` and `operations-flush-loss` were never in an earlier schedule, so there is no earlier rate for them. #91 asks for a comparison within the same arms, which this is; it is not a test of `focused3`.
 - The three jobs started together at one cell each, which put 12 of this evaluator's streams in flight, `c1`'s peak. Engine load was shared while all three ran. `lines-correct` ended at 05:48:11Z and `lines` at 05:51:59Z. `base` ran until 06:13:46Z, so its last two `operations-flush-loss` cells ran beside opencode only, and beside the smoke.
 - Planned: about 2 to 2.5 h and 2 million tokens, comparable to one `c1`. Actual: 1 h 56 min (04:17:49Z to 06:14:00Z) and 2,145,458 tokens.
 
@@ -42,7 +42,7 @@ From `reproduce.py`; see `summary.json`.
 | --- | ---: | ---: | ---: |
 | Cells complete and accounted | 10 of 12 | 12 of 12 | 12 of 12 |
 | Discovery sessions complete | 46 of 48 | 48 of 48 | 48 of 48 |
-| First answers refused for citations (see below) | **0** (95% CI 0 to 7.4%) | **0** (0 to 7.4%) | **0** (0 to 7.4%) |
+| First answers refused for citations (see below) | **0** of 46 answered (95% CI 0 to 7.7%) | **0** of 48 (0 to 7.4%) | **0** of 48 (0 to 7.4%) |
 | Corrections offered / corrected | (off) | (off) | 0 / 0 |
 | Correction tokens | (off) | (off) | 0 |
 | Sessions lost, by cause | 2 `output_cap` | none | none |
@@ -53,7 +53,7 @@ From `reproduce.py`; see `summary.json`.
 | Mean cell latency | 580 s | 471 s | 452 s |
 
 - **"First answer"** means the answer nare returned to Scrutare at the end of the session's own run. That includes any answer after nare's own schema-correction turn (16, 15 and 11 sessions per job had one). It is the answer Scrutare validates, and the one a citation correction would follow.
-- **Pooled across the three jobs:** 0 of 144 discovery sessions had a citation refusal (95% Wilson interval 0 to 2.6%). That is consistent with the earlier schedules' 1 to 2%, and does not show any setting lowering it: at 1.5%, a run of 144 sessions with no refusal happens about 1 time in 9.
+- **Pooled across the three jobs:** 0 of the 142 discovery sessions that returned an answer had a citation refusal (95% Wilson interval 0 to 2.6%; the other 2 were cut off at the cap and had no answer to refuse). That is consistent with the earlier schedules' 1 to 2%, and does not show any setting lowering it: at 1.5%, a run of 144 sessions with no refusal happens about 1 time in 9.
 - **`base` lost two cells,** both on `operations-flush-loss` (repeats 1 and 2). In each, one reviewer's request ran to the 20,000-token cap, and the session failed as `output_cap` (complete accounting, no answer used). This has nothing to do with citations or either setting, and one job is too few to tell whether line counts affect it.
 - **The token and latency differences between jobs are within run-to-run noise** for 12 cells. The `base` total includes the two capped requests (about 40,000 output tokens). These figures are not evidence that either setting is cheaper.
 - **Each corrected session's extra cost** would have been one tool-free turn over the session's context. In the smoke below that was 5,453 input and 455 output tokens (5,908 in all), against a median discovery session of 13,105 tokens here.
@@ -103,11 +103,12 @@ Some figures come from private captures and are not recomputed:
 - the first-answer classification (`first-answers.json`), made with the released `citation_defects` over the private streams;
 - the proxy rows, load samples and smoke.
 
-The retained captures' hashes are in each job's `original-artifact-sha256.json`, and the raw spend rows' hash is in `provider-evidence.json`. Each `preparation.json` is published byte-identical to the one the job ran, so it keeps one local path, the operator's nare console.
+Each job's `experiment.json` and `snapshot.json` are re-serialised with local paths scrubbed (as in the `c1` package), so their hashes differ from the originals'. The retained captures' hashes are in each job's `original-artifact-sha256.json`, and the raw spend rows' hash is in `provider-evidence.json`. Each `preparation.json` is published byte-identical to the one the job ran, so it keeps one local path, the operator's nare console.
 
 ## What this does not establish
 
 - **Whether either setting reduces citation refusals.** None occurred in any job, with or without them.
+- **The other arms.** 5 of the 7 earlier citation refusals were in `focused3`, which this did not run.
 - **How often a live correction succeeds.** None was offered. The smoke used a synthetic defect.
 - **Behaviour on an idle engine,** or on cases other than these four.
 - **Review quality.** Nothing here judges findings beyond mechanical validation.
