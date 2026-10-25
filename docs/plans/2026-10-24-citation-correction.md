@@ -58,17 +58,17 @@ is run, and no default changes.
   ledger and in `result.json`.
 
 ## Tasks
-- [ ] 1. Configuration: opt-in, boolean, requires evidence v2, recorded only when on,
+- [x] 1. Configuration: opt-in, boolean, requires evidence v2, recorded only when on,
   evaluator arms inherit it: `tests/test_citation_correction_config.py`.
-- [ ] 2. Defect diagnosis, prompt, schema and application, pure functions:
+- [x] 2. Defect diagnosis, prompt, schema and application, pure functions:
   `tests/test_citation_correction_defects.py`.
-- [ ] 3. Session: on/off, a past-end citation corrected, a placeholder hash corrected,
+- [x] 3. Session: on/off, a past-end citation corrected, a placeholder hash corrected,
   a correction that fails again, a correction that gives no answer, a non-citation
   failure not offered, shared accounting: `tests/test_citation_correction_session.py`.
-- [ ] 4. Replay audits the recorded refusal, prompt and outcome against the retained
+- [x] 4. Replay audits the recorded refusal, prompt and outcome against the retained
   streams: `tests/test_replay_citation_correction.py`.
-- [ ] 5. Installed native nare 2026.10.12 proofs through the installed wheel: on, off,
+- [x] 5. Installed native nare 2026.10.12 proofs through the installed wheel: on, off,
   past-end corrected, placeholder hash corrected, failed again, non-citation failure,
   replay: `tests/test_installed_citation_correction.py`.
-- [ ] 6. Documentation: `docs/config.md`, `docs/replay.md`, `docs/session-fanout.md`,
+- [x] 6. Documentation: `docs/config.md`, `docs/replay.md`, `docs/session-fanout.md`,
   `docs/evaluation.md`.

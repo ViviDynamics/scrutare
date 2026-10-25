@@ -74,6 +74,11 @@ adds `--max-tokens N` to each of its sessions, and records the cap in
 turn nare cut off at `max_tokens` fails as `output_cap`, with complete accounting
 and no findings or corrections, also when the same turn exhausted its budget and
 nare's terminal stop reason is `budget`.
+With [`findings.citation_correction`](config.md#citation-correction-turn-opt-in),
+a discovery session whose answer is refused only for correctable citation
+defects is resumed once, in the same attempt, for one tool-free turn under the
+same lease and budget limit; its usage stays cumulative in the session's
+outcome and the shared ledger.
 Scrutare passes `--contract` equal to the inspected contract: 1 for releases
 before 2026.10.7, 2 from then. Contract 2 only changes when `ask` blocks, and
 these sessions offer only `read`.
