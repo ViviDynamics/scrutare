@@ -1,0 +1,76 @@
+{
+ "declared": {
+  "holdout_used": false,
+  "infrastructure_changed": false,
+  "screening_run": false
+ },
+ "groups": {
+  "ada/deepseek-r1-14b": {
+   "decode_tok_s": null,
+   "http_error": true,
+   "json_schema_valid": false,
+   "tool_calls": false
+  },
+  "ada/gemma3-12b": {
+   "decode_tok_s": 26.0,
+   "http_error": false,
+   "json_schema_valid": true,
+   "tool_calls": false
+  },
+  "ada/gemma4-12b": {
+   "decode_tok_s": null,
+   "http_error": false,
+   "json_schema_valid": true,
+   "tool_calls": false
+  },
+  "ada/llama3.1-8b": {
+   "decode_tok_s": 41.6,
+   "http_error": false,
+   "json_schema_valid": true,
+   "tool_calls": false
+  },
+  "ada/phi4-14b": {
+   "decode_tok_s": null,
+   "http_error": true,
+   "json_schema_valid": false,
+   "tool_calls": false
+  },
+  "ada/qwen2.5-coder-14b": {
+   "decode_tok_s": null,
+   "http_error": true,
+   "json_schema_valid": false,
+   "tool_calls": false
+  },
+  "ada/qwen3-14b": {
+   "decode_tok_s": null,
+   "http_error": true,
+   "json_schema_valid": false,
+   "tool_calls": false
+  },
+  "ada/qwen3-8b": {
+   "decode_tok_s": 38.8,
+   "http_error": false,
+   "json_schema_valid": true,
+   "tool_calls": false
+  },
+  "arc/qwen3-8b": {
+   "decode_tok_s": 26.7,
+   "http_error": false,
+   "json_schema_valid": true,
+   "tool_calls": false
+  },
+  "spark/glm-5.3-flash": {
+   "decode_tok_s": 22.9,
+   "http_error": false,
+   "json_schema_valid": true,
+   "tool_calls": true
+  }
+ },
+ "groups_able_to_run_nare_reviews": [
+  "spark/glm-5.3-flash"
+ ],
+ "paid_provider_rows": 0,
+ "probe_rows": 32,
+ "probed_groups": 10,
+ "schema_version": 1
+}

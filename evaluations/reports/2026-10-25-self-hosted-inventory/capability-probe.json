@@ -1,0 +1,420 @@
+{
+ "ended_utc": "2026-10-25T01:51:46Z",
+ "groups": [
+  {
+   "decode": {
+    "completion_tokens": 288,
+    "content_chars": 371,
+    "decode_tok_s": 22.9,
+    "error": null,
+    "finish_reason": "stop",
+    "prompt_tokens": 30,
+    "reasoning_chars": 196,
+    "seconds": 12.99,
+    "tool_call_names": [],
+    "ttft": 0.4
+   },
+   "group": "spark/glm-5.3-flash",
+   "json_schema": {
+    "completion_tokens": 733,
+    "content_chars": 124,
+    "decode_tok_s": 15.6,
+    "error": null,
+    "finish_reason": "stop",
+    "prompt_tokens": 34,
+    "reasoning_chars": 3041,
+    "seconds": 47.49,
+    "tool_call_names": [],
+    "ttft": 0.52
+   },
+   "json_schema_valid": true,
+   "tool_call": {
+    "completion_tokens": 30,
+    "content_chars": 0,
+    "decode_tok_s": 30.9,
+    "error": null,
+    "finish_reason": "tool_calls",
+    "prompt_tokens": 171,
+    "reasoning_chars": 79,
+    "seconds": 1.6,
+    "tool_call_names": [
+     "read"
+    ],
+    "ttft": 0.63
+   },
+   "tool_call_valid": true
+  },
+  {
+   "decode": {
+    "completion_tokens": null,
+    "content_chars": null,
+    "decode_tok_s": null,
+    "error": "HTTPError: HTTP Error 500: Internal Server Error",
+    "finish_reason": null,
+    "prompt_tokens": null,
+    "reasoning_chars": null,
+    "seconds": 0.29,
+    "tool_call_names": [],
+    "ttft": null
+   },
+   "group": "ada/qwen3-14b",
+   "json_schema": {
+    "completion_tokens": null,
+    "content_chars": null,
+    "decode_tok_s": null,
+    "error": "HTTPError: HTTP Error 500: Internal Server Error",
+    "finish_reason": null,
+    "prompt_tokens": null,
+    "reasoning_chars": null,
+    "seconds": 6.26,
+    "tool_call_names": [],
+    "ttft": null
+   },
+   "json_schema_valid": false,
+   "tool_call": {
+    "completion_tokens": null,
+    "content_chars": null,
+    "decode_tok_s": null,
+    "error": "HTTPError: HTTP Error 500: Internal Server Error",
+    "finish_reason": null,
+    "prompt_tokens": null,
+    "reasoning_chars": null,
+    "seconds": 6.3,
+    "tool_call_names": [],
+    "ttft": null
+   },
+   "tool_call_valid": false
+  },
+  {
+   "decode": {
+    "completion_tokens": 400,
+    "content_chars": 0,
+    "decode_tok_s": 38.8,
+    "error": null,
+    "finish_reason": "stop",
+    "prompt_tokens": 33,
+    "reasoning_chars": 1692,
+    "seconds": 13.82,
+    "tool_call_names": [],
+    "ttft": 3.51
+   },
+   "group": "ada/qwen3-8b",
+   "json_schema": {
+    "completion_tokens": 33,
+    "content_chars": 89,
+    "decode_tok_s": 37.1,
+    "error": null,
+    "finish_reason": "stop",
+    "prompt_tokens": 35,
+    "reasoning_chars": 0,
+    "seconds": 1.03,
+    "tool_call_names": [],
+    "ttft": 0.14
+   },
+   "json_schema_valid": true,
+   "tool_call": {
+    "completion_tokens": 17,
+    "content_chars": 53,
+    "decode_tok_s": 36.5,
+    "error": null,
+    "finish_reason": "stop",
+    "prompt_tokens": 125,
+    "reasoning_chars": 0,
+    "seconds": 0.59,
+    "tool_call_names": [],
+    "ttft": 0.13
+   },
+   "tool_call_valid": false
+  },
+  {
+   "decode": {
+    "completion_tokens": 400,
+    "content_chars": 0,
+    "decode_tok_s": null,
+    "error": null,
+    "finish_reason": "stop",
+    "prompt_tokens": 40,
+    "reasoning_chars": 0,
+    "seconds": 94.16,
+    "tool_call_names": [],
+    "ttft": null
+   },
+   "group": "ada/gemma4-12b",
+   "json_schema": {
+    "completion_tokens": 37,
+    "content_chars": 94,
+    "decode_tok_s": 25.0,
+    "error": null,
+    "finish_reason": "stop",
+    "prompt_tokens": 45,
+    "reasoning_chars": 0,
+    "seconds": 1.74,
+    "tool_call_names": [],
+    "ttft": 0.26
+   },
+   "json_schema_valid": true,
+   "tool_call": {
+    "completion_tokens": 20,
+    "content_chars": 59,
+    "decode_tok_s": 25.9,
+    "error": null,
+    "finish_reason": "stop",
+    "prompt_tokens": 137,
+    "reasoning_chars": 0,
+    "seconds": 1.08,
+    "tool_call_names": [],
+    "ttft": 0.31
+   },
+   "tool_call_valid": false
+  },
+  {
+   "decode": {
+    "completion_tokens": null,
+    "content_chars": null,
+    "decode_tok_s": null,
+    "error": "HTTPError: HTTP Error 500: Internal Server Error",
+    "finish_reason": null,
+    "prompt_tokens": null,
+    "reasoning_chars": null,
+    "seconds": 0.25,
+    "tool_call_names": [],
+    "ttft": null
+   },
+   "group": "ada/qwen2.5-coder-14b",
+   "json_schema": {
+    "completion_tokens": null,
+    "content_chars": null,
+    "decode_tok_s": null,
+    "error": "HTTPError: HTTP Error 500: Internal Server Error",
+    "finish_reason": null,
+    "prompt_tokens": null,
+    "reasoning_chars": null,
+    "seconds": 6.32,
+    "tool_call_names": [],
+    "ttft": null
+   },
+   "json_schema_valid": false,
+   "tool_call": {
+    "completion_tokens": null,
+    "content_chars": null,
+    "decode_tok_s": null,
+    "error": "HTTPError: HTTP Error 500: Internal Server Error",
+    "finish_reason": null,
+    "prompt_tokens": null,
+    "reasoning_chars": null,
+    "seconds": 6.35,
+    "tool_call_names": [],
+    "ttft": null
+   },
+   "tool_call_valid": false
+  },
+  {
+   "decode": {
+    "completion_tokens": 240,
+    "content_chars": 371,
+    "decode_tok_s": 41.6,
+    "error": null,
+    "finish_reason": "stop",
+    "prompt_tokens": 31,
+    "reasoning_chars": 0,
+    "seconds": 24.08,
+    "tool_call_names": [],
+    "ttft": 18.32
+   },
+   "group": "ada/llama3.1-8b",
+   "json_schema": {
+    "completion_tokens": 43,
+    "content_chars": 124,
+    "decode_tok_s": 40.1,
+    "error": null,
+    "finish_reason": "stop",
+    "prompt_tokens": 35,
+    "reasoning_chars": 0,
+    "seconds": 1.18,
+    "tool_call_names": [],
+    "ttft": 0.11
+   },
+   "json_schema_valid": true,
+   "tool_call": {
+    "completion_tokens": 16,
+    "content_chars": 52,
+    "decode_tok_s": 42.4,
+    "error": null,
+    "finish_reason": "stop",
+    "prompt_tokens": 125,
+    "reasoning_chars": 0,
+    "seconds": 0.51,
+    "tool_call_names": [],
+    "ttft": 0.13
+   },
+   "tool_call_valid": false
+  },
+  {
+   "decode": {
+    "completion_tokens": null,
+    "content_chars": null,
+    "decode_tok_s": null,
+    "error": "HTTPError: HTTP Error 500: Internal Server Error",
+    "finish_reason": null,
+    "prompt_tokens": null,
+    "reasoning_chars": null,
+    "seconds": 0.22,
+    "tool_call_names": [],
+    "ttft": null
+   },
+   "group": "ada/phi4-14b",
+   "json_schema": {
+    "completion_tokens": null,
+    "content_chars": null,
+    "decode_tok_s": null,
+    "error": "HTTPError: HTTP Error 500: Internal Server Error",
+    "finish_reason": null,
+    "prompt_tokens": null,
+    "reasoning_chars": null,
+    "seconds": 0.13,
+    "tool_call_names": [],
+    "ttft": null
+   },
+   "json_schema_valid": false,
+   "tool_call": {
+    "completion_tokens": null,
+    "content_chars": null,
+    "decode_tok_s": null,
+    "error": "HTTPError: HTTP Error 500: Internal Server Error",
+    "finish_reason": null,
+    "prompt_tokens": null,
+    "reasoning_chars": null,
+    "seconds": 6.26,
+    "tool_call_names": [],
+    "ttft": null
+   },
+   "tool_call_valid": false
+  },
+  {
+   "decode": {
+    "completion_tokens": 373,
+    "content_chars": 372,
+    "decode_tok_s": 26.0,
+    "error": null,
+    "finish_reason": "stop",
+    "prompt_tokens": 35,
+    "reasoning_chars": 0,
+    "seconds": 46.61,
+    "tool_call_names": [],
+    "ttft": 32.25
+   },
+   "group": "ada/gemma3-12b",
+   "json_schema": {
+    "completion_tokens": 54,
+    "content_chars": 124,
+    "decode_tok_s": 24.8,
+    "error": null,
+    "finish_reason": "stop",
+    "prompt_tokens": 40,
+    "reasoning_chars": 0,
+    "seconds": 2.46,
+    "tool_call_names": [],
+    "ttft": 0.28
+   },
+   "json_schema_valid": true,
+   "tool_call": {
+    "completion_tokens": 17,
+    "content_chars": 52,
+    "decode_tok_s": 29.1,
+    "error": null,
+    "finish_reason": "stop",
+    "prompt_tokens": 132,
+    "reasoning_chars": 0,
+    "seconds": 0.89,
+    "tool_call_names": [],
+    "ttft": 0.31
+   },
+   "tool_call_valid": false
+  },
+  {
+   "decode": {
+    "completion_tokens": null,
+    "content_chars": null,
+    "decode_tok_s": null,
+    "error": "HTTPError: HTTP Error 500: Internal Server Error",
+    "finish_reason": null,
+    "prompt_tokens": null,
+    "reasoning_chars": null,
+    "seconds": 0.18,
+    "tool_call_names": [],
+    "ttft": null
+   },
+   "group": "ada/deepseek-r1-14b",
+   "json_schema": {
+    "completion_tokens": null,
+    "content_chars": null,
+    "decode_tok_s": null,
+    "error": "HTTPError: HTTP Error 500: Internal Server Error",
+    "finish_reason": null,
+    "prompt_tokens": null,
+    "reasoning_chars": null,
+    "seconds": 6.27,
+    "tool_call_names": [],
+    "ttft": null
+   },
+   "json_schema_valid": false,
+   "tool_call": {
+    "completion_tokens": null,
+    "content_chars": null,
+    "decode_tok_s": null,
+    "error": "HTTPError: HTTP Error 500: Internal Server Error",
+    "finish_reason": null,
+    "prompt_tokens": null,
+    "reasoning_chars": null,
+    "seconds": 6.32,
+    "tool_call_names": [],
+    "ttft": null
+   },
+   "tool_call_valid": false
+  },
+  {
+   "decode": {
+    "completion_tokens": 400,
+    "content_chars": 0,
+    "decode_tok_s": 26.7,
+    "error": null,
+    "finish_reason": "stop",
+    "prompt_tokens": 33,
+    "reasoning_chars": 1737,
+    "seconds": 27.43,
+    "tool_call_names": [],
+    "ttft": 12.43
+   },
+   "group": "arc/qwen3-8b",
+   "json_schema": {
+    "completion_tokens": 1215,
+    "content_chars": 375,
+    "decode_tok_s": 26.5,
+    "error": null,
+    "finish_reason": "stop",
+    "prompt_tokens": 35,
+    "reasoning_chars": 4347,
+    "seconds": 46.34,
+    "tool_call_names": [],
+    "ttft": 0.53
+   },
+   "json_schema_valid": true,
+   "tool_call": {
+    "completion_tokens": 143,
+    "content_chars": 4,
+    "decode_tok_s": 26.7,
+    "error": null,
+    "finish_reason": "stop",
+    "prompt_tokens": 125,
+    "reasoning_chars": 607,
+    "seconds": 6.87,
+    "tool_call_names": [],
+    "ttft": 1.51
+   },
+   "tool_call_valid": false
+  }
+ ],
+ "method": "three streamed requests per group through https://litellm.vividynamics.com/v1 (the LAN path nare uses): a decode-rate request (integers 1 to 120, max_tokens 400), a response_format json_schema request (strict, a findings shape), and a tool-call request offering nare's read tool",
+ "schema_version": 1,
+ "started_utc": "2026-10-25T01:45:29Z"
+}

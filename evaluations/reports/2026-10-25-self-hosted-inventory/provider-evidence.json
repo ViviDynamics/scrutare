@@ -1,0 +1,269 @@
+{
+ "ada_failure_body": "ada/qwen3-14b 500 {\"error\":{\"message\":\"litellm.APIConnectionError: OllamaException - Cannot connect to host <endpoint>:11434 ssl:<ssl.SSLContext object at 0x7ff7972723f0> [Connect call failed ('<endpoint>', 11434)]. Received Model Group=ada/qwen3-14b\\nAvailable Model Group Fallbacks=None\",\"type\":\"internal_server_error\",\"param\":null,\"code\":\"500\"}}\nada/phi4-14b 500 {\"error\":{\"message\":\"litellm.APIConnectionError: OllamaException - Cannot connect to host <endpoint>:11434 ssl:<ssl.SSLContext object at 0x7ff7972723f0> [Connect call failed ('<endpoint>', 11434)]. Received Model Group=ada/phi4-14b\\nAvailable Model Group Fallbacks=None\",\"type\":\"internal_server_error\",\"param\":null,\"code\":\"500\"}}",
+ "litellm_self_hosted_deployments": [
+  {
+   "api_base": "http://ollama-ada-skt.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 32768,
+   "max_output_tokens": 8192,
+   "model": "ollama/qwen3:8b",
+   "model_name": "ada/qwen3-8b"
+  },
+  {
+   "api_base": "http://ollama-ada-w4v.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 32768,
+   "max_output_tokens": 8192,
+   "model": "ollama/qwen3:8b",
+   "model_name": "ada/qwen3-8b"
+  },
+  {
+   "api_base": "http://ollama-ada-skt.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 32768,
+   "max_output_tokens": 8192,
+   "model": "ollama/qwen3:14b",
+   "model_name": "ada/qwen3-14b"
+  },
+  {
+   "api_base": "http://ollama-ada-w4v.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 32768,
+   "max_output_tokens": 8192,
+   "model": "ollama/qwen3:14b",
+   "model_name": "ada/qwen3-14b"
+  },
+  {
+   "api_base": "http://ollama-arc.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 8192,
+   "max_output_tokens": 4096,
+   "model": "ollama/qwen3:8b",
+   "model_name": "arc/qwen3-8b"
+  },
+  {
+   "api_base": "http://ollama-ada-skt.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 32768,
+   "max_output_tokens": null,
+   "model": "ollama/qwen3-embedding:4b",
+   "model_name": "ollama/qwen3-embedding"
+  },
+  {
+   "api_base": "http://ollama-ada-w4v.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 32768,
+   "max_output_tokens": null,
+   "model": "ollama/qwen3-embedding:4b",
+   "model_name": "ollama/qwen3-embedding"
+  },
+  {
+   "api_base": "http://ollama-ada-skt.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 32768,
+   "max_output_tokens": 8192,
+   "model": "ollama/qwen2.5-coder:14b",
+   "model_name": "ada/qwen2.5-coder-14b"
+  },
+  {
+   "api_base": "http://ollama-ada-w4v.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 32768,
+   "max_output_tokens": 8192,
+   "model": "ollama/qwen2.5-coder:14b",
+   "model_name": "ada/qwen2.5-coder-14b"
+  },
+  {
+   "api_base": "http://ollama-ada-skt.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 32768,
+   "max_output_tokens": 8192,
+   "model": "ollama/deepseek-r1:14b",
+   "model_name": "ada/deepseek-r1-14b"
+  },
+  {
+   "api_base": "http://ollama-ada-w4v.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 32768,
+   "max_output_tokens": 8192,
+   "model": "ollama/deepseek-r1:14b",
+   "model_name": "ada/deepseek-r1-14b"
+  },
+  {
+   "api_base": "http://ollama-ada-skt.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 32768,
+   "max_output_tokens": 8192,
+   "model": "ollama/gemma4:12b",
+   "model_name": "ada/gemma4-12b"
+  },
+  {
+   "api_base": "http://ollama-ada-w4v.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 32768,
+   "max_output_tokens": 8192,
+   "model": "ollama/gemma4:12b",
+   "model_name": "ada/gemma4-12b"
+  },
+  {
+   "api_base": "http://ollama-ada-skt.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 32768,
+   "max_output_tokens": 8192,
+   "model": "ollama/gemma3:12b",
+   "model_name": "ada/gemma3-12b"
+  },
+  {
+   "api_base": "http://ollama-ada-w4v.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 32768,
+   "max_output_tokens": 8192,
+   "model": "ollama/gemma3:12b",
+   "model_name": "ada/gemma3-12b"
+  },
+  {
+   "api_base": "http://ollama-ada-skt.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 16384,
+   "max_output_tokens": 4096,
+   "model": "ollama/phi4:14b",
+   "model_name": "ada/phi4-14b"
+  },
+  {
+   "api_base": "http://ollama-ada-w4v.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 16384,
+   "max_output_tokens": 4096,
+   "model": "ollama/phi4:14b",
+   "model_name": "ada/phi4-14b"
+  },
+  {
+   "api_base": "http://ollama-ada-skt.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 32768,
+   "max_output_tokens": 8192,
+   "model": "ollama/llama3.1:8b",
+   "model_name": "ada/llama3.1-8b"
+  },
+  {
+   "api_base": "http://ollama-ada-w4v.ollama.svc.cluster.local:11434",
+   "max_input_tokens": 32768,
+   "max_output_tokens": 8192,
+   "model": "ollama/llama3.1:8b",
+   "model_name": "ada/llama3.1-8b"
+  },
+  {
+   "api_base": "http://192.168.3.40:8045/v1",
+   "max_input_tokens": 262144,
+   "max_output_tokens": 32768,
+   "model": "openai/glm-5.3-flash",
+   "model_name": "spark/glm-5.3-flash"
+  }
+ ],
+ "probe_spend_log": {
+  "attempted_fallbacks": {
+   "0": 32
+  },
+  "attempted_retries": {
+   "0": 18,
+   "2": 14
+  },
+  "by_group_endpoint_status": {
+   "ada/deepseek-r1-14b | ollama-ada-skt.ollama | failure": 3,
+   "ada/gemma3-12b | ollama-ada-w4v.ollama | success": 3,
+   "ada/gemma4-12b | ollama-ada-w4v.ollama | success": 3,
+   "ada/llama3.1-8b | ollama-ada-w4v.ollama | success": 3,
+   "ada/phi4-14b | ollama-ada-skt.ollama | failure": 4,
+   "ada/qwen2.5-coder-14b | ollama-ada-skt.ollama | failure": 3,
+   "ada/qwen3-14b | ollama-ada-skt.ollama | failure": 4,
+   "ada/qwen3-8b | ollama-ada-w4v.ollama | success": 3,
+   "arc/qwen3-8b | ollama-arc.ollama | success": 3,
+   "spark/glm-5.3-flash | 192.168.3.40 | success": 3
+  },
+  "note": "30 probe requests plus 2 requests that read the error body of two failing groups; identified by the Python-urllib user agent",
+  "paid_provider_rows": 0,
+  "raw_rows_sha256_private": "36eeac760f998b769c8d4801b94c9d1c29064877a1b11b5d39e7c01b6c5d6e5e",
+  "rows_from_this_probe": 32
+ },
+ "router": {
+  "content_policy_fallbacks": null,
+  "context_window_fallbacks": null,
+  "fallbacks": null,
+  "max_fallbacks": 5,
+  "model_group_alias": {
+   "claude-haiku": {
+    "hidden": true,
+    "model": "claude-haiku-5-5"
+   },
+   "claude-haiku-4-5": {
+    "hidden": true,
+    "model": "claude-haiku-5-5"
+   },
+   "claude-sonnet": {
+    "hidden": true,
+    "model": "claude-sonnet-5-5"
+   }
+  },
+  "num_retries": 2,
+  "routing_strategy": "latency-based-routing",
+  "timeout": 3600
+ },
+ "router_read_utc": "2026-10-25T01:43:12Z",
+ "schema_version": 1,
+ "usage_72h_by_group_client_key": {
+  "ada/qwen3-8b | opencode | odysseus": {
+   "first": "2026-10-22T16:55:54.710+00:00",
+   "last": "2026-10-24T19:19:42.119+00:00",
+   "rows": 8
+  },
+  "spark/glm-5.3-flash | AsyncAnthropic | external user key 1": {
+   "first": "2026-10-23T00:33:31.753+00:00",
+   "last": "2026-10-23T00:58:53.003+00:00",
+   "rows": 18
+  },
+  "spark/glm-5.3-flash | claude-cli | proxy master key": {
+   "first": "2026-10-24T05:23:50.360+00:00",
+   "last": "2026-10-24T08:10:51.282+00:00",
+   "rows": 7
+  },
+  "spark/glm-5.3-flash | opencode | odysseus": {
+   "first": "2026-10-22T01:09:33.209+00:00",
+   "last": "2026-10-24T19:33:55.998+00:00",
+   "rows": 488
+  },
+  "spark/glm-5.3-flash | opencode | proxy master key": {
+   "first": "2026-10-22T00:03:54.560+00:00",
+   "last": "2026-10-25T00:59:59.318+00:00",
+   "rows": 1108
+  },
+  "spark/glm-5.3-flash | performer | proxy master key": {
+   "first": "2026-10-23T03:39:39.209+00:00",
+   "last": "2026-10-24T12:16:41.267+00:00",
+   "rows": 273
+  },
+  "spark/glm-5.3-flash | python-httpx | proxy master key": {
+   "first": "2026-10-22T00:34:33.705+00:00",
+   "last": "2026-10-25T00:56:05.934+00:00",
+   "rows": 2135
+  },
+  "spark/glm-5.3-flash | python-httpx2 | dettmore-ci-qare": {
+   "first": "2026-10-22T01:17:24.091+00:00",
+   "last": "2026-10-24T09:48:06.718+00:00",
+   "rows": 74
+  },
+  "spark/glm-5.3-flash | python-httpx2 | external user key 1": {
+   "first": "2026-10-23T00:56:30.963+00:00",
+   "last": "2026-10-23T00:59:28.924+00:00",
+   "rows": 12
+  },
+  "spark/glm-5.3-flash | python-httpx2 | proxy master key": {
+   "first": "2026-10-22T03:25:02.658+00:00",
+   "last": "2026-10-22T14:25:32.454+00:00",
+   "rows": 537
+  }
+ },
+ "usage_window_utc": [
+  "2026-10-22 00:00:00",
+  "2026-10-25 01:00:00"
+ ],
+ "vllm_spark": {
+  "cache_dtype": "fp8_e4m3",
+  "gpu_memory_utilization": 0.75,
+  "kv_cache_memory_bytes_per_node": 18000000000,
+  "kv_cache_size_tokens": 1981012,
+  "max_model_len": 262144,
+  "model_id": "glm-5.3-flash",
+  "prefix_caching": true,
+  "raw_sha256_private": {
+   "vllm-metrics.txt": "7d33af3694f4679f71fa010b494c107b7a253b90f7de70ecec04ddd9ee116cc5",
+   "vllm-models.json": "5e0be36b8417d4729cd3ae8dee0c96dac0b464e76a0cd37b8d066bccc28d4370",
+   "vllm-version.json": "2bd89ec9b983123a225f3df0381c737a45302bb7417e345bf9ef92304e4388cf"
+  },
+  "read_utc": "2026-10-25T06:49:11Z",
+  "requests_running_at_read": 1.0,
+  "source": "GET /version, /v1/models and /metrics on the rank-0 host, retained privately",
+  "version": "0.32.0"
+ }
+}

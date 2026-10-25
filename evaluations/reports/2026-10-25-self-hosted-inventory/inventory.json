@@ -1,0 +1,38 @@
+{
+ "hosts": {
+  "ada": {
+   "clients_last_73h": "ada/qwen3-8b only: 8 rows, opencode on the odysseus key",
+   "engine": "Ollama, OLLAMA_CONTEXT_LENGTH 32768: 0.32.15 in git at probe time, bumped to 0.40.11 in git at 04:23Z 2026-10-25 after the probe (#254); vLLM on both nodes scaled to zero since 2026-09-26",
+   "hardware": "2x NVIDIA RTX 2000 Ada (16 GB, SM 8.9) in Talos workers talos-skt-uua and talos-w4v-yr3",
+   "litellm": "ada/* groups via the ollama/ provider; git lists one deployment per group (w4v), the live proxy still lists two including the removed ollama-ada-skt; max input 32768 and output 8192 (phi4 16384 and 4096)",
+   "models": [
+    "qwen3:8b",
+    "qwen3:14b",
+    "qwen2.5-coder:14b",
+    "deepseek-r1:14b",
+    "gemma4:12b",
+    "gemma3:12b",
+    "phi4:14b",
+    "llama3.1:8b",
+    "qwen3-embedding:4b"
+   ],
+   "serving": "one GPU: talos-w4v-yr3 serves Ollama; talos-skt-uua moved to WhisperX diarization on 2026-10-21 (infrastructure #214, Ollama skt scaled to 0)"
+  },
+  "arc": {
+   "litellm": "arc/qwen3-8b via Ollama 0.40.6 on an Intel Arc B580 (infrastructure #208), context 8192, output 4096"
+  },
+  "spark": {
+   "clients_last_73h": "opencode (master key and odysseus key), python-httpx (master key), performer, claude-cli, AsyncAnthropic and python-httpx2 (an external user key), dettmore-ci-qare; 4,652 rows",
+   "engine": "one vLLM 0.32.0 engine, tensor-parallel 3, rank 0 at 192.168.3.40:8045",
+   "free_capacity": "none for a second model: the three nodes run this one engine jointly; any new model on the Sparks replaces or shrinks it",
+   "hardware": "3x NVIDIA DGX Spark (GB10 Grace-Blackwell, SM121, 128 GB unified LPDDR5X each, 384 GB total), RoCE mesh between them (NCCL all-reduce 21 GB/s)",
+   "kv_cache": "fp8, 18 GB per node, 1,981,012-token pool, prefix caching on, gpu_memory_utilization 0.75 (the committed spark_glm_engine role defaults)",
+   "litellm": "spark/glm-5.3-flash, one deployment, max_output_tokens 32768 advertised",
+   "max_model_len": 262144,
+   "model": "GLM-5.3-Flash NVFP4 (181.3 GiB of weights), served as glm-5.3-flash"
+  }
+ },
+ "method": "read-only: infrastructure repo at origin/main 9dca807 (glm53-tp3 README and unit, spark_glm_engine role defaults, the unmerged issue-203 candidate, garden cluster manifests), live LiteLLM /model/info and /router/settings, vLLM /v1/models, /version and /metrics on 192.168.3.40:8045, 73 h of spend-log rows, and a three-request capability probe per self-hosted group through the LAN LiteLLM path",
+ "read_utc": "2026-10-25",
+ "schema_version": 1
+}
