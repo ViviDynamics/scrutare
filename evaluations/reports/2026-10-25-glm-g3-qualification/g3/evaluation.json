@@ -1,0 +1,33 @@
+{
+  "models": {
+    "default": {
+      "provider": "openai",
+      "base_url": "https://litellm.vividynamics.com/v1",
+      "model": "onprem/glm-5.3-flash",
+      "structured_output": "json_schema",
+      "max_output_tokens": 20000
+    }
+  },
+  "budgets": {
+    "per_persona_tokens": 200000,
+    "review_max_tokens": 200000
+  },
+  "rounds": {
+    "max": 3
+  },
+  "context": {
+    "enabled": true,
+    "related_paths": [
+      "client.py",
+      "policy.py",
+      "schema.py",
+      "formatting.py",
+      "test_formatting.py"
+    ],
+    "line_counts": true
+  },
+  "findings": {
+    "evidence": "v2",
+    "citation_correction": true
+  }
+}
