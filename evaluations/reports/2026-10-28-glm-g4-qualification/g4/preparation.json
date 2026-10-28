@@ -1,0 +1,172 @@
+{
+  "label": "g4",
+  "source_commit": "fe1f3dc8dd5e80e6240b5d2148d58d37ec0ed057",
+  "source_is_ancestor_of_origin_main": true,
+  "release_tag": "2026.10.38",
+  "structured_output": "json_schema",
+  "max_output_tokens": 20000,
+  "nare_runtime": {
+    "console": "/home/user/Workspace/ViviDynamics/scrutare/.agents/state/nare-2026.10.12/.venv/bin/nare",
+    "version": "2026.10.12",
+    "commit": "96672e1e6d23920fc6cdeebfcad7250c8c36cc5e",
+    "contract": {
+      "contract": 2,
+      "nare": "2026.10.12",
+      "exit_codes": {
+        "done": 0,
+        "blocked": 0,
+        "error": 1
+      },
+      "never_started": 2,
+      "statuses": [
+        "working",
+        "blocked",
+        "done",
+        "error"
+      ],
+      "event_types": [
+        "progress",
+        "tool_use",
+        "thinking",
+        "cost",
+        "error",
+        "output"
+      ],
+      "image_input": {
+        "flag": "--image-input",
+        "tool": "read",
+        "media_types": [
+          "image/png",
+          "image/jpeg"
+        ],
+        "max_bytes": 4194304,
+        "max_pixels": 20000000,
+        "max_edge": 8000
+      },
+      "prompt_input": {
+        "file_flag": "--prompt-file",
+        "stdin_positional": "-",
+        "encoding": "utf-8",
+        "exclusive": true
+      },
+      "structured_output": {
+        "flag": "--structured-output",
+        "modes": [
+          "json_schema"
+        ],
+        "requires": "--schema",
+        "providers": [
+          "openai"
+        ],
+        "constrained_turns": [
+          "schema_correction",
+          "tool_free_run"
+        ],
+        "event": "progress",
+        "event_detail": "structured_output"
+      },
+      "redaction": {
+        "version": 1,
+        "rules": [
+          "anthropic-key",
+          "openai-key",
+          "github-token",
+          "credential-assignment"
+        ]
+      }
+    },
+    "uv_lock_sha256": "fc5d11bde0c7992131c20bd1f26ad9f0817ca974c6189395089b5700e505f145",
+    "nare_package_sha256": {
+      "nare/__init__.py": "da7fbd6dd56acc9958033fad69d3621bdeb1d17fe25dbecb1415155d182d4a1f",
+      "nare/_version.py": "1075d22d5827e1f63d5d0a802cd05bcb1001e489f3ce16bd7774b88c75466f52",
+      "nare/accounting.py": "8f2e357b7b889757777f0d2387239bc9a3939463a0796aefcf6680587944caa6",
+      "nare/cli.py": "ff9f3451bad444df0a254bb9b2796314567d344f45e071d9fce726f373776f25",
+      "nare/compact.py": "0319e0961647b5595e441bfe475076c4918ae74e9b8075c7a4a806068f84dc64",
+      "nare/contract.py": "00643f6a753ad43f63897739d589801505efbbbe26f786f3c35e789680d8d505",
+      "nare/events.py": "410a0bfcedb4c6e3652fba18b620ab17a02580b000c61d917477078e818d06d5",
+      "nare/loop.py": "850755cb1187b3b3e2b453d940aa5e2502d37e0fe45ccc76a4d9ed0ee70f3264",
+      "nare/mcp.py": "5b0e9bc8a3ee6cc77580ade0a183facb312c10d9878b453f8986fc8772e2c154",
+      "nare/schema.py": "5f4d1881d07de3d31cc66908af43b91e71c37b6dae85dfb2baaccf5905a48e57",
+      "nare/session.py": "6baba12645346d95e7b08ef5b081a7e25ad7f8d2262b2cccde00bf16146f8506",
+      "nare/tools.py": "81d020604882ae1146edbe8d9b1643f89b65953bfeb8e0bfa6bf5bb4f39c1ac8",
+      "nare/transport/__init__.py": "62e50f943e5d4bad426179856aaa1e33b33597f55694a10deb3792d58213f2f0",
+      "nare/transport/anthropic.py": "1f989f5c33da81801a42bd6077e36f7c554d93b9d90b9536ac701c60af98a02d",
+      "nare/transport/openai.py": "4a23bc155964eb23345cb9bc89f32651e7e98983696b3b829ea9ea442d4a4d34",
+      "nare/tui/__init__.py": "560d59a46c6f94e64ffba1245a984f0efe41c887b6a78a8d33f04b1cff8a06b4",
+      "nare/tui/app.py": "8f3412b067abeffd4a7e800cea4be98d239bdf51713831a40b536fd17d643679",
+      "nare/tui/approve.py": "5a71bb67ac7db8493e67ca7c2367331a5dfd9e520d837308e2fa84b6487a089a",
+      "nare/tui/attach.py": "ececdc34a8e6b8043fed9061e8ab8fc8212e9578fbc844cb7881cb7d43a20305",
+      "nare/tui/render.py": "08787b978943f0700f866386776a04883f159cbfa5f1d82c10fc51871891c5de"
+    }
+  },
+  "model_alias": "onprem/glm-5.3-flash",
+  "backend_revision_verified": false,
+  "corpus": "evaluations/pilot",
+  "cases": [
+    "contract-explicit-default-clean",
+    "security-auth-order",
+    "tests-consumer-fixture"
+  ],
+  "split": "development",
+  "comparison_set": "focused",
+  "variants": null,
+  "repeats": 3,
+  "expected_runs": 36,
+  "configured_max_tokens": 200000,
+  "concurrency": 3,
+  "max_turns": 6,
+  "timeout_seconds": 1800,
+  "transient_retries_per_cell": 3,
+  "transient_retry_delay_seconds": 20.0,
+  "transient_retry_budget_job": 6,
+  "nominal_estimate_usd": {
+    "method": "attempts x configured ceiling x LiteLLM attribution output rate for the self-hosted group; external spend is USD 0 by construction (no paid deployment or fallback is reachable)",
+    "output_rate_per_token": 5e-07,
+    "first_attempts": 3.6,
+    "worst_case_with_all_budgeted_reruns": 4.2,
+    "not_a_billing_cap": true
+  },
+  "assessment_tokens": 50000,
+  "tool_capture": null,
+  "context_line_counts": true,
+  "citation_correction": true,
+  "protocol_correction": true,
+  "wheel_origin": "GitHub released asset",
+  "related_paths": [
+    "client.py",
+    "policy.py",
+    "schema.py",
+    "formatting.py",
+    "test_formatting.py"
+  ],
+  "holdout_used": false,
+  "frozen_before_this_job_calls": true,
+  "input_sha256": {
+    "corpus/captures/contract-explicit-default-clean/diff.patch": "f6ed5ac115f35dffe0d85041ae104e8cd50fa0de6c3e3ee3e3dda75d44f9b941",
+    "corpus/captures/contract-explicit-default-clean/files.json": "7b5791c398015e5df676e0e9165d587076e2de4889d08891bbaa952edb935aba",
+    "corpus/captures/contract-explicit-default-clean/metadata.json": "499ae50d0cfe5b8ba47f4fa253873d89e0da5813c84766cfddd89787747413d0",
+    "corpus/captures/security-auth-order/diff.patch": "468f7483ee52f142033b2bad72d504b45db6360d0f603833be290d102ca310af",
+    "corpus/captures/security-auth-order/files.json": "e0af47181a44c18c7148a530779de20d75787667c09c504f361e9ebdb3e84107",
+    "corpus/captures/security-auth-order/metadata.json": "7fcba9e8e0cc791572e49924bceae386e2056182287b7ea029df99dc1dbc69a1",
+    "corpus/captures/tests-consumer-fixture/diff.patch": "989cdf739cd0d1daa96f3e28b343195aa888440594a4f2e2b4bdaf8c48b051db",
+    "corpus/captures/tests-consumer-fixture/files.json": "d1ee56094b6348a05a911ac180d59658184cdac41ce0060da6db1e032f629949",
+    "corpus/captures/tests-consumer-fixture/metadata.json": "b2129431005491352d117d0620e445f78b70fe357bf8fac660fb4b50c92aaa52",
+    "corpus/labels/contract-explicit-default-clean.json": "607017c25737ac2944eb4ad0a19b3d01fbd3db558af7d9f3c20c3bc95bc85882",
+    "corpus/labels/security-auth-order.json": "59a62eba67aad56a9e4c077b7688f16e9d2539d608ab624a33fbf41e4d213cef",
+    "corpus/labels/tests-consumer-fixture.json": "b122fdffd4ab9c08c66941fec21a6a112f3af660e14320441e5eff2995a42af5",
+    "corpus/manifest.json": "9e576afcdbafe7973c2d5f14e1c1b21bf3f90c51ea2c294333e5ab9e1b4cd872",
+    "corpus/sources/contract-explicit-default-clean/base/change.py": "2f89c80c073de5248eb9074cd113e68219ad7f10fce75861d6d0784c12fe7bba",
+    "corpus/sources/contract-explicit-default-clean/head/change.py": "ae22349e0ea24c2608ec5cb88958f89159f644a02a5271a1f0c3f25a79784931",
+    "corpus/sources/security-auth-order/base/api.py": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+    "corpus/sources/security-auth-order/base/policy.py": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+    "corpus/sources/security-auth-order/head/api.py": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+    "corpus/sources/security-auth-order/head/policy.py": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+    "corpus/sources/tests-consumer-fixture/base/formatting.py": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+    "corpus/sources/tests-consumer-fixture/base/test_formatting.py": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+    "corpus/sources/tests-consumer-fixture/head/formatting.py": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+    "corpus/sources/tests-consumer-fixture/head/test_formatting.py": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+    "evaluation.json": "06e54db3b393b55722b5b6d577d18514fd8c709ff9b5ba4c688e479086dd1edf",
+    "gate.json": "302812fb4c70d60376c2bee97c168a387ea64061cc6803de537af807590b23b0",
+    "scrutare-2026.10.38-py3-none-any.whl": "43634957026d0e3d1ec049f7a8f6cabebf986a7191b60e793408769b890a2e6b"
+  }
+}

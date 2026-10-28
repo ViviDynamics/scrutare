@@ -1,0 +1,142 @@
+"""Render only the new public report from its offline-verified summary."""
+import json
+import sys
+from pathlib import Path
+
+p = Path(sys.argv[1])
+read = lambda name: json.loads((p / name).read_text())
+s = read('summary.json')
+j = s['jobs']['g4']
+sessions = s['session_causes']['g4']
+c = sessions['corrections']
+provider = s['provider']['g4']
+evidence = read('provider-evidence.json')
+prep = read('g4/preparation.json')
+mechanical = read('g4/mechanical-qualification.json')
+amendment = read('g4-amendment.json')
+max_attempt = max(a['tokens'] for cell in mechanical['cells'] for a in cell['attempts'])
+smoke = read('smoke-summary.json')
+
+def table(headers, rows):
+    return '\n'.join(['| ' + ' | '.join(headers) + ' |',
+                      '| ' + ' | '.join('---' for _ in headers) + ' |'] +
+                     ['| ' + ' | '.join(str(v).replace('|', '\\|') for v in row) + ' |'
+                      for row in rows])
+
+gate_rows = []
+for title, key, denominator in [
+    ('Complete and accounted', 'cells_complete_and_accounted', 36),
+    ('Complete and accounted on first attempt', 'cells_complete_and_accounted_first_attempt', 36),
+    ('Aggregate defect cells with non-empty valid v2 evidence', 'aggregate_defect_cells_nonempty_valid_v2', 6),
+    ('Assessed defect cells with an actual complete assessor', 'assessed_defect_cells_actual_complete_assessor', 6),
+]:
+    gate_rows.append([title] + [f"{s['jobs'][label]['gate_items'][key]}/{denominator}"
+                              for label in ('g4', 'g3', 'c1', 's2')])
+gate_rows.append(['Every attempt within the 200,000 ceiling'] +
+                 ['pass' if s['jobs'][label]['tests']['all_attempts_within_ceiling'] else 'fail'
+                  for label in ('g4', 'g3', 'c1', 's2')])
+gate_rows.append(['Transient rerun attempts'] + [s['jobs'][label]['rerun_attempts']
+                                               for label in ('g4', 'g3', 'c1', 's2')])
+verdict = 'passed' if s['qualified'] else 'did not pass'
+lines = [f'''# GLM 5.3 Flash qualification with protocol correction — g4
+
+**g4 {verdict} the frozen execution/protocol gate.** {j['gate_items']['cells_complete_and_accounted']} of 36 cells completed and were accounted for. Issue #99; refs #98, #51, #96 and #91. This single development-corpus schedule does not establish semantic quality or authorize promotion.
+
+The gate was [frozen on #51 before launch](https://github.com/ViviDynamics/scrutare/issues/51#issuecomment-6472089607). All 24 declared criteria/profile fields and the pass-rule string are byte-identical to g3/c1; all 23 corpus input hashes match. The actual published Scrutare **{prep['release_tag']}** wheel comes from `{prep['source_commit']}`. Its SHA-256 is `{next(v for k, v in prep['input_sha256'].items() if k.endswith('.whl'))}`.
+
+The profile retains g3's `context.line_counts: true` and `findings.citation_correction: true`, adding `findings.protocol_correction: true`. Protocol correction takes precedence: a session receives at most one correction. The model supplies a complete replacement answer for deterministic protocol defects; unchanged validation decides acceptance. The engine never drops, clamps or inserts findings, lines or candidate IDs. A still-invalid or unanswered correction fails its session and cell and remains in the 36/36 gate.
+
+Other settings remain unchanged: three pilot development cases; aggregate/assessed/focused1/focused3; three repeats; 200,000 review ceiling; 50,000 assessor reservation; 37,500 discovery grants (50,000 aggregate); 20,000 per-request output cap; `json_schema`; nare 2026.10.12; six initial native turns plus at most one eligible bounded correction; concurrency 3; 1800 s session timeout; no overrun fallback. Every attempt is retained. A cell needing a transient provider rerun fails the first-attempt item. Protocol refusals and `model_repetition` are ineligible for transient reruns.
+
+The gate allows g4 plus at most one prospective re-test, only on explicit maintainer approval and a newly posted freeze. No re-test was run. The frozen launch condition requires no idle window under the maintainer's 2026-10-25 (#96) and 2026-10-28 (#99) instructions and the [c1 precedent](https://github.com/ViviDynamics/scrutare/issues/51#issuecomment-6340502541). g4 launched at **{evidence['launch']['started_utc']}** as `scrutare-glm-g4.service`, with separate load and finish-evidence units.
+
+## Gate results
+
+{table(['Criterion', 'g4', 'g3', 'c1', 's2'], gate_rows)}
+
+g4 status counts: `{json.dumps(j['status_counts'], sort_keys=True)}`. The matrix contains {j['gate_items']['cells']} cells; clean cells complete: {j['clean_cells_complete']}/12. Maximum recorded attempt: {max_attempt:,} tokens. Discussion rounds attempted/completed: {mechanical['discussion_attempted_rounds']}/{mechanical['discussion_completed_rounds']}.
+
+## Failed cells
+''']
+if s['gate_losses']:
+    lines.append(table(['Cell', 'Causes / failed gate items'],
+                       [[f"`{r['cell']}`", ', '.join(f'`{v}`' for v in r['causes'])]
+                        for r in s['gate_losses']]))
+    lines.append('\nFailed native sessions:\n')
+    for r in sessions['failed_sessions']:
+        lines.append(f"- `{r['cell']}`, attempt {r['cell_attempt']}, `{r['persona']}`: `{r['cause']}` (`{r['reason']}`).")
+else:
+    lines.append('None. Every cell met the frozen gate.')
+lines.append('''
+The discovery loss in `security-auth-order/assessed/3` stopped on request three: recorded outputs were `66, 509, 20000`. Its 30,725 total tokens were below its 37,500 grant. The cap stopped the request before an acceptable final answer; no correction was offered, and assessment did not run after failed discovery.
+
+The `tests-consumer-fixture/assessed/3` assessor returned native status `done/end_turn`, but consumed **58,769 tokens (38,471 input + 20,298 output)** against its **50,000 grant**, an overrun of **8,769**. The engine retained it as `partial/budget` and made the cell `invalid`. Its request outputs were `23, 517, 4958, 11783, 3017`; none reached the per-request cap. The cell's 120,273 total tokens remain below the shared 200,000 ceiling. Passing that shared ceiling item does not excuse exceeding the assessor's own reservation.
+
+The `tests-consumer-fixture/focused3/2` assessor stopped at the cap on request four: recorded outputs were `96, 224, 67, 20000`. Its 45,951 total tokens were below its 50,000 grant. No correction was offered. Per-session output totals can exceed 20,000 across several requests; neither cap failure exceeded the 20,000 limit on an individual request.
+
+All three losses have complete recorded accounting. Every request cost reconciles exactly with the proxy, including both capped requests. There were no g4 session timeouts, repetition aborts, transient provider reruns or post-hoc exclusions. All 36 first attempts remain in the gate.
+''')
+lines.append(f'''
+## Protocol corrections
+
+Sessions completed: {sessions['complete']}/{sessions['sessions']}. Protocol-policy sessions: {c['sessions']}; phase counts: `{json.dumps(c['by_phase'], sort_keys=True)}`. First answers returned: {c['answered_sessions']}; refused: {c['first_answers_refused']}. Corrections offered: **{c['offered']}**. Outcomes: `{json.dumps(c['by_outcome'], sort_keys=True)}`. Recorded correction-turn usage: **{c['tokens']} tokens**. Corrected sessions that completed: {c['corrected_sessions_complete']}.
+''')
+if c['offered']:
+    lines.append(table(['Defect type', 'Corrected', 'Refused', 'No answer', 'Failed'],
+                       [[f'`{kind}`'] + [outcomes.get(k, 0) for k in ('corrected', 'refused', 'no_answer', 'failed')]
+                        for kind, outcomes in sorted(c['sessions_by_type_and_outcome'].items())]))
+    lines.append('\nCorrection sessions and recorded tokens:\n')
+    lines.append(table(['Session', 'Types', 'Outcome', 'Tokens'],
+                       [[f"`{r['session']}`", ', '.join(sorted({d['type'] for d in r['defects']})), r['outcome'], r['tokens']]
+                        for r in c['offered_sessions']]))
+    lines.append('\nType counts are session incidences. A session can name several types; type rows must not be summed as unique turns. Defect occurrence counts are retained separately in summary.json. Both native streams count toward usage; a correction is not a rerun.')
+else:
+    lines.append('No correction fired, so this schedule cannot estimate its live effect.')
+usage_rows = []
+for title, fn in [('Recorded total tokens', lambda d: d['usage_all_attempts']['total']),
+                  ('Recorded output tokens', lambda d: d['usage_all_attempts']['output']),
+                  ('Mean cell latency (s)', lambda d: d['cell_latency_seconds']['mean'])]:
+    usage_rows.append([title] + [fn(s['jobs'][label]) for label in ('g4', 'g3', 'c1', 's2')])
+reconciliation = s['spend_reconciliation']
+differences = {k: v for k, v in reconciliation.items() if k.endswith('_difference')}
+lines.append(f'''
+## Usage, spend and concurrent load
+
+{table(['Measurement', 'g4', 'g3', 'c1', 's2'], usage_rows)}
+
+The authoritative proxy re-read covers {provider['window_utc'][0]}Z to {provider['window_utc'][1]}Z. It contains **{provider['rows_all_keys']} rows**: **{provider['evaluator_rows']}** nare evaluator requests, **{provider['other_onprem_rows']}** other on-prem host requests, and **one unrelated opencode request to the self-hosted small-GPU Qwen deployment on another key**. The evaluator called only on-prem host. The small-GPU row is concurrent traffic, not an evaluator call or fallback, and is retained in the public evidence. Native/proxy differences: `{json.dumps(differences, sort_keys=True)}`. Exact match: `{reconciliation['exact_match']}`. Any nonzero difference remains visible and requires a cause explanation; no outcome is excluded.
+
+**External spend: US$0. Zero evaluator paid-provider rows and zero attempted fallbacks.** LiteLLM's nominal attribution is US${provider['evaluator_nominal_attribution_usd']:.6f}, not billed. Read-only router checks before smoke, before launch and after exit found one on-prem host deployment and no fallback routes. on-prem host base URLs are normalized with `rstrip('/')`; {provider['base_url_with_trailing_slash_rows']} window rows use a trailing slash and remain self-hosted. Sanitized serving rows are published for offline verification.
+''')
+lines.append(table(['Client / key / base', 'Requests', 'Prompt tokens', 'Completion tokens'],
+                   [[f'`{key}`', value['rows'], value['prompt_tokens'], value['completion_tokens']]
+                    for key, value in sorted(provider['by_agent_key_base'].items())]))
+samples = evidence['samples_15min']
+errors = sum('error' in row for row in samples)
+lines.append(f'''
+The preceding-hour read contains {s['provider']['prelaunch']['rows_all_keys']} on-prem host rows, including smoke and other native-client traffic. {len(samples)} load samples were retained, with {errors} read errors. Samples overlap and must not be summed. Each is a lower bound until in-flight requests are logged. The full-window re-read counts rows persisted by its recorded read time; other clients still in flight can arrive later, and traffic bypassing LiteLLM is invisible. This schedule did not run on an idle engine.
+
+The {j['findings']} returned findings include {j['automated_matched_findings']} matches under the unchanged prospective keyword rules; {j['findings_left_pending_for_a_person']} remain pending for a person. One clean aggregate cell returned a finding, which remains unadjudicated. These are mechanically validated observations, not unique or human-confirmed defects. No quality improvement is claimed.
+
+## Smoke timeout, maintainer ruling and deviations
+
+The only released-wheel smoke ran from **{smoke['started_utc']} to {smoke['ended_utc']}**. It **failed at its own 900 s session timeout** ({smoke['seconds']} s elapsed), while request four was still generating. That request produced 11,536 completion tokens at about 17 tok/s, below the 20,000 output cap. The gate's session timeout remains 1800 s. Prepared line counts, citation and protocol settings, runtime policy, line-bound prompt and every producer provenance hash verified from retained artifacts. This establishes activation; no correction was offered and no answer completed.
+
+The first three requests exactly match the retained native usage: 10,057 input + 2,131 output = 12,188 tokens. Proxy totals are 14,545 prompt + 13,667 completion = 28,212 tokens. Request four accounts for the entire difference: 4,488 prompt + 11,536 completion = 16,024 tokens, retained at local cancellation without a native terminal cost record. The smoke window had 40 on-prem host rows, zero paid calls, zero attempted fallbacks and US$0 external spend.
+
+Jason's maintainer ruling dated 2026-10-28 was recorded in `g4-amendment.json` and [posted on #51 before launch]({s['smoke']['amendment_url']}):
+
+> {amendment['ruling_text']}
+
+The amendment SHA-256 is `{read('amendment-post.json')['amendment_sha256']}`. All 55 recorded frozen artifacts and preparation inputs re-hashed unchanged. The frozen launcher requires complete smoke verification, so a **new** `launch-g4-amended.py` replaced only that check with the posted amendment/hash requirement. Its SHA-256 is `{amendment['launcher_sha256']}`; the exact bytes are published as `launch-g4-amended.py.txt`. It retained all original hash checks, the absent-process requirement, the read-only router check, the preceding-hour capture and the same three systemd units. It added read-backs of the posted freeze/amendment bodies and verification of the launcher and preparation input hashes. No frozen script or criterion changed. No further smoke or re-test ran.
+
+New read-only reporting helpers replace the inherited smoke-completion assumptions. Their exact bytes are retained as `.py.txt` files. The report extractor includes both correction and initial streams, all cell attempts, and discussion/reassessment sessions without counting them as initial sessions. No frozen file or published predecessor package was edited.
+
+## Reproduce and limits
+
+Run `python3 reproduce.py --output g4-summary.json` with Python 3.10 or newer. It uses only the standard library and the immutable g3, c1 and s2 sibling packages. It verifies the public manifest, posted freeze and amendment hashes, amendment timing, unchanged criteria/corpus/settings, mechanical cells, session corrections/accounting, smoke cancellation accounting and serving/load evidence. It refuses a differing summary. `extract-sessions.py` can regenerate session metadata from retained private captures without provider calls.
+
+Private native captures and raw proxy reads remain private and are represented by hashes. Public exports cannot independently authenticate the provider or establish semantic truth. Personal aliases/emails, keys/hashes, client IPs, request content and transcripts are excluded. Runs on different days/releases and concurrent loads provide a side-by-side comparison, not a paired causal estimate. Backend model revision is unverified. These pilot cases do not establish general reliability. Zero actual human judgments were added. The holdout remains unopened. No defaults, promotion, App, infrastructure or deployment changes were made. #51 remains open.
+''')
+(p / 'README.md').write_text('\n'.join(lines).rstrip() + '\n')
+print(json.dumps({'qualified': s['qualified'], 'readme': str(p / 'README.md')}))

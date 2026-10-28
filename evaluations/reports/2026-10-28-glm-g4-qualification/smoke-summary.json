@@ -1,0 +1,126 @@
+{
+  "scrutare_version": "2026.10.38",
+  "started_utc": "2026-10-28T14:44:37Z",
+  "ended_utc": "2026-10-28T14:59:39Z",
+  "seconds": 901.6,
+  "status": "failed",
+  "session_status": "failed",
+  "reason": "timeout",
+  "usage": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 10057,
+    "output": 2131,
+    "total": 12188
+  },
+  "max_output_tokens": {
+    "limit": 20000,
+    "reached": false
+  },
+  "structured_output": {
+    "constrained_turns": 0,
+    "mode": "json_schema"
+  },
+  "protocol_correction": {
+    "defects": 0,
+    "exit_code": null,
+    "offered": false,
+    "outcome": null
+  },
+  "line_count_entries": 12,
+  "captured_last_lines": [
+    {
+      "side": "base",
+      "path": "api.py",
+      "line_count": 7
+    },
+    {
+      "side": "head",
+      "path": "api.py",
+      "line_count": 7
+    },
+    {
+      "side": "base",
+      "path": "policy.py",
+      "line_count": 2
+    },
+    {
+      "side": "head",
+      "path": "policy.py",
+      "line_count": 2
+    }
+  ],
+  "prepared_correction_enabled": true,
+  "config": {
+    "strategy": "panel",
+    "rounds": {
+      "max": 3
+    },
+    "personas": [
+      "senior-dev"
+    ],
+    "budgets": {
+      "per_persona_tokens": 50000,
+      "review_max_tokens": 50000
+    },
+    "models": {
+      "default": {
+        "provider": "openai",
+        "base_url": "https://litellm.vividynamics.com/v1",
+        "model": "onprem/glm-5.3-flash",
+        "structured_output": "json_schema",
+        "max_output_tokens": 20000
+      },
+      "overrides": {}
+    },
+    "verdict": {
+      "blocking_categories": [
+        "correctness",
+        "security",
+        "regression"
+      ],
+      "advisory_categories": [
+        "style",
+        "consistency",
+        "docs"
+      ]
+    },
+    "github": {
+      "post_mode": "review",
+      "human_reviewers": [],
+      "paths": {
+        "include": [],
+        "exclude": [
+          "docs/**",
+          "*.md"
+        ]
+      }
+    },
+    "context": {
+      "enabled": true,
+      "include": [],
+      "exclude": [],
+      "related_paths": [
+        "client.py",
+        "policy.py",
+        "schema.py",
+        "formatting.py",
+        "test_formatting.py"
+      ],
+      "max_file_bytes": 65536,
+      "max_total_bytes": 1048576,
+      "max_files": 128,
+      "max_tree_requests": 256,
+      "line_counts": true
+    },
+    "inspection": {
+      "procedures": "v1"
+    },
+    "findings": {
+      "evidence": "v2",
+      "protocol_correction": true,
+      "citation_correction": true
+    }
+  },
+  "provenance_sha256": "803278ff6e01870407ff1d48168fc46eb7e6b2c91362df4b963231a7d77dfb44"
+}

@@ -1,0 +1,27 @@
+"""Verify released-wheel smoke activation and producer provenance without model calls."""
+import hashlib,json
+from pathlib import Path
+HERE=Path(__file__).resolve().parent;run=HERE/'smoke'
+s=json.loads((HERE/'evidence/smoke-summary.json').read_text())
+assert s['status']=='failed' and s['session_status']=='failed' and s['reason']=='timeout'
+assert s['scrutare_version']==json.loads((HERE/'g4/preparation.json').read_text())['release_tag']
+config=json.loads((run/'config.json').read_text())
+assert config['context']['line_counts'] is True and config['findings']['citation_correction'] is True and config['findings']['protocol_correction'] is True
+entries=json.loads((run/'review-inputs/repository-context.json').read_text())['entries']
+assert all('line_count' in e for e in entries)
+assert any(e.get('line_count') for e in entries)
+p=next((run/'sessions').glob('*/attempt-*/result.json'));res=json.loads(p.read_text())
+assert res['status']=='failed' and res['reason']=='timeout' and res['accounting_complete'] is False
+policy=res['protocol_correction']
+assert set(policy)=={'offered','defects','outcome','exit_code'}
+assert (policy['outcome']=='corrected' if policy['offered'] else policy=={'offered':False,'defects':0,'exit_code':None,'outcome':None})
+from scrutare.replay.audit import _protocol_correction_issues
+assert _protocol_correction_issues(run,config)==()
+inv=json.loads((p.parent/'invocation.json').read_text())
+assert 'end_line may never exceed line_count' in ' '.join(inv['argv'])
+assert inv['rail']['model']=='onprem/glm-5.3-flash' and inv['rail']['base_url']=='https://litellm.vividynamics.com/v1'
+manifest=json.loads((run/'artifacts.json').read_text())
+for e in manifest['artifacts']:
+ assert hashlib.sha256((run/e['path']).read_bytes()).hexdigest()==e['sha256'],e['path']
+out={'activation_verified':True,'session_complete':False,'completion_waived':True,'prepared_line_counts':True,'prepared_citation_correction':True,'prepared_protocol_correction':True,'line_bound_prompt_in_invocation':True,'runtime_correction_policy_recorded':True,'provenance_verified':True,'accounting_complete':False}
+(HERE/'evidence/smoke-activation-verification.json').write_text(json.dumps(out,indent=2)+'\n');print(json.dumps(out))
