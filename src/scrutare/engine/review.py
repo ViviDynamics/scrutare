@@ -14,6 +14,14 @@ from scrutare.config import ReviewConfig
 from scrutare.engine.github import GitHubClient, GitHubError, PullRequestRef
 from scrutare.engine.ingestion import ingest_pr
 from scrutare.engine.nare_session import SessionRuntimeError
+from scrutare.engine.recovery import (
+    capture_bytes,
+    restore_capture,
+    retryable_sessions,
+    sum_usage,
+    verify_capture,
+    whole_review_history,
+)
 from scrutare.engine.review_inputs import ReviewInputError
 from scrutare.engine.session_artifacts import SessionArtifactError, write_owned_bytes
 from scrutare.engine.session_models import NareRuntime, TokenUsage
@@ -29,7 +37,7 @@ from scrutare.poster import (
     post_replies,
     post_review,
 )
-from scrutare.poster.errors import PostingInterruptedError
+from scrutare.poster.errors import PostingInterruptedError, PostingSuperseded
 from scrutare.provenance import ProvenanceError, write_artifact_manifest
 
 
@@ -43,6 +51,10 @@ class ReviewRunError(Exception):
         super().__init__(message)
         self.run_dir = run_dir
         self.confirmed_posting = confirmed_posting
+
+
+class ReviewSupersededError(ReviewRunError):
+    """The PR head moved; no answer from these attempts may be posted."""
 
 
 class ReviewInterruptedError(ReviewRunError):
@@ -67,6 +79,7 @@ class ReviewRunResult:
     replies: tuple[PostedReply, ...] | None = None
     # Present only for an opt-in phase overrun fallback, so callers need not read verdict.json.
     degraded: dict[str, Any] | None = None
+    recovery: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         data: dict[str, Any] = {
@@ -76,6 +89,8 @@ class ReviewRunResult:
             "verdict": self.verdict, "rule": self.rule, "panel_status": self.panel_status,
             "usage": self.usage.to_dict(), "accounting_complete": self.accounting_complete,
         }
+        if self.recovery is not None:
+            data["recovery"] = self.recovery
         if self.review is not None:
             data["review"] = asdict(self.review)
         if self.replies is not None:
@@ -137,6 +152,7 @@ async def review_pr(
     runs_root: Path, runtime: NareRuntime, capture_client: GitHubClient | None = None,
     review_client: ReviewClient | None = None,
     analysis_capture: Path | None = None, replies_only: bool = False,
+    whole_review_retry: bool = False, expected_head: str | None = None,
 ) -> ReviewRunResult:
     """Run once, never reusing captured evidence or inventing a missing verdict.
 
@@ -148,12 +164,55 @@ async def review_pr(
     run_dir: Path | None = None
     confirmed = False
     manifest_attempted = False
+    recovery = None
     try:
         run_dir = ingest_pr(capture_client if capture_client is not None else GitHubClient(),
                             ref, runs_root, config_bytes=config_bytes,
                             config_data=config.to_dict(), review_config=config,
                             analysis_capture=analysis_capture).absolute()
-        panel = await run_review(run_dir, config, runtime=runtime)
+        if whole_review_retry:
+            captured = json.loads((run_dir / "metadata.json").read_bytes())['head_sha']
+            if expected_head is not None and captured != expected_head:
+                raise ReviewSupersededError("PR head moved; job superseded.", run_dir=run_dir)
+            frozen = capture_bytes(run_dir)
+            attempts = []
+            with whole_review_history():
+                for number in (1, 2):
+                    panel = await run_review(run_dir, config, runtime=runtime)
+                    verify_capture(run_dir, frozen)
+                    usable = (panel.status == "complete" and panel.accounting_complete
+                              and isinstance(panel.verdict, Verdict))
+                    attempts.append({'attempt': number, 'run_dir': str(run_dir),
+                                     'status': panel.status, 'usage': panel.usage.to_dict(),
+                                     'accounting_complete': panel.accounting_complete})
+                    recovery = {'max_retries': 1, 'attempts': attempts,
+                                'selected_attempt': number if usable else None,
+                                'cumulative_usage': sum_usage(attempts)}
+                    write_owned_bytes(run_dir / "review-recovery.json",
+                                      (json.dumps(recovery, sort_keys=True, indent=2)
+                                       + "\n").encode(),
+                                      prepared_root=run_dir / "review-inputs")
+                    if usable:
+                        break
+                    # No POST, even a journal whose state is uncertain, can be retried.
+                    if (number == 2 or not panel.accounting_complete
+                            or any(run_dir.glob("**/*posting.json"))
+                            or not retryable_sessions(run_dir)):
+                        raise ReviewRunError(
+                            "Review failed with no answer; inspect retained attempts.")
+                    api = capture_client if capture_client is not None else GitHubClient()
+                    if api.get_pr(ref)['head']['sha'] != captured:
+                        raise ReviewSupersededError(
+                            "PR head moved; job superseded.", run_dir=run_dir)
+                    write_artifact_manifest(run_dir)
+                    retry_dir = run_dir.with_name(run_dir.name + "-retry")
+                    restore_capture(retry_dir, frozen)
+                    run_dir = retry_dir
+            api = capture_client if capture_client is not None else GitHubClient()
+            if api.get_pr(ref)['head']['sha'] != captured:
+                raise ReviewSupersededError("PR head moved; job superseded.", run_dir=run_dir)
+        else:
+            panel = await run_review(run_dir, config, runtime=runtime)
         if (panel.status not in ("complete", "partial") or not panel.accounting_complete
                 or not isinstance(panel.verdict, Verdict)):
             raise ReviewRunError("Panel failed to produce a usable verdict; inspect the saved run.")
@@ -178,7 +237,7 @@ async def review_pr(
                                  panel.status, panel.usage, panel.accounting_complete,
                                  receipt, request, replies,
                                  verdict.degradation.to_dict()
-                                 if verdict.degradation is not None else None)
+                                 if verdict.degradation is not None else None, recovery)
         write_owned_bytes(run_dir / "result.json", result.to_bytes(),
                           prepared_root=run_dir / "review-inputs")
         await asyncio.sleep(0)
@@ -186,6 +245,10 @@ async def review_pr(
         write_artifact_manifest(run_dir)
         await asyncio.sleep(0)
         return result
+    except PostingSuperseded:
+        raise ReviewSupersededError("PR head moved; job superseded.", run_dir=run_dir) from None
+    except ReviewSupersededError:
+        raise
     except (asyncio.CancelledError, KeyboardInterrupt) as error:
         confirmed = confirmed or isinstance(error, PostingInterruptedError)
         failure: ReviewRunError = ReviewInterruptedError(

@@ -111,7 +111,10 @@ class FakeProvider:
 
     def __init__(self, scenario):
         self.scenario = scenario
-        self.replies = list(scenario.get("replies", []))
+        replies = scenario.get("replies", [])
+        if scenario.get("alternate_replies_path_contains", "\0") in str(artifact):
+            replies = scenario["alternate_replies"]
+        self.replies = list(replies)
         # A scenario declares a backend that can constrain an answer turn to a schema.
         self.supports_structured_output = scenario.get("structured_output", False) is True
 
@@ -137,8 +140,10 @@ class FakeProvider:
                 await asyncio.sleep(0.01)
         await asyncio.sleep(self.scenario.get("delay_seconds", 0))
         # A path-scoped error lets a fresh evaluator attempt directory succeed.
-        if self.scenario.get("error") and self.scenario.get(
-                "error_unless_path_contains", "\0") not in str(artifact):
+        if (self.scenario.get("error")
+                and len(observations["calls"]) > self.scenario.get("error_after_turns", 0)
+                and self.scenario.get(
+                "error_unless_path_contains", "\0") not in str(artifact)):
             raise RuntimeError(self.scenario["error"])
         if not self.replies:
             raise AssertionError("Offline transport exhausted scripted replies")

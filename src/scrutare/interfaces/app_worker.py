@@ -372,6 +372,9 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
         if reply:
             # The head was reviewed already. Post again only for a trusted contest.
             argv.append("--replies-only")
+        if settings.whole_review_retry:
+            argv.extend(("--whole-review-retry", "--expected-head",
+                         api.head(job["repository"], job["number"], token)))
         known = _runs(runs)
         try:
             completed = runner(argv, cwd=repository_root, env=environment,
@@ -389,6 +392,13 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
         # CLI diagnostics exclude credentials. Save both streams for failed-run inspection.
         (root / "stdout.json").write_bytes(completed.stdout)
         (root / "stderr.log").write_bytes(completed.stderr)
+        if settings.whole_review_retry and code == 3:
+            delivery, _ = _journal(_runs(runs) - known)
+            if delivery == "not_sent":
+                store.finish(job["id"], "superseded", {
+                    "reason": "PR head moved; retained attempts have no accepted answer",
+                    "delivery": delivery, "work_dir": str(root)})
+                return
         if code != 0:
             # Exit 130 and signal deaths are interruptions. Exit 1 covers refusals, a
             # failure after confirmed delivery and an uncertain POST alike, so the

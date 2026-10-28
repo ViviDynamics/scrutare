@@ -296,3 +296,26 @@ write access ending `unchanged`; and confirmation that
 `GET /repos/{owner}/{repo}/collaborators/{login}/permission` succeeds with the
 narrowed installation token. If that lookup is refused, every account is
 untrusted and no reply triggers a reassessment.
+
+### Optional whole-review retry
+
+`SCRUTARE_APP_WHOLE_REVIEW_RETRY=true` enables one whole-review retry before
+posting. It defaults to `false`; no live setting is changed by installing this
+release. The worker invokes the review CLI with `--whole-review-retry` and an
+immutable `--expected-head`. The CLI retains each failed attempt and clones the
+original capture/configuration into a separate run directory. Iterative history
+is frozen too; an intervening history writer refuses recovery.
+
+The retry uses the same model, grants, caps and session timeouts, within the
+unchanged overall job deadline. Failed, partial or unaccounted attempts supply no
+posted answer. A failed original with incomplete accounting fails closed, since
+the App has no independent provider-ledger reconciliation facility. Two failed
+attempts finish the job as failed, with no answer. Confirmed or uncertain posting
+journals prevent retry. A moved head supersedes the job at capture, before
+recovery, before posting, and at the posting transport's final metadata check
+(including after a posting backoff). GitHub does not provide an atomic
+compare-head-and-post API; the posted review remains bound to its captured SHA.
+
+The accepted result's `recovery` object and retained `review-recovery.json` record
+attempt statuses, separate per-attempt usage and cumulative usage. The ordinary
+path and its result artifacts are unchanged when the setting is off.

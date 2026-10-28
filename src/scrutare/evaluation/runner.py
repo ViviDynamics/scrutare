@@ -23,6 +23,13 @@ from scrutare.engine import assessment_inputs, discussion_inputs
 from scrutare.engine.assessment_inputs import assessor_persona
 from scrutare.engine.budgets import ReviewBudgetLedger
 from scrutare.engine.nare_session import inspect_nare_runtime, require_structured_output
+from scrutare.engine.recovery import (
+    RULE_A,
+    attempt_record,
+    retryable_sessions,
+    select_attempt,
+    sum_usage,
+)
 from scrutare.engine.repository_context import capture_repository_context, encoded
 from scrutare.engine.repository_snapshot import RepositorySnapshot
 from scrutare.engine.review_inputs import (
@@ -181,6 +188,7 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                          transient_retry_delay_seconds: float = 0.0,
                          transient_retry_budget: int | None = None,
                          assessment_tokens: int | None = None,
+                         qualification_rule_a: bool = False,
                          ) -> dict[str, Any]:
     """Fresh 3-repeat job; ordinary CI calls this only with explicitly offline evidence.
 
@@ -198,6 +206,8 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                 type(transient_retry_budget) is not int or transient_retry_budget < 0)):
         raise ValueError('transient retry policy requires 0-5 retries, 0-600 seconds and a '
                          'nonnegative job budget')
+    if type(qualification_rule_a) is not bool or qualification_rule_a and transient_retries:
+        raise ValueError('rule A requires a boolean and cannot combine with transient retries')
     variants = comparison_configs(config, comparison_set=comparison_set,
                                   variant_names=variant_names,
                                   assessment_tokens=assessment_tokens)
@@ -246,6 +256,8 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                 'original_metadata_sha256': hashlib.sha256(
                     captures[case.id]['metadata.json']).hexdigest()}
             derived_metadata[case.id] = encoded(metadata)
+    defect_cases = {case.id for case in cases if read_json(case.labels).get('defects')} \
+        if qualification_rule_a else set()
     label_hashes = {case.id: hashlib.sha256(case.labels.read_bytes()).hexdigest()
                     for case in cases}
     output = output.absolute()
@@ -294,6 +306,8 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                       else {})}
                   for case in cases],
     }
+    if qualification_rule_a:
+        snapshot['qualification'] = RULE_A
     def prepare(directory: Path, case: Case, conf: ReviewConfig) -> PreparedReviewInputs:
         """Materialize one attempt from the bytes frozen above, never from the corpus."""
         directory.mkdir(parents=True)
@@ -310,6 +324,8 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         capture_static_analysis(directory, conf,
                                 capture_bytes=analysis_captures.get(case.id)
                                 if conf.analysis.enabled else None)
+        if qualification_rule_a:
+            write_json(directory / 'qualification-policy.json', RULE_A)
         return prepare_review_inputs(directory, conf)
 
     # Prepare every case synchronously before provider inspection. This records
@@ -395,11 +411,19 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         result = {'schema_version': 1, 'evidence_kind': evidence_kind,
                   'status': 'complete' if len(completed) == len(records) else 'incomplete',
                   'runs': records}
+        if qualification_rule_a:
+            result['cumulative_usage'] = sum_usage([a for r in records
+                                                  for a in r.get('attempts', [])])
         temporary = output / 'experiment.next.json'
         with temporary.open('w', encoding='utf-8') as stream:
             json.dump(result, stream, indent=2, sort_keys=True, allow_nan=False)
             stream.write('\n')
         temporary.replace(output / 'experiment.json')
+        if qualification_rule_a:
+            journal = output / 'runs.next.jsonl'
+            journal.write_text(''.join(json.dumps(r, sort_keys=True) + '\n' for r in records
+                                       if r['status'] != 'missing'), encoding='utf-8')
+            journal.replace(output / 'runs.jsonl')
         return result
     persist()
     async def attempt_once(run_id: str, case: Case, variant: str, conf: ReviewConfig,
@@ -436,6 +460,9 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                 if record['status'] != 'failed':
                     record['status'] = 'invalid'
                     record['error'] = 'UnavailableFocusedTrace'
+        if qualification_rule_a and record['status'] == 'complete' and not record[
+                'findings'] and case.id in defect_cases:
+            record.update(status='invalid', error='EmptyEvidence')
         record['latency_seconds'] = time.monotonic() - started
         return record, interrupted
 
@@ -470,6 +497,12 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                 record.update(attempt=len(attempts), attempts=list(attempts),
                     retry_usage=TokenUsage(*(sum(getattr(u, key) for u in earlier) for key in (
                         'input', 'output', 'cache_read', 'cache_write'))).to_dict())
+            if qualification_rule_a:
+                failures = retryable_sessions(directory) if record['status'] != 'complete' \
+                    and record['error'] is None else None
+                first = attempt_record(record, 1)
+                first['retryable_session_failures'] = failures
+                select_attempt(record, [first])
             write_json(directory / 'evaluation.json', record)
             write_artifact_manifest(directory)
             if (interrupted or not transient_retries or attempts[-1][
@@ -505,8 +538,9 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         if transient_retries:
             record['latency_seconds'] = time.monotonic() - started
         completed[run_id] = record
-        with (output / 'runs.jsonl').open('a', encoding='utf-8') as stream:
-            stream.write(json.dumps(record, sort_keys=True) + '\n')
+        if not qualification_rule_a:
+            with (output / 'runs.jsonl').open('a', encoding='utf-8') as stream:
+                stream.write(json.dumps(record, sort_keys=True) + '\n')
         persist()
         if interrupted:
             raise asyncio.CancelledError
@@ -519,6 +553,32 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
              for case in cases for variant, conf in variants.items() for repeat in range(1, 4)]
     try:
         await asyncio.gather(*tasks)
+        if qualification_rule_a:
+            # All originals precede the fixed-order recovery phase. No successful cell reruns.
+            for case in cases:
+                for variant, conf in variants.items():
+                    for repeat in range(1, 4):
+                        run_id = f'{case.id}/{variant}/{repeat}'
+                        original = completed[run_id]
+                        if not original['attempts'][0]['retryable_session_failures']:
+                            continue
+                        directory = output / '_retries' / run_id / 'attempt-0002'
+                        inputs = prepare(directory, case, conf)
+                        if prepared_content_hashes(inputs) != case_variants[
+                                case.id][variant]['inputs_sha256']:
+                            raise ValueError('RetryInputsDiffer')
+                        record, interrupted = await attempt_once(
+                            run_id, case, variant, conf, repeat, directory)
+                        second = attempt_record(record, 2)
+                        second['retryable_session_failures'] = None
+                        select_attempt(record, [original['attempts'][0], second])
+                        write_json(directory / 'evaluation.json', record)
+                        write_artifact_manifest(directory)
+                        record['latency_seconds'] += original['latency_seconds']
+                        completed[run_id] = record
+                        persist()
+                        if interrupted:
+                            raise asyncio.CancelledError
     finally:
         for task in tasks:
             if not task.done():

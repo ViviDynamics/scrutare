@@ -478,3 +478,32 @@ on the original pilot paths. These are protocol reliability limits on the curren
 aliased model rail, with no demonstrated architecture winner or default promotion.
 Both packages include portable scoring/table reproduction, source reconstruction
 patches, public artifact hashes and explicit provenance/privacy limitations.
+
+## Operational qualification rule A
+
+`run --qualification-rule-a` opts into one fresh whole-cell replay after a terminal
+session failure. It cannot be combined with transient retries. All originals run
+first; an eligible failed cell then replays its complete pipeline once in
+`_retries/<cell>/attempt-0002`, using the captured input bytes and the same grants,
+ceilings, correction policy, output caps and timeouts. Successful cells and
+completed empty/invalid defect answers never rerun. Hard input, artifact, routing,
+or cost-evidence failures refuse recovery. Without the flag, artifacts retain the
+existing format and behavior.
+
+Every attempt has retained artifacts and usage. `usage` describes the selected or
+last attempt; `cumulative_usage` separately sums every attempt, including failures.
+A failed attempt contributes no accepted findings. The policy is recorded in the
+snapshot and each attempt's manifest-covered `qualification-policy.json`.
+Incomplete accounting flags remain incomplete. Missing failed-request usage must
+be uniquely reconciled against retained provider records, never guessed or waived.
+
+`qualify-rule-a --experiment PATH --gate PATH --ledger PATH --output PATH` checks
+the fixed 36-cell matrix, all 12 clean cells, nonempty valid v2 evidence in all 24
+defect cells, six aggregate evidence cells, six actual completed assessors,
+accepted replay, attempt identities/bounds, provenance, all-attempt request
+attribution and zero paid calls/fallbacks. The ledger binds each provider request
+to its cell/attempt/session and native cost event, or one explicit failed-request
+supplement with the session-result hash. Retain raw provider exports and read
+receipts: an offline checker cannot independently authenticate them. This gate
+qualifies operational execution only; human adjudication and the untouched
+holdout remain separate prerequisites for quality promotion.

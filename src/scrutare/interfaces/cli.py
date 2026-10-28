@@ -15,6 +15,7 @@ from scrutare.engine.github import GitHubError, resolve_pr
 from scrutare.engine.review import (
     ReviewInterruptedError,
     ReviewRunError,
+    ReviewSupersededError,
     preflight_replies_only,
     preflight_review,
     review_pr,
@@ -48,6 +49,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     review.add_argument("--replies-only", action="store_true",
                         help="post a review only for a new head or a trusted reply that "
                              "contests a finding; requires replies.enabled")
+    review.add_argument("--whole-review-retry", action="store_true",
+                        help="retry one failed whole review before posting, on captured inputs")
+    review.add_argument("--expected-head", help="supersede if capture differs from this head")
     replay = commands.add_parser(
         "replay", help="audit a stored verdict offline; no model or network",
         description="Recompute a stored verdict and compare saved and recorded posted identity.",
@@ -93,7 +97,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             ref, review_config, config_bytes=config_bytes,
             runs_root=Path(".scrutare/runs"), runtime=runtime,
             analysis_capture=args.analysis_capture, replies_only=args.replies_only,
+            **({"whole_review_retry": True, "expected_head": args.expected_head}
+               if args.whole_review_retry else {}),
         ))
+    except ReviewSupersededError as exc:
+        print(f"scrutare: {exc}", file=sys.stderr)
+        return 3
     except ReviewRunError as exc:
         location = f" Run: {exc.run_dir}" if exc.run_dir is not None else ""
         print(f"scrutare: {exc}{location}", file=sys.stderr)

@@ -19,6 +19,7 @@ from scrutare.poster.errors import (
     PostingInterruptedError,
     PostingRateLimited,
     PostingRejected,
+    PostingSuperseded,
     PostingUncertain,
 )
 from scrutare.poster.journal import atomic_write, canonical, read_json, run_lock
@@ -341,7 +342,10 @@ def _post_review_locked(
     wait = sleeper if sleeper is not None else sleep
     while True:
         _wait_retry(state, wait)
-        assert_pr_open(transport.get_pr(ref))
+        current = transport.get_pr(ref)
+        assert_pr_open(current)
+        if (run_dir / "review-recovery.json").exists() and current["head"]["sha"] != head:
+            raise PostingSuperseded("PR head moved; recovery review superseded.")
         _begin_attempt(path, state, atomic_write)
         try:
             receipt = transport.create_review(ref, payload)

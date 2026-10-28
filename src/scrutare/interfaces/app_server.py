@@ -37,6 +37,9 @@ def load_settings() -> AppSettings:
         origins = json.loads(os.environ["SCRUTARE_APP_MODEL_ORIGINS"])
         if not isinstance(origins, list):
             raise ValueError
+        retry = os.environ.get("SCRUTARE_APP_WHOLE_REVIEW_RETRY", "false")
+        if retry not in ("true", "false"):
+            raise ValueError
         settings = AppSettings(
             int(os.environ["SCRUTARE_APP_ID"]),
             Path(os.environ["SCRUTARE_APP_PRIVATE_KEY"]),
@@ -46,6 +49,7 @@ def load_settings() -> AppSettings:
             tuple(origins),
             int(os.environ.get("SCRUTARE_APP_MAX_PENDING", "100")),
             int(os.environ.get("SCRUTARE_APP_JOB_TIMEOUT", "3300")),
+            retry == "true",
         )
         if not settings.private_key.is_file():
             raise AppError("App private key file is unavailable")
