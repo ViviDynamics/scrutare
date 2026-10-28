@@ -194,6 +194,12 @@ through to every evidence-v2 arm (the arms without evidence have no citations).
 It adds a model turn to sessions it fires in, so compare it only against the
 same arms without it, and report how often it was offered and each outcome.
 
+`findings: {evidence: v2, protocol_correction: true}` similarly passes the broader
+[protocol correction](config.md#protocol-correction-turn-opt-in) to every evidence-v2
+arm, including its assessor and focused discussion sessions. Report corrections by
+defect type and outcome, and their token use. Compare with the unchanged profile;
+protocol qualification does not establish semantic quality or authorize promotion.
+
 The [tools, reliability and separating-case measurements](../evaluations/reports/2026-10-13-tools-reliability-separating/README.md)
 retain 321 cells in thirteen jobs and four withdrawn freezes. The unchanged profile
 passed 3 of the 4 qualification schedules run; captured Ruff evidence changed no

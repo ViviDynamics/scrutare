@@ -23,6 +23,7 @@ from scrutare.findings.citation_correction import (
 )
 from scrutare.findings.evidence import CitationValidationError
 from scrutare.findings.models import Finding, FindingError, parse_finding
+from scrutare.findings.protocol_correction import ProtocolContext, ProtocolDefect
 from scrutare.findings.verification import ReanchorCorrection
 
 
@@ -97,6 +98,17 @@ class CitationCorrectionOffered(Exception):
         self.reason = reason
         self.citation_reason = citation_reason
         self.evidence = evidence
+
+
+class ProtocolCorrectionOffered(Exception):
+    """A complete answer refused only for enumerated deterministic protocol defects."""
+
+    def __init__(self, defects: tuple[ProtocolDefect, ...], reason: str,
+                 citation_reason: str | None, evidence: _DecodedEvidence,
+                 context: ProtocolContext) -> None:
+        super().__init__("protocol correction offered")
+        self.defects, self.reason, self.citation_reason = defects, reason, citation_reason
+        self.evidence, self.context = evidence, context
 
 
 # nare's error event for a turn cut off at max_tokens (nare 2026.10.12 loop._UNFINISHED; the
@@ -440,6 +452,7 @@ def decode_session(
     descriptor: DebateInput | AssessmentInput | None = None,
     evidence_version: int = 1, candidate_namespace: str = "",
     discard_cut_off: bool = False, offer_citation_correction: bool = False,
+    protocol_context: ProtocolContext | None = None,
 ) -> DecodedSession:
     """Reconcile fresh findings evidence, attributing candidates only to the caller.
 
@@ -465,6 +478,22 @@ def decode_session(
         try:
             findings = () if evidence.output is None or discarded else parser(evidence.output)
         except (ValueError, TypeError, KeyError) as error:
+            if (protocol_context is not None and evidence.status == "done" and not discarded
+                    and evidence.usage.total < expected_limit):
+                from scrutare.findings.protocol_correction import protocol_defects
+                protocol_found = protocol_defects(evidence.output, expected_root, protocol_context)
+                if protocol_found is not None:
+                    # Both saved and streamed documents must have the same typed semantics,
+                    # including at refused fields (JSON bool/int equality is insufficient).
+                    if json.dumps(evidence.output, sort_keys=True) != json.dumps(
+                            evidence.saved_output, sort_keys=True):
+                        _fail()
+                    raise ProtocolCorrectionOffered(
+                        protocol_found,
+                        "citation_validation" if isinstance(error, CitationValidationError)
+                        else "protocol",
+                        error.reason if isinstance(error, CitationValidationError) else None,
+                        evidence, protocol_context) from None
             # nare refuses to start a turn once usage reaches the limit, so a session with no
             # budget left is never offered one.
             if (offer_citation_correction and descriptor is None and evidence_version == 2
@@ -497,7 +526,8 @@ def decode_session(
 
 
 def decode_citation_correction(
-    stdout: bytes, session_document: bytes | None, *, offered: CitationCorrectionOffered,
+    stdout: bytes, session_document: bytes | None, *,
+    offered: CitationCorrectionOffered | ProtocolCorrectionOffered,
     persona: str, exit_code: int, expected_limit: int, expected_root: Path,
     candidate_namespace: str = "", discard_cut_off: bool = False,
 ) -> DecodedSession:
@@ -526,8 +556,17 @@ def decode_citation_correction(
     findings: tuple[Finding, ...] = ()
     if answered:
         try:
-            corrected = apply_citation_correction(first.output, offered.defects,
-                                                  evidence.output)
+            if isinstance(offered, ProtocolCorrectionOffered):
+                assert isinstance(offered, ProtocolCorrectionOffered)
+                findings = offered.context.parse(evidence.output, expected_root, persona,
+                                                  candidate_namespace)
+                offered.context.parse(evidence.saved_output, expected_root, persona,
+                                       candidate_namespace)
+                return DecodedSession(
+                    evidence.session_id, evidence.status, evidence.stop_reason, evidence.exit_code,
+                    usage, findings, answered, evidence.budget_limit, evidence.partial,
+                    evidence.nare_version, evidence.contract, evidence.turns, evidence.cut_off)
+            corrected = apply_citation_correction(first.output, offered.defects, evidence.output)
             findings = _findings(corrected, persona, evidence_version=2,
                                  expected_root=expected_root,
                                  candidate_namespace=candidate_namespace)

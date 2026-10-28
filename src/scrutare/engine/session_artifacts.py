@@ -161,3 +161,25 @@ def write_owned_bytes(path: Path, data: bytes, *, prepared_root: Path) -> None:
         raise SessionArtifactError(
             "Cannot create private JSON artifact; inspect destination, permissions and disk space."
         ) from None
+
+
+def accepted_session_path(attempt: Path) -> Path:
+    """Select the native full-answer capture only after an accepted protocol correction.
+
+    Original captures stay immutable. Citation-only correction continues to reconstruct
+    its answer separately and never uses this full-answer path.
+    """
+    from scrutare.replay.artifacts import decode_artifact, read_artifact
+
+    result_path = attempt / 'result.json'
+    if result_path.exists():
+        result = decode_artifact(read_artifact(result_path), artifact='session.result')
+        if isinstance(result, dict):
+            correction = result.get('protocol_correction')
+            if isinstance(correction, dict) and correction.get('outcome') == 'corrected':
+                if (result.get('status') not in ('complete', 'partial')
+                        or result.get('accounting_complete') is not True
+                        or result.get('output_available') is not True):
+                    raise SessionArtifactError('session: correction was not accepted')
+                return attempt / 'correction-session.json'
+    return attempt / 'session.json'

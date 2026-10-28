@@ -40,6 +40,7 @@ Errors identify a field path or YAML location without echoing field values.
 | `github.human_reviewers` | List of nonempty reviewer-name strings for escalation | `[]` |
 | `github.paths.include` | List of nonempty glob strings | `[]` |
 | `github.paths.exclude` | List of nonempty glob strings | `["docs/**", "*.md"]` |
+| `findings.protocol_correction` | Boolean; `true` requires v2 evidence and OpenAI rails; takes precedence over citation correction | `false` (off) |
 | `findings.citation_correction` | Boolean; `true` requires `findings.evidence: v2` and `provider: openai` on every rail | `false` (off) |
 | `replies.enabled` | Boolean; `true` requires `strategy: iterative` | `false` |
 | `replies.trust` | `write` (verified write access), `anyone` (any non-bot account) | `write` |
@@ -468,3 +469,46 @@ that finding and be answered in the thread. It is accepted only with
 trigger a reassessment. The default section is omitted from canonical
 configuration, so existing captured configurations and iterative histories are
 unchanged. See [iterative review](iterative-review.md#replies-on-scrutare-threads-opt-in).
+
+
+## Protocol correction turn (opt-in)
+
+`findings: {evidence: v2, protocol_correction: true}` offers a discovery reviewer,
+evidence assessor or focused discussion perspective one tool-free resumed turn when
+its entire answer is refused only for deterministic protocol defects. Like citation
+correction, it requires OpenAI rails. It is off by default. When both correction
+settings are on, protocol correction owns the single opportunity; the two never chain.
+Ordinary legacy pool-selection/chair and anchor-only sessions retain their existing policy.
+
+The defect inventory names field paths and exact requirements: missing/unknown fields,
+wrong types (including booleans used as integers), enums, empty required strings,
+non-positive lines, malformed paths/revisions/hashes, reversed or out-of-capture citation
+ranges, captured revision/path/hash mismatches, missing required evidence and unknown,
+missing or duplicate immutable candidate IDs. Every accessible field is checked, including
+those hidden by an earlier parser refusal. Corrupt or inconsistent native evidence,
+provider failure, output caps, exhausted budgets and changed/unreadable captured inputs
+are ineligible; they retain their existing failure handling. No semantic judgement is retried.
+
+The model returns a **complete replacement answer**, under the original answer schema,
+using only the session's captured inputs. The engine never drops a finding, clamps a
+line or removes/inserts a candidate ID. Both original and replacement are retained;
+the replacement must pass the unchanged parser, immutable candidate coverage, citation
+and evidence checks. A refused replacement fails the session with no second correction.
+This broader setting is separate from the citation-only contract, which is unchanged.
+
+The resumed process has `--tools none`, `--max-turns 1`, the same budget, model, cap and
+structured-output mode, and only the remaining session timeout. Usage is cumulative in
+the original lease and shared ledger. A turn can still overrun its after-turn budget;
+existing overrun handling remains authoritative. The correction's stream retains its
+own constraint/cap evidence.
+
+Each eligible session records `protocol_correction: {offered, defects, outcome, exit_code}`
+in `result.json`, with the same outcome vocabulary as citation correction: `corrected`,
+`refused`, `no_answer`, `failed`, or null when unoffered. Offered attempts keep
+`protocol-correction.json` (original refusal, complete defect inventory, exact prompt,
+prompt hash and argv), `protocol-correction.schema.json`, `correction.stdout.jsonl`,
+`correction.stderr.txt`, and `correction-session.json`. The original `session.json` and
+`stdout.jsonl` remain untouched. Assessment/discussion consume the replacement only
+after an accepted outcome. The producer provenance inventory covers all retained files.
+Replay independently reconstructs the caller pool, defect inventory, prompt, schema,
+arguments, two native streams, corrected findings and cumulative usage.
