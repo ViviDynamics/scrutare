@@ -824,3 +824,16 @@ def test_unreadable_journal_reports_no_head_as_before(tmp_path):
     run_job(settings(tmp_path), store, job, client=TrustedClient(), runner=runner)
     saved = store.get(job["id"])
     assert (saved["result"]["delivery"], saved["reviewed"]) == ("uncertain", None)
+
+
+def test_worker_opt_in_binds_retry_to_head_and_reports_superseded(tmp_path):
+    store, job = claimed(tmp_path)
+    calls = []
+    def runner(argv, **kwargs):
+        calls.append(argv)
+        return subprocess.CompletedProcess(argv, 3, b'', b'scrutare: PR head moved\n')
+    run_job(replace(settings(tmp_path), whole_review_retry=True), store, job,
+            client=TrustedClient(), runner=runner)
+    assert '--whole-review-retry' in calls[0]
+    assert calls[0][calls[0].index('--expected-head') + 1] == 'a' * 40
+    assert store.get(job['id'])['status'] == 'superseded'

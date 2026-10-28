@@ -49,12 +49,14 @@ class AppSettings:
     max_pending: int = 100
     # Installation tokens last one hour; stop a review before its credential expires.
     job_timeout: int = 3300
+    whole_review_retry: bool = False
 
     def __post_init__(self) -> None:
         if (type(self.app_id) is not int or self.app_id <= 0
                 or not self.webhook_secret or not self.api_token
                 or type(self.max_pending) is not int or self.max_pending <= 0
                 or type(self.job_timeout) is not int or not 0 < self.job_timeout <= 3300
+                or type(self.whole_review_retry) is not bool
                 or not self.installations
                 or not isinstance(self.model_origins, tuple) or not self.model_origins
                 or any(not isinstance(origin, str) or _ORIGIN.fullmatch(origin) is None

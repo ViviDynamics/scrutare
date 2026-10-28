@@ -23,6 +23,10 @@ class PostingError(GitHubError):
         return self.confirmed_review is not None
 
 
+class PostingSuperseded(PostingError):
+    """The current PR head differs from a recovery job's immutable capture."""
+
+
 class PostingInterruptedError(KeyboardInterrupt):
     """Synchronous interruption after a validated review receipt was obtained."""
 
