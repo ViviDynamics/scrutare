@@ -103,12 +103,14 @@ def _comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline
         context = replace(base, context=replace(base.context, enabled=True))
         procedures = replace(context, inspection=InspectionSettings('v1'))
         # The opt-in citation correction applies to every arm whose findings carry citations.
+        protocol = config.findings.protocol_correction
         correction = config.findings.citation_correction
         evidence = replace(procedures, findings=FindingSettings(
-            'v2', citation_correction=correction))
+            'v2', citation_correction=correction, protocol_correction=protocol))
         assessed = replace(evidence, findings=FindingSettings('v2',
             AssessmentSettings(True, total // 5 if assessment_tokens is None
-                               else assessment_tokens), citation_correction=correction))
+                               else assessment_tokens), citation_correction=correction,
+            protocol_correction=protocol))
         if comparison_set == 'focused':
             discussion = replace(assessed, strategy='debate',
                 findings=replace(assessed.findings, discussion=DiscussionSettings(True)))
