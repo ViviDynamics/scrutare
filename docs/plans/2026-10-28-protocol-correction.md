@@ -45,3 +45,9 @@ native terminal/budget semantics and partial/overshoot outcome replay; strict
 correction constraint-stream validation. These are fixed with unchanged validators
 and no additional model call. The two independent review rounds exhaust the planned
 review budget; final verification is the regression suite and both full preflight lanes.
+
+A final local failure-path probe reproduced a missing-correction-capture audit gap:
+a failed/no-exit correction record could hide a successful session result. The new
+protocol path now requires failed, unavailable, incomplete-accounting status and the
+unchanged first-run usage when no correction stream was created. Tests cover both the
+masked-success mutation (RED→GREEN) and a real pre-capture artifact failure.

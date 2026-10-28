@@ -181,3 +181,30 @@ def test_replay_validates_correction_constraint_mode(capture, tmp_path):
     path = attempt / "correction.stdout.jsonl"
     path.write_text(path.read_text().replace('"mode": "json_schema"', '"mode": "wrong-mode"'))
     assert issues(capture)
+
+
+def test_missing_capture_cannot_support_a_successful_session(capture, tmp_path):
+    _, _, attempt = launch(capture, tmp_path, PLACEHOLDER)
+    (attempt / "correction.stdout.jsonl").unlink()
+    result = load(attempt / "result.json")
+    result["protocol_correction"].update(outcome="failed", exit_code=None)
+    (attempt / "result.json").write_text(json.dumps(result))
+    assert issues(capture)
+
+
+def test_failure_before_correction_capture_is_created_replays(capture, tmp_path, monkeypatch):
+    from scrutare.engine import nare_session
+    from scrutare.engine.session_artifacts import SessionArtifactError
+
+    original = nare_session._new_capture
+
+    def fail_before_capture(directory, name):
+        if name == "correction.stdout.jsonl":
+            raise SessionArtifactError("test: unavailable correction capture")
+        return original(directory, name)
+
+    monkeypatch.setattr(nare_session, "_new_capture", fail_before_capture)
+    outcome, _, attempt = launch(capture, tmp_path, PLACEHOLDER)
+    assert (outcome.status, outcome.reason) == ("failed", "artifacts")
+    assert not (attempt / "correction.stdout.jsonl").exists()
+    assert issues(capture) == ()

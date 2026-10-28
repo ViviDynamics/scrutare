@@ -567,6 +567,12 @@ def _answer_correction_issues(run_dir: Path, config_data: object, *,
             if record["outcome"] != "failed" or record["exit_code"] is not None:
                 issues.append(AuditIssue(key + "_evidence_missing",
                                          f"{where}/correction.stdout.jsonl", "incomplete"))
+            elif protocol and not (
+                    outcome.get("status") == "failed" and outcome.get("findings") == []
+                    and outcome.get("output_available") is False
+                    and outcome.get("accounting_complete") is False
+                    and same_json(outcome.get("usage"), first.usage.to_dict())):
+                issues.append(AuditIssue(key + "_disagrees", f"{where}/result.json", "invalid"))
             continue
         expected, findings, rejected, usage = "failed", None, None, None
         second = None
