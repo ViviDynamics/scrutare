@@ -16,6 +16,7 @@ from typing import Any
 from scrutare.config import ReviewConfig
 from scrutare.engine.panel import PanelResult, run_panel
 from scrutare.engine.panel_artifacts import encode_panel, preflight_panel, publish_panel
+from scrutare.engine.recovery import frozen_history, record_history_input, remember_history
 from scrutare.engine.replies import ReplyView, delivered_review, reply_view
 from scrutare.engine.repository_context import context_contents, supporting_dependencies
 from scrutare.engine.review_inputs import ReviewInputError, prepare_review_inputs
@@ -80,6 +81,7 @@ def _history(run: Path, config: ReviewConfig) -> Iterator[tuple[dict[str, Any], 
             "rounds_completed": 0, "heads": [], "sections": {}, "pool": [],
             "escalated_heads": [], "contests": [],
         })
+        state = frozen_history(path, state)
         if (not isinstance(state, dict) or state.get("schema_version") != version
                 or state.get("identity") != identity or state.get("config") != config.to_dict()
                 or type(state.get("rounds_completed")) is not int
@@ -94,6 +96,7 @@ def _history(run: Path, config: ReviewConfig) -> Iterator[tuple[dict[str, Any], 
             if entry["disposition"] not in ("fixed", "upheld", "withdrawn"):
                 raise ReviewInputError("Iterative history: invalid finding disposition.")
             _finding(entry, evidence_version=version)
+        record_history_input(run, state)
         yield state, path
     except (OSError, KeyError, TypeError, ValueError) as error:
         if isinstance(error, ReviewInputError):
@@ -113,6 +116,7 @@ def _save(path: Path, state: dict[str, Any]) -> None:
         stream.flush()
         os.fsync(stream.fileno())
     os.replace(temporary, path)
+    remember_history(path)
 
 
 def _project(run: Path, config: ReviewConfig, patches: dict[str, bytes]) -> Path:
