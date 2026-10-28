@@ -1,0 +1,54 @@
+{
+  "blocked": true,
+  "reason": "released-wheel smoke session_timeout; frozen verifier requires complete session",
+  "smoke_window_utc": [
+    "2026-10-28T14:44:37Z",
+    "2026-10-28T14:59:39Z"
+  ],
+  "native_usage": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 10057,
+    "output": 2131,
+    "total": 12188
+  },
+  "native_completed_requests": 3,
+  "proxy_requests": 4,
+  "proxy_prompt_tokens": 14545,
+  "proxy_completion_tokens": 13667,
+  "completed_native_requests_exact_match": true,
+  "unreported_inflight_request": {
+    "startTime": "2026-10-28T14:48:08.217+00:00",
+    "endTime": "2026-10-28T14:59:39.602+00:00",
+    "prompt_tokens": 4488,
+    "completion_tokens": 11536,
+    "status": "success"
+  },
+  "explanation": "Local 900-second session timeout interrupted request four before a native cost/result event. LiteLLM logged its usage at cancellation. The first three rows exactly match retained native cost events; the fourth row exactly explains all differences. No answer was returned or accepted.",
+  "external_spend_usd": 0,
+  "all_window_paid_rows": 0,
+  "all_window_attempted_fallbacks": 0,
+  "evaluator_nominal_attribution_usd": 0.009015249999999997,
+  "concurrent_by_agent": {
+    "python-httpx": {
+      "requests": 13,
+      "prompt_tokens": 782419,
+      "completion_tokens": 10894
+    },
+    "opencode": {
+      "requests": 23,
+      "prompt_tokens": 2308699,
+      "completion_tokens": 9286
+    },
+    "python-httpx2": {
+      "requests": 4,
+      "prompt_tokens": 14545,
+      "completion_tokens": 13667
+    }
+  },
+  "provenance_hashes_verified": true,
+  "g4_launched": false,
+  "g4_process_json_exists": false,
+  "smoke_verified_for_launch": false,
+  "read_utc": "2026-10-28T15:01:48.338808+00:00"
+}
