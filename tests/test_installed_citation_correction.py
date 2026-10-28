@@ -40,7 +40,8 @@ def fixed(provider, *, end_line=1, digest=None):
 
 
 def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=True,
-           structured=False, succeeds=True, policy="citation_correction", assessment=False):
+           structured=False, succeeds=True, policy="citation_correction", assessment=False,
+           provider_error=False):
     """Run `scrutare review` once against offline GitHub and native offline nare."""
     from scrutare.engine.repository_context import _artifact
 
@@ -76,7 +77,9 @@ def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=T
                  {"assess_candidates": "supported"}], **flag}},
         ])
     (tmp_path / "offline-spec.json").write_text(json.dumps(
-        {"default": {"replies": replies, **flag}, "scenarios": scenarios}))
+        {"default": {"replies": replies, **flag,
+          **({"error": "offline provider failure"} if provider_error else {})},
+         "scenarios": scenarios}))
     working = tmp_path / "outside-checkout"
     working.mkdir()
     rail = ', structured_output: json_schema' if structured else ''

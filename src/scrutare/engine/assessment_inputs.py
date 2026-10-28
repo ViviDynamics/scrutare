@@ -46,7 +46,8 @@ class AssessmentInput(PersonaReviewInput):
                             else {})}, sort_keys=True,
                          separators=(",", ":"))))
 
-    def output_schema(self) -> dict[str, Any]:
+    @staticmethod
+    def output_schema() -> dict[str, Any]:
         citations = evidence_schema()["properties"]["citations"]
         properties = {"candidate_id": {"type": "string"},
                       "status": {"type": "string", "enum": ["supported", "refuted", "unresolved"]},

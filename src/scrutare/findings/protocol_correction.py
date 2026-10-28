@@ -72,7 +72,21 @@ def protocol_context(schema: dict[str, Any], task: str) -> ProtocolContext:
         ids = tuple(f.candidate_id for f in candidates)
         if len(set(ids)) != len(ids) or None in ids:
             raise ValueError("protocol correction: invalid caller pool")
-    return ProtocolContext(kind, schema, candidates)
+    if kind == "assessment":
+        from scrutare.engine.assessment_inputs import AssessmentInput
+
+        expected = AssessmentInput.output_schema()
+    elif kind == "discussion":
+        from scrutare.engine.discussion_inputs import DiscussionInput
+
+        expected = DiscussionInput.output_schema()
+    else:
+        from scrutare.engine.session_output import findings_schema
+
+        expected = findings_schema(evidence_version=2)
+    if schema != expected:
+        raise ValueError("protocol correction: original schema differs from caller contract")
+    return ProtocolContext(kind, expected, candidates)
 
 
 def protocol_correction_prompt(

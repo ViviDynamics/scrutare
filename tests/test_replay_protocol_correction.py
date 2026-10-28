@@ -86,3 +86,52 @@ def test_discussion_correction_replays(capture, tmp_path):
 
     launch(capture, tmp_path, proposals(*IDS, "extra"), proposals(*IDS), kind="discussion")
     assert issues(capture) == ()
+
+
+def test_replay_does_not_owe_correction_to_invalid_original_state(capture, tmp_path):
+    launch(capture, tmp_path, PLACEHOLDER, first_step={"status": "done", "stop": "budget"})
+    assert issues(capture) == ()
+
+
+@pytest.mark.parametrize("rehash", [False, True])
+def test_reconstructed_assessor_pool_must_match_task_hash_and_phase_pool(capture, tmp_path, rehash):
+    from hashlib import sha256
+
+    second = assessments(*IDS)
+    for row in second["assessments"]:
+        row.update(
+            status="refuted", counter_citations=row["supporting_citations"], supporting_citations=[]
+        )
+    _, _, attempt = launch(
+        capture, tmp_path, assessments(*IDS, "unknown"), second, kind="assessment"
+    )
+    inv = load(attempt / "invocation.json")
+    # This test supplies the authoritative assessment-phase artifact, as a full review does.
+    task = inv["argv"][2]
+    data, _ = json.JSONDecoder().raw_decode(task.split("\n", 1)[1])
+    (capture / "assessment.json").write_text(json.dumps({"candidates": data["candidates"]}))
+    changed = task.replace('"problem":"failure"', '"problem":"changed"')
+    assert changed != task
+    inv["argv"][2] = changed
+    if rehash:
+        inv["task_prompt_sha256"] = sha256(changed.encode()).hexdigest()
+    (attempt / "invocation.json").write_text(json.dumps(inv))
+    assert issues(capture)
+
+
+@pytest.mark.parametrize("kind", ["assessment", "discussion"])
+def test_original_and_correction_schema_must_be_canonical(capture, tmp_path, kind):
+    from test_protocol_correction_session import proposals
+
+    first, second = (
+        (assessments(*IDS, "unknown"), assessments(*IDS))
+        if kind == "assessment"
+        else (proposals(*IDS, "unknown"), proposals(*IDS))
+    )
+    _, _, attempt = launch(capture, tmp_path, first, second, kind=kind)
+    for name in ("findings.schema.json", "protocol-correction.schema.json"):
+        doc = load(attempt / name)
+        key, field = ("assessments", "status") if kind == "assessment" else ("proposals", "action")
+        doc["properties"][key]["items"]["properties"][field]["enum"].append("invented")
+        (attempt / name).write_text(json.dumps(doc))
+    assert issues(capture)

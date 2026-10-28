@@ -696,6 +696,13 @@ async def _run_session(
                         protocol_context=protocol)
                 except (CitationCorrectionOffered, ProtocolCorrectionOffered) as offered:
                     assert correction is not None
+                    first = offered.evidence
+                    if isinstance(offered, ProtocolCorrectionOffered) and (
+                            first.nare_version != capability.version
+                            or first.contract != capability.contract
+                            or first.status in ("done", "blocked")
+                            and first.stop_reason == "budget" and not first.partial):
+                        raise SessionProtocolError("session: invalid original terminal state")
                     # Every usage seen so far is in the ledger; the turn continues from it.
                     ledger.observe(lease, offered.evidence.usage)
                     evidence.usage = offered.evidence.usage

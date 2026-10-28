@@ -438,7 +438,32 @@ def _answer_correction_issues(run_dir: Path, config_data: object, *,
                 if not isinstance(original_schema, dict):
                     raise ValueError
                 context = protocol_context(original_schema, first_argv[2])
-            except (ValueError, KeyError, TypeError, IndexError):
+                if (sha256(first_argv[2].encode()).hexdigest()
+                        != invocation.get("task_prompt_sha256")):
+                    raise ValueError("protocol correction: original task hash disagrees")
+                if context.kind != "discovery":
+                    from scrutare.findings.models import artifact_data
+                    number = int(attempt.name.rsplit("-", 1)[1])
+                    if context.kind == "assessment":
+                        phase_name = ("assessment.json" if number == 1 else
+                                      f"assessment-round-{number - 1:04d}.json")
+                        phase = document(run_dir / phase_name)
+                        if (not isinstance(phase, dict)
+                                or phase.get("candidates") != artifact_data(context.candidates)):
+                            raise ValueError("protocol correction: assessment pool disagrees")
+                    else:
+                        initial = document(run_dir / "assessment.json")
+                        trace = document(run_dir / "debate.json")
+                        if not isinstance(initial, dict) or not isinstance(trace, dict):
+                            raise ValueError("protocol correction: discussion pool missing")
+                        round_record = trace["rounds"][number - 3]
+                        identifiers = round_record["candidate_ids"]
+                        candidates = initial["candidates"]
+                        expected_pool = [f for f in candidates if f["candidate_id"] in identifiers]
+                        if (number < 3 or identifiers != list(context.ids)
+                                or expected_pool != artifact_data(context.candidates)):
+                            raise ValueError("protocol correction: discussion pool disagrees")
+            except (ValueError, KeyError, TypeError, IndexError, AttributeError):
                 issues.append(AuditIssue(key + "_disagrees", f"{where}/invocation.json", "invalid"))
                 continue
 
@@ -462,7 +487,10 @@ def _answer_correction_issues(run_dir: Path, config_data: object, *,
         defects: Any = None
         refusal: dict[str, object] | None = None
         if (first is not None and first.status == "done" and first.usage.total < limit
-                and not (capped and first.cut_off)):
+                and not (capped and first.cut_off)
+                and (not protocol or (first.nare_version == invocation.get("nare_version")
+                     and first.contract == invocation.get("contract")
+                     and not (first.stop_reason == "budget" and not first.partial)))):
             try:
                 parse(first.output)
             except CitationValidationError as error:

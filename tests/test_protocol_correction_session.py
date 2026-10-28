@@ -81,6 +81,19 @@ def launch(
             descriptor = DiscussionInput(
                 descriptor.persona, descriptor.inputs, candidates, (), False, ()
             )
+    if kind != "discovery":
+        from scrutare.findings.models import artifact_data
+
+        save_json(capture / "assessment.json", {"candidates": artifact_data(candidates)})
+        if kind == "discussion":
+            # Focused discussion sessions start at attempt3 after discovery and reanchor.
+            moved = attempt.with_name("attempt-0003")
+            attempt.rename(moved)
+            attempt = moved
+            save_json(
+                capture / "debate.json",
+                {"rounds": [{"candidate_ids": [f.candidate_id for f in candidates]}]},
+            )
     outcome = asyncio.run(
         run_persona_session(
             descriptor,
@@ -261,3 +274,35 @@ def test_a_mixed_answer_is_exhaustively_described(capture, tmp_path):
         "malformed_sha256",
         "line_range_outside_capture",
     }
+
+
+@pytest.mark.parametrize("kind", ["discovery", "assessment", "discussion"])
+def test_invalid_original_native_done_budget_is_not_corrected(capture, tmp_path, kind):
+    first, second = (
+        (PLACEHOLDER, VALID)
+        if kind == "discovery"
+        else (assessments(*IDS, "unknown"), assessments(*IDS))
+        if kind == "assessment"
+        else (proposals(*IDS, "unknown"), proposals(*IDS))
+    )
+    outcome, _, attempt = launch(
+        capture, tmp_path, first, second, kind=kind, first_step={"status": "done", "stop": "budget"}
+    )
+    assert (outcome.status, outcome.reason) == ("failed", "protocol")
+    assert load(attempt / "result.json")["protocol_correction"]["offered"] is False
+    assert not (attempt / "correction-session.json").exists()
+
+
+@pytest.mark.parametrize("kind", ["assessment", "discussion"])
+def test_corrected_overrun_uses_cumulative_capture_for_fallback(capture, tmp_path, kind):
+    from scrutare.engine.overrun import native_overrun
+
+    first, second = (
+        (assessments(*IDS, "unknown"), assessments(*IDS))
+        if kind == "assessment"
+        else (proposals(*IDS, "unknown"), proposals(*IDS))
+    )
+    outcome, _, attempt = launch(capture, tmp_path, first, second, kind=kind, limit=100)
+    assert (outcome.status, outcome.reason) == ("partial", "budget")
+    assert outcome.usage.total == 111
+    native_overrun(attempt, outcome.to_dict())

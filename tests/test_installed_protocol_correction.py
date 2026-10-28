@@ -101,3 +101,40 @@ def test_installed_g3_unknown_fifth_assessor_is_corrected_and_applied(
     assert resumed(assessor)["calls"][0]["tools"] == []
     assert replay.returncode == 0, replay.stderr.decode()
     assert json.loads(replay.stdout)["issues"] == []
+
+
+def test_installed_provider_failure_is_not_offered_a_protocol_correction(
+    tmp_path, installed, wheel_cli
+):
+    _, run, attempt, _, _ = review(
+        tmp_path,
+        installed,
+        wheel_cli,
+        answer=placeholder,
+        correction=first_answer,
+        policy="protocol_correction",
+        provider_error=True,
+        succeeds=False,
+    )
+    assert load(attempt / "result.json")["protocol_correction"]["offered"] is False
+    assert not (attempt / "correction-session.json").exists()
+    from scrutare.replay.audit import _protocol_correction_issues
+
+    assert _protocol_correction_issues(run, load(run / "config.json")) == ()
+
+
+def test_installed_no_valid_replacement_keeps_original_refusal(tmp_path, installed, wheel_cli):
+    _, run, attempt, _, _ = review(
+        tmp_path,
+        installed,
+        wheel_cli,
+        answer=placeholder,
+        correction=lambda p: {"wrong": []},
+        policy="protocol_correction",
+        succeeds=False,
+    )
+    assert load(attempt / "result.json")["protocol_correction"]["outcome"] == "no_answer"
+    assert len(resumed(attempt)["calls"]) == 1
+    from scrutare.replay.audit import _protocol_correction_issues
+
+    assert _protocol_correction_issues(run, load(run / "config.json")) == ()
