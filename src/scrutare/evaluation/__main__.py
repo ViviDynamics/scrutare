@@ -10,6 +10,7 @@ from scrutare.config import parse_config
 from scrutare.engine.session_models import NareRuntime
 from scrutare.evaluation.corpus import load_corpus, read_json
 from scrutare.evaluation.promotion import evaluate_promotion
+from scrutare.evaluation.qualification import inspect_rule_a
 from scrutare.evaluation.runner import run_experiment, write_json
 from scrutare.evaluation.scoring import adjudication_packet, score_experiment
 
@@ -29,6 +30,8 @@ def main() -> None:
                      choices=('baseline', 'procedures', 'architectures', 'focused'),
                      default='baseline')
     run.add_argument('--variants', help='comma-separated subset of the comparison arms')
+    run.add_argument('--qualification-rule-a', action='store_true',
+                     help='one whole frozen pipeline rerun per failed cell; all attempts charged')
     run.add_argument('--transient-retries', type=int, default=0,
                      help='recorded fresh reruns of a cell stopped only by upstream HTTP 5xx')
     run.add_argument('--transient-retry-delay-seconds', type=float, default=0.0)
@@ -47,6 +50,11 @@ def main() -> None:
     score.add_argument('--corpus', type=Path, required=True)
     score.add_argument('--decisions', type=Path, required=True)
     score.add_argument('--output', type=Path, required=True)
+    operational = sub.add_parser('qualify-rule-a', help='offline rule A gate; never promote')
+    operational.add_argument('--experiment', type=Path, required=True)
+    operational.add_argument('--gate', type=Path, required=True)
+    operational.add_argument('--ledger', type=Path, required=True)
+    operational.add_argument('--output', type=Path, required=True)
     gate = sub.add_parser('gate', help='report pass/fail/inconclusive; never change defaults')
     gate.add_argument('--input', type=Path, required=True)
     gate.add_argument('--output', type=Path, required=True)
@@ -61,9 +69,13 @@ def main() -> None:
             transient_retries=args.transient_retries,
             transient_retry_delay_seconds=args.transient_retry_delay_seconds,
             transient_retry_budget=args.transient_retry_budget,
-            assessment_tokens=args.assessment_tokens))
+            assessment_tokens=args.assessment_tokens,
+            qualification_rule_a=args.qualification_rule_a))
     elif args.command == 'adjudicate':
         write_json(args.output, adjudication_packet(read_json(args.experiment)['runs']))
+    elif args.command == 'qualify-rule-a':
+        write_json(args.output, inspect_rule_a(args.experiment, read_json(args.gate),
+                                              read_json(args.ledger)))
     elif args.command == 'gate':
         data = read_json(args.input)
         write_json(args.output, evaluate_promotion(
