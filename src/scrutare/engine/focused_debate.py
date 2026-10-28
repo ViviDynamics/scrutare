@@ -37,6 +37,7 @@ from scrutare.engine.panel_artifacts import preflight_panel, publish_panel
 from scrutare.engine.review_inputs import ReviewInputError, prepared_content_hashes
 from scrutare.engine.session_artifacts import (
     SessionArtifactError,
+    accepted_session_path,
     create_attempt_directory,
     write_owned_json,
 )
@@ -247,7 +248,7 @@ async def _discuss(
         parsed_proposals: list[Proposal] = []
         for descriptor, attempt in zip(descriptors, attempts):
             session = decode_artifact(
-                read_artifact(attempt / "session.json"), artifact="discussion.session"
+                read_artifact(accepted_session_path(attempt)), artifact="discussion.session"
             )
             if not isinstance(session, dict):
                 raise FindingError("discussion: missing captured session")

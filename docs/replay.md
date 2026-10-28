@@ -240,3 +240,15 @@ with posted comparison null confirms only the saved target. Exit 0 with a
 pending reviewer request confirms verdict identity while request delivery
 remains pending. Argument errors and required-input `ReplayError` also use
 exit 2, with stderr diagnostics instead of a result object.
+
+
+With `findings.protocol_correction`, replay audits discovery, assessor and focused
+discussion sessions using the same native evidence reconciliation as the runtime.
+It derives immutable candidate IDs from the original invocation's quoted caller pool,
+recomputes every deterministic defect, and requires the original full-answer schema
+and one tool-free resumed turn with the same rail, grant and root. Both saved and
+streamed outputs are independently validated. It verifies every outcome and cumulative
+usage, including failed/refused/unanswered turns. Issues use `protocol_correction_`
+with suffixes `unrecorded`, `disagrees`, `evidence_missing`, `unconfigured` or
+`config_invalid`. Runs that never opted in and contain no protocol records retain
+the earlier replay behavior. With both settings on, only protocol correction is owed.

@@ -45,9 +45,11 @@ def native_overrun(directory: Path, outcome: Mapping[str, object]) -> None:
     The saved session must carry the granted budget and the recorded usage, and show either
     a budget stop or a finished turn past that budget.
     """
+    from scrutare.engine.session_artifacts import accepted_session_path
     from scrutare.replay.artifacts import decode_artifact, read_artifact
 
-    session = decode_artifact(read_artifact(directory / "session.json"), artifact="session.json")
+    session = decode_artifact(read_artifact(accepted_session_path(directory)),
+                              artifact="session.json")
     if not isinstance(session, dict):
         raise ValueError("overrun: missing native session")
     budget = session.get("budget")

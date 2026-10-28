@@ -227,8 +227,13 @@ class FindingSettings:
     discussion: DiscussionSettings = DiscussionSettings()
     # Opt-in: one tool-free turn to correct machine-describable citation defects (#91).
     citation_correction: bool = False
+    protocol_correction: bool = False
 
     def __post_init__(self) -> None:
+        if type(self.protocol_correction) is not bool:
+            raise ConfigError("findings.protocol_correction: expected boolean")
+        if self.protocol_correction and self.evidence != "v2":
+            raise ConfigError("findings.protocol_correction: requires evidence v2")
         if self.evidence not in ("legacy", "v2"):
             raise ConfigError("findings.evidence: expected legacy or v2")
         if type(self.citation_correction) is not bool:
@@ -316,6 +321,13 @@ class ReviewConfig:
             # which Anthropic refuses; nare's OpenAI rail omits the empty tool list.
             raise ConfigError("findings.citation_correction: requires provider openai on every "
                               "model rail")
+        if self.findings.protocol_correction and any(
+                rail.provider != "openai"
+                for rail in (self.models.default, *(rail for _, rail in self.models.overrides))):
+            # The correction resumes a transcript holding tool_use blocks with no tools offered,
+            # which Anthropic refuses; nare's OpenAI rail omits the empty tool list.
+            raise ConfigError("findings.protocol_correction: requires provider openai on every "
+                              "model rail")
 
     def to_dict(self) -> dict[str, Any]:
         result: dict[str, Any] = {
@@ -351,6 +363,8 @@ class ReviewConfig:
                 result["findings"]["assessment"] = self.findings.assessment.record()
             if self.findings.discussion != DiscussionSettings():
                 result["findings"]["discussion"] = self.findings.discussion.record()
+            if self.findings.protocol_correction:
+                result["findings"]["protocol_correction"] = True
             if self.findings.citation_correction:
                 result["findings"]["citation_correction"] = True
         if self.analysis.enabled:
@@ -373,7 +387,7 @@ class ReviewConfig:
 
 def _finding_settings(value: object) -> FindingSettings:
     fields = _mapping(value, "findings", ("evidence", "assessment", "discussion",
-                                          "citation_correction"))
+                                          "citation_correction", "protocol_correction"))
     assessment = _mapping(fields.get("assessment", {}), "findings.assessment",
                           ("enabled", "tokens", "overrun"))
     return FindingSettings(cast(Literal["legacy", "v2"], _choice(
@@ -381,7 +395,7 @@ def _finding_settings(value: object) -> FindingSettings:
         AssessmentSettings(**assessment), DiscussionSettings(**_mapping(
             fields.get("discussion", {}), "findings.discussion",
             ("enabled", "tokens", "overrun"))),
-        fields.get("citation_correction", False))
+        fields.get("citation_correction", False), fields.get("protocol_correction", False))
 
 
 def _analysis_settings(value: object, context: ContextSettings) -> AnalysisSettings:

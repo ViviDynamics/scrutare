@@ -79,6 +79,10 @@ a discovery session whose answer is refused only for correctable citation
 defects is resumed once, in the same attempt, for one tool-free turn under the
 same lease and budget limit; its usage stays cumulative in the session's
 outcome and the shared ledger.
+The broader [`findings.protocol_correction`](config.md#protocol-correction-turn-opt-in)
+applies that same bound to deterministic full-answer refusals in discovery, assessment
+and focused discussion. It takes precedence if both correction settings are enabled.
+The model supplies a complete replacement answer; the engine never edits content.
 Scrutare passes `--contract` equal to the inspected contract: 1 for releases
 before 2026.10.7, 2 from then. Contract 2 only changes when `ask` blocks, and
 these sessions offer only `read`.
