@@ -554,6 +554,10 @@ def decode_citation_correction(
     usage = first.usage if evidence.status is None else evidence.usage
     answered = evidence.status == "done" and not (discard_cut_off and evidence.cut_off)
     findings: tuple[Finding, ...] = ()
+    if (isinstance(offered, ProtocolCorrectionOffered)
+            and evidence.status in ("done", "blocked") and evidence.stop_reason == "budget"
+            and not evidence.partial):
+        raise SessionProtocolError("protocol correction: invalid native terminal state")
     if answered:
         try:
             if isinstance(offered, ProtocolCorrectionOffered):

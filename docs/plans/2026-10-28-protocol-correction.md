@@ -37,3 +37,11 @@ One live smoke resumed the actual g3 junior-dev refusal and corrected it on Spar
 tool-free json_schema turn (2026-10-28 12:08:53Z–12:10:25Z):7058prompt+965output,
 matching one LAN spend row,0fallbacks/paid calls and US$0 external. Full preflight/review
 and shipment are tracked in the ship-issue checkpoint; no second smoke is required.
+
+Round2 found four further Important boundary cases, reproduced with six failing
+regressions: strict JSON primitive identity in schema comparison; prepared-input
+revalidation before a protocol offer and before launching its process; resumed
+native terminal/budget semantics and partial/overshoot outcome replay; strict
+correction constraint-stream validation. These are fixed with unchanged validators
+and no additional model call. The two independent review rounds exhaust the planned
+review budget; final verification is the regression suite and both full preflight lanes.

@@ -34,6 +34,7 @@ def launch(
     both=False,
     rail=RAIL,
     timeout=10,
+    mutate_inputs=False,
 ):
     from test_citation_correction_defects import CALLER, OPENAI_MODELS
     from test_repository_context import contextual
@@ -94,6 +95,16 @@ def launch(
                 capture / "debate.json",
                 {"rounds": [{"candidate_ids": [f.candidate_id for f in candidates]}]},
             )
+    executable = fake_nare(
+        tmp_path, first, {"output": second, **(correction or {})}, first_step=first_step
+    )
+    if mutate_inputs:
+        script = executable.read_text().replace(
+            "print(json.dumps(result), flush=True)",
+            'if not a.resume: (Path(a.root) / "diff.patch").write_bytes(b"tampered")\n'
+            "print(json.dumps(result), flush=True)",
+        )
+        executable.write_text(script)
     outcome = asyncio.run(
         run_persona_session(
             descriptor,
@@ -102,9 +113,7 @@ def launch(
             ledger=ledger,
             artifact_directory=attempt,
             runtime=NareRuntime(
-                fake_nare(
-                    tmp_path, first, {"output": second, **(correction or {})}, first_step=first_step
-                ),
+                executable,
                 6,
                 timeout,
             ),
@@ -306,3 +315,11 @@ def test_corrected_overrun_uses_cumulative_capture_for_fallback(capture, tmp_pat
     assert (outcome.status, outcome.reason) == ("partial", "budget")
     assert outcome.usage.total == 111
     native_overrun(attempt, outcome.to_dict())
+
+
+def test_changed_prepared_inputs_never_trigger_a_correction_call(capture, tmp_path):
+    outcome, _, attempt = launch(capture, tmp_path, PLACEHOLDER, mutate_inputs=True)
+    assert (outcome.status, outcome.reason) == ("failed", "inputs")
+    assert load(attempt / "result.json")["protocol_correction"]["offered"] is False
+    assert not (attempt / "correction-session.json").exists()
+    assert not (attempt / "cwd/observed-resume.json").exists()

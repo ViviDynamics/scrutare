@@ -349,6 +349,7 @@ def _answer_correction_issues(run_dir: Path, config_data: object, *,
         protocol_context,
         protocol_correction_prompt,
         protocol_defects,
+        same_json,
     )
 
     key = "protocol_correction" if protocol else "citation_correction"
@@ -393,6 +394,17 @@ def _answer_correction_issues(run_dir: Path, config_data: object, *,
                                 f"{attempt.relative_to(run_dir).as_posix()}/result.json",
                                 "invalid") for attempt in recorded)
     root = run_dir / "review-inputs"
+    if protocol:
+        try:
+            from scrutare.engine.review_inputs import PreparedReviewInputs
+            metadata = document(run_dir / "metadata.json")
+            files = document(root / "files.json")
+            if not isinstance(metadata, dict) or not isinstance(files, list):
+                raise ValueError
+            PreparedReviewInputs(root.absolute(), metadata["head_sha"],
+                                 tuple(f["filename"] for f in files))
+        except (OSError, ValueError, TypeError, KeyError):
+            return (AuditIssue(key + "_disagrees", "review-inputs", "invalid"),)
     discovery_schema = findings_schema(evidence_version=2)
     capped = any(rail.max_output_tokens is not None for rail in
                  (config.models.default, *(r for _, r in config.models.overrides)))
@@ -541,9 +553,9 @@ def _answer_correction_issues(run_dir: Path, config_data: object, *,
                  and _flag(argv, "--session") == str(Path(namespace) / "correction-session.json")
                  and _flag(argv, "--schema")
                  == str(Path(namespace) / (stem + ".schema.json"))
-                 and document(attempt / (stem + ".schema.json"))
-                 == (context.schema if context is not None
-                     else citation_correction_schema(defects)))
+                 and (same_json(document(attempt / (stem + ".schema.json")), context.schema)
+                      if context is not None else document(attempt / (stem + ".schema.json"))
+                      == citation_correction_schema(defects)))
         if not valid:
             issues.append(AuditIssue(key + "_disagrees",
                                      f"{where}/{stem}.json", "invalid"))
@@ -560,6 +572,12 @@ def _answer_correction_issues(run_dir: Path, config_data: object, *,
         second = None
         if record["exit_code"] is not None:
             try:
+                if protocol:
+                    from scrutare.engine.session_output import constrained_turns
+                    mode = _flag(first_argv, "--structured-output")
+                    if mode is not None and not isinstance(mode, str):
+                        raise ValueError("protocol correction: invalid constraint mode")
+                    constrained_turns(correction, mode)
                 second = _decode_evidence(
                     correction, raw(attempt / "correction-session.json"),
                     exit_code=record["exit_code"], expected_limit=limit,
@@ -568,8 +586,11 @@ def _answer_correction_issues(run_dir: Path, config_data: object, *,
                 second = None
         if second is not None:
             usage = first.usage if second.status is None else second.usage
-            expected = "no_answer"
-            if second.status == "done" and not (capped and second.cut_off):
+            invalid_terminal = (protocol and second.status in ("done", "blocked")
+                                and second.stop_reason == "budget" and not second.partial)
+            expected = "failed" if invalid_terminal else "no_answer"
+            if (not invalid_terminal and second.status == "done"
+                    and not (capped and second.cut_off)):
                 try:
                     if context is not None:
                         corrected = parse(second.output)
@@ -588,9 +609,23 @@ def _answer_correction_issues(run_dir: Path, config_data: object, *,
         recorded_usage = outcome.get("usage")
         same_usage = (usage is not None and isinstance(recorded_usage, dict)
                       and all(recorded_usage.get(f) == getattr(usage, f) for f in fields))
+        if protocol and usage is not None:
+            same_usage = same_json(recorded_usage, usage.to_dict())
         if record["outcome"] == "corrected":
             valid = (expected == "corrected" and status in ("complete", "partial")
                      and outcome.get("findings") == findings and same_usage)
+            if protocol:
+                valid = (valid and second is not None and usage is not None
+                         and status == ("partial" if second.partial else "complete")
+                         and reason == ("budget" if second.partial else "done")
+                         and type(outcome.get("overshoot_tokens")) is int
+                         and outcome.get("overshoot_tokens") == max(0, usage.total - limit)
+                         and outcome.get("accounting_complete") is True
+                         and outcome.get("output_available") is True
+                         and outcome.get("nare_status") == second.status
+                         and outcome.get("stop_reason") == second.stop_reason
+                         and outcome.get("session_id") == second.session_id
+                         and same_json(outcome.get("findings"), findings))
         elif record["outcome"] == "refused":
             valid = (expected == "refused" and status == "failed" and reason == rejected
                      and outcome.get("findings") == [] and same_usage)

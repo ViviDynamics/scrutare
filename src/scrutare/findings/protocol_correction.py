@@ -12,6 +12,13 @@ from typing import Any
 from scrutare.findings.models import Finding, _path, finding_from_artifact
 
 
+def same_json(left: object, right: object) -> bool:
+    """Compare JSON data with exact primitive types (Python equates bool and int)."""
+    return json.dumps(left, sort_keys=True, allow_nan=False) == json.dumps(
+        right, sort_keys=True, allow_nan=False
+    )
+
+
 @dataclass(frozen=True)
 class ProtocolDefect:
     path: str
@@ -84,7 +91,7 @@ def protocol_context(schema: dict[str, Any], task: str) -> ProtocolContext:
         from scrutare.engine.session_output import findings_schema
 
         expected = findings_schema(evidence_version=2)
-    if schema != expected:
+    if not same_json(schema, expected):
         raise ValueError("protocol correction: original schema differs from caller contract")
     return ProtocolContext(kind, expected, candidates)
 

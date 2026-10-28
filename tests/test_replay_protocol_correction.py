@@ -135,3 +135,49 @@ def test_original_and_correction_schema_must_be_canonical(capture, tmp_path, kin
         doc["properties"][key]["items"]["properties"][field]["enum"].append("invented")
         (attempt / name).write_text(json.dumps(doc))
     assert issues(capture)
+
+
+@pytest.mark.parametrize(
+    "files",
+    [
+        ("findings.schema.json", "protocol-correction.schema.json"),
+        ("protocol-correction.schema.json",),
+    ],
+)
+def test_schema_boolean_integer_confusion_is_rejected(capture, tmp_path, files):
+    _, _, attempt = launch(
+        capture, tmp_path, assessments(*IDS, "unknown"), assessments(*IDS), kind="assessment"
+    )
+    for name in files:
+        value = load(attempt / name)
+        value["additionalProperties"] = 0
+        (attempt / name).write_text(json.dumps(value))
+    assert issues(capture)
+
+
+def test_invalid_resumed_done_budget_fails_and_replays(capture, tmp_path):
+    outcome, _, attempt = launch(
+        capture, tmp_path, PLACEHOLDER, correction={"status": "done", "stop": "budget"}
+    )
+    assert (outcome.status, outcome.reason) == ("failed", "protocol")
+    assert load(attempt / "result.json")["protocol_correction"]["outcome"] == "failed"
+    assert issues(capture) == ()
+
+
+def test_corrected_overrun_cannot_be_relabelled_as_complete(capture, tmp_path):
+    _, _, attempt = launch(capture, tmp_path, PLACEHOLDER, limit=100)
+    result = load(attempt / "result.json")
+    result.update(status="complete", reason="done", overshoot_tokens=0)
+    (attempt / "result.json").write_text(json.dumps(result))
+    assert issues(capture)
+
+
+def test_replay_validates_correction_constraint_mode(capture, tmp_path):
+    from scrutare.config import ModelRail
+
+    _, _, attempt = launch(
+        capture, tmp_path, PLACEHOLDER, rail=ModelRail("openai", None, "m", "json_schema")
+    )
+    path = attempt / "correction.stdout.jsonl"
+    path.write_text(path.read_text().replace('"mode": "json_schema"', '"mode": "wrong-mode"'))
+    assert issues(capture)

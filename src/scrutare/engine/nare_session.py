@@ -497,6 +497,8 @@ async def _correct_citations(
     remaining = deadline - asyncio.get_running_loop().time()
     if remaining <= 0:
         raise asyncio.TimeoutError
+    if isinstance(offered, ProtocolCorrectionOffered):
+        validate_prepared_inputs(descriptor.inputs)
     correction = _Evidence(evidence.usage, started=True)
     try:
         with ExitStack() as stack:
@@ -703,6 +705,8 @@ async def _run_session(
                             or first.status in ("done", "blocked")
                             and first.stop_reason == "budget" and not first.partial):
                         raise SessionProtocolError("session: invalid original terminal state")
+                    if isinstance(offered, ProtocolCorrectionOffered):
+                        validate_prepared_inputs(descriptor.inputs)
                     # Every usage seen so far is in the ledger; the turn continues from it.
                     ledger.observe(lease, offered.evidence.usage)
                     evidence.usage = offered.evidence.usage
