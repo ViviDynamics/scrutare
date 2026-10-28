@@ -6,6 +6,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, cast
 
+from scrutare.engine.session_artifacts import accepted_session_path
 from scrutare.findings.evidence import validate_evidence
 from scrutare.findings.models import Citation, Finding, FindingError, _text, parse_evidence
 
@@ -157,7 +158,7 @@ async def assess_candidates(
                 status = "partial"
             elif (outcome.status in ("complete", "partial") and outcome.output_available
                     and outcome.accounting_complete and context.ledger.accounting_complete):
-                document = decode_artifact(read_artifact(attempt / "session.json"),
+                document = decode_artifact(read_artifact(accepted_session_path(attempt)),
                                            artifact="assessment.session")
                 if not isinstance(document, dict):
                     raise FindingError("assessment: invalid captured session")

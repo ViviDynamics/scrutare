@@ -147,6 +147,8 @@ class FakeProvider:
         usage = reply.get("usage", {"input": 10, "output": 5})
         if reply.get("assess_candidates"):
             prompt = arguments[1]
+            if option("--resume"):
+                prompt = json.loads((artifact / "invocation.json").read_bytes())["argv"][2]
             pool, _ = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])
             status = reply["assess_candidates"]
             rows = []
@@ -158,6 +160,8 @@ class FakeProvider:
                              "reason": "Independent captured code assessment.",
                              "supporting_citations": citations if status != "refuted" else [],
                              "counter_citations": citations if status == "refuted" else []})
+            if reply.get("extra_assessment"):
+                rows.append(dict(rows[0], candidate_id="never-given-fifth-id"))
             reply = {"content": [{"type": "text", "text": json.dumps({"assessments": rows})}]}
         if reply.get("propose_candidates"):
             prompt = arguments[1]

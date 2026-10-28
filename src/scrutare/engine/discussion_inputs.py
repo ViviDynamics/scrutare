@@ -38,7 +38,8 @@ class DiscussionInput(DebateInput):
             ),
         )
 
-    def output_schema(self) -> dict[str, Any]:
+    @staticmethod
+    def output_schema() -> dict[str, Any]:
         properties = {
             "candidate_id": {"type": "string"},
             "action": {"type": "string", "enum": ["retain", "refute", "unresolved"]},

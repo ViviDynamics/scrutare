@@ -40,7 +40,8 @@ def fixed(provider, *, end_line=1, digest=None):
 
 
 def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=True,
-           structured=False, succeeds=True):
+           structured=False, succeeds=True, policy="citation_correction", assessment=False,
+           provider_error=False):
     """Run `scrutare review` once against offline GitHub and native offline nare."""
     from scrutare.engine.repository_context import _artifact
 
@@ -66,8 +67,19 @@ def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=T
     scenarios = [] if correction is None else [{
         "purpose": "review", "attempt": "attempt-0001", "prompt_prefix": PREFIX,
         "scenario": {"replies": [text(correction(provider))], **flag}}]
+    if assessment:
+        scenarios.extend([
+            {"purpose": "review", "attempt": "attempt-0001",
+             "prompt_prefix": "Independently assess", "scenario": {"replies": [
+                 {"assess_candidates": "supported", "extra_assessment": True}], **flag}},
+            {"purpose": "review", "attempt": "attempt-0001",
+             "prompt_prefix": PREFIX, "scenario": {"replies": [
+                 {"assess_candidates": "supported"}], **flag}},
+        ])
     (tmp_path / "offline-spec.json").write_text(json.dumps(
-        {"default": {"replies": replies, **flag}, "scenarios": scenarios}))
+        {"default": {"replies": replies, **flag,
+          **({"error": "offline provider failure"} if provider_error else {})},
+         "scenarios": scenarios}))
     working = tmp_path / "outside-checkout"
     working.mkdir()
     rail = ', structured_output: json_schema' if structured else ''
@@ -75,9 +87,10 @@ def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=T
         "personas: [senior-dev]\n"
         "models: {default: {provider: openai, model: offline-model, "
         f'base_url: "https://offline.invalid/v1"{rail}}}}}\n'
-        "budgets: {per_persona_tokens: 400, review_max_tokens: 400}\n"
+        "budgets: {per_persona_tokens: 400, review_max_tokens: 800}\n"
         "context: {enabled: true, related_paths: [src/caller.py, tests/test_caller.py]}\n"
-        "findings: {evidence: v2" + (", citation_correction: true" if enabled else "") + "}\n")
+        "findings: {evidence: v2" + (f", {policy}: true" if enabled else "")
+        + (", assessment: {enabled: true, tokens: 400}" if assessment else "") + "}\n")
     binary = tmp_path / "bin"
     binary.mkdir()
     gh = binary / "gh"

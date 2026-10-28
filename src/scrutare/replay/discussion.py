@@ -9,6 +9,7 @@ from scrutare.config import ReviewConfig
 from scrutare.engine.assessment import Assessment, assessment_wire, parse_assessments
 from scrutare.engine.discussion import Proposal, disputed_ids, parse_proposals, proposal_wire
 from scrutare.engine.overrun import artifact_status, native_overrun, phase_degradation
+from scrutare.engine.session_artifacts import accepted_session_path
 from scrutare.findings import Exhaustion
 from scrutare.findings.models import artifact_data, finding_from_artifact
 from scrutare.findings.verdict import Degradation
@@ -136,7 +137,7 @@ def replay_discussion(
             _complete(position)
             persona = cast(str, position["persona"])
             session = _document(
-                run_dir / "sessions" / persona / f"attempt-{number + 2:04d}" / "session.json"
+                accepted_session_path(run_dir / "sessions" / persona / f"attempt-{number + 2:04d}")
             )
             parsed.extend(parse_proposals(session["output"], pool, root))
             total_tokens += _tokens(position)
@@ -224,8 +225,8 @@ def replay_discussion(
                     ):
                         raise ValueError("discussion: reassessment executor disagrees")
                     session = _document(
-                        run_dir / "sessions" / assessor_name / f"attempt-{number + 1:04d}"
-                        / "session.json"
+                        accepted_session_path(run_dir / "sessions" / assessor_name
+                                              / f"attempt-{number + 1:04d}")
                     )
                     native_rows = parse_assessments(session["output"], pool, root)
                     if native_rows != updated_rows:

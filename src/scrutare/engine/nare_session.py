@@ -39,6 +39,7 @@ from scrutare.engine.session_output import (
     CitationCorrectionOffered,
     DecodedReanchorSession,
     DecodedSession,
+    ProtocolCorrectionOffered,
     SessionProtocolError,
     constrained_turns,
     decode_citation_correction,
@@ -451,7 +452,8 @@ def _rail_options(rail: ModelRail) -> list[str]:
 
 
 async def _correct_citations(
-    offered: CitationCorrectionOffered, descriptor: PersonaReviewInput, rail: ModelRail,
+    offered: CitationCorrectionOffered | ProtocolCorrectionOffered,
+    descriptor: PersonaReviewInput, rail: ModelRail,
     lease: BudgetLease, *, ledger: ReviewBudgetLedger, directory: int, artifact_directory: Path,
     executable: Path, runtime: NareRuntime, capability: NareCapability, evidence: _Evidence,
     deadline: float, record: dict[str, object],
@@ -462,32 +464,41 @@ async def _correct_citations(
     was; a correction that gives no answer leaves the original refusal standing.
     """
     root = descriptor.inputs.root
-    defects = offered.defects
-    prompt = citation_correction_prompt(defects)
+    protocol = isinstance(offered, ProtocolCorrectionOffered)
+    stem = "protocol-correction" if protocol else "citation-correction"
+    if isinstance(offered, ProtocolCorrectionOffered):
+        from scrutare.findings.protocol_correction import protocol_correction_prompt
+        prompt = protocol_correction_prompt(offered.defects, offered.context)
+        schema = offered.context.schema
+    else:
+        prompt = citation_correction_prompt(offered.defects)
+        schema = citation_correction_schema(offered.defects)
     system = descriptor.persona.system_prompt
     argv = [str(executable), "run", prompt, "--tools", "none", "--root", str(root),
             "--system=" + system, *_rail_argv(rail, capability),
             "--jsonl", "--yes", "--contract", str(capability.contract),
-            "--schema", str(artifact_directory / "citation-correction.schema.json"),
+            "--schema", str(artifact_directory / (stem + ".schema.json")),
             "--budget-tokens", str(lease.limit_tokens),
             "--resume", str(artifact_directory / "session.json"),
             "--session", str(artifact_directory / "correction-session.json"),
             "--max-turns", "1", *_rail_options(rail)]
     # Recorded as offered before anything is written, so any later failure says so.
-    record.update(offered=True, defects=len(defects), outcome="failed")
-    write_owned_json(artifact_directory / "citation-correction.schema.json",
-                     citation_correction_schema(defects), prepared_root=root)
-    write_owned_json(artifact_directory / "citation-correction.json", {
+    record.update(offered=True, defects=len(offered.defects), outcome="failed")
+    write_owned_json(artifact_directory / (stem + ".schema.json"),
+                     schema, prepared_root=root)
+    write_owned_json(artifact_directory / (stem + ".json"), {
         "schema_version": 1, "scrutare_version": __version__,
         "session_key": lease.session_key,
         "refusal": {"reason": offered.reason, "citation_reason": offered.citation_reason},
-        "defects": [defect.to_dict() for defect in defects],
+        "defects": [defect.to_dict() for defect in offered.defects],
         "prompt": prompt, "prompt_sha256": sha256(prompt.encode("utf-8")).hexdigest(),
         "argv": argv, "max_turns": 1, "invocation_limit": lease.limit_tokens,
     }, prepared_root=root)
     remaining = deadline - asyncio.get_running_loop().time()
     if remaining <= 0:
         raise asyncio.TimeoutError
+    if isinstance(offered, ProtocolCorrectionOffered):
+        validate_prepared_inputs(descriptor.inputs)
     correction = _Evidence(evidence.usage, started=True)
     try:
         with ExitStack() as stack:
@@ -558,6 +569,8 @@ async def _run_session(
     constrained: int | None = None
     correction: dict[str, object] | None = None
     answered = False
+    protocol = None
+    correction_key = "citation_correction"
     deadline = asyncio.get_running_loop().time() + getattr(runtime, "timeout_seconds", 0)
     try:
         expected_descriptor = PersonaReanchorInput if purpose == "reanchor" else PersonaReviewInput
@@ -590,7 +603,15 @@ async def _run_session(
                 f"{rail.structured_output}")
         if purpose == "reanchor" and lease.session_key != f"{lease.persona}/attempt-0002":
             raise SessionRuntimeError("session_key: expected the fresh correction identity")
-        if purpose == "review" and _offers_citation_correction(descriptor):
+        from scrutare.config import load_config
+        from scrutare.engine.discussion_inputs import DiscussionInput
+        protocol_enabled = (purpose == "review" and not isinstance(descriptor, PersonaReanchorInput)
+            and (not isinstance(descriptor, DebateInput) or isinstance(descriptor, DiscussionInput))
+            and load_config(prepared_root.parent / "config.yaml").findings.protocol_correction)
+        if protocol_enabled:
+            correction_key = "protocol_correction"
+            correction = {"offered": False, "defects": 0, "outcome": None, "exit_code": None}
+        elif purpose == "review" and _offers_citation_correction(descriptor):
             correction = {"offered": False, "defects": 0, "outcome": None, "exit_code": None}
         reason = "artifacts"
         if purpose == "reanchor" and artifact_directory.name != "attempt-0002":
@@ -608,6 +629,9 @@ async def _run_session(
                       if isinstance(descriptor, (DebateInput, AssessmentInput)) else
                       reanchor_schema() if purpose == "reanchor" else
                       findings_schema(evidence_version=evidence_version(prepared_root)))
+            if protocol_enabled:
+                from scrutare.findings.protocol_correction import protocol_context
+                protocol = protocol_context(schema, input_args[0])
             argv.extend(("--jsonl", "--yes", "--contract", str(capability.contract), "--schema",
                          str(artifact_directory / schema_name), "--budget-tokens",
                          str(lease.limit_tokens), "--session",
@@ -670,9 +694,19 @@ async def _run_session(
                                     else None),
                         evidence_version=evidence_version(prepared_root),
                         candidate_namespace=str(artifact_directory), discard_cut_off=capped,
-                        offer_citation_correction=correction is not None)
-                except CitationCorrectionOffered as offered:
+                        offer_citation_correction=correction is not None and protocol is None,
+                        protocol_context=protocol)
+                except (CitationCorrectionOffered, ProtocolCorrectionOffered) as offered:
                     assert correction is not None
+                    first = offered.evidence
+                    if isinstance(offered, ProtocolCorrectionOffered) and (
+                            first.nare_version != capability.version
+                            or first.contract != capability.contract
+                            or first.status in ("done", "blocked")
+                            and first.stop_reason == "budget" and not first.partial):
+                        raise SessionProtocolError("session: invalid original terminal state")
+                    if isinstance(offered, ProtocolCorrectionOffered):
+                        validate_prepared_inputs(descriptor.inputs)
                     # Every usage seen so far is in the ledger; the turn continues from it.
                     ledger.observe(lease, offered.evidence.usage)
                     evidence.usage = offered.evidence.usage
@@ -757,7 +791,7 @@ async def _run_session(
                 structured["max_output_tokens"] = {"limit": rail.max_output_tokens,
                                                    "reached": outcome.reason == "output_cap"}
             if correction is not None:
-                structured["citation_correction"] = correction
+                structured[correction_key] = correction
             write_owned_json(artifact_directory / "result.json", {
                 "schema_version": 1, "scrutare_version": __version__,
                 "nare_version": capability.version, "contract": capability.contract,
