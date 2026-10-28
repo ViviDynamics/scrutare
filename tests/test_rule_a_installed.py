@@ -56,7 +56,8 @@ def test_installed_completed_empty_defect_evidence_never_retries(tmp_path, insta
 
 
 @pytest.mark.parametrize('recover', [True, False])
-def test_installed_whole_review_retry_before_posting(tmp_path, installed, recover):
+@pytest.mark.parametrize('strategy', ['panel', 'iterative'])
+def test_installed_whole_review_retry_before_posting(tmp_path, installed, recover, strategy):
     from test_post_review import REF, SHA, CaptureClient, FakePoster
 
     from scrutare.engine.review import ReviewRunError, review_pr
@@ -67,7 +68,7 @@ def test_installed_whole_review_retry_before_posting(tmp_path, installed, recove
         'alternate_replies': [tool(), text({'findings': []})]})
     raw = (b'models: {default: {provider: openai, model: offline-model, '
            b'base_url: "https://offline.invalid/v1", max_output_tokens: 20}}\n'
-           b'personas: [security]\n')
+           b'personas: [security]\n') + f'strategy: {strategy}\n'.encode()
     poster = FakePoster()
     def invoke():
         return asyncio.run(review_pr(REF, parse_config(raw), config_bytes=raw,
@@ -79,6 +80,10 @@ def test_installed_whole_review_retry_before_posting(tmp_path, installed, recove
         assert all(a['usage']['total'] > 0 for a in result.recovery['attempts'])
         assert replay_run(result.run_dir).exit_code == 0
         assert len(poster.creates) == 1
+        if strategy == 'iterative':
+            inputs = [p.read_bytes() for p in (tmp_path / 'runs').glob(
+                'run-*/review-history-input.json')]
+            assert len(inputs) == 2 and inputs[0] == inputs[1]
     else:
         with pytest.raises(ReviewRunError, match='no answer'):
             invoke()

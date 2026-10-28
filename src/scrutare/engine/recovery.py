@@ -43,34 +43,15 @@ def retryable_sessions(directory: Path) -> list[dict[str, str]] | None:
         allowed = ('initial', 'correction', 'discovery_incomplete', 'assessment_incomplete',
                    'perspectives', 'chair', 'perspectives_incomplete', 'reassessment_incomplete',
                    'perspective_budget', 'chair_budget')
-        if any(json.loads(p.read_bytes()).get('reason') not in allowed for p in summaries):
-            return None
-        # Every outcome named by the pipeline must have its own durable terminal record.
-        def bound_outcomes(value: Any) -> bool:
-            if isinstance(value, list):
-                return all(bound_outcomes(v) for v in value)
-            if not isinstance(value, dict):
-                return True
-            if 'artifact_directory' in value and 'status' in value:
-                path = Path(value['artifact_directory']) / 'result.json'
-                if not path.resolve().is_relative_to(directory.resolve()) or not path.is_file():
-                    return False
-                saved = json.loads(path.read_bytes())
-                if any(saved.get(k) != value.get(k) for k in ('status', 'reason', 'usage')):
-                    return False
-            return all(bound_outcomes(v) for v in value.values())
-        fanout_path = directory / 'fanout.json'
-        if not fanout_path.is_file():
-            fanout_path = directory / 'iterative-round/fanout.json'
-        fanout = json.loads(fanout_path.read_bytes())
-        expected = {p['name'] for p in fanout['personas']}
-        outcomes = fanout['result']['outcomes']
-        if ({o['persona'] for o in outcomes} != expected
-                or len(outcomes) != len(expected) or not expected):
-            return None
-        for path in [*summaries, fanout_path, *directory.glob('assessment*.json')]:
-            if path.is_symlink() or not bound_outcomes(json.loads(path.read_bytes())):
+        for path in summaries:
+            summary = json.loads(path.read_bytes())
+            if (summary.get('strategy') == 'iterative' and 'reason' not in summary
+                    and (directory / 'iterative-round/panel.json').is_file()):
+                continue
+            if summary.get('reason') not in allowed:
                 return None
+        if not pipeline_records_valid(directory):
+            return None
         config = parse_config((directory / 'config.yaml').read_bytes())
         keys = set()
         for path in paths:
@@ -117,6 +98,53 @@ def retryable_sessions(directory: Path) -> list[dict[str, str]] | None:
         return None
     return failures or None
 
+
+
+def pipeline_records_valid(directory: Path) -> bool:
+    """Every declared participant and outcome has its own agreeing durable terminal."""
+    try:
+        referenced = set()
+        def bound(value: Any) -> bool:
+            if isinstance(value, list):
+                return all(bound(v) for v in value)
+            if not isinstance(value, dict):
+                return True
+            if 'artifact_directory' in value and 'status' in value:
+                path = Path(value['artifact_directory']) / 'result.json'
+                if (not path.resolve().is_relative_to(directory.resolve())
+                        or not path.is_file() or path.is_symlink()):
+                    return False
+                saved = json.loads(path.read_bytes())
+                if any(saved.get(k) != value.get(k) for k in ('status', 'reason', 'usage')):
+                    return False
+                referenced.add(path.resolve())
+            return all(bound(v) for v in value.values())
+        fanout_path = directory / 'fanout.json'
+        if not fanout_path.is_file():
+            fanout_path = directory / 'iterative-round/fanout.json'
+        fanout = json.loads(fanout_path.read_bytes())
+        names = [p['name'] for p in fanout['personas']]
+        outcomes = fanout['result']['outcomes']
+        config = parse_config((directory / 'config.yaml').read_bytes())
+        if not config.routing.enabled:
+            from scrutare.personas import resolve_personas
+            expected = {p.name for p in resolve_personas(config.personas,
+                        procedures=config.inspection.procedures)}
+            if set(names) != expected:
+                return False
+        if (not names or len(set(names)) != len(names)
+                or {o['persona'] for o in outcomes} != set(names)
+                or len(outcomes) != len(names)):
+            return False
+        summaries = [*directory.glob('*.json'), *directory.glob('iterative-round/*.json')]
+        for path in summaries:
+            if path.name not in ('artifacts.json', 'evaluation.json', 'review-recovery.json'):
+                if path.is_symlink() or not bound(json.loads(path.read_bytes())):
+                    return False
+        terminals = {p.resolve() for p in directory.glob('**/sessions/*/attempt-*/result.json')}
+        return bool(referenced) and referenced == terminals
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
 
 def attempt_record(record: dict[str, Any], number: int) -> dict[str, Any]:
     return {key: record[key] for key in ('run_dir', 'status', 'error', 'accounting_complete',
@@ -194,3 +222,16 @@ def remember_history(path: Path) -> None:
     snapshot = _HISTORY.get()
     if snapshot is not None and path in snapshot:
         snapshot[path]['latest'] = path.read_bytes()
+
+
+def record_history_input(run: Path, state: dict[str, Any]) -> None:
+    if _HISTORY.get() is None:
+        return
+    from scrutare.engine.session_artifacts import write_owned_json
+    path = run / 'review-history-input.json'
+    document = {'schema_version': 1, 'state': state}
+    if path.exists():
+        if path.is_symlink() or json.loads(path.read_bytes()) != document:
+            raise ValueError('frozen iterative history input changed')
+    else:
+        write_owned_json(path, document, prepared_root=run / 'review-inputs')

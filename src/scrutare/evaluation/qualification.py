@@ -87,7 +87,12 @@ def inspect_rule_a(root: Any, gate: dict[str, Any], ledger: dict[str, Any]) -> d
     from pathlib import Path
 
     from scrutare.config import parse_config
-    from scrutare.engine.recovery import RULE_A, retryable_sessions, sum_usage
+    from scrutare.engine.recovery import (
+        RULE_A,
+        pipeline_records_valid,
+        retryable_sessions,
+        sum_usage,
+    )
     from scrutare.engine.review_inputs import prepare_review_inputs, prepared_content_hashes
     from scrutare.engine.session_output import decode_cost_event
     from scrutare.findings.evidence import validate_evidence
@@ -143,6 +148,8 @@ def inspect_rule_a(root: Any, gate: dict[str, Any], ledger: dict[str, Any]) -> d
                             'case_variants'][case][variant]['inputs_sha256']):
                     raise ValueError('frozen inputs differ')
                 facts['provenance_valid'] = True
+                if not pipeline_records_valid(directory):
+                    raise ValueError('required pipeline terminal records missing or inconsistent')
                 sessions = sorted(directory.glob('**/sessions/*/attempt-*/result.json'))
                 started, outcomes, engine_costs = [], [], []
                 matched = True
@@ -185,7 +192,10 @@ def inspect_rule_a(root: Any, gate: dict[str, Any], ledger: dict[str, Any]) -> d
                               and s.get('attempt') == number and s.get('session') == session]
                     for supplement in extras:
                         matches = [r for r in requests if r.get('id') == supplement['id']]
-                        if (len(matches) != 1 or supplement['id'] in used_requests
+                        if (len(matches) != 1
+                                or any(matches[0].get(k) != supplement.get(k)
+                                       for k in ('run_id', 'attempt', 'session'))
+                                or supplement['id'] in used_requests
                                 or supplement.get('session_result_sha256') != hashlib.sha256(
                                     path.read_bytes()).hexdigest()
                                 or supplement.get('reason') != 'missing_failed_request'
@@ -214,7 +224,8 @@ def inspect_rule_a(root: Any, gate: dict[str, Any], ledger: dict[str, Any]) -> d
                     fallbacks=sum(r['fallbacks'] for r in attributed))
                 facts['routing_valid'] &= all(
                     r['model'] == 'openai/glm-5.3-flash'
-                    and r['api_base'].rstrip('/') == 'http://192.168.3.40:8045'
+                    and r['api_base'].rstrip('/') in ('http://192.168.3.40:8045',
+                                                      'http://192.168.3.40:8045/v1')
                     and isinstance(r.get('source_sha256'), str)
                     and len(r['source_sha256']) == 64 for r in attributed)
             except (OSError, ValueError, KeyError, TypeError):
@@ -223,8 +234,12 @@ def inspect_rule_a(root: Any, gate: dict[str, Any], ledger: dict[str, Any]) -> d
         evidence_valid, replay_valid, assessor = False, False, False
         try:
             directory = Path(row['run_dir'])
-            if not directory.resolve().is_relative_to(root):
-                raise ValueError('accepted directory outside experiment')
+            selected = row.get('selected_attempt')
+            if (row['status'] != 'complete' or not isinstance(selected, int)
+                    or not 1 <= selected <= len(attempts)
+                    or not attempts[selected - 1].get('provenance_valid')
+                    or directory.resolve() != Path(attempts[selected - 1]['run_dir']).resolve()):
+                raise ValueError('accepted directory differs from validated selected attempt')
             for finding in row['findings']:
                 parsed = parse_finding({k: v for k, v in finding.items() if k != 'persona'},
                     persona=finding['persona'], evidence_version=2, artifact=True)
@@ -255,9 +270,12 @@ def inspect_rule_a(root: Any, gate: dict[str, Any], ledger: dict[str, Any]) -> d
         cells.append({**row, 'attempts': attempts, 'evidence_valid': evidence_valid,
                       'findings': len(row['findings']), 'replay_valid': replay_valid,
                       'assessor_complete': assessor})
+    snapshot_cases = snapshot.get('cases', [])
+    holdout_used = (gate.get('holdout_used') is not False
+        or not snapshot_cases or any(c.get('split') != 'development' for c in snapshot_cases))
     tests = rule_a_predicates(cells, cases=gate['cases'], clean_cases=gate['clean_cases'],
         experiment_terminal=experiment['status'] == 'complete',
-        holdout_used=gate['holdout_used'], max_tokens_per_attempt=gate['max_tokens_per_run'])
+        holdout_used=holdout_used, max_tokens_per_attempt=gate['max_tokens_per_run'])
     tests['all_provider_requests_attributed_once'] = (
         unique_ids and used_requests == set(ids) and len(used_supplements) == len(supplements))
     tests['rule_a_frozen'] = snapshot.get('qualification') == RULE_A
@@ -270,4 +288,4 @@ def inspect_rule_a(root: Any, gate: dict[str, Any], ledger: dict[str, Any]) -> d
             'qualification': 'pass' if all(tests.values()) else 'not_qualified',
             'cumulative_usage': experiment.get('cumulative_usage'),
             'reconciled_cumulative_usage': sum_usage(requests), 'cells': cells,
-            'semantic_qualification': False, 'holdout_used': False}
+            'semantic_qualification': False, 'holdout_used': holdout_used}
