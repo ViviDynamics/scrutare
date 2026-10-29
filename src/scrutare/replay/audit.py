@@ -198,13 +198,12 @@ def _proxy_num_retries_issues(run_dir: Path, config_data: object) -> tuple[Audit
         config = parse_config(json.dumps(config_data))
         names = {p if isinstance(p, str) else p.name for p in config.personas}
         if config.routing.enabled:
-            focus = decode_artifact(read_artifact(run_dir / "review-inputs/routing-focus.json"),
-                                    artifact="routing-focus.json")
-            effective = focus.get("effective_personas") if isinstance(focus, dict) else None
-            if (not isinstance(effective, list) or not effective
-                    or any(not isinstance(name, str) or not name for name in effective)):
-                raise ValueError
-            names = set(effective)
+            from scrutare.engine.routing import plan_routing
+            files = decode_artifact(read_artifact(run_dir / "review-inputs/files.json"),
+                                    artifact="files.json")
+            # Identity selection uses changed paths and trusted rules, never focus metadata.
+            # Supporting paths affect work groups only, not persona activation.
+            names = {p.name for p in plan_routing(files, (), config).personas}
         expected_rails = {name: config.models.for_persona(name) for name in names}
         # Reproduce the executor identities reserved by debate and fanout, including collisions.
         if config.strategy == "debate" and not config.findings.discussion.enabled:

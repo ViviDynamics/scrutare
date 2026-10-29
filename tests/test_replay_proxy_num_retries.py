@@ -105,3 +105,32 @@ def test_chair_uses_the_senior_override_and_cannot_claim_another_persona(tmp_pat
     invocation["argv"] = invocation["argv"][:-2]
     path.write_text(json.dumps(invocation))
     assert _proxy_num_retries_issues(tmp_path, config)
+
+
+def test_routed_chair_identity_cannot_be_changed_in_unvalidated_focus(capture):
+    config = parse_config(json.dumps({
+        "strategy": "debate", "routing": {"enabled": True},
+        "models": {"default": {"provider": "openai", "model": "m"},
+                   "overrides": {"senior-dev": {"proxy_num_retries": 0}}},
+    })).to_dict()
+    assert config.get("context", {}).get("enabled") is not True
+    inputs = capture / "review-inputs"
+    inputs.mkdir()
+    (inputs / "files.json").write_bytes((capture / "files.json").read_bytes())
+    focus_path = inputs / "routing-focus.json"
+    focus = {"effective_personas": ["senior-dev", "junior-dev", "security", "devops"]}
+    focus_path.write_text(json.dumps(focus))
+    attempt = capture / "sessions/debate-chair/attempt-0001"
+    attempt.mkdir(parents=True)
+    path = attempt / "invocation.json"
+    invocation = {"persona": "debate-chair", "rail": {"provider": "openai", "model": "m",
+                  "base_url": None, "proxy_num_retries": 0},
+                  "argv": ["nare", "run", "prompt", "--proxy-num-retries", "0"]}
+    path.write_text(json.dumps(invocation))
+    assert _proxy_num_retries_issues(capture, config) == ()
+    focus["effective_personas"].append("debate-chair")
+    focus_path.write_text(json.dumps(focus))
+    invocation["rail"].pop("proxy_num_retries")
+    invocation["argv"] = invocation["argv"][:-2]
+    path.write_text(json.dumps(invocation))
+    assert _proxy_num_retries_issues(capture, config)
