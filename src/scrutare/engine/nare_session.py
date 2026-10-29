@@ -218,7 +218,12 @@ async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
                     or contract.get("nare") != version):
                 raise SessionRuntimeError(
                     "contract: expected contract 1 (before 2026.10.7) or 2 and matching release")
-            return NareCapability(version, contract["contract"], _structured_output(contract))
+            retry_entry = contract.get("proxy_num_retries")
+            retry_capable = retry_entry == {
+                "flag": "--proxy-num-retries", "providers": ["openai"],
+                "request_field": "num_retries", "default": None}
+            return NareCapability(version, contract["contract"], _structured_output(contract),
+                                  retry_capable)
     except SessionRuntimeError:
         raise
     except (OSError, ValueError, asyncio.TimeoutError, RecursionError):
@@ -230,6 +235,9 @@ async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
 def require_structured_output(models: ModelSettings, capability: NareCapability) -> None:
     """Refuse a wave before any session when a rail asks for a constraint nare cannot send."""
     for rail in (models.default, *(rail for _, rail in models.overrides)):
+        if rail.proxy_num_retries is not None and not capability.proxy_num_retries:
+            raise SessionRuntimeError(
+                f"capability: nare {capability.version} cannot send proxy_num_retries")
         mode = rail.structured_output
         if mode is not None and mode not in getattr(capability, "structured_output", ()):
             raise SessionRuntimeError(
@@ -248,6 +256,11 @@ def _rail(rail: ModelRail) -> None:
     if rail.max_output_tokens is not None and (
             type(rail.max_output_tokens) is not int or rail.max_output_tokens <= 0):
         raise SessionRuntimeError("rail.max_output_tokens: expected a positive integer or null")
+    if rail.proxy_num_retries is not None and (
+            type(rail.proxy_num_retries) is not int or rail.proxy_num_retries < 0
+            or rail.provider != "openai"):
+        raise SessionRuntimeError(
+            "rail.proxy_num_retries: expected a nonnegative integer on openai")
     if rail.base_url is not None:
         if not isinstance(rail.base_url, str):
             raise SessionRuntimeError("rail.base_url: expected an HTTP(S) URL or null")
@@ -448,6 +461,8 @@ def _rail_options(rail: ModelRail) -> list[str]:
         argv.extend(("--structured-output", rail.structured_output))
     if rail.max_output_tokens is not None:
         argv.extend(("--max-tokens", str(rail.max_output_tokens)))
+    if rail.proxy_num_retries is not None:
+        argv.extend(("--proxy-num-retries", str(rail.proxy_num_retries)))
     return argv
 
 
@@ -596,6 +611,8 @@ async def _run_session(
         _version(capability.version)
         if not _speaks(capability.version, capability.contract):
             raise SessionRuntimeError("capability: expected an inspected supported contract")
+        if rail.proxy_num_retries is not None and not capability.proxy_num_retries:
+            raise SessionRuntimeError("capability: nare cannot send proxy_num_retries")
         if (rail.structured_output is not None
                 and rail.structured_output not in capability.structured_output):
             raise SessionRuntimeError(
@@ -651,7 +668,9 @@ async def _run_session(
                                         **({"structured_output": rail.structured_output}
                                            if rail.structured_output is not None else {}),
                                         **({"max_output_tokens": rail.max_output_tokens}
-                                           if rail.max_output_tokens is not None else {})},
+                                           if rail.max_output_tokens is not None else {}),
+                                        **({"proxy_num_retries": rail.proxy_num_retries}
+                                           if rail.proxy_num_retries is not None else {})},
                 "allocated_tokens": lease.allocated_tokens, "invocation_limit": lease.limit_tokens,
                 "max_turns": runtime.max_turns, "timeout_seconds": runtime.timeout_seconds,
             }, prepared_root=prepared_root)

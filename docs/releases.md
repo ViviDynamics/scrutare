@@ -29,14 +29,14 @@ scrutare --version
 ```
 
 Install gh separately and use already authorized GitHub access. Install nare
-2026.10.12 in a separate Python 3.14 environment with its own locked dependencies:
+2026.10.31 in a separate Python 3.14 environment with its own locked dependencies:
 
 ```sh
-git clone --depth 1 --branch 2026.10.12 https://github.com/ViviDynamics/nare.git nare-2026.10.12
-test "$(git -C nare-2026.10.12 rev-parse HEAD)" = 96672e1e6d23920fc6cdeebfcad7250c8c36cc5e
-uv sync --project nare-2026.10.12 --python 3.14 --locked --no-dev
+git clone --depth 1 --branch 2026.10.31 https://github.com/ViviDynamics/nare.git nare-2026.10.31
+test "$(git -C nare-2026.10.31 rev-parse HEAD)" = 96aeee3d9c58577fb8d74cc0c2fa8c68f36aac5b
+uv sync --project nare-2026.10.31 --python 3.14 --locked --no-dev
 scrutare review --pr https://github.com/owner/repo/pull/12 \
-  --nare-executable "$PWD/nare-2026.10.12/.venv/bin/nare"
+  --nare-executable "$PWD/nare-2026.10.31/.venv/bin/nare"
 ```
 
 Prepare `scrutare.yaml` and authorized provider credentials before review. The

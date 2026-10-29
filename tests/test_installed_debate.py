@@ -118,7 +118,7 @@ def test_installed_debate_pipeline(
         observations = load(attempt / "offline-observations.json")
         session = load(attempt / "session.json")
         assert observations["guard_violations"] == observations["credential_names"] == []
-        assert observations["version"] == "2026.10.12"
+        assert observations["version"] == "2026.10.31"
         assert session["policy"] == {"tools": ["read"], "root": str(run / "review-inputs")}
         assert session["budget"]["tokens"] == invocation["invocation_limit"]
         if attempt.parent.name == "debate-chair":

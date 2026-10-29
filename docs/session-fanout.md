@@ -32,10 +32,10 @@ for outcome in result.outcomes:
 
 `NareRuntime` is an operational Python argument, with positive finite timeout
 and turn limits. It adds no YAML fields. Scrutare requires Python 3.10 or newer;
-install nare 2026.10.12 separately (supported minimum 2026.10.0) with the interpreter required by its
+install nare 2026.10.31 separately (supported minimum 2026.10.0) with the interpreter required by its
 release. For the pinned integration runtime, clone the public
-[ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.10.12),
-verify commit `96672e1e6d23920fc6cdeebfcad7250c8c36cc5e`, and run
+[ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.10.31),
+verify commit `96aeee3d9c58577fb8d74cc0c2fa8c68f36aac5b`, and run
 `uv sync --project /path/to/nare-checkout --python 3.14 --locked --no-dev`.
 Point `NareRuntime.executable`, or the CLI option `--nare-executable`, at that
 checkout's `.venv/bin/nare`. The CLI defaults to `nare` on PATH. Nare is
@@ -201,7 +201,7 @@ and replay contracts.
 ## Offline installed CLI proof
 
 Set `SCRUTARE_TEST_NARE_EXECUTABLE` to the absolute installed console path for
-nare 2026.10.12, then run:
+nare 2026.10.31, then run:
 
 ```sh
 uv run --python 3.10 --locked --extra dev pytest tests/test_nare_cli_integration.py

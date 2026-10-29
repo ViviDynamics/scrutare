@@ -52,13 +52,15 @@ class ModelRail:
     structured_output: StructuredOutput | None = None
     # Opt-in per-request output token cap, passed to nare as --max-tokens on every request.
     max_output_tokens: int | None = None
+    proxy_num_retries: int | None = None
 
     def __post_init__(self) -> None:
         _structured_output(self.structured_output, self.provider, "structured_output")
         _max_output_tokens(self.max_output_tokens, "max_output_tokens")
+        _proxy_num_retries(self.proxy_num_retries, self.provider, "proxy_num_retries")
 
     def record(self, *, structured_output: bool = False,
-               max_output_tokens: bool = False) -> dict[str, Any]:
+               max_output_tokens: bool = False, proxy_num_retries: bool = False) -> dict[str, Any]:
         """The rail as recorded; each opt-in field appears only when it is set or requested."""
         record: dict[str, Any] = {"provider": self.provider, "base_url": self.base_url,
                                   "model": self.model}
@@ -66,6 +68,8 @@ class ModelRail:
             record["structured_output"] = self.structured_output
         if max_output_tokens or self.max_output_tokens is not None:
             record["max_output_tokens"] = self.max_output_tokens
+        if proxy_num_retries or self.proxy_num_retries is not None:
+            record["proxy_num_retries"] = self.proxy_num_retries
         return record
 
 
@@ -92,7 +96,9 @@ class ModelSettings:
     def rail_record(self, rail: ModelRail) -> dict[str, Any]:
         """One rail recorded with every opt-in field any rail of these settings uses."""
         return rail.record(structured_output=self.structured_output,
-                           max_output_tokens=self.caps_output)
+                           max_output_tokens=self.caps_output,
+                           proxy_num_retries=any(r.proxy_num_retries is not None for r in
+                               (self.default, *(r for _, r in self.overrides))))
 
     def record(self) -> dict[str, Any]:
         return {"default": self.rail_record(self.default),
@@ -522,9 +528,18 @@ def _max_output_tokens(value: object, path: str) -> None:
         raise ConfigError(f"{path}: expected a positive integer or null")
 
 
+def _proxy_num_retries(value: object, provider: str, path: str) -> None:
+    if value is None:
+        return
+    if type(value) is not int or value < 0:
+        raise ConfigError(f"{path}: expected a nonnegative integer or null")
+    if provider != "openai":
+        raise ConfigError(f"{path}: requires provider openai")
+
+
 def _rail(value: object, path: str, default: ModelRail | None = None) -> ModelRail:
     fields = _mapping(value, path, ("provider", "base_url", "model", "structured_output",
-                                    "max_output_tokens"))
+                                    "max_output_tokens", "proxy_num_retries"))
     provider = cast(
         Provider,
         _choice(
@@ -559,8 +574,10 @@ def _rail(value: object, path: str, default: ModelRail | None = None) -> ModelRa
                           "to clear it)") from None
     cap = fields.get("max_output_tokens", default.max_output_tokens if default else None)
     _max_output_tokens(cap, f"{path}.max_output_tokens")
+    retries = fields.get("proxy_num_retries", default.proxy_num_retries if default else None)
+    _proxy_num_retries(retries, provider, f"{path}.proxy_num_retries")
     return ModelRail(provider, base_url, model, cast("StructuredOutput | None", structured),
-                     cast("int | None", cap))
+                     cast("int | None", cap), cast("int | None", retries))
 
 
 def _models(value: object, personas: tuple[str | PersonaDefinition, ...]) -> ModelSettings:

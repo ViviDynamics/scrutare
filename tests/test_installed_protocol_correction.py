@@ -1,4 +1,4 @@
-"""Installed wheel plus real nare 2026.10.12: protocol replacement and replay."""
+"""Installed wheel plus real nare 2026.10.31: protocol replacement and replay."""
 
 import copy
 import json

@@ -57,7 +57,7 @@ print("Local git checkout: root and origin discovered from nested directory")
 # Capture requires gh pagination to return an array of pages.
 assert "--slurp" in subprocess.check_output(["gh", "api", "--help"], text=True)
 version = subprocess.check_output(["nare", "--version"], text=True).strip()
-assert version == "2026.10.12"
+assert version == "2026.10.31"
 contract = json.loads(subprocess.check_output(["nare", "contract"], text=True))
 assert contract["contract"] == 2 and contract["nare"] == version
 print(f"UID {os.getuid()}: writable /work, four personas, nare {version}, contract 2")
