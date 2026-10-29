@@ -1,0 +1,38 @@
+[
+ {
+  "returncode": 0,
+  "script": "systemctl --user stop",
+  "stderr": "",
+  "stdout": ""
+ },
+ {
+  "returncode": 0,
+  "script": "/usr/bin/python3 -I <private state>/load-sampler.py",
+  "stderr": "",
+  "stdout": ""
+ },
+ {
+  "returncode": 0,
+  "script": "/usr/bin/python3 <private state>/collect-window.py g5",
+  "stderr": "",
+  "stdout": "{\"window_utc\": [\"2026-10-28 22:37:19\", \"2026-10-29 01:27:33\"], \"rows_all_keys\": 844, \"evaluator_rows\": 554, \"evaluator_prompt_tokens\": 2064050, \"evaluator_completion_tokens\": 566971, \"evaluator_nominal_attribution_usd\": 0.593093, \"evaluator_paid_provider_rows\": 0, \"evaluator_attempted_fallbacks_nonzero\": 0, \"evaluator_rows_present\": true, \"all_keys_attempted_fallbacks_nonzero\": 0, \"all_keys_served_by\": {\"spark/glm-5.3-flash | openai/glm-5.3-flash | http://192.168.3.40:8045/v1\": 844}, \"rows_sha256_private\": \"b546f211b2be2961b054893024ba7b7713ca7a5edd578ed3e99c4acb93bce370\", \"read_utc\": \"2026-10-29T01:28:34.674255+00:00\"}\n"
+ },
+ {
+  "returncode": 0,
+  "script": "/usr/bin/python3 <private state>/private-call.py spend-verify.py",
+  "stderr": "",
+  "stdout": "{\n \"window_utc\": [\n  \"2026-10-28 22:37:19\",\n  \"2026-10-29 01:27:33\"\n ],\n \"rows_all_keys\": 844,\n \"rows_this_key\": 844,\n \"this_key_by_model_group_model_api_base_provider_status\": {\n  \"spark/glm-5.3-flash | openai/glm-5.3-flash | http://192.168.3.40:8045/v1 | openai | success\": 844\n },\n \"other_keys_by_model_group\": {},\n \"this_key_attributed_spend_usd\": 4.463845,\n \"this_key_prompt_tokens\": 27134733,\n \"this_key_completion_tokens\": 787271,\n \"this_key_paid_provider_rows\": 0,\n \"this_key_attempted_fallbacks\": {\n  \"0\": 844\n },\n \"this_key_attempted_retries\": {\n  \"0\": 844\n }\n}\n"
+ },
+ {
+  "returncode": 0,
+  "script": "/usr/bin/python3 <private state>/private-call.py fallback-check.py",
+  "stderr": "",
+  "stdout": "{\n \"lan_path_private\": true,\n \"resolved_lan_addresses\": [\n  \"192.168.3.203\"\n ],\n \"read_utc\": \"2026-10-29T01:28:36Z\",\n \"fallback_fields\": {\n  \"fallbacks\": null,\n  \"context_window_fallbacks\": null,\n  \"content_policy_fallbacks\": null\n },\n \"model_group_alias\": {\n  \"claude-haiku\": {\n   \"hidden\": true,\n   \"model\": \"claude-haiku-5-5\"\n  },\n  \"claude-haiku-4-5\": {\n   \"hidden\": true,\n   \"model\": \"claude-haiku-5-5\"\n  },\n  \"claude-sonnet\": {\n   \"hidden\": true,\n   \"model\": \"claude-sonnet-5-5\"\n  }\n },\n \"wildcard_groups\": [],\n \"glm_deployments\": [\n  {\n   \"model\": \"openai/glm-5.3-flash\",\n   \"api_base\": \"http://192.168.3.40:8045/v1\",\n   \"db_model\": false,\n   \"id\": \"d31159ac94c6ef5729858bcfe729e216e5b49b6f351c4a236b3189da2e1b4d9f\"\n  }\n ],\n \"num_retries\": 2,\n \"timeout\": 3600,\n \"ok\": true\n}\n"
+ },
+ {
+  "returncode": 0,
+  "script": "/usr/bin/python3 <private state>/build-ledger-and-check.py",
+  "stderr": "",
+  "stdout": "{\"schema_version\": 1, \"rule\": \"A\", \"tests\": {\"matrix_exact\": true, \"experiment_terminal\": true, \"all_36_complete_accounted\": true, \"all_12_clean_complete\": true, \"all_24_defect_cells_nonempty_valid\": true, \"six_aggregate_nonempty_valid\": true, \"six_assessed_actual_complete\": true, \"accepted_replay_valid\": true, \"bounded_rule_a_selection\": true, \"every_attempt_terminal\": true, \"all_attempts_reconciled\": true, \"all_attempts_provenance_routing\": true, \"all_attempts_within_ceiling\": true, \"zero_paid_calls_and_fallbacks\": true, \"holdout_untouched\": true, \"all_provider_requests_attributed_once\": true, \"rule_a_frozen\": true, \"cumulative_cost_complete\": true, \"released_process_exit_success\": true, \"terminal_experiment_record\": true, \"provider_attribution_succeeded\": true, \"router_smoke\": true, \"router_prelaunch\": true, \"router_after\": true}, \"qualification\": \"pass\", \"cumulative_usage\": {\"cache_read\": 0, \"cache_write\": 0, \"input\": 2064050, \"output\": 566971, \"total\": 2631021}, \"reconciled_cumulative_usage\": {\"input\": 2064050, \"output\": 566971, \"cache_read\": 0, \"cache_write\": 0, \"total\": 2631021}, \"semantic_qualification\": false, \"holdout_used\": false, \"status_counts\": {\"complete\": 36}, \"first_attempt_status_counts\": {\"complete\": 34, \"failed\": 2}, \"cells_needing_rerun\": 2, \"rerun_attempts\": 2, \"original_failed_sessions\": 2, \"rerun_failed_sessions\": 0}\n"
+ }
+]

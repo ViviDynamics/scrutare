@@ -1,0 +1,17 @@
+"""Retain attribution failures explicitly and still produce a failed qualification report."""
+import hashlib,json,subprocess
+from pathlib import Path
+H=Path(__file__).resolve().parent;J=H/'g5';E=H/'evidence';py=str(J/'venv/bin/python')
+assert (E/'run-completion.json').exists() and not (J/'provider-ledger.json').exists()
+p=subprocess.run([py,str(H/'build-request-ledger.py'),'--experiment',str(J/'experiment'),'--rows',str(E/'g5-rows.json'),'--output',str(J/'provider-ledger.json')],capture_output=True,text=True)
+(E/'ledger-build-status.json').write_text(json.dumps({'returncode':p.returncode,'stdout':p.stdout,'stderr':p.stderr},indent=2)+'\n')
+if p.returncode:
+ try:raw_rows=json.loads((E/'g5-rows.json').read_text())
+ except (OSError,ValueError):raw_rows=[]
+ rows=[r for r in raw_rows if((r.get('metadata')or{}).get('user_agent')or'').split('/')[0]=='python-httpx2']
+ requests=[]
+ for r in rows:
+  md=r.get('metadata')or{};base=(r.get('api_base')or'').rstrip('/');u={'input':r.get('prompt_tokens')or 0,'output':r.get('completion_tokens')or 0,'cache_read':0,'cache_write':0};u['total']=sum(u.values())
+  requests.append({'id':hashlib.sha256(r['request_id'].encode()).hexdigest(),'source_sha256':hashlib.sha256(json.dumps(r,sort_keys=True,separators=(',',':')).encode()).hexdigest(),'run_id':None,'attempt':None,'session':None,'stream':None,'event':None,'usage':u,'model':r['model'],'api_base':r.get('api_base')or'','paid_calls':int(r['model_group']!='spark/glm-5.3-flash'or r['model']!='openai/glm-5.3-flash'or base not in('http://192.168.3.40:8045','http://192.168.3.40:8045/v1')),'fallbacks':int(md.get('attempted_fallbacks')or 0),'nominal_attribution_usd':r.get('spend')or 0})
+ (J/'provider-ledger.json').write_text(json.dumps({'schema_version':1,'attribution_failed':True,'error':'No unique complete request attribution; qualification fails. All provider rows retained as unassigned and cumulative spend remains charged.','requests':requests,'supplements':[]},indent=2)+'\n')
+subprocess.run([py,str(H/'check-qualification.py'),str(J),'--output',str(J/'mechanical-qualification.json')],check=True)

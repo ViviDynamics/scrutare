@@ -1,0 +1,13 @@
+[
+ {
+  "operation": "extract_sessions",
+  "returncode": 0,
+  "stderr": "",
+  "stdout": "{\"sessions\": 170}\n"
+ },
+ {
+  "operation": "classify_first_answers",
+  "returncode": 0,
+  "stderr": ""
+ }
+]

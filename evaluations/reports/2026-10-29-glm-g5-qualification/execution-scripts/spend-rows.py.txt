@@ -1,0 +1,23 @@
+"""Raw spend-log rows in a UTC window (private evidence), plus a public digest. Never prints the key."""
+import hashlib, json, os, sys, urllib.parse, urllib.request
+start, end, out = sys.argv[1], sys.argv[2], sys.argv[3]
+K = os.environ['K']; mine = hashlib.sha256(K.encode()).hexdigest()
+rows, page = [], 1
+while True:
+    q = urllib.parse.urlencode({'start_date': start, 'end_date': end, 'page': page, 'page_size': 100})
+    d = json.load(urllib.request.urlopen(urllib.request.Request(
+        'https://litellm.vividynamics.com/spend/logs/v2?' + q, headers={'Authorization': 'Bearer ' + K}), timeout=120))
+    rows += d['data']
+    if page >= d['total_pages']: break
+    page += 1
+text = json.dumps(rows)
+assert K not in text
+open(out, 'w').write(json.dumps(rows, indent=1) + '\n')
+for r in rows:
+    md = r.get('metadata') or {}
+    print(json.dumps({'start': r.get('startTime'), 'end': r.get('endTime'), 'agent': (md.get('user_agent') or 'none').split('/')[0],
+                      'this_key': r['api_key'] in (mine, 'litellm_proxy_master_key'), 'group': r['model_group'], 'model': r['model'],
+                      'api_base': r['api_base'], 'status': r['status'], 'prompt': r['prompt_tokens'], 'completion': r['completion_tokens'],
+                      'fallbacks': md.get('attempted_fallbacks'), 'retries': md.get('attempted_retries'),
+                      'max_tokens_fields': sorted({k for k in ('proxy_server_request', 'messages', 'request_tags', 'model_parameters') if r.get(k)}),
+                      'max_tokens_in_row': [p for p in ('"max_tokens": ', '"max_tokens":') if p in json.dumps(r)]}))
