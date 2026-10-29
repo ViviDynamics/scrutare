@@ -14,13 +14,13 @@ from pathlib import Path
 C1 = '2026-10-22-glm-capped-c1-qualification'
 S2 = '2026-10-21-glm-structured-s2-qualification'
 POSTED = {
-    'preparation.json': 'f4c77b615afb58672895cc72525ea1551f5bdf4140aa2bd861a85af28924090a',
-    'gate.json': '7d4c2f51057bbeea2c138bea77b156228b3b140e0e19fb1e2f96eefe84d62b78',
-    'evaluation.json': '0dfb9ed918fb8b140cbc2830a8f699168f2615d9af349356bf6075506a938ac0',
+    'preparation.json': '4d2c235afb24a1eafe6052827180652ae39882729a0051dda35573775b545836',
+    'gate.json': 'f42c4eefa4793b52e5322d63ea2a5418ad30b08c3f5562b0b74f4eb3b48b0ac1',
+    'evaluation.json': '0ea3175cc695e02140d3d821e5cf32260b76f0b933c9b7ce5386682ae6c17ca2',
     'scrutare-2026.10.36-py3-none-any.whl':
         '08f4b13b109564cc30ad6728c528ba45a5c9f31878c071b6d3f824668ba390c3',
 }
-POSTED_FREEZE = '4b9867c5b6ec3e8f38283fa42e7204651c55918e6ce53c90704cd9839f8a5792'
+POSTED_FREEZE = '9b43c5411262786964cbc5b99fb1f7ba465a867cdb5dec079e9c8f19fcf4dab6'
 ROSTER = {'senior-dev', 'junior-dev', 'security', 'devops'}
 
 

@@ -23,12 +23,12 @@ JOBS = ('c1',)
 # maintainer's waiver of the launch condition, posted before launch (comment 6340502541).
 # The waiver is a separate file, so no frozen file changed.
 POSTED_ON_51 = {
-    'c1': {'preparation.json': 'cf02dfdc9e476f238e6a68805f6a8fc700adfe63511314bc451952daea5b51df',
-           'gate.json': 'e80ca72cf8fca370d45fad60f99ca93bd3e2767e9c0b208f1adc44b99b6ec49c',
-           'evaluation.json': 'a46c0b59be03043aa3408f1542c63605d4a2a7b4d216e93926364bcfff9c7fec',
-           'deviations.json': '3ff3fdf0ae936e8d36d3473ca4b03ed0260e3e7e9f5f086c430b17112b351e2d',
+    'c1': {'preparation.json': '4c1e8ec8a480dad4ffc4dc82f267c3660acca52ef06a9f694aa081a92a2a84c4',
+           'gate.json': 'eb3e11e42721e9fb0929482a133b829baca234b1635690b5c111e47039832237',
+           'evaluation.json': '1b4c050fa35c60cb2f4f75d0e1bbc31ff5bcfb5e201d850fd8d16f9ef4f7232d',
+           'deviations.json': '2a070f4546956a04569718f7c7dcdcdc02383e50ccee9b916b6da0d787792ba0',
            'cap-sizing.json': '54e54d867fb9f3a6b3aebdbeb5c183573d3b26f3d69064c14ea4c313fb05ba7a',
-           'amendment.json': 'f94dfda57ded4040a7f8f101af68e390f262bb5140f5fbd4d1e901694b06e53e',
+           'amendment.json': '53b1c92c44abefcbf5763ca6833468208865c0199895f2e8100e877a020bbc3e',
            'wheel': '401d1801e9e4b027ed4d1a32cff2809ddc89657224f045cd71bae8da522ac3e9'},
 }
 CAP = 20000

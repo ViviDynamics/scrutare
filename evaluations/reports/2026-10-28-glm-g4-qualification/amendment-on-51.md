@@ -6,8 +6,8 @@ The one released-wheel smoke ran 14:44:37–14:59:39Z. Prepared settings and pro
 
 No frozen file or criterion changed. All frozen inputs, corpus files and 27 scripts were re-hashed unchanged. The exact list is recorded in the amendment below.
 
-- `g4-amendment.json` `2b573b08565c607a227df0adf65cdc60a7d7256b3c83174f57b3fe2cf60f068b`
-- New `launch-g4-amended.py` `f83d8d5e4e558db1a05b0c86a44eefee599d88c69d5044e53ab91e7422999bcd`
-- Unchanged `freeze-g4.json` `c8832d2834bcb09f1e16c31cf5a1bee52ac0a94ab4b3791d1e0770ec5f7c0374`
+- `g4-amendment.json` `58d009100754125ec37cf588b487bde738cf1a5cc76898d4df108f3603c2e4ac`
+- New `launch-g4-amended.py` `5b264769ee8a1f8390280939930db74601f59b9e21b8404bfb6e3a8a0cf488d7`
+- Unchanged `freeze-g4.json` `c397e4a488687ba43413aa389f6ed13ab62f6ecd13d895511c1982cb4b7c61fd`
 
 The new launcher retains every frozen launcher check except smoke completion, replacing it with the posted amendment/hash requirement. It also reads back both posted comments, verifies the launcher hash and all preparation input hashes, then performs the read-only pre-launch router check, captures the preceding hour and starts the exact same evaluator/load/finish units. All original frozen scripts remain unchanged. The report will publish the amendment and new launcher and disclose this deviation.

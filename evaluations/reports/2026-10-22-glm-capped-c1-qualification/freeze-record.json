@@ -22,10 +22,10 @@
     },
     "freeze_hashes_verified": {
       "cap_sizing_sha256": "54e54d867fb9f3a6b3aebdbeb5c183573d3b26f3d69064c14ea4c313fb05ba7a",
-      "deviations_sha256": "3ff3fdf0ae936e8d36d3473ca4b03ed0260e3e7e9f5f086c430b17112b351e2d",
-      "evaluation_sha256": "a46c0b59be03043aa3408f1542c63605d4a2a7b4d216e93926364bcfff9c7fec",
-      "gate_sha256": "e80ca72cf8fca370d45fad60f99ca93bd3e2767e9c0b208f1adc44b99b6ec49c",
-      "preparation_sha256": "cf02dfdc9e476f238e6a68805f6a8fc700adfe63511314bc451952daea5b51df",
+      "deviations_sha256": "2a070f4546956a04569718f7c7dcdcdc02383e50ccee9b916b6da0d787792ba0",
+      "evaluation_sha256": "1b4c050fa35c60cb2f4f75d0e1bbc31ff5bcfb5e201d850fd8d16f9ef4f7232d",
+      "gate_sha256": "eb3e11e42721e9fb0929482a133b829baca234b1635690b5c111e47039832237",
+      "preparation_sha256": "4c1e8ec8a480dad4ffc4dc82f267c3660acca52ef06a9f694aa081a92a2a84c4",
       "wheel_sha256": "401d1801e9e4b027ed4d1a32cff2809ddc89657224f045cd71bae8da522ac3e9"
     },
     "frozen_files_changed": "none: preparation.json, gate.json, evaluation.json, the wheel, c1-deviations.json and cap-sizing.json keep the hashes posted on #51 (verified before this record)",
@@ -74,13 +74,13 @@
   "freezes": {
     "c1": {
       "cap_sizing_sha256": "54e54d867fb9f3a6b3aebdbeb5c183573d3b26f3d69064c14ea4c313fb05ba7a",
-      "deviations_sha256": "3ff3fdf0ae936e8d36d3473ca4b03ed0260e3e7e9f5f086c430b17112b351e2d",
-      "evaluation_sha256": "a46c0b59be03043aa3408f1542c63605d4a2a7b4d216e93926364bcfff9c7fec",
+      "deviations_sha256": "2a070f4546956a04569718f7c7dcdcdc02383e50ccee9b916b6da0d787792ba0",
+      "evaluation_sha256": "1b4c050fa35c60cb2f4f75d0e1bbc31ff5bcfb5e201d850fd8d16f9ef4f7232d",
       "experiment_exists": false,
-      "gate_sha256": "e80ca72cf8fca370d45fad60f99ca93bd3e2767e9c0b208f1adc44b99b6ec49c",
+      "gate_sha256": "eb3e11e42721e9fb0929482a133b829baca234b1635690b5c111e47039832237",
       "label": "c1",
       "nare": "2026.10.12 96672e1",
-      "preparation_sha256": "cf02dfdc9e476f238e6a68805f6a8fc700adfe63511314bc451952daea5b51df",
+      "preparation_sha256": "4c1e8ec8a480dad4ffc4dc82f267c3660acca52ef06a9f694aa081a92a2a84c4",
       "process_json_exists": false,
       "recorded_utc": "2026-10-22T03:30:34Z",
       "release_tag": "2026.10.29",

@@ -52,7 +52,7 @@
   "citation_past_file_end": "Citation validation remains authoritative. Protocol correction covers the existing citation defects and takes precedence over citation-only correction. A still-invalid citation fails the session/cell and unchanged first-attempt gate; no relaxed validation, exclusion or transient protocol retry.",
   "launch_condition": "Launch without an idle window, after read-only router/fallback verification and a released-wheel activation/provenance smoke. Authority: maintainer instructions of2026-10-25 recorded in #96 and2026-10-28 recorded in #99, applying the2026-10-22 c1 precedent https://github.com/ViviDynamics/scrutare/issues/51#issuecomment-6340502541. on-prem host carries independent other-client traffic outside this evaluator's control. Record the preceding hour,15-minute samples throughout scrutare-glm-g4.service, and a full-window re-read after exit. Split by user agent, key and base URL; redact personal aliases/emails. In-flight requests are invisible until logged and clients bypassing LiteLLM remain invisible.",
   "schedules_allowed": "One schedule (g4), plus at most one re-test only with explicit maintainer approval for a diagnosable failure addressed by a documented prospective change, with a new freeze posted on #51 before launch. Publish every outcome without post-hoc exclusion. This task authorizes g4 only; no re-test is approved.",
-  "s2_gate_sha256": "95ddc29f896f380d563ac008a7dbfebf3a9b967d1d8ddea2b4fe515ee04ca9a4",
+  "s2_gate_sha256": "5af91210273495bd13dafd5fa8e7b77a56e1f668ad203685678462dc2e2c809f",
   "schedule": "g4",
   "context_line_counts": true,
   "citation_correction": true,
@@ -135,7 +135,7 @@
     "citation validation": "unchanged (see citation_past_file_end)",
     "nare 2026.10.12 (96672e1), corpus, cases, arms, repeats, max_turns 6, concurrency 3, retry policy, no overrun fallback, LAN path": "identical to s2"
   },
-  "c1_gate_sha256": "e80ca72cf8fca370d45fad60f99ca93bd3e2767e9c0b208f1adc44b99b6ec49c",
+  "c1_gate_sha256": "eb3e11e42721e9fb0929482a133b829baca234b1635690b5c111e47039832237",
   "unchanged_criteria_keys": [
     "cases",
     "clean_cases",
@@ -206,5 +206,5 @@
     "200000 ceiling,50000 assessor,37500 discovery (50000 aggregate),20000 cap,1800s timeout,json_schema,six initial turns,concurrency3,nare2026.10.12": "g3 had no timeout/cap/citation failure and maximum attempt120132; its two losses were deterministic protocol slips. No evidence justifies changing these settings.",
     "corpus,cases,arms,three repeats,related paths,rounds.max3,no overrun fallback,LAN path": "identical experiment; holdout unopened; no semantic quality or promotion claim"
   },
-  "g3_gate_sha256": "7d4c2f51057bbeea2c138bea77b156228b3b140e0e19fb1e2f96eefe84d62b78"
+  "g3_gate_sha256": "f42c4eefa4793b52e5322d63ea2a5418ad30b08c3f5562b0b74f4eb3b48b0ac1"
 }

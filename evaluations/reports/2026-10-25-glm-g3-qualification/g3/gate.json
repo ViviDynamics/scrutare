@@ -52,7 +52,7 @@
   "citation_past_file_end": "Citation validation remains authoritative. With citation_correction enabled, a machine-detectable citation defect gets at most one bounded tool-free schema-constrained correction within its session grant. A citation still invalid after correction fails its session and cell (citation_validation or protocol as appropriate), counts against all 36 complete, and is neither excluded nor eligible for a transient rerun. The same applies to malformed revision/content hashes; no relaxed evidence is admitted.",
   "launch_condition": "Launch without an idle window, after read-only router/fallback verification and a released-wheel smoke. This is the maintainer's 2026-10-25 instruction to re-qualify with line_counts and citation correction, recorded in #96, applying the 2026-10-22 c1 precedent https://github.com/ViviDynamics/scrutare/issues/51#issuecomment-6340502541. on-prem host carries opencode, python-httpx, client-a and client-b traffic outside this evaluator's control. Record load for the preceding hour, every 15 minutes throughout the systemd service, and re-read the entire run window after exit. Split by user agent, key and base URL; redact personal aliases in public artifacts. In-flight requests and clients bypassing LiteLLM are invisible until logged or entirely invisible.",
   "schedules_allowed": "One schedule (g3), plus at most one re-test only if g3 fails for a diagnosable reason that a documented, prospectively frozen change addresses, with its gate posted on #51 before launch and an explicit maintainer approval. Both published; no post-hoc exclusion. No c2 or re-test is authorized by this task; otherwise stop and report not qualified.",
-  "s2_gate_sha256": "95ddc29f896f380d563ac008a7dbfebf3a9b967d1d8ddea2b4fe515ee04ca9a4",
+  "s2_gate_sha256": "5af91210273495bd13dafd5fa8e7b77a56e1f668ad203685678462dc2e2c809f",
   "schedule": "g3",
   "context_line_counts": true,
   "citation_correction": true,
@@ -159,7 +159,7 @@
     "citation validation": "unchanged (see citation_past_file_end)",
     "nare 2026.10.12 (96672e1), corpus, cases, arms, repeats, max_turns 6, concurrency 3, retry policy, no overrun fallback, LAN path": "identical to s2"
   },
-  "c1_gate_sha256": "e80ca72cf8fca370d45fad60f99ca93bd3e2767e9c0b208f1adc44b99b6ec49c",
+  "c1_gate_sha256": "eb3e11e42721e9fb0929482a133b829baca234b1635690b5c111e47039832237",
   "unchanged_criteria_keys": [
     "cases",
     "clean_cases",

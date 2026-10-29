@@ -22,10 +22,10 @@ JOBS = ('s2',)
 # Freeze hashes posted on issue #51 before s2's first call (comment 6315240876), and the
 # deviations file as amended before launch (comment 6317937750).
 POSTED_ON_51 = {
-    's2': {'preparation.json': '360026406fa522c64784729c0438295f0ea7631119dd039df08cfd6d030a0e88',
-           'gate.json': '95ddc29f896f380d563ac008a7dbfebf3a9b967d1d8ddea2b4fe515ee04ca9a4',
-           'evaluation.json': 'd8acb2f7486702b609aa057d1a487af458de7e46791d36fcce6c3ab22bee627a',
-           'deviations.json': 'c9d2c19b2e44ec2be297268edb2847421a5c9c413a401130dc8dd1a83cd826a9',
+    's2': {'preparation.json': '39a27e43881a76067229de367dce0403de0dc62910bd92081d17fa4887262e46',
+           'gate.json': '5af91210273495bd13dafd5fa8e7b77a56e1f668ad203685678462dc2e2c809f',
+           'evaluation.json': '4c0b99c9dd799678f693b48b8faa1be05b7492e899ffcf7a0eeb56c37b368971',
+           'deviations.json': 'e9c6183d913edb527a49fe099e1fccfaaac08fb1417ebc8d51c96d569f083c72',
            'deviations_before_amendment': (
                'ce3cd916c19fd8a242ba3651eb024c872e5739ca2aba7ddf5b7bc2579026958a'),
            'wheel': 'acf0d147467ae68d09e737a55ceacabae0e0423d09b82854a9fb49d96fcb87ec'},

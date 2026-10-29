@@ -50,7 +50,7 @@
   "citation_past_file_end": "Unchanged validation and one bounded within-session protocol correction; completed invalid evidence fails with no whole-cell replay.",
   "launch_condition": "Launch without an idle window after read-only router/fallback verification and one completed released-wheel rule A activation/provenance smoke. Authority: maintainer 2026-10-25 (#96) and 2026-10-28 (#99) instructions plus https://github.com/ViviDynamics/scrutare/issues/51#issuecomment-6340502541. Record preceding hour,15-minute samples during scrutare-glm-g5.service,full-window reread split by agent,key,base URL; redact personal emails/aliases; in-flight/bypass traffic invisible.",
   "schedules_allowed": "g5 only. Any re-test requires explicit maintainer approval and a separately posted prospective freeze. No re-test approved.",
-  "s2_gate_sha256": "95ddc29f896f380d563ac008a7dbfebf3a9b967d1d8ddea2b4fe515ee04ca9a4",
+  "s2_gate_sha256": "5af91210273495bd13dafd5fa8e7b77a56e1f668ad203685678462dc2e2c809f",
   "schedule": "g5",
   "context_line_counts": true,
   "citation_correction": true,
@@ -122,7 +122,7 @@
     "citation validation": "unchanged (see citation_past_file_end)",
     "nare 2026.10.12 (96672e1), corpus, cases, arms, repeats, max_turns 6, concurrency 3, retry policy, no overrun fallback, LAN path": "identical to s2"
   },
-  "c1_gate_sha256": "e80ca72cf8fca370d45fad60f99ca93bd3e2767e9c0b208f1adc44b99b6ec49c",
+  "c1_gate_sha256": "eb3e11e42721e9fb0929482a133b829baca234b1635690b5c111e47039832237",
   "protocol_correction": "At most one tool-free, schema-constrained complete-answer correction per eligible discovery, assessor or focused-discussion session, inside its original grant, shared accounting and remaining timeout. Only deterministic machine-describable answer defects qualify. Scrutare never repairs/drops/clamps findings or candidate IDs. Unchanged validation decides the model replacement. Still-invalid or unanswered corrections fail the session and cell, count against36/36 and are not excluded or eligible for a transient rerun. Native/provider/input/cap/budget failures retain their handling. Both flags do not yield two turns: protocol correction takes precedence.",
   "historical_g3_changes_from_c1": [
     {
@@ -148,9 +148,9 @@
     "1800 s timeout, json_schema, six turns, concurrency 3, nare 2026.10.12": "c1 had no timeout or findings-schema failure; no data warrants another setting change",
     "pilot development corpus, cases, arms, three repeats, rounds.max 3, related paths, no overrun fallback, LAN path": "unchanged experiment design; no holdout or promotion"
   },
-  "g3_gate_sha256": "7d4c2f51057bbeea2c138bea77b156228b3b140e0e19fb1e2f96eefe84d62b78",
+  "g3_gate_sha256": "f42c4eefa4793b52e5322d63ea2a5418ad30b08c3f5562b0b74f4eb3b48b0ac1",
   "qualification_rule_a": true,
-  "g4_gate_sha256": "302812fb4c70d60376c2bee97c168a387ea64061cc6803de537af807590b23b0",
+  "g4_gate_sha256": "a38e5a4390a03836349fb5d87808ebe18d0d1b7e49b2fb7bf0a9b638d36e9efb",
   "g4_unchanged_profile_keys": [
     "model_alias",
     "cases",

@@ -118,7 +118,7 @@ def test_reproduction_refuses_regenerated_freeze_mechanical_or_extra_files(tmp_p
     for name, old, new in (
             ('s1/preparation.json', '"concurrency": 3', '"concurrency": 4'),
             ('s1/mechanical-qualification.json', '"gate_sha256":"', '"gate_sha256":"0'),
-            ('freeze-record.json', '"gate_sha256": "1b55a7bd', '"gate_sha256": "2b55a7bd')):
+            ('freeze-record.json', '"gate_sha256": "f61bf9db', '"gate_sha256": "2b55a7bd')):
         package = copy(tmp_path, name.replace('/', '-'))
         text = (package / name).read_text()
         assert old in text, name

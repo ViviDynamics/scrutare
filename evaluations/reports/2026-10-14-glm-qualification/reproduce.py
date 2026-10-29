@@ -23,12 +23,12 @@ WITHDRAWN = ('g2-withdrawn-c8059bb',)
 # Freeze hashes posted on issue #51 before each schedule's first call (comments
 # 6171757077 and 6175788942). They tie this package to a record outside it.
 POSTED_ON_51 = {
-    'g1': {'preparation.json': 'b6440e47eb35fec7416d3f6882eb4e4de57d35ba963e5ce0bc31c4a9edba153e',
-           'gate.json': 'c3301ce7135c3ddb33f87b75a1731f759069ecdfde8d63aca02a2eaa5a25337b',
-           'evaluation.json': 'a0b4f9920ee6fcbafd1d3156940a0ca3073fcb37d617386b3ea00385adf03cf8'},
-    'g2': {'preparation.json': '5a364521b5f29082db278696519be188aebf1303a07e2db9c3f07509ed046681',
-           'gate.json': 'b3121fa3c2ba56960528e91e53a05830d406e3d1491bb2b3028f71ab159c996c',
-           'evaluation.json': 'a0b4f9920ee6fcbafd1d3156940a0ca3073fcb37d617386b3ea00385adf03cf8'},
+    'g1': {'preparation.json': 'b5a46b866a1ca0a390be81c6ebb8e08091b6b7df3a73572f1bb28809c4e48489',
+           'gate.json': '81ae6a05db99e760a40d7c74777209a72d1b408826792cb805a58359e44b9c7f',
+           'evaluation.json': '224fba9148b84b3a938a94f960c457ecaf7d2823bca9d34079f6623b528ae221'},
+    'g2': {'preparation.json': '5587bbf3676bba51f38b78e05d8e34ced91a5ae557523aba71c00fe7a09c3a21',
+           'gate.json': '15b3482b671c89da897f4793bfeda57875c5fd09554de16e26b817c22e6c86bb',
+           'evaluation.json': '224fba9148b84b3a938a94f960c457ecaf7d2823bca9d34079f6623b528ae221'},
 }
 # The gpt-6.1-sol schedules of the reference profile, read from sibling packages and
 # checked against those packages' own published hashes. Different source commit

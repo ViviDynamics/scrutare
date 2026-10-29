@@ -3,9 +3,9 @@
     "adjudicate-baseline.py": "487270886e5bc5fd94459f30a41e2e461dc0c713339fb7530ac9b20adce3943f",
     "automated-decisions.json": "5657809a17e8f4e9556a3025667a234f45149ce9ef21cbb40e775b111f361e0b",
     "blinded-packet.json": "7bfa849294c72fe76ef3082ca03e6e3959c1bb7e8208a5049b123e52c2d7ed91",
-    "experiment.json": "7f453a2ef9964f8aad57539965de816151526248edab5419967097b4a4c74f7d",
+    "experiment.json": "bf369669e116ab4bc093e563e036b81f2c80743b5a262ab34a2c64378b071951",
     "pending-human-adjudication.json": "932ef8d25326bc0ae420c660f7c9c2218ada205ada9eb67697089aefa938b71b",
-    "snapshot.json": "835b306e1db63dd9394bb461d73f7512f6d7e61acc0d59ad0cec9b3b75fcb7e0"
+    "snapshot.json": "e85a9552b7b9173acce14eef8396f89ac739c7dd965b932c5fec383b3a863d08"
   },
   "automated_judgments": 531,
   "candidate_commit": "899748bed1bddbaf41fe919d38d31dafc87e34b0",

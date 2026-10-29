@@ -13,8 +13,8 @@ Prospective freeze for **g5**, issue #103, implementation #102. Refs #51 and the
 **Schedules: g5 only.** Any re-test needs explicit maintainer approval and a new prospective freeze. Only onprem/glm-5.3-flash through LAN LiteLLM https://litellm.vividynamics.com to vLLM192.0.2.40:8045. Spend logs must verify0paid calls and0fallbacks, normalizing trailing slashes (python-httpx on on-prem host is not paid). No App/infrastructure/default/deployment/promotion changes. Publish and STOP for the maintainer decision; #51 stays open.
 
 SHA-256 freeze:
-- `preparation.json` `84c993b5c7d55a2bdc6320e9283c3e431018687f48b5cf48833b2d884da2eabe`
-- `gate.json` `dbedd3994e5972260ea9167fc4a70c14bf30ac02455e587366539cf7c7395544`
-- `evaluation.json` `06e54db3b393b55722b5b6d577d18514fd8c709ff9b5ba4c688e479086dd1edf`
+- `preparation.json` `69430bfb457ec0cd6bd753cfc5be9f999094a967771c975f7530020ec21c0597`
+- `gate.json` `bace63495bbb884f315ad4e19a5a6f0ac9ab7745779e8d8d7681ecd49e533f82`
+- `evaluation.json` `8138503a7c906f5c04a158bf20dd43e7bee67ce2eb5eefc25dbd4d915c5ced6f`
 - `scrutare-2026.10.40-py3-none-any.whl` `4c5635d60ff104d1778362315584cf7ed20fc9f85e1c658fc65f34bbaa328b6f`
-- `freeze-g5.json` `d09af8aea971e39468d781124b2d2e5fadc568322e8fa77b68fe89bf898f83c4` (records adapted-script and common-predicate hashes)
+- `freeze-g5.json` `aea3cba638feba08bfdbce191acdda03a40e0ad0c7eb009446152a9cc7526b1c` (records adapted-script and common-predicate hashes)

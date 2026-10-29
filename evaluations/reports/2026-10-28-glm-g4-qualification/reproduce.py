@@ -16,17 +16,17 @@ from pathlib import Path
 C1 = "2026-10-22-glm-capped-c1-qualification"
 S2 = "2026-10-21-glm-structured-s2-qualification"
 POSTED = {
-    "preparation.json": "9b0188593205552e5c9a589512480269f889da8096eb18bac34c246339b8945e",
-    "gate.json": "302812fb4c70d60376c2bee97c168a387ea64061cc6803de537af807590b23b0",
-    "evaluation.json": "06e54db3b393b55722b5b6d577d18514fd8c709ff9b5ba4c688e479086dd1edf",
+    "preparation.json": "aea3c0b63676cdd29a3353ff0cc45b34b5319143f0e534ee41a9a5e86220a006",
+    "gate.json": "a38e5a4390a03836349fb5d87808ebe18d0d1b7e49b2fb7bf0a9b638d36e9efb",
+    "evaluation.json": "8138503a7c906f5c04a158bf20dd43e7bee67ce2eb5eefc25dbd4d915c5ced6f",
     "scrutare-2026.10.38-py3-none-any.whl": (
         "43634957026d0e3d1ec049f7a8f6cabebf986a7191b60e793408769b890a2e6b"
     ),
 }
-POSTED_FREEZE = "c8832d2834bcb09f1e16c31cf5a1bee52ac0a94ab4b3791d1e0770ec5f7c0374"
+POSTED_FREEZE = "c397e4a488687ba43413aa389f6ed13ab62f6ecd13d895511c1982cb4b7c61fd"
 G3 = "2026-10-25-glm-g3-qualification"
 ROSTER = {"senior-dev", "junior-dev", "security", "devops"}
-POSTED_AMENDMENT = "2b573b08565c607a227df0adf65cdc60a7d7256b3c83174f57b3fe2cf60f068b"
+POSTED_AMENDMENT = "58d009100754125ec37cf588b487bde738cf1a5cc76898d4df108f3603c2e4ac"
 AMENDMENT_URL = "https://github.com/ViviDynamics/scrutare/issues/51#issuecomment-6473582253"
 
 

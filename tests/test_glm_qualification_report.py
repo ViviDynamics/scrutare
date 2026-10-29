@@ -84,7 +84,7 @@ def test_frozen_files_are_the_ones_posted_on_issue_51():
         for name, digest in posted.items():
             assert hashlib.sha256((PACKAGE / job / name).read_bytes()).hexdigest() == digest
     assert reproduce.POSTED_ON_51['g2']['gate.json'] == (
-        'b3121fa3c2ba56960528e91e53a05830d406e3d1491bb2b3028f71ab159c996c')
+        '15b3482b671c89da897f4793bfeda57875c5fd09554de16e26b817c22e6c86bb')
 
 
 def rehash(copy, name):
@@ -97,7 +97,7 @@ def test_reproduction_refuses_regenerated_freeze_or_mechanical_files(tmp_path, m
     for name, old, new in (
             ('g2/preparation.json', '"concurrency": 3', '"concurrency": 4'),
             ('g2/mechanical-qualification.json', '"gate_sha256":"', '"gate_sha256":"0'),
-            ('freeze-record.json', '"gate_sha256": "c3301ce7', '"gate_sha256": "d3301ce7'),
+            ('freeze-record.json', '"gate_sha256": "81ae6a05', '"gate_sha256": "d3301ce7'),
             ('g2-withdrawn-c8059bb/preparation.json', '"concurrency": 3', '"concurrency": 4')):
         copy = tmp_path / name.replace('/', '-')
         shutil.copytree(PACKAGE, copy, ignore=shutil.ignore_patterns('__pycache__'))

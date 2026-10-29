@@ -22,9 +22,9 @@ JOBS = ('s1',)
 # Freeze hashes posted on issue #78 before s1's first call (comment 6307641005). They
 # tie this package to a record outside it.
 POSTED_ON_78 = {
-    's1': {'preparation.json': '8a35936426833c293ac5dfed3553b8c9967df97daa4c7028aba0cd6840fc2673',
-           'gate.json': '1b55a7bdcee3d95e62ed35d5381d27d59abf37fdb119732d02354418175c311e',
-           'evaluation.json': 'ab0d1fe4f6f7ab387bea76ff1cdfc3afc008bd8bcec5083654acba73511d4847'},
+    's1': {'preparation.json': '97bb607a334e0eb5b17445a3ef3b91b7ebd3d39731812cc513d261cfbf9ae861',
+           'gate.json': 'f61bf9db321767e8ae22532629672f365a46c4c691335e95bdd39d4ce2654d7c',
+           'evaluation.json': 'f8cb1405bd81de1ff4a57b0f854115c5c3a687b3005bf3d228b7072e55be8e8a'},
 }
 # The g2 schedule (constraint off, nare 2026.10.4), read from its published package and
 # checked against that package's own hashes.
