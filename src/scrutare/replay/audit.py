@@ -198,9 +198,19 @@ def _proxy_num_retries_issues(run_dir: Path, config_data: object) -> tuple[Audit
         config = parse_config(json.dumps(config_data))
         names = {p if isinstance(p, str) else p.name for p in config.personas}
         if config.routing.enabled:
+            from scrutare.engine.review_inputs import PreparedReviewInputs
             from scrutare.engine.routing import plan_routing
             files = decode_artifact(read_artifact(run_dir / "review-inputs/files.json"),
                                     artifact="files.json")
+            metadata = decode_artifact(read_artifact(run_dir / "metadata.json"),
+                                       artifact="metadata.json")
+            if not isinstance(files, list) or not isinstance(metadata, dict):
+                raise ValueError
+            # Reconcile the entire prepared view with its coherent capture even
+            # when repository context is disabled. A changed copied path must
+            # never activate a procedure and displace a reserved executor.
+            PreparedReviewInputs((run_dir / "review-inputs").absolute(), metadata["head_sha"],
+                                 tuple(file["filename"] for file in files))
             # Identity selection uses changed paths and trusted rules, never focus metadata.
             # Supporting paths affect work groups only, not persona activation.
             names = {p.name for p in plan_routing(files, (), config).personas}
@@ -216,7 +226,7 @@ def _proxy_num_retries_issues(run_dir: Path, config_data: object) -> tuple[Audit
             while assessor in expected_rails:
                 assessor += "-assessor"
             expected_rails[assessor] = config.models.default
-    except (ConfigError, ReplayError, TypeError, ValueError):
+    except (ConfigError, ReplayError, OSError, TypeError, ValueError, KeyError, RecursionError):
         return (AuditIssue("proxy_num_retries_config_invalid", "config.json", "invalid"),)
 
     def key(rail: Any) -> tuple[object, ...]:

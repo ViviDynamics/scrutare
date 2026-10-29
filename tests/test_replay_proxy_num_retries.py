@@ -108,18 +108,19 @@ def test_chair_uses_the_senior_override_and_cannot_claim_another_persona(tmp_pat
 
 
 def test_routed_chair_identity_cannot_be_changed_in_unvalidated_focus(capture):
+    from scrutare.engine.review_inputs import prepare_review_inputs
+
     config = parse_config(json.dumps({
         "strategy": "debate", "routing": {"enabled": True},
         "models": {"default": {"provider": "openai", "model": "m"},
                    "overrides": {"senior-dev": {"proxy_num_retries": 0}}},
     })).to_dict()
     assert config.get("context", {}).get("enabled") is not True
-    inputs = capture / "review-inputs"
-    inputs.mkdir()
-    (inputs / "files.json").write_bytes((capture / "files.json").read_bytes())
+    for name in ("config.yaml", "config.json"):
+        (capture / name).write_text(json.dumps(config))
+    inputs = prepare_review_inputs(capture, parse_config(json.dumps(config))).root
     focus_path = inputs / "routing-focus.json"
-    focus = {"effective_personas": ["senior-dev", "junior-dev", "security", "devops"]}
-    focus_path.write_text(json.dumps(focus))
+    focus = json.loads(focus_path.read_text())
     attempt = capture / "sessions/debate-chair/attempt-0001"
     attempt.mkdir(parents=True)
     path = attempt / "invocation.json"
@@ -134,3 +135,39 @@ def test_routed_chair_identity_cannot_be_changed_in_unvalidated_focus(capture):
     invocation["argv"] = invocation["argv"][:-2]
     path.write_text(json.dumps(invocation))
     assert _proxy_num_retries_issues(capture, config)
+
+
+@pytest.mark.parametrize("field", ["filename", "previous_filename"])
+def test_routed_chair_retry_cannot_be_removed_by_injecting_a_prepared_path(capture, field):
+    from scrutare.engine.review_inputs import prepare_review_inputs
+
+    config = parse_config(json.dumps({
+        "strategy": "debate", "routing": {"enabled": True, "rules": [{
+            "persona": {"name": "debate-chair", "system_prompt": "Review."},
+            "paths": ["special/**"]}]},
+        "models": {"default": {"provider": "openai", "model": "m"},
+                   "overrides": {"senior-dev": {"proxy_num_retries": 0}}},
+    }))
+    assert not config.context.enabled
+    for name in ("config.yaml", "config.json"):
+        (capture / name).write_text(json.dumps(config.to_dict()))
+    inputs = prepare_review_inputs(capture, config)
+    focus = (inputs.root / "routing-focus.json").read_bytes()
+    assert "debate-chair" not in json.loads(focus)["effective_personas"]
+    attempt = capture / "sessions/debate-chair/attempt-0001"
+    attempt.mkdir(parents=True)
+    invocation = {"persona": "debate-chair", "rail": {"provider": "openai", "model": "m",
+                  "base_url": None, "proxy_num_retries": 0},
+                  "argv": ["nare", "run", "prompt", "--proxy-num-retries", "0"]}
+    path = attempt / "invocation.json"
+    path.write_text(json.dumps(invocation))
+    assert _proxy_num_retries_issues(capture, config.to_dict()) == ()
+    files_path = inputs.root / "files.json"
+    files = json.loads(files_path.read_text())
+    files[0][field] = "special/trigger.py"
+    files_path.write_text(json.dumps(files))
+    invocation["rail"].pop("proxy_num_retries")
+    invocation["argv"] = invocation["argv"][:-2]
+    path.write_text(json.dumps(invocation))
+    assert (inputs.root / "routing-focus.json").read_bytes() == focus
+    assert _proxy_num_retries_issues(capture, config.to_dict())

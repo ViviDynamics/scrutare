@@ -439,6 +439,11 @@ def _decode_evidence(
                 or not baseline.turns <= count <= baseline.turns + max_correction_turns
                 or count - baseline.turns != len(turns)):
             _fail()
+        if (baseline is not None and len(turns) == 2
+                and baseline.usage.total + turns[0][0].total >= expected_limit):
+            # Nare checks cumulative usage before admitting its summary; only
+            # the final admitted request may cross the ceiling.
+            _fail()
         return _DecodedEvidence(identity, status, stop, exit_code, total_usage,
                                 output is not None, expected_limit,
                                 (status == "error" and stop == "budget")
