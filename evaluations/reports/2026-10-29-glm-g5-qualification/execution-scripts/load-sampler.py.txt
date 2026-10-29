@@ -1,0 +1,49 @@
+"""Every 15 minutes while scrutare-glm-g5 runs, split the last 15 minutes of spend-log rows by user agent,
+key (alias, or 'proxy master key'; other keys by alias only) and base URL. Never prints or stores a key."""
+import collections, datetime, json, shlex, subprocess, time, urllib.parse, urllib.request
+from pathlib import Path
+HERE = Path(__file__).resolve().parent
+OUT = HERE / 'evidence' / 'load-g5-samples.jsonl'
+K = next(shlex.split(l.partition('=')[2].strip())[0] for l in Path(
+    '/home/jason/Workspace/ViviDynamics/infrastructure/.env').read_text().splitlines()
+    if l.startswith('LITELLM_MASTER_KEY='))
+def rows(start, end):
+    out, page = [], 1
+    while True:
+        q = urllib.parse.urlencode({'start_date': start, 'end_date': end, 'page': page, 'page_size': 100})
+        d = json.load(urllib.request.urlopen(urllib.request.Request(
+            'https://litellm.vividynamics.com/spend/logs/v2?' + q, headers={'Authorization': 'Bearer ' + K}), timeout=120))
+        out += d['data']
+        if page >= d['total_pages']:
+            return out
+        page += 1
+def key(r):
+    md = r.get('metadata') or {}
+    if md.get('user_api_key') == 'litellm_proxy_master_key' or r.get('api_key') == 'litellm_proxy_master_key':
+        return 'proxy master key'
+    return md.get('user_api_key_alias') or 'unnamed other key'
+fmt = lambda t: t.strftime('%Y-%m-%d %H:%M:%S')
+def active():
+    return subprocess.run(['systemctl', '--user', 'is-active', '-q', 'scrutare-glm-g5.service']).returncode == 0
+while True:
+    running = active()
+    end = datetime.datetime.now(datetime.timezone.utc); start = end - datetime.timedelta(minutes=15)
+    try:
+        data = rows(fmt(start), fmt(end))
+        by = {}
+        for r in data:
+            md = r.get('metadata') or {}
+            k = f"{(md.get('user_agent') or 'none').split('/')[0]} | {key(r)} | {r.get('model_group')} | {r.get('api_base')}"
+            b = by.setdefault(k, {'rows': 0, 'prompt_tokens': 0, 'completion_tokens': 0, 'fallbacks_nonzero': 0})
+            b['rows'] += 1; b['prompt_tokens'] += r.get('prompt_tokens') or 0
+            b['completion_tokens'] += r.get('completion_tokens') or 0
+            b['fallbacks_nonzero'] += bool(md.get('attempted_fallbacks'))
+        rec = {'window_utc': [fmt(start), fmt(end)], 'rows': len(data), 'by_agent_key_group_base': by, 'g5_running': running}
+        assert K not in json.dumps(rec)
+    except Exception as e:
+        rec = {'window_utc': [fmt(start), fmt(end)], 'error': type(e).__name__, 'g5_running': running}
+    with OUT.open('a') as f:
+        f.write(json.dumps(rec) + '\n')
+    if not running:
+        break
+    time.sleep(900)

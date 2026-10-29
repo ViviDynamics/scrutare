@@ -1,0 +1,4 @@
+"""Use the complete released-wheel smoke/ledger verifier; no completion waiver."""
+import runpy
+from pathlib import Path
+runpy.run_path(str(Path(__file__).with_name('verify-smoke-activation.py')),run_name='__main__')

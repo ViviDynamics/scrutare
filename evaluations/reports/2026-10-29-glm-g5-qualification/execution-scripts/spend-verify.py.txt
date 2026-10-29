@@ -1,0 +1,38 @@
+"""Every LiteLLM spend-log row in a UTC window on this key; prints a summary, never the key."""
+import collections, hashlib, json, os, sys, urllib.parse, urllib.request
+start, end, out = sys.argv[1], sys.argv[2], sys.argv[3]
+K = os.environ['K']; mine = hashlib.sha256(K.encode()).hexdigest()
+rows, page = [], 1
+while True:
+    q = urllib.parse.urlencode({'start_date': start, 'end_date': end, 'page': page, 'page_size': 100})
+    req = urllib.request.Request('https://litellm.vividynamics.com/spend/logs/v2?' + q,
+                                 headers={'Authorization': 'Bearer ' + K})
+    d = json.load(urllib.request.urlopen(req, timeout=120))
+    rows += d['data']
+    if page >= d['total_pages']:
+        break
+    page += 1
+assert len(rows) == d['total'], (len(rows), d['total'])
+ours = [r for r in rows if r['api_key'] in (mine, 'litellm_proxy_master_key')]
+def key(r):
+    md = r.get('metadata') or {}
+    return (r['model_group'], r['model'], r['api_base'], r['custom_llm_provider'], r['status'])
+summary = {
+    'window_utc': [start, end], 'rows_all_keys': len(rows), 'rows_this_key': len(ours),
+    'this_key_by_model_group_model_api_base_provider_status': {
+        ' | '.join(map(str, k)): v for k, v in collections.Counter(map(key, ours)).items()},
+    'other_keys_by_model_group': dict(collections.Counter(r['model_group'] for r in rows if r['api_key'] not in (mine, 'litellm_proxy_master_key'))),
+    'this_key_attributed_spend_usd': round(sum(r['spend'] or 0 for r in ours), 6),
+    'this_key_prompt_tokens': sum(r['prompt_tokens'] or 0 for r in ours),
+    'this_key_completion_tokens': sum(r['completion_tokens'] or 0 for r in ours),
+    'this_key_paid_provider_rows': sum(1 for r in ours if r['model_group'] != 'spark/glm-5.3-flash'
+                                       or (r['api_base'] or '').rstrip('/') != 'http://192.168.3.40:8045/v1'),
+    'this_key_attempted_fallbacks': collections.Counter(
+        str((r.get('metadata') or {}).get('attempted_fallbacks')) for r in ours),
+    'this_key_attempted_retries': collections.Counter(
+        str((r.get('metadata') or {}).get('attempted_retries')) for r in ours),
+}
+summary['this_key_attempted_fallbacks'] = dict(summary['this_key_attempted_fallbacks'])
+summary['this_key_attempted_retries'] = dict(summary['this_key_attempted_retries'])
+open(out, 'w').write(json.dumps(summary, indent=1) + '\n')
+print(json.dumps(summary, indent=1))

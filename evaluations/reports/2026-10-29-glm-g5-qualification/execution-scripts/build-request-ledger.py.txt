@@ -1,0 +1,84 @@
+"""Uniquely bind retained native request costs to retained LiteLLM rows, offline.
+
+No network, credential read or model call. Ambiguity/missing requests fail closed.
+Historical inputs may test attribution machinery; this never reclassifies them.
+"""
+import argparse,datetime,hashlib,json
+from pathlib import Path
+p=argparse.ArgumentParser();p.add_argument('--experiment',type=Path,required=True);p.add_argument('--rows',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
+root=a.experiment.resolve();raw=json.loads(a.rows.read_text())
+sha=lambda b:hashlib.sha256(b).hexdigest()
+utc=lambda s:datetime.datetime.fromisoformat(s.replace('Z','+00:00')).timestamp()
+canonical=lambda d:json.dumps(d,sort_keys=True,separators=(',',':')).encode()
+rows=[r for r in raw if ((r.get('metadata') or {}).get('user_agent') or '').split('/')[0]=='python-httpx2']
+assert rows and len({r['request_id'] for r in rows})==len(rows)
+for row in rows:
+ assert (row.get('total_tokens') or 0)==(row.get('prompt_tokens') or 0)+(row.get('completion_tokens') or 0),'provider total differs'
+ assert row.get('cache_hit') in (None,False,'False','false'),'unexpected provider response cache'
+ obj=(row.get('metadata') or {}).get('usage_object') or {}
+ for name in ('prompt_tokens','completion_tokens','total_tokens'):
+  if name in obj:assert obj[name]==row.get(name), 'provider usage fields disagree'
+ details=obj.get('prompt_tokens_details') or {}
+ assert not any(details.get(k) for k in ('cached_tokens','cache_read_input_tokens','cache_creation_input_tokens')),'nonzero cache categories require explicit disjoint attribution'
+used=set();requests=[];supplements=[];sessions=[];costs=[]
+def identity(path):
+ parts=path.relative_to(root).parts
+ if parts[0]=='_retries':
+  assert parts[4]=='attempt-0002';run='/'.join(parts[1:4]);number=2;offset=5
+ else:run='/'.join(parts[:3]);number=1;offset=3
+ assert parts[offset]=='sessions' and len(parts)==offset+4
+ return {'run_id':run,'attempt':number,'session':'/'.join(parts[offset:-1])}
+def usage(r):return {'input':r.get('prompt_tokens') or 0,'output':r.get('completion_tokens') or 0,'cache_read':0,'cache_write':0,'total':(r.get('prompt_tokens') or 0)+(r.get('completion_tokens') or 0)}
+def consume(row,binding,stream,index):
+ assert row['request_id'] not in used
+ used.add(row['request_id']);md=row.get('metadata') or {};base=(row.get('api_base') or '').rstrip('/')
+ requests.append({**binding,'id':sha(row['request_id'].encode()),'source_sha256':sha(canonical(row)),'model':row['model'],'model_group':row['model_group'],'api_base':row.get('api_base') or '', 'status':row['status'],'start_utc':row['startTime'],'end_utc':row['endTime'],'usage':usage(row),'stream':stream,'event':index,'fallbacks':int(md.get('attempted_fallbacks') or 0),'paid_calls':int(row['model_group']!='spark/glm-5.3-flash' or row['model']!='openai/glm-5.3-flash' or base not in ('http://192.168.3.40:8045','http://192.168.3.40:8045/v1')),'nominal_attribution_usd':row.get('spend') or 0})
+ return requests[-1]['id']
+for path in sorted(root.glob('**/sessions/*/attempt-*/result.json')):
+ terminal=json.loads(path.read_text());binding=identity(path)
+ if terminal['status']=='not_started':continue
+ inv=json.loads((path.parent/'invocation.json').read_text())
+ timestamps=[];last_cost=None
+ for stream in ('stdout.jsonl','correction.stdout.jsonl'):
+  f=path.parent/stream
+  if not f.exists():continue
+  index=0
+  for line in f.read_text().splitlines():
+   if not line.strip():continue
+   e=json.loads(line)
+   if e.get('timestamp'):timestamps.append(utc(e['timestamp']))
+   if e.get('type')=='cost':
+    u={k:e['detail'][k] for k in ('input','output','cache_read','cache_write')};u['total']=sum(u.values())
+    assert u['cache_read']==u['cache_write']==0,'Spark ledger needs explicit cache reconciliation'
+    t=utc(e['timestamp']);last_cost=max(last_cost or t,t)
+    costs.append({'binding':binding,'stream':stream,'event':index,'usage':u,'time':t});index+=1
+ sessions.append({'binding':binding,'path':path,'terminal':terminal,'first':min(timestamps) if timestamps else None,'last_cost':last_cost,'last':path.stat().st_mtime,'timeout':inv['timeout_seconds']})
+pending=sorted(costs,key=lambda c:c['time'])
+while pending:
+ remaining=[];progress=False
+ for cost in pending:
+  owner=next(s for s in sessions if s['binding']==cost['binding'])
+  matches=[r for r in rows if r['request_id'] not in used and usage(r)==cost['usage'] and owner['first']-5<=utc(r['startTime']) and utc(r['endTime'])<=cost['time']+5]
+  if len(matches)>1:
+   precise=[r for r in matches if abs(utc(r['endTime'])-cost['time'])<=1]
+   if len(precise)==1:matches=precise
+  if len(matches)!=1:
+   remaining.append(cost);continue
+  consume(matches[0],cost['binding'],cost['stream'],cost['event']);progress=True
+ assert progress or not remaining,{'error':'native costs have no unique retained provider attribution','unresolved_cost_events':len(remaining),'bindings':[c['binding'] for c in remaining]}
+ pending=remaining
+for row in rows:
+ if row['request_id'] in used:continue
+ candidates=[]
+ for s in sessions:
+  t=s['terminal']
+  if t['status'] not in ('failed','partial') or t['accounting_complete'] is not False or s['first'] is None:continue
+  low=s['last_cost'] if s['last_cost'] is not None else s['first']
+  if low-1<=utc(row['startTime'])<=s['last']+5 and utc(row['endTime'])<=max(s['last']+30,s['first']+s['timeout']+30):candidates.append(s)
+ assert len(candidates)==1,{'error':'unaccounted provider row has no unique failed-session binding','candidate_count':len(candidates),'source_sha256':sha(canonical(row))}
+ s=candidates[0];identifier=consume(row,s['binding'],None,None)
+ supplements.append({**s['binding'],'id':identifier,'reason':'missing_failed_request','session_result_sha256':sha(s['path'].read_bytes()),'binding_evidence':{'first_native_event_utc':datetime.datetime.fromtimestamp(s['first'],datetime.timezone.utc).isoformat(),'last_native_cost_epoch':s['last_cost'],'terminal_artifact_mtime_epoch':s['last'],'frozen_session_timeout_seconds':s['timeout']}})
+assert len(requests)==len(rows) and len(used)==len(rows)
+out={'schema_version':1,'attribution':'Exact disjoint native counters and one-to-one provider row inside the retained native session time interval; where counters collide require one unique match within1s, iterating only forced matches; unreported failed requests require unique retained session time window and terminal SHA binding. Any ambiguity refuses attribution. Original engine accounting flags remain unchanged.','source_rows_sha256_private':sha(a.rows.read_bytes()),'requests':requests,'supplements':supplements}
+a.output.write_text(json.dumps(out,indent=2)+'\n')
+print(json.dumps({'requests':len(requests),'supplements':len(supplements),'native_cost_events':len(costs),'paid_calls':sum(r['paid_calls'] for r in requests),'fallbacks':sum(r['fallbacks'] for r in requests),'tokens':sum(r['usage']['total'] for r in requests)}))

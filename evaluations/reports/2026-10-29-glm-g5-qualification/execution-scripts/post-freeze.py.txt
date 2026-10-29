@@ -1,0 +1,28 @@
+"""Post the exact prospective g5 freeze once, before smoke or qualification calls."""
+import hashlib,json,subprocess
+from pathlib import Path
+H=Path(__file__).resolve().parent;J=H/'g5';r=json.loads((H/'freeze-g5.json').read_text())
+assert not (H/'freeze-post.json').exists() and not (J/'process.json').exists() and not (H/'smoke').exists()
+sha=hashlib.sha256((H/'freeze-g5.json').read_bytes()).hexdigest()
+body=f'''Prospective freeze for **g5**, issue #103, implementation #102. Refs #51 and the [maintainer rule A ruling](https://github.com/ViviDynamics/scrutare/issues/51#issuecomment-6479128978). Posted before any g5 smoke/qualification call.
+
+**Rule A, common predicates 1–7 without exceptions:** exact 36 logical cells, all 12 clean cells complete; nonempty mechanically valid v2 evidence in all 24 defect cells; 6/6 aggregate evidence and 6/6 actual completed accounted assessors. Each original with a retryable terminal failed session gets at most one whole frozen-pipeline replay in a new attempt directory from identical captured inputs. All originals execute before recovery. Accept the original if successful, else the sole successful rerun. Second failure fails the cell. Completed empty/invalid answers and hard accounting/provenance/routing failures are not retryable. Every attempt remains retained and charged; report cumulative operation cost separately. Zero paid calls and attempted fallbacks across originals/reruns. No provider change, budget increase or extra correction. Holdout untouched. Human quality promotion remains separate.
+
+**Unchanged g4 profile/corpus:** same 3 pilot development cases, aggregate/assessed/focused1/focused3, 3 repeats, 200000 shared per-attempt ceiling, 50000 assessor reservation, 37500 discovery (50000 aggregate), 20000 per-request output cap, json_schema, six native turns, concurrency3, 1800s session timeout, nare2026.10.12, rounds.max3, related paths and no overrun fallback. Line counts, citation and protocol correction remain on. Protocol correction still takes precedence for one within-session opportunity. Every corpus input hash is identical to g4. Historical schedules retain their published failures.
+
+**Changes:** released Scrutare **{r['release_tag']}** at `{r['source_commit']}`, actual published wheel, and `--qualification-rule-a` on. Rule A replaces first-attempt perfection and the old transient policy; transient retries are disabled so no policy can add extra attempts. No other qualification profile change is made.
+
+**One released-wheel smoke job must complete.** Its session timeout is1800s, equal to the gate (g4 smoke failed only at its shorter900s limit). It exercises the actual released evaluator mode on the same security case with one senior reviewer/50000 grant, cap/corrections/line counts retained. The evaluator's fixed three repeats mean this single smoke job has three logical cells; every smoke attempt/cost is retained separately from the 36 g5 cells. The snapshot and manifest-covered policy artifact must prove rule A active. No second smoke or completion waiver is authorized.
+
+**Launch condition in the gate: no idle window.** Authority: maintainer instructions of2026-10-25 (#96) and2026-10-28 (#99), plus https://github.com/ViviDynamics/scrutare/issues/51#issuecomment-6340502541. Read-only router checks and the completed smoke precede launch. Record preceding hour,15-minute samples throughout scrutare-glm-g5.service and full-window reread, split by agent,key,base URL; redact personal aliases/emails. In-flight/bypass traffic is invisible.
+
+**Schedules: g5 only.** Any re-test needs explicit maintainer approval and a new prospective freeze. Only spark/glm-5.3-flash through LAN LiteLLM https://litellm.vividynamics.com to vLLM192.168.3.40:8045. Spend logs must verify0paid calls and0fallbacks, normalizing trailing slashes (python-httpx on Spark is not paid). No App/infrastructure/default/deployment/promotion changes. Publish and STOP for the maintainer decision; #51 stays open.
+
+SHA-256 freeze:
+'''
+for n,d in r['files'].items():body+=f'- `{n}` `{d}`\n'
+body+=f'- `freeze-g5.json` `{sha}` (records adapted-script and common-predicate hashes)\n'
+p=H/'freeze-on-51.md';p.write_text(body)
+gh='/home/jason/Workspace/ViviDynamics/skills/skills/ship-issue/scripts/vgh'
+u=subprocess.check_output([gh,'issue','comment','51','--repo','ViviDynamics/scrutare','--body-file',str(p)],cwd='/home/jason/Workspace/ViviDynamics/scrutare',text=True).strip();assert '#issuecomment-' in u
+(H/'freeze-post.json').write_text(json.dumps({'url':u,'freeze_sha256':sha,'body_sha256':hashlib.sha256(p.read_bytes()).hexdigest()},indent=2)+'\n');print(u)

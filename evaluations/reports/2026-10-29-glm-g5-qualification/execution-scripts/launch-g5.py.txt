@@ -1,0 +1,28 @@
+"""Launch the single posted frozen g5 only after the released-wheel smoke verifies."""
+import datetime,hashlib,json,subprocess
+from pathlib import Path
+H=Path(__file__).resolve().parent;E=H/'evidence';J=H/'g5'
+read=lambda p:json.loads(p.read_text())
+freeze=read(H/'freeze-g5.json');post=read(H/'freeze-post.json')
+subprocess.run(['/usr/bin/python3',str(H/'verify-frozen-inputs.py')],check=True)
+assert post['freeze_sha256']==hashlib.sha256((H/'freeze-g5.json').read_bytes()).hexdigest()
+assert read(E/'smoke-verification.json')['verified'] and not (J/'process.json').exists()
+assert read(E/'smoke-job-status.json')['verified'] is True
+smoke_unit=subprocess.check_output(['systemctl','--user','show','scrutare-glm-g5-smoke.service','-p','Result','-p','ExecMainStatus'],text=True)
+assert 'Result=success' in smoke_unit.splitlines() and 'ExecMainStatus=0' in smoke_unit.splitlines()
+gh='/home/jason/Workspace/ViviDynamics/skills/skills/ship-issue/scripts/vgh'
+comment_id=post['url'].split('#issuecomment-')[1]
+posted=subprocess.check_output([gh,'api','repos/ViviDynamics/scrutare/issues/comments/'+comment_id,'--jq','.body'],cwd='/home/jason/Workspace/ViviDynamics/scrutare',text=True)
+assert posted.rstrip()==(H/'freeze-on-51.md').read_text().rstrip()
+smoke_spend=read(E/'smoke-spend-summary.json')
+assert smoke_spend['evaluator_paid_provider_rows']==0 and smoke_spend['evaluator_attempted_fallbacks_nonzero']==0
+for name,digest in freeze['files'].items():assert hashlib.sha256((J/name).read_bytes()).hexdigest()==digest,name
+for name,digest in freeze['script_sha256'].items():assert hashlib.sha256((H/name).read_bytes()).hexdigest()==digest,name
+subprocess.run(['/usr/bin/python3',str(H/'private-call.py'),'fallback-check.py',str(E/'fallback-check-prelaunch.json')],check=True)
+end=datetime.datetime.now(datetime.timezone.utc);start=end-datetime.timedelta(hours=1)
+fmt=lambda t:t.strftime('%Y-%m-%d %H:%M:%S')
+subprocess.run(['/usr/bin/python3',str(H/'collect-window.py'),'prelaunch',fmt(start),fmt(end)],check=True)
+subprocess.run(['systemd-run','--user','--unit=scrutare-glm-g5','--setenv=GLM_UNIT=scrutare-glm-g5.service',f'--property=WorkingDirectory={J}','/usr/bin/python3',str(H/'launch-detached.py'),str(J)],check=True)
+for suffix,script in [('load','load-sampler.py'),('finish','finish-evidence.py')]:
+ subprocess.run(['systemd-run','--user','--unit=scrutare-glm-g5-'+suffix,f'--property=WorkingDirectory={H}',f'--property=StandardOutput=append:{E/(suffix+"-service.log")}',f'--property=StandardError=append:{E/(suffix+"-service.log")}','/usr/bin/python3',str(H/script)],check=True)
+(H/'launch-ledger.json').write_text(json.dumps({'launched_once':True,'schedule':'g5','freeze_url':post['url'],'observed_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'no_idle_window':True,'evaluator_unit':'scrutare-glm-g5.service','load_unit':'scrutare-glm-g5-load.service','finish_unit':'scrutare-glm-g5-finish.service'},indent=2)+'\n')
