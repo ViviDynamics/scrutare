@@ -1,0 +1,78 @@
+"""Launch one frozen job; never log credential values."""
+import hashlib
+import json
+import os
+import shlex
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+job = Path(sys.argv[1]).resolve()
+assert job.parent == Path(__file__).resolve().parent
+assert not (job / 'process.json').exists()
+prep = json.loads((job / 'preparation.json').read_text())
+for name, digest in prep['input_sha256'].items():
+    assert hashlib.sha256((job / name).read_bytes()).hexdigest() == digest, name
+assert prep['qualification_rule_a'] is True
+assert prep['transient_retries_per_cell'] == 0 and prep['transient_retry_budget_job'] == 0
+assert prep['holdout_used'] is False and 'holdout' not in prep['corpus']
+assert prep['model_alias'] == 'onprem/glm-5.3-flash', 'this stream calls only the self-hosted model'
+config = json.loads((job / 'evaluation.json').read_text())
+assert config['context']['line_counts'] is prep['context_line_counts'] is True
+assert config['findings']['citation_correction'] is prep['citation_correction'] is True
+assert config['findings']['protocol_correction'] is prep['protocol_correction'] is True
+assert config['models']['default']['base_url']=='https://litellm.vividynamics.com/v1'
+rail = config['models']['default']
+assert rail['model'] == 'onprem/glm-5.3-flash'
+assert rail.get('structured_output') == prep['structured_output']
+assert rail.get('max_output_tokens') == prep['max_output_tokens']
+assert prep['nare_runtime']['console'].endswith('nare-2026.10.12/.venv/bin/nare')
+credential = None
+with Path('/home/user/Workspace/example/infrastructure/.env').open() as source:
+    for line in source:
+        if line.startswith('LITELLM_MASTER_KEY='):
+            credential = shlex.split(line.partition('=')[2].strip())[0]
+            break
+assert credential, 'provider credential reference unavailable'
+env = {k: os.environ[k] for k in ('PATH', 'HOME', 'LANG', 'LC_ALL', 'TMPDIR') if k in os.environ}
+env['OPENAI_API_KEY'] = credential
+argv = [str(job / 'venv/bin/python'), '-m', 'scrutare.evaluation', 'run',
+        '--corpus', str(job / 'corpus'), '--split', 'development',
+        '--config', str(job / 'evaluation.json'), '--output', str(job / 'experiment'),
+        '--nare-executable',
+        prep['nare_runtime']['console'],
+        '--timeout-seconds', str(prep['timeout_seconds']),
+        '--concurrency', str(prep['concurrency']),
+        '--comparison-set', prep['comparison_set'], '--max-turns', str(prep['max_turns']),
+        '--transient-retries', str(prep['transient_retries_per_cell']),
+        '--transient-retry-delay-seconds', str(prep['transient_retry_delay_seconds']),
+        '--transient-retry-budget', str(prep['transient_retry_budget_job'])]
+argv += ['--qualification-rule-a']
+if prep.get('assessment_tokens') is not None:
+    argv += ['--assessment-tokens', str(prep['assessment_tokens'])]
+if prep['variants']:
+    argv += ['--variants', ','.join(prep['variants'])]
+# Detached form: this script is the main process of its own systemd user unit and
+# replaces itself with the evaluator, so the evaluator's PID is this PID and it lives in
+# the unit's cgroup, not the tool session's.
+out = os.open(job / 'stdout.log', os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+err = os.open(job / 'stderr.log', os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+null = os.open(os.devnull, os.O_RDONLY)
+if os.getsid(0) != os.getpid():
+    os.setsid()
+(job / 'process.json').write_text(json.dumps({
+    'pid': os.getpid(), 'pgid': os.getpgid(0), 'sid': os.getsid(0),
+    'systemd_unit': os.environ.get('GLM_UNIT'),
+    'cgroup': Path('/proc/self/cgroup').read_text().strip(),
+    'cwd': str(job), 'started_at_epoch': time.time(),
+    'started_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+    'expected_runs': prep['expected_runs'],
+    'source_commit': prep['source_commit'], 'label': prep['label'],
+    'model_alias': prep['model_alias'], 'holdout_used': False, 'argv_without_credential': argv,
+    'credential_reference': 'infrastructure/.env:LITELLM_MASTER_KEY'}, indent=2) + '\n')
+os.chdir(job)
+os.dup2(null, 0)
+os.dup2(out, 1)
+os.dup2(err, 2)
+os.execve(argv[0], argv, env)

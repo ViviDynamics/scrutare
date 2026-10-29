@@ -1,0 +1,78 @@
+"""Offline refusal-path proofs; no credential, network, systemd or model calls."""
+import json
+import runpy
+import shutil
+import subprocess
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+
+import pytest
+
+H=Path(__file__).resolve().parent
+
+@pytest.mark.parametrize('experiment',['missing','incomplete'])
+def test_finish_keeps_collecting_after_interruption_and_routing_refusal(tmp_path,experiment):
+ h=tmp_path;shutil.copy(H/'finish-evidence.py',h/'finish-evidence.py')
+ (h/'evidence').mkdir();(h/'g5/experiment').mkdir(parents=True)
+ (h/'g5/process.json').write_text(json.dumps({'started_utc':'2026-10-28T22:00:00Z'}))
+ if experiment=='incomplete':(h/'g5/experiment/experiment.json').write_text('{"status":"incomplete"}')
+ calls=[]
+ def run(argv,**kwargs):
+  calls.append(argv)
+  if 'is-active' in argv:return SimpleNamespace(returncode=1)
+  if 'show' in argv:return SimpleNamespace(returncode=0,stdout='Result=exit-code\nExecMainStatus=1\n',stderr='')
+  return SimpleNamespace(returncode=1,stdout='',stderr='simulated evidence refusal')
+ with patch('subprocess.run',run),patch('time.sleep',lambda _:None):runpy.run_path(str(h/'finish-evidence.py'))
+ names=' '.join(' '.join(a)for a in calls)
+ for expected in ('collect-window.py','spend-verify.py','fallback-check.py','build-ledger-and-check.py'):assert expected in names
+ c=json.loads((h/'evidence/run-completion.json').read_text());assert c['experiment_status']==('incomplete' if experiment=='incomplete' else 'missing_or_unreadable')
+ assert json.loads((h/'evidence/FINAL-EVIDENCE-READY.json').read_text())['every_collection_step_succeeded'] is False
+
+def test_spend_collection_retains_paid_and_fallback_rows_instead_of_aborting(tmp_path):
+ h=tmp_path;shutil.copy(H/'collect-window.py',h/'collect-window.py');(h/'evidence').mkdir()
+ old=Path.read_text
+ def read(path,*a,**kw):
+  if str(path).endswith('infrastructure/.env'):return 'LITELLM_MASTER_KEY=offline-dummy\n'
+  return old(path,*a,**kw)
+ def run(argv,**kw):
+  Path(argv[-1]).write_text(json.dumps([{'model_group':'wrong','model':'wrong','api_base':'https://paid.invalid','spend':1,'prompt_tokens':2,'completion_tokens':3,'metadata':{'user_agent':'python-httpx2/1','attempted_fallbacks':1}}]));return SimpleNamespace(stdout=b'',stderr=b'',returncode=0)
+ with patch.object(Path,'read_text',read),patch('subprocess.run',run),patch('sys.argv',['collect-window.py','g5','start','end']):runpy.run_path(str(h/'collect-window.py'))
+ d=json.loads((h/'evidence/g5-spend-summary.json').read_text())
+ assert d['evaluator_paid_provider_rows']==d['evaluator_attempted_fallbacks_nonzero']==1
+ assert (h/'evidence/g5-rows.json').is_file()
+
+@pytest.mark.parametrize('experiment',['missing','incomplete'])
+def test_inspector_emits_not_qualified_for_uninspectable_capture(tmp_path,experiment):
+ h=tmp_path;job=h/'g5';(job/'experiment').mkdir(parents=True);(h/'evidence').mkdir()
+ if experiment=='incomplete':(job/'experiment/experiment.json').write_text('{"status":"incomplete","runs":[]}')
+ (job/'provider-ledger.json').write_text(json.dumps({'attribution_failed':True,'requests':[{'usage':{'input':2,'output':3,'cache_read':0,'cache_write':0,'total':5}}]}))
+ (job/'gate.json').write_text('{}')
+ (h/'evidence/run-completion.json').write_text(json.dumps({'systemd_status':['Result=exit-code','ExecMainStatus=1'],'experiment_status':experiment}))
+ p=subprocess.run([str(H/'g5/venv/bin/python'),str(H/'check-qualification.py'),str(job),'--output',str(job/'mechanical.json')],capture_output=True,text=True)
+ assert p.returncode==0,p.stderr
+ r=json.loads((job/'mechanical.json').read_text());assert r['qualification']=='not_qualified'
+ assert r['reconciled_cumulative_usage']['total']==5 and r['cumulative_usage'] is None
+ assert not r['tests']['provider_attribution_succeeded'] and not r['tests']['released_process_exit_success']
+
+@pytest.mark.parametrize('spend_ok',[False,True])
+def test_smoke_failures_preserve_unassigned_cost_and_collection_outcomes(tmp_path,spend_ok):
+ h=tmp_path;shutil.copy(H/'smoke-job.py',h/'smoke-job.py');(h/'evidence').mkdir()
+ calls=[]
+ def run(argv,**kwargs):
+  calls.append(argv)
+  if argv[-1].endswith('smoke.py'):
+   (h/'smoke').mkdir();(h/'smoke/experiment.json').write_text('{"status":"incomplete","cumulative_usage":{"total":7}}')
+   return SimpleNamespace(returncode=1)
+  if 'collect-window.py' in ' '.join(argv):
+   if spend_ok:(h/'evidence/smoke-rows.json').write_text(json.dumps([{'request_id':'offline-id','model_group':'onprem/glm-5.3-flash','model':'openai/glm-5.3-flash','api_base':'http://192.0.2.40:8045/v1/','prompt_tokens':2,'completion_tokens':3,'metadata':{'user_agent':'python-httpx2/1'}}]))
+   return SimpleNamespace(returncode=0 if spend_ok else 1,stdout='',stderr='')
+  return SimpleNamespace(returncode=1,stdout='',stderr='attribution refused')
+ with patch('subprocess.run',run),patch('time.sleep',lambda _:None),pytest.raises(AssertionError,match='STOP'):runpy.run_path(str(h/'smoke-job.py'))
+ assert any('build-request-ledger.py' in ' '.join(a) for a in calls)
+ s=json.loads((h/'evidence/smoke-job-status.json').read_text());ledger=json.loads((h/'evidence/smoke-request-ledger.json').read_text())
+ assert len(s['collection_steps'])==2 and not s['verified']
+ assert s['accounting']['known_native_cumulative_usage']['total']==7 and s['accounting']['missing_or_unknown_usage']
+ assert ledger['attribution_failed']
+ assert s['accounting']['known_provider_usage']['total']==(5 if spend_ok else 0)
+ assert len(calls)==3  # one smoke, spend read, ledger attempt; no repeat or g5 launch

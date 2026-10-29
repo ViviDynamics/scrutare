@@ -1,0 +1,10 @@
+{
+ "experiment_status": "complete",
+ "observed_ended_utc": "2026-10-29T01:27:33.078564+00:00",
+ "systemd_status": [
+  "Result=success",
+  "ExecMainExitTimestamp=n/a",
+  "ExecMainStatus=0",
+  "ActiveState=inactive"
+ ]
+}

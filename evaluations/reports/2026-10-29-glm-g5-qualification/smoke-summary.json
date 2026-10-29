@@ -1,0 +1,54 @@
+{
+ "checks": [
+  {
+   "accounting_complete": true,
+   "attempts": 1,
+   "provenance_sha256": "b9907814f62dadf6c90b2db87b962aa6c209c99c0aac53703ef886cc7711eabf",
+   "replay_exit": 0,
+   "run_id": "security-auth-order/senior/1",
+   "status": "complete"
+  },
+  {
+   "accounting_complete": true,
+   "attempts": 1,
+   "provenance_sha256": "bcdeb8412ddbd5c82a70694a6b04f8f64b356cafa213187fc02e0e69047af70b",
+   "replay_exit": 0,
+   "run_id": "security-auth-order/senior/2",
+   "status": "complete"
+  },
+  {
+   "accounting_complete": true,
+   "attempts": 1,
+   "provenance_sha256": "3a2b031cd0216895d0ec06dc649f910d6463666ae7324afff2d3cd708213da0a",
+   "replay_exit": 0,
+   "run_id": "security-auth-order/senior/3",
+   "status": "complete"
+  }
+ ],
+ "cumulative_usage": {
+  "cache_read": 0,
+  "cache_write": 0,
+  "input": 30290,
+  "output": 9087,
+  "total": 39377
+ },
+ "ended_utc": "2026-10-28T22:35:26Z",
+ "holdout_used": false,
+ "logical_cells": 3,
+ "policy": {
+  "accounting": "every attempt retained; cumulative usage separate",
+  "inputs": "identical captured inputs",
+  "max_whole_cell_reruns": 1,
+  "per_attempt_limits": "unchanged",
+  "rule": "A",
+  "selection": "original success, else sole successful rerun"
+ },
+ "qualification_rule_a": true,
+ "scrutare_version": "2026.10.40",
+ "seconds": 621.3,
+ "session_timeout_seconds": 1800,
+ "smoke_jobs": 1,
+ "started_utc": "2026-10-28T22:25:05Z",
+ "status": "complete",
+ "why_three_cells": "The released evaluator always executes three repeats; one smoke job exercises its actual rule A mode, rather than labelling a direct engine call as recovery-enabled. This is preparation, outside g5 statistics."
+}

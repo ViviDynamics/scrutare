@@ -1,0 +1,40 @@
+"""One systemd smoke job, retaining failed collection/attribution and unknown cost."""
+import datetime,hashlib,json,subprocess,time
+from pathlib import Path
+H=Path(__file__).resolve().parent;E=H/'evidence';J=H/'g5';py=str(J/'venv/bin/python')
+assert not (E/'smoke-job-status.json').exists() and not (H/'smoke').exists()
+utc=lambda:datetime.datetime.now(datetime.timezone.utc)
+start=utc()
+(E/'smoke-job-start.json').write_text(json.dumps({'started_utc':start.isoformat(),'systemd_unit':'scrutare-glm-g5-smoke.service','one_job_only':True})+'\n')
+with (E/'smoke-stdout.log').open('x') as out,(E/'smoke-stderr.log').open('x') as err:
+ p=subprocess.run([py,'-I',str(H/'smoke.py')],stdout=out,stderr=err)
+end=utc()
+status={'smoke_returncode':p.returncode,'started_utc':start.isoformat(),'ended_utc':end.isoformat(),'verified':False,'completion_waived':False,'collection_steps':[]}
+def save(): (E/'smoke-job-status.json').write_text(json.dumps(status,indent=2)+'\n')
+def retain(argv):
+ try:
+  r=subprocess.run(argv,capture_output=True,text=True);entry={'argv':argv,'returncode':r.returncode,'stdout':r.stdout,'stderr':r.stderr}
+ except OSError as error:entry={'argv':argv,'returncode':None,'error':type(error).__name__}
+ status['collection_steps'].append(entry);save();return entry['returncode']==0
+save();time.sleep(60)
+fmt=lambda t:t.strftime('%Y-%m-%d %H:%M:%S')
+spend_ok=retain(['/usr/bin/python3',str(H/'collect-window.py'),'smoke',fmt(start),fmt(end)])
+ledger_ok=retain([py,'-I',str(H/'build-request-ledger.py'),'--experiment',str(H/'smoke'),'--rows',str(E/'smoke-rows.json'),'--output',str(E/'smoke-request-ledger.json')])
+if not ledger_ok:
+ try:rows=json.loads((E/'smoke-rows.json').read_text())
+ except (OSError,ValueError):rows=[]
+ requests=[]
+ for row in rows:
+  md=row.get('metadata')or{}
+  if (md.get('user_agent')or'').split('/')[0]!='python-httpx2':continue
+  u={'input':row.get('prompt_tokens')or 0,'output':row.get('completion_tokens')or 0,'cache_read':0,'cache_write':0};u['total']=sum(u.values())
+  requests.append({'id':hashlib.sha256(row['request_id'].encode()).hexdigest(),'source_sha256':hashlib.sha256(json.dumps(row,sort_keys=True,separators=(',',':')).encode()).hexdigest(),'run_id':None,'attempt':None,'session':None,'stream':None,'event':None,'usage':u,'model':row['model'],'api_base':row.get('api_base')or'','paid_calls':int(row['model_group']!='onprem/glm-5.3-flash'or row['model']!='openai/glm-5.3-flash'or(row.get('api_base')or'').rstrip('/') not in('http://192.0.2.40:8045','http://192.0.2.40:8045/v1')),'fallbacks':int(md.get('attempted_fallbacks')or 0),'nominal_attribution_usd':row.get('spend')or 0})
+ (E/'smoke-request-ledger.json').write_text(json.dumps({'schema_version':1,'attribution_failed':True,'requests':requests,'supplements':[],'error':'Unassigned retained provider requests; missing/ambiguous attribution fails smoke. Known spend retained; unknown usage is not zero.'},indent=2)+'\n')
+try:native=json.loads((H/'smoke/experiment.json').read_text()).get('cumulative_usage')
+except (OSError,ValueError):native=None
+ledger=json.loads((E/'smoke-request-ledger.json').read_text())
+status['accounting']={'spend_read_succeeded':spend_ok,'unique_attribution_succeeded':ledger_ok,'known_native_cumulative_usage':native,'known_provider_usage':{k:sum(r['usage'][k]for r in ledger['requests'])for k in('input','output','cache_read','cache_write','total')},'missing_or_unknown_usage':not(spend_ok and ledger_ok),'native_accounting_flags_unchanged':True};save()
+assert p.returncode==0 and spend_ok and ledger_ok,'smoke or its evidence failed; STOP, no g5 launch, waiver or repeat'
+assert retain([py,'-I',str(H/'verify-smoke.py')]),'smoke verification failed; STOP'
+status['verified']=True;save()
+print(json.dumps({'smoke_job_complete':True,'spend_and_provenance_verified':True}))

@@ -1,0 +1,1049 @@
+{
+  "actual_human_judgments": 0,
+  "attempts": 38,
+  "comparison_limit": "Different days/releases/concurrent load; no causal effect or semantic quality conclusion. Historical rule A recovery was not observed.",
+  "corrections": {
+    "answered_sessions": 168,
+    "by_outcome": {},
+    "by_phase": {
+      "assessment": 18,
+      "discovery": 152
+    },
+    "corrected_sessions_complete": 0,
+    "defect_occurrences_by_type": {},
+    "first_answers_refused": 0,
+    "offered": 0,
+    "offered_sessions": [],
+    "sessions": 170,
+    "sessions_by_type": {},
+    "sessions_by_type_and_outcome": {},
+    "tokens": 0
+  },
+  "cumulative_tokens_including_smoke": 2670398,
+  "defaults_promoted": false,
+  "discussion_all_attempts": {
+    "attempts_with_trace": 20,
+    "complete": true,
+    "expected_focused_attempts": 20,
+    "known_rounds_subtotal": 0,
+    "rounds_reported": 0,
+    "trace_statuses": {
+      "complete": 18,
+      "failed": 2
+    },
+    "unavailable_traces": 0
+  },
+  "evidence_audit_errors": [],
+  "failed_cells": [],
+  "failed_sessions": [
+    {
+      "cause": "output_cap",
+      "cell": "security-auth-order/focused3/3",
+      "cell_attempt": 1,
+      "persona": "devops",
+      "reason": "output_cap",
+      "status": "failed",
+      "tokens": 30287
+    },
+    {
+      "cause": "output_cap",
+      "cell": "tests-consumer-fixture/focused1/1",
+      "cell_attempt": 1,
+      "persona": "security",
+      "reason": "output_cap",
+      "status": "failed",
+      "tokens": 29956
+    }
+  ],
+  "first_attempt_perfection_pass": false,
+  "first_attempt_predicates": {
+    "accepted_replay_valid": true,
+    "all_12_clean_complete": true,
+    "all_24_defect_cells_nonempty_valid": true,
+    "all_36_complete_accounted": true,
+    "all_attempts_provenance_routing": true,
+    "all_attempts_reconciled": true,
+    "all_attempts_within_ceiling": true,
+    "all_original_clean_complete": true,
+    "all_original_defects_nonempty_valid": false,
+    "all_originals_complete_on_first_attempt": false,
+    "all_provider_requests_attributed_once": true,
+    "bounded_rule_a_selection": true,
+    "cumulative_cost_complete": true,
+    "every_attempt_terminal": true,
+    "experiment_terminal": true,
+    "g5_spend_verified": true,
+    "holdout_untouched": true,
+    "independent_attempt_execution": true,
+    "independent_pipeline_sessions": true,
+    "independent_request_attribution": true,
+    "matrix_exact": true,
+    "native_attempts_consistent": true,
+    "original_actual_assessors": true,
+    "original_aggregate_evidence": true,
+    "provider_attribution_succeeded": true,
+    "provider_window_ledger_consistent": true,
+    "released_predicates_consistent": true,
+    "released_process_exit_success": true,
+    "router_after": true,
+    "router_prelaunch": true,
+    "router_smoke": true,
+    "rule_a_frozen": true,
+    "six_aggregate_nonempty_valid": true,
+    "six_assessed_actual_complete": true,
+    "smoke_complete_verified": true,
+    "smoke_spend_verified": true,
+    "terminal_experiment_record": true,
+    "zero_paid_calls_and_fallbacks": true
+  },
+  "first_attempt_status_counts": {
+    "complete": 34,
+    "failed": 2
+  },
+  "holdout_used": false,
+  "ledger": {
+    "errors": [],
+    "exact_match": true,
+    "fallbacks": 0,
+    "native_usage": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 2064050,
+      "output": 566971,
+      "total": 2631021
+    },
+    "paid_calls": 0,
+    "provider_usage": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 2064050,
+      "output": 566971,
+      "total": 2631021
+    },
+    "requests": 554,
+    "supplement_usage": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0,
+      "total": 0
+    },
+    "supplements": 0,
+    "unknown_accounting": false,
+    "valid": true
+  },
+  "load_export_receipt": {
+    "errors": [],
+    "sha256_private": "c31bd8c75b5d570eb0124b94cc7e5a4478988b65855121db8687e52e1814c6cd",
+    "state": "available"
+  },
+  "load_read_errors": 0,
+  "load_samples": 13,
+  "native_cumulative_usage": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 2064050,
+    "output": 566971,
+    "total": 2631021
+  },
+  "nominal_attribution_including_smoke_usd": 0.60218,
+  "observations": {
+    "accepted_findings": 96,
+    "actual_human_judgments": 0,
+    "automated_matches": 96,
+    "clean_cells_with_findings": 0,
+    "decisions": [
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "2c4244405b57580989c304b275645a638f9b57e15e232cdeb84bacedbf633842",
+        "method": "automated",
+        "run_id": "security-auth-order/aggregate/1"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "d4c967739009356251d692a4e60e51aced96d37e018315ba9bc8e76f1dba6c9d",
+        "method": "automated",
+        "run_id": "security-auth-order/aggregate/1"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "5a2c9c4f3c6a37f31bde8d959407d12c7b8ac4fa01f946831ace5da5dfbf8544",
+        "method": "automated",
+        "run_id": "security-auth-order/aggregate/1"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "80fa001b775cd156e703f4db3eb4e32894f5dd7b66846fd7eb1e912b09287c35",
+        "method": "automated",
+        "run_id": "security-auth-order/aggregate/1"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "c3d738174ae8c0650a8e4d19fba410778a947b5e3ca4c0996457c086bc779d26",
+        "method": "automated",
+        "run_id": "security-auth-order/aggregate/2"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "25b29c61592827a59c489364f40fe06d229c25aae3566409aa266fd9fc61590c",
+        "method": "automated",
+        "run_id": "security-auth-order/aggregate/2"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "a83a315b09fe02455d202d459f4295603dd3f2b5d23336902672f9d6877f1407",
+        "method": "automated",
+        "run_id": "security-auth-order/aggregate/2"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "23f7c0049bed2cae62939f79f9eba8b2c16175717504c85e078cd6db4068c88c",
+        "method": "automated",
+        "run_id": "security-auth-order/aggregate/2"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "811a189c17c8ce3ae2b27922dbdf86699676e823179c03562443f6cf8dd8f7f5",
+        "method": "automated",
+        "run_id": "security-auth-order/aggregate/3"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "cbab1662cb96d4276a61553a4e17822e794221d688ceb1f5437b07bc411af3ca",
+        "method": "automated",
+        "run_id": "security-auth-order/aggregate/3"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "c956e17601e5ecd48e528ec616a550f04200ccb8cb31e0d311c6b0ab2889571d",
+        "method": "automated",
+        "run_id": "security-auth-order/aggregate/3"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "c3dc22a04cf223ecf1c7610db4cab74be01a9a726d98cf414989a05a582f3c58",
+        "method": "automated",
+        "run_id": "security-auth-order/aggregate/3"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "b69ec2a66cb36055d7f051b6ad4d3293c9e32b3ee575fa0ac69d97a9ca617eaf",
+        "method": "automated",
+        "run_id": "security-auth-order/assessed/1"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "d19f1b5c2fd928ebc97ff54c096b810fdce7ff0e369326fb13adb2b728a7fbb8",
+        "method": "automated",
+        "run_id": "security-auth-order/assessed/1"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "e5dd72e513fc2d000b091d969eb37158001f69dc1c372bcba92a1b8280039749",
+        "method": "automated",
+        "run_id": "security-auth-order/assessed/1"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "93d9b231f2a6a9adac17c8376f0939b7a8e56f4d1340d04efe5af9fc1c3816e5",
+        "method": "automated",
+        "run_id": "security-auth-order/assessed/1"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "56f8f9ff47debf20aa1d217e18118ad19e83b5f8d081da76d9e15520573f9218",
+        "method": "automated",
+        "run_id": "security-auth-order/assessed/2"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "965fcd43935e8124abe41ae63cbc69a6aa2f9be1a13455e8e83b0e52f277fd04",
+        "method": "automated",
+        "run_id": "security-auth-order/assessed/2"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "77fedf5d3cae89c711dab51e0e00c035399ad662dec0c91840e690559bffe8f1",
+        "method": "automated",
+        "run_id": "security-auth-order/assessed/2"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "c97e470f23432fd885923fdf9bbf2f28f343645d8b2a2fc821e88a2bde55a669",
+        "method": "automated",
+        "run_id": "security-auth-order/assessed/2"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "02ccc8dc4289d591be2087ffd5b68d57a58192361818293389e6029cfd6b34e1",
+        "method": "automated",
+        "run_id": "security-auth-order/assessed/3"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "c6a046048d11f6526891b4463cb3f92be1fbd8813075719c9a29da43088f7461",
+        "method": "automated",
+        "run_id": "security-auth-order/assessed/3"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "cc28e2aeea21a3f836b083cbfa56db65c7834e1c32a5672039f7c529d8bc2803",
+        "method": "automated",
+        "run_id": "security-auth-order/assessed/3"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "671863b03c2d2bda2ad4a0b008b7040c448ebca81d1c25f8264ade7a1e4b678f",
+        "method": "automated",
+        "run_id": "security-auth-order/assessed/3"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "c05cae76bc05f32bd018d6c421789585f7b5c7e2e1151ed2bd28ca670e81fd20",
+        "method": "automated",
+        "run_id": "security-auth-order/focused1/1"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "e4705a63d0ab14d62c17c151b09cc897c88005b52c6447c18ebd1e60626e675b",
+        "method": "automated",
+        "run_id": "security-auth-order/focused1/1"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "92af703d3d9cc366ed455f7efdc55907a8964c645eef15e36d3fdf5e2c269032",
+        "method": "automated",
+        "run_id": "security-auth-order/focused1/1"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "80169e615dc80271a5abda12c7fd588bed26b777bc7ade7f121ee141bf8696e6",
+        "method": "automated",
+        "run_id": "security-auth-order/focused1/1"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "7bcdc6a8564fee6886df0cac1478b26cf1b61ae9218110873c07448fa49cc779",
+        "method": "automated",
+        "run_id": "security-auth-order/focused1/2"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "0eef5c5f293e043f219de0d783af1aed4933de307b26879a34f26782db34c787",
+        "method": "automated",
+        "run_id": "security-auth-order/focused1/2"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "041e9bc05c72d9f907fbd5fe427834ddfa14ab1450c621b9ad648553a0b53e5c",
+        "method": "automated",
+        "run_id": "security-auth-order/focused1/2"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "8a882057a43578c0c2316bd96b0aec1a46605ef9b220b07f21a65f67babb5deb",
+        "method": "automated",
+        "run_id": "security-auth-order/focused1/2"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "f6c256d28370db377b181e502bb364b963f5292f341b2e375c1f252250ac8f6c",
+        "method": "automated",
+        "run_id": "security-auth-order/focused1/3"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "f577b80358c045f44b89bd11aa104f1742ac0ea9e80c02f47e95fdcc7c93ec6c",
+        "method": "automated",
+        "run_id": "security-auth-order/focused1/3"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "7701b3ea350c4fc296ac558091364b467561e162f522dba0ce1c910be45f4d6e",
+        "method": "automated",
+        "run_id": "security-auth-order/focused1/3"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "5e9ebec61731d506c9bc1ca327d1ea78f55ed40cc21f32acfb6cf93f3c1ce192",
+        "method": "automated",
+        "run_id": "security-auth-order/focused1/3"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "d65de5b4ee4ea372aaf6b8532260840e55d702c68ae5437b2853adb7670696e3",
+        "method": "automated",
+        "run_id": "security-auth-order/focused3/1"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "99946cad3964bc95be476dbdf02aae549aeb38f7abb0e431e8b73f4df79b7f6a",
+        "method": "automated",
+        "run_id": "security-auth-order/focused3/1"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "6f701e665dffac7126f26c7053377b172686d782228cb89f1f4b45e833c533da",
+        "method": "automated",
+        "run_id": "security-auth-order/focused3/1"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "0a655fc9e47ad36d950a78f0cbd89cf55f0ac7cec60f0d8026a3171f0264e188",
+        "method": "automated",
+        "run_id": "security-auth-order/focused3/1"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "901862c2d653ab75afd2615b1f7f9816d1624a4ac8111d51dc290076fe0f55d6",
+        "method": "automated",
+        "run_id": "security-auth-order/focused3/2"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "5772ed37985ef94b188032edffbf800db8343d67fdca0b90670ff3932f52e84d",
+        "method": "automated",
+        "run_id": "security-auth-order/focused3/2"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "c5458b05c7305501c38fd6d924d9e6574c29da0f1e74fe1760dc2b3b36f060be",
+        "method": "automated",
+        "run_id": "security-auth-order/focused3/2"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "5ad50c6b598d4d9409e1e3560d98ad841ded16b91579ffb2becdc3d83fdf0292",
+        "method": "automated",
+        "run_id": "security-auth-order/focused3/2"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "2853585bce4d56425a4acda94d683a1210e565f2bb043992104d6d16fb3ecc6f",
+        "method": "automated",
+        "run_id": "security-auth-order/focused3/3"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "155620586f5d434262b5c0ebab0e924194d89f8d7776718044ea9bb984bacf35",
+        "method": "automated",
+        "run_id": "security-auth-order/focused3/3"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "b2b739234d7d7efd080877d54eafac630cd7657dc229e678196652f59db92baa",
+        "method": "automated",
+        "run_id": "security-auth-order/focused3/3"
+      },
+      {
+        "defect_id": "security-auth-order-defect",
+        "finding_id": "651a30b6ef3fc70c3aeaaa426eabff85949b494bf3fee7455fbb1d483b03a86e",
+        "method": "automated",
+        "run_id": "security-auth-order/focused3/3"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "3ebe138c19cdd5bb98167f5d604c91e9034f4f962055cea5fbe7e84fb1a9f32c",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/aggregate/1"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "34ac62875e4a92bfc30ce21db2d7c1117b2ad1ec610d9db783614c535ab90261",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/aggregate/1"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "fed954259670006453e63c38fb7ac0f3462b92732f49ba1ffeafd02dc54ea858",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/aggregate/1"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "3a699cb76c65aca65185318b41b673130b4039d7997620c6308b21c6edb002ba",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/aggregate/1"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "217f682929ac01f05a7ccd4dd9fd825eb27d3da9d0945b84f9038a7f21c08b69",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/aggregate/2"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "bd6df0ad56516f62303b41f122509bd768d59749b94836b9ee18bdf799c57956",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/aggregate/2"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "2ce54acdf45dc6b82234b9c2d4fcfc31142b5005182108ecc666dad85450a451",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/aggregate/2"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "25be13bb2ffb863027d08382e2d72c1f5d8ae12758ea0a19b590f6a6446c6624",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/aggregate/2"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "897dfd7bb5f7795227e35eaaf3565f47fe8ccff706984486620bb233205a8ee0",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/aggregate/3"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "4fd5ed112eae73c813489ac849dc3975dae147e360c1d3b0db58e089b81d3dd6",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/aggregate/3"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "33d79970834bcce8263c8948756c1fd8031638bb91af1e7befecb9c9a12527cd",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/aggregate/3"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "c83a4786ff3d37ad035728a9a1e1b6dbcb8435d8ee6356130c4c46f38126b5da",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/aggregate/3"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "f112dd5aeab697b14b8be07262cb85d674df32ac7a827d232173c396644318e3",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/assessed/1"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "7e64dabb0c19a610362be85d6502288169951e54178b5c87b7238e35bf1e11b0",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/assessed/1"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "d070bad78205c3b919ba8752321f28cc8f31e42934da7cb9a957864a42ea25e5",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/assessed/1"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "24b2ddb98e2edca5af7752f1d9e306a3d293edf06522964d49a008488a30bc84",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/assessed/1"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "9b47a947024021a4608801a96c2875cdebf88556d06058332b2f72288b84a08f",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/assessed/2"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "c8632384e19053e76ab8cadb2bac522319b6192deb931813508c64036374a3c4",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/assessed/2"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "fa9dc1a054ea67197c7bd145cca3a5f3b51a1b257d92b029f6e90a245056331c",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/assessed/2"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "48d84139cd79e62f1e1839d7be8ca5e831d2e07bfc68947407719d90e851525d",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/assessed/2"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "f5f733779f05c9a0e1fa1a1d2832735bd3f55ace9ec2acf669780278f5ea7ca7",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/assessed/3"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "b46c8ac4726442b47eaec88d5c40d550e7109ad0617af474ad0b125b93809b5f",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/assessed/3"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "46a3daaab32329187596160d4253258de4915823b90ed146b178b99934fc05fb",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/assessed/3"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "43b9ddeb3a9c819b609c7e009053ae1ccd141d1a6d6b13fec3d6cbe568e9ef4c",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/assessed/3"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "0ea4144c225d21da43aa77975a7e3c72c0e25cd14708b55c04e6590d271ef833",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused1/1"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "6d8ec90f5194f4d9c1b16433ad3213cefefc79ac3604f9492727ba38b2ba0543",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused1/1"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "fd45ab2c45046510215a6e6cf0edcdaaab5b8351ced6a0ee2478c44524c9ca6b",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused1/1"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "d5688bb4fef598a47e500e522618ab32e530989935afc04f11a4262834f55556",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused1/1"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "87c76446c97d80c92219cf9d6862380e3ca1f7668ea36cf04a9001feb444a150",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused1/2"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "6d1e6e4edd4153f0d6715a224cbf3c938dd0c7a9e41484253f7e81ac03385942",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused1/2"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "7740437397930e0a1416bcf5133c4e9a3d51c913ae91f76538e70041c8be3d26",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused1/2"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "263037bff40a1e33e09e55d0c61e852f8caa0c20aa3cb248630f9b711e31d00f",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused1/2"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "88712d71551cc528f668120ed73451edb3d8bad1b36b7334752bf05a12f35cab",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused1/3"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "cdf39be97bd93229bc9350fd324711b594ab8a8fdb4330e91777b0215af5bb7e",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused1/3"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "03c4b9e3c4e19652704a8015b10aef64a25906960cf23d7a8310be4f952d6067",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused1/3"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "7aca12ead9a4e2271eb46fd417d53aa18e6c6f4dc16df07f6512c47a21caccc9",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused1/3"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "8d959491bd5fe14e7cefa4c8d3c7ceeaa48cadafbb951c3e5e4ffbba2eeb9252",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused3/1"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "608ce8054683e21e651e661bfe2e0cc4374816301c5f6836cc97f45b9f754bf6",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused3/1"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "61047207c7dc3f56b0354d026aa9728d46373086b6338bb665807838d9b888a7",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused3/1"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "fa401519066508b2de7f957948a0f2a126f66c422b3337ecd3c0a7a5bc692bc5",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused3/1"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "71a984f69d10a8caef5ed8ab263b79b03e1bfe9821e92816e0e01f7ba23d585d",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused3/2"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "875f050030762469496148f72ed94a0d2697cfff050ace4e2fdeedc6e8533165",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused3/2"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "3cdc4a3cdb1cb9058150486f646520ae3e7d924e2a71cb63881a5fdd86774e7b",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused3/2"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "bbcc9fc59280bfaa01726e30d4b4842b21b98eb696216ab43c7cda58ba7b8bdd",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused3/2"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "65f65e87e9a8ea20b9bb7ebd62f1f4ee0c54bdec9b7103eca7c18613dbdc95a2",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused3/3"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "ae291e6832713c07a343f744964a9966836417ea4798c43cec2b5982209d48fa",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused3/3"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "990464c01490b451eee28ad6087db7fa09f7352678ab50e3ca1fa5f9127055df",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused3/3"
+      },
+      {
+        "defect_id": "tests-consumer-fixture-defect",
+        "finding_id": "fb71605019e5431aa3db808ff728f99e1da715cfef5ade5516f41861c4df8019",
+        "method": "automated",
+        "run_id": "tests-consumer-fixture/focused3/3"
+      }
+    ],
+    "defect_cells_automatically_matched": 24,
+    "pending_for_a_person": 0,
+    "pipeline_latency_seconds_including_failed_attempts": {
+      "cells": 36,
+      "max": 2161.01,
+      "mean": 765.73,
+      "median": 749.38,
+      "p95_nearest_rank": 1824.25
+    },
+    "returned_findings_not_validated_for_acceptance": 0
+  },
+  "operation_cost": {
+    "complete": true,
+    "g5_complete": true,
+    "g5_fallbacks": 0,
+    "g5_paid_calls": 0,
+    "g5_requests": 554,
+    "known_nominal_attribution_usd": 0.60218,
+    "known_provider_g5_tokens": 2631021,
+    "known_provider_smoke_tokens": 39377,
+    "known_tokens_lower_bound": 2670398,
+    "method": "Separate phase known subtotals; maximum of native/provider tokens per phase is a conservative lower bound, never their sum. Missing total or attribution remains unknown. Nominal known spend is a subtotal, not billing.",
+    "native_g5_tokens": 2631021,
+    "native_smoke_tokens": 39377,
+    "nominal_attribution_usd": 0.60218,
+    "smoke_complete": true,
+    "total_tokens": 2670398
+  },
+  "original_failed_sessions": 2,
+  "pipeline_session_error": null,
+  "provider": {
+    "g5": {
+      "available": true,
+      "by_agent_key_base": {
+        "opencode | proxy master key | http://192.0.2.40:8045/v1": {
+          "completion_tokens": 164044,
+          "prompt_tokens": 21078930,
+          "rows": 233
+        },
+        "python-httpx | proxy master key | http://192.0.2.40:8045/v1": {
+          "completion_tokens": 56256,
+          "prompt_tokens": 3991753,
+          "rows": 57
+        },
+        "python-httpx2 | proxy master key | http://192.0.2.40:8045/v1": {
+          "completion_tokens": 566971,
+          "prompt_tokens": 2064050,
+          "rows": 554
+        }
+      },
+      "evaluator_requests": 554,
+      "evaluator_usage": {
+        "input": 2064050,
+        "output": 566971,
+        "total": 2631021
+      },
+      "fallbacks": 0,
+      "known_rows": 844,
+      "nominal_attribution_usd": 0.593093,
+      "other_non_onprem_requests": 0,
+      "other_onprem_requests": 290,
+      "paid_calls": 0,
+      "trailing_slash_onprem_rows": 0
+    },
+    "prelaunch": {
+      "available": true,
+      "by_agent_key_base": {
+        "opencode | proxy master key | http://192.0.2.40:8045/v1": {
+          "completion_tokens": 105023,
+          "prompt_tokens": 14150146,
+          "rows": 156
+        },
+        "python-httpx | proxy master key | http://192.0.2.40:8045/v1": {
+          "completion_tokens": 50403,
+          "prompt_tokens": 1923772,
+          "rows": 29
+        },
+        "python-httpx2 | proxy master key | http://192.0.2.40:8045/v1": {
+          "completion_tokens": 9087,
+          "prompt_tokens": 30290,
+          "rows": 9
+        }
+      },
+      "evaluator_requests": 9,
+      "evaluator_usage": {
+        "input": 30290,
+        "output": 9087,
+        "total": 39377
+      },
+      "fallbacks": 0,
+      "known_rows": 194,
+      "nominal_attribution_usd": 0.009087,
+      "other_non_onprem_requests": 0,
+      "other_onprem_requests": 185,
+      "paid_calls": 0,
+      "trailing_slash_onprem_rows": 0
+    },
+    "smoke": {
+      "available": true,
+      "by_agent_key_base": {
+        "opencode | proxy master key | http://192.0.2.40:8045/v1": {
+          "completion_tokens": 21900,
+          "prompt_tokens": 3470513,
+          "rows": 38
+        },
+        "python-httpx2 | proxy master key | http://192.0.2.40:8045/v1": {
+          "completion_tokens": 9087,
+          "prompt_tokens": 30290,
+          "rows": 9
+        }
+      },
+      "evaluator_requests": 9,
+      "evaluator_usage": {
+        "input": 30290,
+        "output": 9087,
+        "total": 39377
+      },
+      "fallbacks": 0,
+      "known_rows": 47,
+      "nominal_attribution_usd": 0.009087,
+      "other_non_onprem_requests": 0,
+      "other_onprem_requests": 38,
+      "paid_calls": 0,
+      "trailing_slash_onprem_rows": 0
+    }
+  },
+  "qualified": true,
+  "reconciled_usage_by_phase": {
+    "originals": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 1912008,
+      "output": 525895,
+      "total": 2437903
+    },
+    "reruns": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 152042,
+      "output": 41076,
+      "total": 193118
+    },
+    "unassigned": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0,
+      "total": 0
+    }
+  },
+  "references": {
+    "c1": {
+      "aggregate": 4,
+      "assessed": 6,
+      "clean_complete": 12,
+      "complete": 31,
+      "defect_nonempty": 19,
+      "first_attempt": 31,
+      "historical_qualified": false,
+      "mean_cell_latency_seconds": 659.28,
+      "native_tokens": 2499181,
+      "reconciled_tokens": 2505333,
+      "rule_a_recovery": "unobserved; published verdict unchanged"
+    },
+    "g3": {
+      "aggregate": 6,
+      "assessed": 5,
+      "clean_complete": 12,
+      "complete": 34,
+      "defect_nonempty": 22,
+      "first_attempt": 34,
+      "historical_qualified": false,
+      "mean_cell_latency_seconds": 531.37,
+      "native_tokens": 2523739,
+      "reconciled_tokens": 2523739,
+      "rule_a_recovery": "unobserved; published verdict unchanged"
+    },
+    "g4": {
+      "aggregate": 6,
+      "assessed": 4,
+      "clean_complete": 12,
+      "complete": 33,
+      "defect_nonempty": 21,
+      "first_attempt": 33,
+      "historical_qualified": false,
+      "mean_cell_latency_seconds": 722.8,
+      "native_tokens": 2514190,
+      "reconciled_tokens": 2514190,
+      "rule_a_recovery": "unobserved; published verdict unchanged"
+    },
+    "s2": {
+      "aggregate": 6,
+      "assessed": 5,
+      "clean_complete": 12,
+      "complete": 34,
+      "defect_nonempty": 22,
+      "first_attempt": 34,
+      "historical_qualified": false,
+      "mean_cell_latency_seconds": 732.87,
+      "native_tokens": 2522568,
+      "reconciled_tokens": 2574137,
+      "rule_a_recovery": "unobserved; published verdict unchanged"
+    }
+  },
+  "released_predicate_disagreements": [],
+  "rerun_failed_sessions": 0,
+  "reruns": [
+    {
+      "cell": "security-auth-order/focused3/3",
+      "original_status": "failed",
+      "original_tokens": 68860,
+      "rerun_status": "complete",
+      "rerun_tokens": 113418,
+      "selected_attempt": 2
+    },
+    {
+      "cell": "tests-consumer-fixture/focused1/1",
+      "original_status": "failed",
+      "original_tokens": 65922,
+      "rerun_status": "complete",
+      "rerun_tokens": 79700,
+      "selected_attempt": 2
+    }
+  ],
+  "rule": "A",
+  "schema_version": 1,
+  "semantic_qualification": false,
+  "sessions_complete": 168,
+  "sessions_started": 170,
+  "sessions_unstarted": 0,
+  "smoke": {
+    "activation_verified": true,
+    "all_attempts_reconciled": true,
+    "completed_cells": 3,
+    "completion_waived": false,
+    "cumulative_usage": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 30290,
+      "output": 9087,
+      "total": 39377
+    },
+    "holdout_used": false,
+    "ledger_sha256": "527589814709f0bd4c826403958e04e3e75784a633e960c4c07553cefb55e5df",
+    "line_bound_prompt_in_invocation": true,
+    "prepared_citation_correction": true,
+    "prepared_line_counts": true,
+    "prepared_protocol_correction": true,
+    "qualification_rule_a": true,
+    "reconciled_cumulative_usage": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 30290,
+      "output": 9087,
+      "total": 39377
+    },
+    "session_complete": true,
+    "session_timeout_seconds": 1800,
+    "smoke_attempts": 3,
+    "summary_sha256": "f2d1608b9694657226b9c5211a51859f76c6f652a20bef108c0859360e989902",
+    "verified": true
+  },
+  "status_counts": {
+    "complete": 36
+  },
+  "tests": {
+    "accepted_replay_valid": true,
+    "all_12_clean_complete": true,
+    "all_24_defect_cells_nonempty_valid": true,
+    "all_36_complete_accounted": true,
+    "all_attempts_provenance_routing": true,
+    "all_attempts_reconciled": true,
+    "all_attempts_within_ceiling": true,
+    "all_provider_requests_attributed_once": true,
+    "bounded_rule_a_selection": true,
+    "cumulative_cost_complete": true,
+    "every_attempt_terminal": true,
+    "experiment_terminal": true,
+    "g5_spend_verified": true,
+    "holdout_untouched": true,
+    "independent_attempt_execution": true,
+    "independent_pipeline_sessions": true,
+    "independent_request_attribution": true,
+    "matrix_exact": true,
+    "native_attempts_consistent": true,
+    "provider_attribution_succeeded": true,
+    "provider_window_ledger_consistent": true,
+    "released_predicates_consistent": true,
+    "released_process_exit_success": true,
+    "router_after": true,
+    "router_prelaunch": true,
+    "router_smoke": true,
+    "rule_a_frozen": true,
+    "six_aggregate_nonempty_valid": true,
+    "six_assessed_actual_complete": true,
+    "smoke_complete_verified": true,
+    "smoke_spend_verified": true,
+    "terminal_experiment_record": true,
+    "zero_paid_calls_and_fallbacks": true
+  },
+  "views": {
+    "first_attempt": {
+      "aggregate": 6,
+      "assessed": 6,
+      "clean_complete": 12,
+      "complete": 34,
+      "defect_nonempty": 22
+    },
+    "rule_a": {
+      "aggregate": 6,
+      "assessed": 6,
+      "clean_complete": 12,
+      "complete": 36,
+      "defect_nonempty": 24
+    }
+  }
+}

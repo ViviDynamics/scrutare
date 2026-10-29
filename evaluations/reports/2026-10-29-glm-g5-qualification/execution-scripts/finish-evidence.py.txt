@@ -1,0 +1,30 @@
+"""Retain final evidence even on interruption/routing failure. Never launch/retry."""
+import datetime,json,subprocess,time
+from pathlib import Path
+H=Path(__file__).resolve().parent;E=H/'evidence';job=H/'g5'
+while subprocess.run(['systemctl','--user','is-active','-q','scrutare-glm-g5.service']).returncode==0:
+ time.sleep(30)
+status=subprocess.run(['systemctl','--user','show','scrutare-glm-g5.service','-p','Result','-p','ExecMainStatus','-p','ExecMainExitTimestamp','-p','ActiveState'],capture_output=True,text=True).stdout
+try:
+ experiment=json.loads((job/'experiment/experiment.json').read_text());state=experiment.get('status','unknown')
+except (OSError,ValueError):state='missing_or_unreadable'
+end=datetime.datetime.now(datetime.timezone.utc)
+(E/'run-completion.json').write_text(json.dumps({'observed_ended_utc':end.isoformat(),'systemd_status':status.strip().splitlines(),'experiment_status':state},indent=2)+'\n')
+results=[]
+def retain(argv):
+ try:
+  p=subprocess.run(argv,capture_output=True,text=True);r={'script':Path(argv[-1]).name if len(argv)==1 else ' '.join(argv[:3]),'returncode':p.returncode,'stdout':p.stdout,'stderr':p.stderr}
+ except OSError as error:r={'script':str(argv),'returncode':None,'error':type(error).__name__}
+ results.append(r)
+ (E/'finish-step-status.json').write_text(json.dumps(results,indent=2)+'\n')
+retain(['systemctl','--user','stop','scrutare-glm-g5-load.service'])
+retain(['/usr/bin/python3','-I',str(H/'load-sampler.py')])
+time.sleep(60)
+try:start=datetime.datetime.fromisoformat(json.loads((job/'process.json').read_text())['started_utc'].replace('Z','+00:00'))
+except (OSError,ValueError,KeyError):start=end-datetime.timedelta(days=1)
+fmt=lambda t:t.strftime('%Y-%m-%d %H:%M:%S')
+retain(['/usr/bin/python3',str(H/'collect-window.py'),'g5',fmt(start),fmt(end)])
+retain(['/usr/bin/python3',str(H/'private-call.py'),'spend-verify.py',fmt(start),fmt(end),str(E/'g5-spend-check.json')])
+retain(['/usr/bin/python3',str(H/'private-call.py'),'fallback-check.py',str(E/'fallback-check-after.json')])
+retain(['/usr/bin/python3',str(H/'build-ledger-and-check.py')])
+(E/'FINAL-EVIDENCE-READY.json').write_text(json.dumps({'ready':True,'at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'every_collection_step_succeeded':all(r['returncode']==0 for r in results),'experiment_status':state})+'\n')

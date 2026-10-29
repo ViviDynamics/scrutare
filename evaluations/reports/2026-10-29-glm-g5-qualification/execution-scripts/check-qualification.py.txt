@@ -1,0 +1,30 @@
+"""Released rule A inspector, failing closed while preserving incomplete-run cost."""
+import argparse,collections,json
+from pathlib import Path
+from scrutare.evaluation.qualification import inspect_rule_a
+p=argparse.ArgumentParser();p.add_argument('job',type=Path);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
+ledger=json.loads((a.job/'provider-ledger.json').read_text())
+try:
+ r=inspect_rule_a(a.job/'experiment',json.loads((a.job/'gate.json').read_text()),ledger)
+except (OSError,ValueError,KeyError,TypeError,IndexError) as error:
+ try:experiment=json.loads((a.job/'experiment/experiment.json').read_text())
+ except (OSError,ValueError):experiment={}
+ keys=('input','output','cache_read','cache_write','total')
+ r={'schema_version':1,'rule':'A','tests':{'inspectable_complete_artifacts':False},'qualification':'not_qualified','inspection_error_type':type(error).__name__,'cumulative_usage':experiment.get('cumulative_usage'),'reconciled_cumulative_usage':{k:sum(q['usage'][k] for q in ledger['requests']) for k in keys},'cells':[],'semantic_qualification':False,'holdout_used':False,'limits':'Missing/incomplete evidence fails qualification. Retained partial experiment, session records, provider rows and unassigned ledger must be reported; unknown cost is not zero.'}
+completion=json.loads((a.job.parent/'evidence/run-completion.json').read_text());status=completion['systemd_status']
+r['tests']['released_process_exit_success']=('Result=success' in status and 'ExecMainStatus=0' in status)
+r['tests']['terminal_experiment_record']=completion['experiment_status']=='complete'
+r['tests']['provider_attribution_succeeded']=not ledger.get('attribution_failed',False)
+# Router evidence is independent of provider-row attribution.
+for label in ('smoke','prelaunch','after'):
+ try:ok=json.loads((a.job.parent/f'evidence/fallback-check-{label}.json').read_text())['ok'] is True
+ except (OSError,ValueError,KeyError):ok=False
+ r['tests']['router_'+label]=ok
+r['qualification']='pass' if all(r['tests'].values()) else 'not_qualified'
+r['status_counts']=dict(collections.Counter(c['status']for c in r['cells']))
+r['first_attempt_status_counts']=dict(collections.Counter(c['attempts'][0]['status'] if c['attempts'] else 'missing' for c in r['cells']))
+r['cells_needing_rerun']=sum(len(c['attempts'])==2 for c in r['cells'])
+r['rerun_attempts']=sum(max(0,len(c['attempts'])-1)for c in r['cells'])
+r['original_failed_sessions']=sum(c['attempts'][0].get('failed_sessions',0) for c in r['cells'] if c['attempts'])
+r['rerun_failed_sessions']=sum(v.get('failed_sessions',0)for c in r['cells']for v in c['attempts'][1:])
+a.output.write_text(json.dumps(r,indent=2)+'\n');print(json.dumps({k:v for k,v in r.items()if k!='cells'}))

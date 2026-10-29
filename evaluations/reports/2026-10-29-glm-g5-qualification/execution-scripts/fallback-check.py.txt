@@ -1,0 +1,27 @@
+"""Read the live router settings and deployments; refuse unless onprem/glm-5.3-flash has one
+self-hosted deployment and no fallbacks of any kind. Never prints the key."""
+import json, os, sys, time, urllib.request, ipaddress, socket
+K = os.environ['K']; B = 'https://litellm.vividynamics.com'; out = sys.argv[1]
+def get(p):
+    r = urllib.request.Request(B + p, headers={'Authorization': 'Bearer ' + K})
+    return json.load(urllib.request.urlopen(r, timeout=60))
+addresses=sorted({a[4][0]for a in socket.getaddrinfo('litellm.vividynamics.com',443,type=socket.SOCK_STREAM)})
+lan=bool(addresses)and all(ipaddress.ip_address(a).is_private and not ipaddress.ip_address(a).is_loopback for a in addresses)
+assert lan,'LiteLLM hostname must resolve only to LAN addresses'
+rs = get('/router/settings'); mi = get('/model/info')
+fields = {f['field_name']: f['field_value'] for f in rs['fields']}
+fb = {k: v for k, v in fields.items() if 'fallback' in k and k != 'max_fallbacks'}
+glm = [d for d in mi['data'] if d.get('model_name') == 'onprem/glm-5.3-flash']
+wild = [d['model_name'] for d in mi['data'] if '*' in (d.get('model_name') or '')]
+aliases = fields.get('model_group_alias')
+dep = [{'model': d['litellm_params'].get('model'), 'api_base': d['litellm_params'].get('api_base'),
+        'db_model': (d.get('model_info') or {}).get('db_model'), 'id': (d.get('model_info') or {}).get('id')} for d in glm]
+doc = {'lan_path_private':lan,'resolved_lan_addresses':addresses,'read_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'fallback_fields': fb,
+       'model_group_alias': aliases, 'wildcard_groups': wild, 'glm_deployments': dep,
+       'num_retries': fields.get('num_retries'), 'timeout': fields.get('timeout')}
+ok = (all(not v for v in fb.values()) and not wild and len(dep) == 1
+      and dep[0]['model'] == 'openai/glm-5.3-flash' and dep[0]['api_base'] == 'http://192.0.2.40:8045/v1'
+      and not any('glm' in json.dumps(v) for v in (aliases or {}).values()))
+doc['ok'] = ok
+open(out, 'w').write(json.dumps(doc, indent=1) + '\n'); print(json.dumps(doc, indent=1))
+sys.exit(0 if ok else 1)

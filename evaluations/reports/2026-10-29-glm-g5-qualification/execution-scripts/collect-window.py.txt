@@ -1,0 +1,16 @@
+"""Read a spend window privately; verify the self-hosted evaluator rows and zero fallbacks."""
+import collections,datetime,hashlib,json,shlex,subprocess,sys,os
+from pathlib import Path
+H=Path(__file__).resolve().parent
+label,start,end=sys.argv[1:]
+K=next(shlex.split(l.partition('=')[2].strip())[0] for l in Path('/home/user/Workspace/example/infrastructure/.env').read_text().splitlines() if l.startswith('LITELLM_MASTER_KEY='))
+out=H/'evidence'/f'{label}-rows.json'
+p=subprocess.run([sys.executable,str(H/'spend-rows.py'),start,end,str(out)],capture_output=True,env=dict(os.environ,K=K),check=True)
+assert K.encode() not in p.stdout+p.stderr
+rows=json.loads(out.read_text())
+def agent(r):return ((r.get('metadata') or {}).get('user_agent') or 'none').split('/')[0]
+ours=[r for r in rows if agent(r)=='python-httpx2']
+def paid(r):
+ return r['model_group']!='onprem/glm-5.3-flash' or r['model']!='openai/glm-5.3-flash' or (r.get('api_base') or '').rstrip('/') not in ('http://192.0.2.40:8045','http://192.0.2.40:8045/v1')
+summary={'window_utc':[start,end],'rows_all_keys':len(rows),'evaluator_rows':len(ours),'evaluator_prompt_tokens':sum(r.get('prompt_tokens') or 0 for r in ours),'evaluator_completion_tokens':sum(r.get('completion_tokens') or 0 for r in ours),'evaluator_nominal_attribution_usd':round(sum(r.get('spend') or 0 for r in ours),6),'evaluator_paid_provider_rows':sum(paid(r) for r in ours),'evaluator_attempted_fallbacks_nonzero':sum(bool((r.get('metadata') or {}).get('attempted_fallbacks')) for r in ours),'evaluator_rows_present':bool(ours),'all_keys_attempted_fallbacks_nonzero':sum(bool((r.get('metadata') or {}).get('attempted_fallbacks')) for r in rows),'all_keys_served_by':dict(collections.Counter(f"{r['model_group']} | {r['model']} | {(r['api_base'] or '').rstrip('/')}" for r in rows)),'rows_sha256_private':hashlib.sha256(out.read_bytes()).hexdigest(),'read_utc':datetime.datetime.now(datetime.timezone.utc).isoformat()}
+(H/'evidence'/f'{label}-spend-summary.json').write_text(json.dumps(summary,indent=2)+'\n');print(json.dumps(summary))

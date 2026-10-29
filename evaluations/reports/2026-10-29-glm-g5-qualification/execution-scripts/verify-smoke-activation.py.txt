@@ -1,0 +1,30 @@
+"""Verify all three cells of the one smoke, including actual released rule A policy."""
+import hashlib,json
+from pathlib import Path
+from scrutare.engine.recovery import RULE_A
+from scrutare.evaluation.qualification import inspect_rule_a
+H=Path(__file__).resolve().parent;E=H/'evidence';root=H/'smoke'
+s=json.loads((E/'smoke-summary.json').read_text());p=json.loads((H/'g5/preparation.json').read_text());snapshot=json.loads((root/'snapshot.json').read_text())
+assert s['status']=='complete' and s['qualification_rule_a'] is True and s['session_timeout_seconds']==1800
+assert s['scrutare_version']==p['release_tag'] and snapshot['qualification']==RULE_A
+r=inspect_rule_a(root,{'cases':['security-auth-order'],'clean_cases':[],'holdout_used':False,'max_tokens_per_run':50000},json.loads((E/'smoke-request-ledger.json').read_text()))
+for key in ('every_attempt_terminal','all_attempts_reconciled','all_attempts_provenance_routing','all_attempts_within_ceiling','zero_paid_calls_and_fallbacks','all_provider_requests_attributed_once','rule_a_frozen','cumulative_cost_complete','holdout_untouched'):assert r['tests'][key],key
+for c in r['cells']:assert c['status']=='complete' and c['replay_valid'] and c['evidence_valid'] and c['findings']>0
+assert len(r['cells'])==3 and all(1 <= len(c['attempts']) <= 2 for c in r['cells'])
+for cell in r['cells']:
+ d=Path(cell['run_dir']);config=json.loads((d/'config.json').read_text())
+ assert config['context']['line_counts'] is True
+ assert config['findings']['citation_correction'] is True and config['findings']['protocol_correction'] is True
+ assert config['models']['default']['max_output_tokens']==20000 and config['models']['default']['structured_output']=='json_schema'
+ entries=json.loads((d/'review-inputs/repository-context.json').read_text())['entries']
+ assert entries and all('line_count' in e for e in entries) and any(e.get('line_count') for e in entries)
+ for result_path in d.glob('**/sessions/*/attempt-*/result.json'):
+  result=json.loads(result_path.read_text());assert result['status']=='complete' and result['accounting_complete'] is True
+  invocation=json.loads((result_path.parent/'invocation.json').read_text())
+  assert invocation['timeout_seconds']==1800
+  assert invocation['rail']['model']=='onprem/glm-5.3-flash' and invocation['rail']['base_url']=='https://litellm.vividynamics.com/v1'
+  assert 'end_line may never exceed line_count' in ' '.join(invocation['argv'])
+  policy=result['protocol_correction'];assert set(policy)=={'offered','defects','outcome','exit_code'}
+  assert policy['outcome']=='corrected' if policy['offered'] else policy=={'offered':False,'defects':0,'outcome':None,'exit_code':None}
+out={'verified':True,'activation_verified':True,'prepared_line_counts':True,'prepared_citation_correction':True,'prepared_protocol_correction':True,'line_bound_prompt_in_invocation':True,'smoke_attempts':sum(len(c['attempts']) for c in r['cells']),'session_complete':True,'completion_waived':False,'qualification_rule_a':True,'completed_cells':3,'session_timeout_seconds':1800,'all_attempts_reconciled':True,'cumulative_usage':r['cumulative_usage'],'reconciled_cumulative_usage':r['reconciled_cumulative_usage'],'summary_sha256':hashlib.sha256((E/'smoke-summary.json').read_bytes()).hexdigest(),'ledger_sha256':hashlib.sha256((E/'smoke-request-ledger.json').read_bytes()).hexdigest(),'holdout_used':False}
+(E/'smoke-verification.json').write_text(json.dumps(out,indent=2)+'\n');print(json.dumps(out))

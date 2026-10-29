@@ -1,0 +1,32 @@
+{
+ "activation_verified": true,
+ "all_attempts_reconciled": true,
+ "completed_cells": 3,
+ "completion_waived": false,
+ "cumulative_usage": {
+  "cache_read": 0,
+  "cache_write": 0,
+  "input": 30290,
+  "output": 9087,
+  "total": 39377
+ },
+ "holdout_used": false,
+ "ledger_sha256": "527589814709f0bd4c826403958e04e3e75784a633e960c4c07553cefb55e5df",
+ "line_bound_prompt_in_invocation": true,
+ "prepared_citation_correction": true,
+ "prepared_line_counts": true,
+ "prepared_protocol_correction": true,
+ "qualification_rule_a": true,
+ "reconciled_cumulative_usage": {
+  "cache_read": 0,
+  "cache_write": 0,
+  "input": 30290,
+  "output": 9087,
+  "total": 39377
+ },
+ "session_complete": true,
+ "session_timeout_seconds": 1800,
+ "smoke_attempts": 3,
+ "summary_sha256": "f2d1608b9694657226b9c5211a51859f76c6f652a20bef108c0859360e989902",
+ "verified": true
+}

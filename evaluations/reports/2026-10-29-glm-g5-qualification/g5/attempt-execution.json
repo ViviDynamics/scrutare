@@ -1,0 +1,3042 @@
+{
+ "attempts": [
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "error": null,
+    "latency_seconds": 207.29531601502094,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 37557,
+     "output": 4290,
+     "total": 41847
+    }
+   },
+   "run_id": "contract-explicit-default-clean/aggregate/1",
+   "sha256_private": "d791e8f022ff7e438a81ce5972d08a1a751760cddcef30e1eb7cf69e6da8171d",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "error": null,
+    "latency_seconds": 242.50643859698903,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 46419,
+     "output": 5763,
+     "total": 52182
+    }
+   },
+   "run_id": "contract-explicit-default-clean/aggregate/2",
+   "sha256_private": "0d226cf6ca94e885b9bea340541e5f13ba48b308d9555b7c5034a642b47900fc",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "error": null,
+    "latency_seconds": 397.4193303019274,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 37692,
+     "output": 8532,
+     "total": 46224
+    }
+   },
+   "run_id": "contract-explicit-default-clean/aggregate/3",
+   "sha256_private": "950a19db012528cdbcaf3b4722c3306a484738d97a84ae769fa8975247d7293d",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "error": null,
+    "latency_seconds": 157.6621287559392,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 38121,
+     "output": 4699,
+     "total": 42820
+    }
+   },
+   "run_id": "contract-explicit-default-clean/assessed/1",
+   "sha256_private": "4834b7e5b0be173e18f7f1e5ef4bf46abce4982cf97a85e2ece9f13ddc288166",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "error": null,
+    "latency_seconds": 199.91024091106374,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 33413,
+     "output": 4307,
+     "total": 37720
+    }
+   },
+   "run_id": "contract-explicit-default-clean/assessed/2",
+   "sha256_private": "2ba495d96decf87781c2c15bb6bf61a553504932c164f27ea4f4ba482439c3c0",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "error": null,
+    "latency_seconds": 213.85572312003933,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 37623,
+     "output": 5984,
+     "total": 43607
+    }
+   },
+   "run_id": "contract-explicit-default-clean/assessed/3",
+   "sha256_private": "d4cd55b022b83810b632d6151a077674bbdbe2325b05a7a9d1f35ba6494264d0",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "0c3e4a965c4b503414d36dacf03cc484c08aa85940759dbe03a0fd127489e920",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [],
+     "final_assessments": [],
+     "reason": "undisputed",
+     "rounds": [],
+     "status": "complete"
+    },
+    "error": null,
+    "latency_seconds": 180.93115108995698,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 33415,
+     "output": 4887,
+     "total": 38302
+    }
+   },
+   "run_id": "contract-explicit-default-clean/focused1/1",
+   "sha256_private": "dc3c207c49ebafe48d46ac826d00db427664ef6e95618ad21b565d07270e17b3",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "c0e9bf9b1f50a986310b0a83a6213a8d1eae11e208f97c816a7ba5bc7653b7e8",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [],
+     "final_assessments": [],
+     "reason": "undisputed",
+     "rounds": [],
+     "status": "complete"
+    },
+    "error": null,
+    "latency_seconds": 271.34811973397154,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 47094,
+     "output": 6994,
+     "total": 54088
+    }
+   },
+   "run_id": "contract-explicit-default-clean/focused1/2",
+   "sha256_private": "9581a2afe349d1fddbbcc0210c8187b82eec42415aa3afb0b96a7df192c696fc",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "9521c6cdd1df1a568441faccc98794e664fed83c87dcec44d5e0774914f88ed1",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [],
+     "final_assessments": [],
+     "reason": "undisputed",
+     "rounds": [],
+     "status": "complete"
+    },
+    "error": null,
+    "latency_seconds": 276.96361703099683,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 37678,
+     "output": 6966,
+     "total": 44644
+    }
+   },
+   "run_id": "contract-explicit-default-clean/focused1/3",
+   "sha256_private": "134d80c6f3caeefcb77d83d4e2e475a31e43c3d8452492a440c5c3885a609548",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "cb65e50a07f2e22e92e645c8f9b02b8ca76c8387b2d9bc76f4d483b042f65e16",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [],
+     "final_assessments": [],
+     "reason": "undisputed",
+     "rounds": [],
+     "status": "complete"
+    },
+    "error": null,
+    "latency_seconds": 242.44224338897038,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 42223,
+     "output": 5158,
+     "total": 47381
+    }
+   },
+   "run_id": "contract-explicit-default-clean/focused3/1",
+   "sha256_private": "e33a8919919c29285ff1a0e613e3e21569e37b097d536b57d7d14ff770338771",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "85b435e5d48ed5d22f5f6d0915a5bb5e50814fabd052d4a2d2528ff91c3f1bcf",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [],
+     "final_assessments": [],
+     "reason": "undisputed",
+     "rounds": [],
+     "status": "complete"
+    },
+    "error": null,
+    "latency_seconds": 729.3389617010253,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 42106,
+     "output": 6428,
+     "total": 48534
+    }
+   },
+   "run_id": "contract-explicit-default-clean/focused3/2",
+   "sha256_private": "1a615cdaf364384f22825f24618256ba9ce7a2e41a8f087743feeac56715155e",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "e6d7d19277f8830db8fbd0bef3f3bd6afa4421b07f97c5b90d276443da10f73f",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [],
+     "final_assessments": [],
+     "reason": "undisputed",
+     "rounds": [],
+     "status": "complete"
+    },
+    "error": null,
+    "latency_seconds": 1373.0746113299392,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 42424,
+     "output": 6733,
+     "total": 49157
+    }
+   },
+   "run_id": "contract-explicit-default-clean/focused3/3",
+   "sha256_private": "ee0edb6c85effd388e0769b04febc36cfa397cb77421008cf2d8a6f8fd69b778",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "error": null,
+    "latency_seconds": 1529.9564379570074,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 40418,
+     "output": 10158,
+     "total": 50576
+    }
+   },
+   "run_id": "security-auth-order/aggregate/1",
+   "sha256_private": "49156a2c14b30cbe5e7b902f04fced77f708a31821a4cd7cea9a30e4511b23b9",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "error": null,
+    "latency_seconds": 1356.9755993470317,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 53307,
+     "output": 15127,
+     "total": 68434
+    }
+   },
+   "run_id": "security-auth-order/aggregate/2",
+   "sha256_private": "8c9eef8212fbeb09e499ca4cc9ac1d9d2d69355f818dd0db142e58c6c0091e77",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "error": null,
+    "latency_seconds": 623.962413373054,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 46244,
+     "output": 13385,
+     "total": 59629
+    }
+   },
+   "run_id": "security-auth-order/aggregate/3",
+   "sha256_private": "ff9297aea546d658be0b783d91f58800268a91cf84affeb2edcfb93cc2d7d331",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "error": null,
+    "latency_seconds": 849.3636398658855,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 58857,
+     "output": 16882,
+     "total": 75739
+    }
+   },
+   "run_id": "security-auth-order/assessed/1",
+   "sha256_private": "895b6499406e9932224cd01eda98a3f50f12c9337a225f09bcad2a5163affa3e",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "error": null,
+    "latency_seconds": 862.3946996601298,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 76583,
+     "output": 18466,
+     "total": 95049
+    }
+   },
+   "run_id": "security-auth-order/assessed/2",
+   "sha256_private": "a21bb269f7b75a09a2a9bc0ca548e9c4b37052b1e94eae157b51f081258c3b1f",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "error": null,
+    "latency_seconds": 998.883307690965,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 65074,
+     "output": 22307,
+     "total": 87381
+    }
+   },
+   "run_id": "security-auth-order/assessed/3",
+   "sha256_private": "7faef35953a76d5b46945d430be02528da18daf4bec861e556e25e53898af3c9",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "c580e20967e755c34d07e031f48eea6b373c03f42080496958f9f2d12486b1d6",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [
+      "4fbd8eb85bd452fa4f121db3e5805ba5f1ccd1804a39841303d55759ec4e3e81",
+      "ee98bfc6092ed640d3c96504bac6df0b870764ed71f8cb937d97a64551190f4d",
+      "2db603aaa9d84010b1566729c56b9eda4deee18f5982a8987083c6370aaa7315",
+      "c160d1dd43f8dcb7437c1c3c6207888fc4e37aba70b5d6e417ef9bfb8d59cc8d"
+     ],
+     "final_assessments": [
+      {
+       "candidate_id": "4fbd8eb85bd452fa4f121db3e5805ba5f1ccd1804a39841303d55759ec4e3e81",
+       "counter_citations": [],
+       "reason": "The captured head api.py is a complete 7-line file (line_count 7) in which delete() executes store.clear() at line 5 before the permitted(actor, owner) check on lines 6-7, so a caller with actor != owner triggers the store wipe before PermissionError is raised. The captured base api.py (same line_count) shows the reverse ordering: the check at lines 5-6 precedes store.clear() at line 7, so denial left the store untouched in base. Captured policy.py (identical blob f26de070df5df716dc26d3ce61083e2996c60da2 in both revisions, sha256 6e46ecec...) defines permitted as 'return actor == owner', making denial of any non-owner the normal path, with no guard or rollback undoing the clear. All cited ranges fall within the captured files' line counts, and the anchor (head api.py line 5) is a changed line between base ('    if not permitted(actor, owner):') and head ('    store.clear()'), consistent with the changed-file entry in the manifest. This is model-based support from the captured sources, not formal proof; the omitted caller/test artifacts (client.py, test_formatting.py, schema.py, formatting.py are recorded missing) do not affect the function-level behavior, since the entire head function body is captured.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "ee98bfc6092ed640d3c96504bac6df0b870764ed71f8cb937d97a64551190f4d",
+       "counter_citations": [],
+       "reason": "Verified directly against the captured full files: head api.py line 5 is '    store.clear()', executing before the permission check at head lines 6-7, while base api.py places store.clear() at line 7 after the raise PermissionError guard at base lines 5-6, so base denial left the store unmodified. Captured policy.py (identical blob f26de070df5df716dc26d3ce61083e2996c60da2 in both revisions) shows permitted() is the pure comparison 'return actor == owner' (policy.py lines 1-2), so any actor != owner takes the denial path after the clear has already run, and the raised PermissionError performs no rollback. All cited ranges are within the captured line counts (api.py line_count 7, policy.py line_count 2), the sha256 values match the manifest, and the anchor head api.py line 5 differs from base line 5, placing it in the change. Support is model-based from captured sources; the omitted caller/test artifacts do not create an evidence gap for the fully captured head function body.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "2db603aaa9d84010b1566729c56b9eda4deee18f5982a8987083c6370aaa7315",
+       "counter_citations": [],
+       "reason": "The captured head api.py (complete, 7 lines) confirms the claim: store.clear() is the first statement of delete() at line 5, ahead of the permitted(actor, owner) check at lines 6-7, and there is no other guard between function entry and the clear (lines 1-4 are only the import, blank lines, and the def). The captured base api.py shows the guard-first ordering (check lines 5-6, clear line 7), confirming the regression described. Captured policy.py defines permitted() as 'return actor == owner' with no side effects; its blob_sha f26de070df5df716dc26d3ce61083e2996c60da2 is identical in both revisions per the manifest, matching the candidate's unchanged-policy assertion. Therefore a caller-supplied actor != owner clears the store before PermissionError is raised, with no compensating guard in the captured head file. Cited ranges respect the recorded line counts and sha256 values match the manifest; the anchor head api.py line 5 is a changed line relative to base. This is model-based support, not formal proof; omitted callers/tests are not needed for the function-level claim.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "c160d1dd43f8dcb7437c1c3c6207888fc4e37aba70b5d6e417ef9bfb8d59cc8d",
+       "counter_citations": [],
+       "reason": "The captured sources confirm the reordering: head api.py line 5 is '    store.clear()' executed before the permitted(actor, owner) check at head lines 6-7, whereas base api.py checks permission at lines 5-6 and clears only at line 7, so base denial left store contents unchanged exactly as the expected clause states. The candidate cites base policy.py (revision 14aaa0a3..., sha256 6e46ecec...), which is captured and valid; the head policy.py entry in the manifest carries the identical sha256 and blob (f26de070df5df716dc26d3ce61083e2996c60da2), so permitted() = 'return actor == owner' holds at head as well, making denial of any non-owner the normal path in which the store has already been cleared and the PermissionError restores nothing. All cited ranges are within the recorded line counts (api.py line_count 7, policy.py line_count 2) and hashes match the manifest; the anchor head api.py line 5 is a changed line relative to base. Support is model-based on the captured full files, not formal proof; the missing caller/test artifacts recorded in the manifest do not affect this function-level ordering claim.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      }
+     ],
+     "reason": "undisputed",
+     "rounds": [],
+     "status": "complete"
+    },
+    "error": null,
+    "latency_seconds": 922.0523128679488,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 71286,
+     "output": 19721,
+     "total": 91007
+    }
+   },
+   "run_id": "security-auth-order/focused1/1",
+   "sha256_private": "a4648e0d063fc50e5a4aa472a5d7a99b30145afe435034bd37608cdfd16f58e9",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "7b11394eff2eaaf4054c4b832a45a7b2977a3bb725971c4a02a979bb53b95c18",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [
+      "8b5d5de9ec8aebb5ca53dbbd85b0c964c94db74c5d5c9d19a1111219e1da916c",
+      "f45021b5ac29475dbc9327cd7241f87771c50f3d7ead9311e90669eab53e506b",
+      "17ab3ec6c423afc8d3fbcd494bfb9790d6cff9a1fac946d429b0bea484bcd36b",
+      "f45f53f89f629f9728d44bdffcca5c60477797b6e11107370f4c4a8190b81e16"
+     ],
+     "final_assessments": [
+      {
+       "candidate_id": "8b5d5de9ec8aebb5ca53dbbd85b0c964c94db74c5d5c9d19a1111219e1da916c",
+       "counter_citations": [],
+       "reason": "The captured head api.py (revision 6147f5510465027638029cdda0f64ba53068c56a) shows delete() executes store.clear() at line 5 before the permitted() guard at lines 6-7, while the base api.py (revision 14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a) gated the clear behind the check (lines 5-7). policy.py, identical in both revisions, defines permitted(actor, owner) as actor == owner, so a non-owner is denied only after the store is already cleared. diff.patch confirms the hunk adds store.clear() before the guard (anchor api.py line 5, RIGHT side, is in the selected hunk). The claimed ordering flaw and its effect on unauthorized callers follow directly from the captured code; no captured caller, wrapper, or rollback exists to contradict it (client.py and test_formatting.py are missing from the capture). Model-based support, not formal proof, but the code ordering is dispositive here.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "f45021b5ac29475dbc9327cd7241f87771c50f3d7ead9311e90669eab53e506b",
+       "counter_citations": [],
+       "reason": "Captured head api.py (revision 6147f5510465027638029cdda0f64ba53068c56a) lines 4-7 show store.clear() as the first statement of delete() with the PermissionError raised afterward, matching the claimed observed behavior. Base api.py (revision 14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a) lines 5-7 show the intended contract where the clear runs only after permitted() passes, matching the stated expectation. policy.py (same blob f26de070df5df716dc26d3ce61083e2996c60da2 in both revisions) returns actor == owner, so every non-owner actor takes the deny path after the store is already emptied. The anchor line 5 RIGHT falls inside the selected diff hunk in diff.patch. No captured code (e.g., callers in the missing client.py) contradicts the act-before-deny ordering; the inference about PermissionError semantics for consumers is a plausible but unproven downstream consequence, which does not undermine the code-level finding.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "17ab3ec6c423afc8d3fbcd494bfb9790d6cff9a1fac946d429b0bea484bcd36b",
+       "counter_citations": [],
+       "reason": "The head revision (6147f5510465027638029cdda0f64ba53068c56a) of api.py shows store.clear() at line 5 executing before the permitted() check and PermissionError at lines 6-7, and the base revision (14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a) shows the clear as the last statement after the gate at lines 5-7, exactly as the candidate describes. policy.py is captured at both revisions with an identical sha256, confirming permitted(actor, owner) == (actor == owner) is unchanged, so any actor != owner is denied only after the destructive clear has run. No transaction, rollback, or pre-invocation authorization guard appears anywhere in the captured sources, and the missing related files (client.py, schema.py, test_formatting.py) are correctly flagged by the candidate as absent rather than relied upon. The anchor api.py line 5 RIGHT is the added store.clear() line within the selected diff hunk.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "f45f53f89f629f9728d44bdffcca5c60477797b6e11107370f4c4a8190b81e16",
+       "counter_citations": [],
+       "reason": "Captured head api.py (revision 6147f5510465027638029cdda0f64ba53068c56a) lines 5-7 confirm the destructive clear runs unconditionally before permitted() is evaluated and PermissionError is raised, while captured base api.py (revision 14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a) lines 5-7 confirm the check ran first and the clear last, matching the candidate's base-expected and head-observed claims. policy.py at both revisions (identical sha256 6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1) implements permitted as actor == owner, so a non-owner actor is denied with the store already cleared, and nothing in the captured code compensates or rolls back. The anchor line 5 RIGHT corresponds to the added store.clear() in the selected diff hunk. No contradictory evidence exists in the capture; the remaining uncertainty (e.g., hypothetical wrappers in the missing client.py) is already acknowledged in the candidate's preconditions and does not defeat the code-ordering finding.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      }
+     ],
+     "reason": "undisputed",
+     "rounds": [],
+     "status": "complete"
+    },
+    "error": null,
+    "latency_seconds": 818.3605346390978,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 65161,
+     "output": 20576,
+     "total": 85737
+    }
+   },
+   "run_id": "security-auth-order/focused1/2",
+   "sha256_private": "0f411079cb11ab0d558e2c594d8a0bd19834913909eda9292b48f448fd729a9e",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "7d58b020f499721bbbc3aa5aeed3cc4e807801708c7de7aadbf8c66da1953f9f",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [
+      "a45a57d0577af64ac1bc93c1f51f8bce1a61290d675b358fcaa3d2dd731be313",
+      "c906dcf83549d44fde748c4ba2514884e3d87f6d530abeee66a240517ac0a8ae",
+      "5cde02eaa5b0be64f8b8232608a0c8e1d1048ad06758476c3acb9ab757c3b5d6",
+      "28c73c957b165420037c379a5957282f724a0fb51d8fddd3d5749c6ad944b69c"
+     ],
+     "final_assessments": [
+      {
+       "candidate_id": "a45a57d0577af64ac1bc93c1f51f8bce1a61290d675b358fcaa3d2dd731be313",
+       "counter_citations": [],
+       "reason": "Captured head api.py (rev 6147f5510465027638029cdda0f64ba53068c56a) shows delete() executing store.clear() at line 5 before the permitted(actor, owner) guard on lines 6-7, while the captured base api.py (rev 14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a) shows the guard at lines 5-6 and store.clear() only at line 7 after the check passes. Captured policy.py (identical in base and head, sha256 6e46ecec...) defines permitted(actor, owner) as 'return actor == owner', so any actor != owner is denied, yet the clear has already executed and the subsequently raised PermissionError does not undo it. No captured code (no try/finally, rollback, or other guard) contradicts this; the only guard is the unchanged policy.py check. All citations validate against repository-context.json (sha256 3340e55e... head api.py, 21bf1dd7... base api.py, line ranges within line_count 7 and 2). This is model-based support from captured code, not formal proof; the anchor api.py:5 RIGHT is the moved store.clear() line in the changed hunk.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "c906dcf83549d44fde748c4ba2514884e3d87f6d530abeee66a240517ac0a8ae",
+       "counter_citations": [],
+       "reason": "Captured head api.py lines 4-7 confirm delete() calls store.clear() at line 5 before the permission guard on lines 6-7, and captured base api.py lines 4-7 show the prior order with store.clear() at line 7 after the check. Captured policy.py lines 1-2 (unchanged between revisions, same blob/sha256) defines permitted(actor, owner) as 'actor == owner', so unauthorized actors are denied only after the store is already emptied; the raised PermissionError does not restore contents, and no compensating guard exists in the captured files. The claim that store.clear() was 'removed from base line 7' and added at head line 5 matches the captured revisions exactly. Minor caveat: the reason's phrase 'documented call pattern api.delete(untrusted_actor, ...)' is not verifiable from captured context because client.py is recorded as missing in the manifest, but the core claim (reorder causes destructive side effect before denial) is fully supported by the captured api.py and policy.py. Support is model-based, not formal proof.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "5cde02eaa5b0be64f8b8232608a0c8e1d1048ad06758476c3acb9ab757c3b5d6",
+       "counter_citations": [],
+       "reason": "Captured head api.py (rev 6147f5510465027638029cdda0f64ba53068c56a, sha256 3340e55e...) lines 5-7 show store.clear() executing before the permitted(actor, owner) check and PermissionError raise, exactly as the observed claim states ('lines 6-7' for the guard is accurate). Captured base api.py (rev 14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a, sha256 21bf1dd7...) lines 5-7 show the check-first order with store.clear() at line 7 only on the success path. Captured policy.py lines 1-2 (identical in both revisions, sha256 6e46ecec...) confirms permitted returns actor == owner, so the actor != owner case reaches the already-executed clear and the subsequent PermissionError provides no restoration. Nothing in the captured context contradicts the claim; the anchor line is inside the selected diff hunk. All cited ranges are within the recorded line_counts (7 and 2). This is code-grounded model-based support, not formal proof.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "28c73c957b165420037c379a5957282f724a0fb51d8fddd3d5749c6ad944b69c",
+       "counter_citations": [],
+       "reason": "Captured head api.py lines 4-7 show store.clear() at line 5 running unconditionally before the permission check on lines 6-7, and captured base api.py lines 4-7 show the base order where store.clear() at line 7 ran only after the check passed. Captured policy.py lines 1-2 (unchanged, sha256 6e46ecec... in both revisions) confirms permitted(actor, owner) returns actor == owner, so an actor != owner is denied yet the store is already cleared when PermissionError is raised; no rollback or other guard appears in the captured files, so the observed behavior is accurate and consistent with the expected-vs-observed framing. The citations validate against the manifest (sha256 3340e55e... head, 21bf1dd7... base, ranges within line_count 7 and 2). Note the candidate's reason contains minor textual slips ('policy.permuted' for permitted, and describing line 6's guard as 'line 5's guard'), but the substantive claim and its code basis are correct. Model-based support from captured code, not formal proof.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      }
+     ],
+     "reason": "undisputed",
+     "rounds": [],
+     "status": "complete"
+    },
+    "error": null,
+    "latency_seconds": 967.5224526159,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 62465,
+     "output": 17885,
+     "total": 80350
+    }
+   },
+   "run_id": "security-auth-order/focused1/3",
+   "sha256_private": "16635da0dc183bc8b7322249bc1cdfacdc605fbc1476edb4c13b76c3e2d622a0",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "c02af1261178a8d9acc1a9496fb440d0b2217a17346b5562fa7d30480d823bf3",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [
+      "4a85f4991f87d3b5f3bb040d79cf91ff5af2e695bfc9d0d5076e7cd4363811dc",
+      "8675074be5c880afc6582ecc0ade11af237e5a4179e676f510cf0ff1d3318501",
+      "c0dc533615af94af6436a7ac83ab3eec602421d02e732a9d1c9b2c50d48fd98a",
+      "9199c8197b26f2fa9dce98670ee241cc6818b1aaaa2ee1ef61883c9bafa8c9e5"
+     ],
+     "final_assessments": [
+      {
+       "candidate_id": "4a85f4991f87d3b5f3bb040d79cf91ff5af2e695bfc9d0d5076e7cd4363811dc",
+       "counter_citations": [],
+       "reason": "The captured head api.py (revision 6147f5510465027638029cdda0f64ba53068c56a, sha256 3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf) shows delete() executing store.clear() as its first statement at line 5, followed by the permitted(actor, owner) check and raise PermissionError at lines 6-7. The base api.py (revision 14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a, sha256 21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac) shows the check-then-clear order: permission check at lines 5-6 and store.clear() only at line 7. The diff.patch hunk @@ -2,6 +2,6 @@ confirms the move is in the selected changed hunk, matching the candidate anchor at head api.py line 5. Captured policy.py (identical in both revisions, sha256 6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1) defines permitted as 'return actor == owner', so any actor != owner deterministically reaches the raise path only after the store was already cleared, exactly as the candidate describes. The manifest records client.py, schema.py, formatting.py, and test_formatting.py as missing, so no caller-side mitigation is evidenced; the failure is nonetheless directly observable in the changed function. Model-based support: this is captured-code evidence, not formal proof.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "8675074be5c880afc6582ecc0ade11af237e5a4179e676f510cf0ff1d3318501",
+       "counter_citations": [],
+       "reason": "Captured head api.py (revision 6147f5510465027638029cdda0f64ba53068c56a, sha256 3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf) lines 4-7 show the function body: store.clear() at line 5 executes unconditionally before the permitted(actor, owner) guard (line 6) and the raise PermissionError (line 7). The base api.py (revision 14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a, sha256 21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac) lines 4-7 show the inverse ordering, with store.clear() only after the check, so the base contract of 'PermissionError means nothing happened' is contradicted by the head. Captured policy.py (identical sha256 6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1 in both revisions) defines permitted as 'return actor == owner', so a non-owner actor deterministically hits the denied path after the store is already emptied. The candidate's own citations are valid against the manifest line counts (api.py line_count 7 in both revisions; policy.py line_count 2). The manifest lists client.py, schema.py, formatting.py, and test_formatting.py as missing, so no captured artifact shows an adapter neutralizing clear(); the pre-mutation ordering defect is nonetheless fully evidenced by the captured diff hunk @@ -2,6 +2,6 @@ at the anchored head line 5. This is model-based support from captured code, not formal proof.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "c0dc533615af94af6436a7ac83ab3eec602421d02e732a9d1c9b2c50d48fd98a",
+       "counter_citations": [],
+       "reason": "The head api.py capture (revision 6147f5510465027638029cdda0f64ba53068c56a, sha256 3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf) shows store.clear() at line 5 running before the permitted(actor, owner) check at line 6 and the raise PermissionError at line 7, so the destructive call is unconditional and the subsequent exception does not restore the store; no transaction or rollback appears anywhere in the captured head file. The base api.py (revision 14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a, sha256 21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac) shows the previously effective check-then-clear order (check lines 5-6, clear line 7). Captured policy.py (sha256 6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1, lines 1-2, identical in both revisions) shows permitted is strict equality 'actor == owner', so non-owner callers exist by design and reach the cleared store before their PermissionError. The anchor (head api.py line 5) lies in the selected diff hunk @@ -2,6 +2,6 @@ in diff.patch. The candidate itself flags that exact clear() semantics are inferred because the store implementation is in omitted files (manifest: client.py, schema.py, formatting.py, test_formatting.py all status missing), but the ordering inversion that defeats the authorization gate is directly captured. Model-based support, not formal proof.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "9199c8197b26f2fa9dce98670ee241cc6818b1aaaa2ee1ef61883c9bafa8c9e5",
+       "counter_citations": [],
+       "reason": "Full-file captures of api.py confirm the claim. Head (revision 6147f5510465027638029cdda0f64ba53068c56a, sha256 3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf, line_count 7): line 5 is store.clear() executed as the first statement of delete(); lines 6-7 perform the permitted(actor, owner) check and raise PermissionError only afterwards. Base (revision 14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a, sha256 21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac, line_count 7): the permission check at lines 5-6 precedes store.clear() at line 7, so base behavior preserved the store on the denial path. Captured policy.py (sha256 6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1, lines 1-2, unchanged between revisions) shows permitted() is a pure equality test with no side effects that could justify pre-check mutation, so a non-owner actor's delete already succeeded in emptying the store when the error surfaces, as the candidate states. The anchored head line 5 falls inside the selected diff hunk @@ -2,6 +2,6 @@ in diff.patch, so the finding is diff-anchored. The manifest marks client.py (the only referenced caller) and the test/schema/formatting files as missing, so no caller-side mitigation is captured; nothing in the captured evidence contradicts the observed ordering. Model-based support, not formal proof.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      }
+     ],
+     "reason": "undisputed",
+     "rounds": [],
+     "status": "complete"
+    },
+    "error": null,
+    "latency_seconds": 980.3225828898139,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 75592,
+     "output": 22871,
+     "total": 98463
+    }
+   },
+   "run_id": "security-auth-order/focused3/1",
+   "sha256_private": "39ee292e7f3faea8e490bb228e43b9ac4d7ea83fef268708182b6bd3c3de5220",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "50207dffcba11f4fc686639ed9f706260b6c15571ce481b4e9686062a9d6d308",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [
+      "da5bcba46a9ba79b41459bce4f97bdc277371c353867ad6286b0d6d7875e5015",
+      "0eeeae09e5f33b5601e804cd4a456412e28cff449dee06738bf21590a5df9808",
+      "b04df3a83a6315b7e924ba04caaa8b2bd3479c2eb303427a139b7a30867a73da",
+      "748eb84691b2df2f3b141d2894e13b1b8adf8c6d96719f93c99eab9cfd958016"
+     ],
+     "final_assessments": [
+      {
+       "candidate_id": "da5bcba46a9ba79b41459bce4f97bdc277371c353867ad6286b0d6d7875e5015",
+       "counter_citations": [],
+       "reason": "Captured head api.py (revision 6147f5510465027638029cdda0f64ba53068c56a) shows store.clear() as the first statement of delete() at line 5, followed by the permitted(actor, owner) check at line 6 and raise PermissionError at line 7, so the store is emptied before denial. Captured base api.py (revision 14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a) shows the reverse order: the check at lines 5-6 precedes store.clear() at line 7, so a denied call left the store intact. Captured policy.py (identical base and head, sha256 6e46ecec...) defines permitted(actor, owner) as actor == owner, so any actor != owner is denied yet, in head, has already triggered the wipe. The diff.patch hunk confirms the moved line. No captured code re-establishes store contents after clearing, and the claim anchors in a selected diff hunk; missing files (client.py, schema.py, formatting.py, test_formatting.py) do not alter the directly observed ordering within api.py.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "0eeeae09e5f33b5601e804cd4a456412e28cff449dee06738bf21590a5df9808",
+       "counter_citations": [],
+       "reason": "Captured head api.py line 5 is store.clear(), executed before the permitted check and PermissionError at head lines 6-7, exactly as the candidate's observed description states. Captured base api.py lines 5-7 show the guard (if not permitted... raise PermissionError) preceding store.clear(), matching the candidate's expected base contract of a side-effect-free denial. Captured policy.py, unchanged between base (revision 14aaa0a3...) and head (revision 6147f551...), defines permitted(actor, owner) as actor == owner, so any non-owner actor takes the denial path after the store is already cleared in head. The moved +store.clear() line appears in the selected diff hunk. Nothing in the captured sources contradicts the described bypass of the authorization guard for the destructive operation.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "b04df3a83a6315b7e924ba04caaa8b2bd3479c2eb303427a139b7a30867a73da",
+       "counter_citations": [],
+       "reason": "Captured head api.py line 5 is store.clear() and lines 6-7 are the permitted check and PermissionError, matching the candidate's observed ordering: the destructive side effect runs unconditionally before access control. Captured base api.py lines 5-7 show the base ordering (check and raise first, store.clear() last), matching the candidate's expected no-side-effect denial for unauthorized actors. Captured policy.py head lines 1-2 (identical to base) define permitted as actor == owner, so any actor differing from owner is denied, yet in head the wipe has already occurred and the exception does not undo it. The claim anchors in the selected diff hunk in diff.patch, and the candidate's note that client.py, schema.py, formatting.py, and test_formatting.py are status missing is confirmed by repository-context.json; this does not undermine the directly observed ordering in the captured api.py and policy.py.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 5,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 6,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "748eb84691b2df2f3b141d2894e13b1b8adf8c6d96719f93c99eab9cfd958016",
+       "counter_citations": [],
+       "reason": "Captured head api.py lines 4-7 show store.clear() as the first statement of delete() with the permitted(actor, owner) check and PermissionError raised afterwards, so an unauthorized caller's store is cleared before denial, exactly as the candidate's observed field states. Captured base api.py lines 4-7 show the base ordering where the guard precedes store.clear(), matching the candidate's expected behavior (non-owner receives PermissionError with the store unchanged). Captured policy.py head lines 1-2, byte-identical to base (same blob_sha f26de070... and sha256 6e46ecec...), define permitted as actor == owner, so any non-owner triggers the denial path after the wipe. The moved line is in the selected diff hunk. No captured code contradicts the claim; the described impact is the direct consequence of the captured ordering, though model-based support here is not formal proof of runtime behavior.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      }
+     ],
+     "reason": "undisputed",
+     "rounds": [],
+     "status": "complete"
+    },
+    "error": null,
+    "latency_seconds": 868.2247997289523,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 77183,
+     "output": 17924,
+     "total": 95107
+    }
+   },
+   "run_id": "security-auth-order/focused3/2",
+   "sha256_private": "8003008153bf36097f53a2d8ae84bb9dd207304779d4e263fa3d8bdcec8be0e9",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "e8fc1f149893e5231ef3fc670f674eba0fd9a4d96b71e9dad6c461deadbd7137",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [],
+     "final_assessments": [],
+     "reason": "discovery_incomplete",
+     "rounds": [],
+     "status": "failed"
+    },
+    "error": null,
+    "latency_seconds": 1375.5441780129913,
+    "status": "failed",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 40381,
+     "output": 28479,
+     "total": 68860
+    }
+   },
+   "run_id": "security-auth-order/focused3/3",
+   "sha256_private": "20820e2cbaf9ff69e70b3731ff6ec3096e1ee48568a7298dcea181ce8afe8acf",
+   "state": "available"
+  },
+  {
+   "attempt": 2,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "af9501827d0d1fc9e2ee2bc2c244f1f89d06c91c81ebbf6b28583c319a4063a8",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [
+      "946bd54652c9c3eaa075d007973029a029f51d090a9e87f1aed648d0c164fb1c",
+      "028af131efd3c2e9c5bea7c1add1eb2664793608d76f985c4d418ae25e92678a",
+      "cd2ae7b73c4abdda0243e05575d9f41593a84fea50a3a6949f4816d5b3c62ba5",
+      "54e2b6036c7c06fa541b40a28efa8772f303d1d67fa7b8746ead9fa1c8da6c17"
+     ],
+     "final_assessments": [
+      {
+       "candidate_id": "946bd54652c9c3eaa075d007973029a029f51d090a9e87f1aed648d0c164fb1c",
+       "counter_citations": [],
+       "reason": "The captured head api.py (lines 4-7) shows store.clear() at line 5 executing before the permitted(actor, owner) check at line 6 and the raise PermissionError at line 7, while the captured base api.py (lines 4-7) shows check (line 5), raise (line 6), then clear (line 7). The added store.clear() at head api.py line 5 is in the selected diff hunk, so the anchor is finding-eligible. policy.py is unchanged between base and head (same blob_sha f26de070df5df716dc26d3ce61083e2996c60da2) and defines permitted as actor == owner, so the guard's semantics did not change \u2014 only its position relative to the destructive side effect. In the captured code, no rollback or compensating guard undoes the clear, so the observed behavior (unauthorized caller empties the store, then PermissionError is raised) is supported by the captured code. The missing explicit-related artifacts (client.py, schema.py, formatting.py, test_formatting.py) are not needed for this claim, which concerns only the captured body of delete(). This is model-based support from the captured revisions, not formal proof.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "028af131efd3c2e9c5bea7c1add1eb2664793608d76f985c4d418ae25e92678a",
+       "counter_citations": [],
+       "reason": "Captured head api.py lines 4-7 confirm store.clear() at line 5 runs before the permitted(actor, owner) guard at line 6 and the PermissionError raise at line 7; captured base api.py lines 4-7 show the original order (guard, raise, clear). The claim anchors on the added store.clear() at head api.py line 5, which lies in the selected diff hunk. Captured policy.py (identical blob f26de070df5df716dc26d3ce61083e2996c60da2 on both sides, as the candidate asserts) defines permitted as return actor == owner, so every actor != owner fails the check after the store has already been cleared. No captured code shows any rollback, transaction, or alternative guard that would prevent the destructive side effect, and no captured evidence contradicts the claim. The captured evidence fully determines delete()'s internal ordering, so the omissions (client.py, schema.py, formatting.py, test_formatting.py recorded as missing in the manifest) leave the core claim unaffected. Support is model-based on the captured revisions, not formal proof.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "cd2ae7b73c4abdda0243e05575d9f41593a84fea50a3a6949f4816d5b3c62ba5",
+       "counter_citations": [],
+       "reason": "The candidate's observed claim is directly borne out by the captured code: head api.py line 5 is store.clear(), executed before the permitted(actor, owner) check on line 6 and the PermissionError raise on line 7 (head lines 4-7), whereas base api.py lines 4-7 order the guard and raise before the clear. The single-line citation at head api.py line 5 matches the added line in the selected diff hunk, so the anchor is finding-eligible. Captured head policy.py lines 1-2 define permitted as actor == owner, so any non-owner actor fails the check after the clear has occurred, matching the candidate's trigger description. The captured code contains no transactional or compensating guard, consistent with the candidate's statement that no counterexample blocks this path. The missing explicit-related files recorded in the manifest do not bear on delete()'s internal ordering. This support is model-based on the captured revisions, not formal proof.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "54e2b6036c7c06fa541b40a28efa8772f303d1d67fa7b8746ead9fa1c8da6c17",
+       "counter_citations": [],
+       "reason": "Captured head api.py lines 4-7 show store.clear() as the first statement in delete() at line 5, before the permitted() guard at line 6 and the PermissionError raise at line 7; captured base api.py lines 4-7 show the check (lines 5-6) preceding the clear (line 7), exactly as the candidate's observed description states. The anchor at head api.py line 5 is the added line in the selected diff hunk, so the finding is eligible. Captured head policy.py lines 1-2 (blob identical to base) define permitted as return actor == owner, so any actor != owner is denied only after the store has been cleared, matching the candidate's trigger and impact description of an irreversible wipe before the exception. No captured artifact contradicts this, and the omitted related files (client.py, schema.py, formatting.py, test_formatting.py, recorded missing in the manifest) do not affect delete()'s internal ordering or policy semantics. This is model-based support from the captured revisions, not formal proof.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "3340e55efc038a0b19d58c115eb23ce38baf941b9ba663143ce61b887567f2bf",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 7,
+         "path": "api.py",
+         "revision": "14aaa0a3c44f9c6b0dc3c1d45884d79a09efd38a",
+         "sha256": "21bf1dd7b87a378d83d5292b7f8f6d20ce6e77b2416a17ff26983a2ddf48d1ac",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "policy.py",
+         "revision": "6147f5510465027638029cdda0f64ba53068c56a",
+         "sha256": "6e46ecec7a94ef0a7f1bab0f04b8ea9dae12c64c173e8057bf7cd2fcfdbd8ed1",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      }
+     ],
+     "reason": "undisputed",
+     "rounds": [],
+     "status": "complete"
+    },
+    "error": null,
+    "latency_seconds": 785.463394237915,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 89765,
+     "output": 23653,
+     "total": 113418
+    }
+   },
+   "run_id": "security-auth-order/focused3/3",
+   "sha256_private": "a03593ff83a3b68f59b435b5bc5ad4f530c39030990be20bc099616c2f3d9242",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "error": null,
+    "latency_seconds": 379.8071275551338,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 37855,
+     "output": 14043,
+     "total": 51898
+    }
+   },
+   "run_id": "tests-consumer-fixture/aggregate/1",
+   "sha256_private": "7a59b1c948d63ba9e5511fa02330890a11ad9c5afcefd86c13b6f9904720053c",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "error": null,
+    "latency_seconds": 498.26851462502964,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 43013,
+     "output": 12663,
+     "total": 55676
+    }
+   },
+   "run_id": "tests-consumer-fixture/aggregate/2",
+   "sha256_private": "8eecd5ecd33b1a21969c353078153175e9778c611a77b52552e6b5e4656c2485",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "error": null,
+    "latency_seconds": 784.3265038218815,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 49124,
+     "output": 18978,
+     "total": 68102
+    }
+   },
+   "run_id": "tests-consumer-fixture/aggregate/3",
+   "sha256_private": "612ab2a52075344e436d0607156d384a205fe51783d727181d2e804bd80bf227",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "error": null,
+    "latency_seconds": 939.9081974900328,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 76040,
+     "output": 22634,
+     "total": 98674
+    }
+   },
+   "run_id": "tests-consumer-fixture/assessed/1",
+   "sha256_private": "534e35c20cce78c8525a22d9431e5166d572b711dd60b282957abc6faa1872b9",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "error": null,
+    "latency_seconds": 1260.852624105988,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 64024,
+     "output": 28351,
+     "total": 92375
+    }
+   },
+   "run_id": "tests-consumer-fixture/assessed/2",
+   "sha256_private": "ffcb4e79ac9e8bf96736d8ed759e6cb81250590a90984f049c762d4489528491",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "error": null,
+    "latency_seconds": 725.1236870691646,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 61780,
+     "output": 16967,
+     "total": 78747
+    }
+   },
+   "run_id": "tests-consumer-fixture/assessed/3",
+   "sha256_private": "a0f08034abb56825f447784c58158947d7fd65ff68345a609b6df40e22fd50e0",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "e73387fa6b2798fc123ad82315fdff43e56ffa421f7e96d42da87f8e2376242b",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [],
+     "final_assessments": [],
+     "reason": "discovery_incomplete",
+     "rounds": [],
+     "status": "failed"
+    },
+    "error": null,
+    "latency_seconds": 1350.4968514000066,
+    "status": "failed",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 37693,
+     "output": 28229,
+     "total": 65922
+    }
+   },
+   "run_id": "tests-consumer-fixture/focused1/1",
+   "sha256_private": "1ba9421b9c1f21fbf047abd154e26c47c3f8a8363b09270c8af9b18805667ff7",
+   "state": "available"
+  },
+  {
+   "attempt": 2,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "c84adc897e974769104e806e21cc286c295854aa32a75d65a91517b51cc0e405",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [
+      "3b04db4d085792979459d14bbd53ac788c2762f6f38b08110fa39c43f47f9eb8",
+      "0b11bf8eb3d3881fad90f32c2a1958f19b47e1b93035a58a2843ac8dd9b4e167",
+      "2078aeb8016fd0c3a64fe38ece8bf2595c29b792e5cdb573c07746cf1b1f1861",
+      "a0281b0d52317758c40ed348a7a654c9ebc6dff2578135139e9d67d88be67b7a"
+     ],
+     "final_assessments": [
+      {
+       "candidate_id": "3b04db4d085792979459d14bbd53ac788c2762f6f38b08110fa39c43f47f9eb8",
+       "counter_citations": [],
+       "reason": "Independently verified from the captured files: head formatting.py (rev 1661991abd288a4346c65099a0a8be1c954c0035, sha256 e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279) line 2 is 'return \"waiting\"', while the head test_formatting.py (sha256 0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5, byte-identical to base per manifest blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37 on both sides) imports label from formatting and line 5 asserts label() == \"ready\". The base formatting.py (rev 19b5939d2328d70274a0ed312dcc0d229f32080f) line 2 returned \"ready\", so the unchanged test passed at base and evaluates to False at head, making the head test run fail. The diff.patch hunk (@@ -1,2 +1,2 @@ on formatting.py) is the only selected change, so no test update accompanies it. The candidate correctly declines to assert impact on client.py, policy.py, and schema.py, which the manifest records as status 'missing' (not captured); that omission is a limitation, not a contradiction, and the claim as stated relies only on captured content.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "0b11bf8eb3d3881fad90f32c2a1958f19b47e1b93035a58a2843ac8dd9b4e167",
+       "counter_citations": [],
+       "reason": "Independently verified from the captured files: head formatting.py (rev 1661991abd288a4346c65099a0a8be1c954c0035, sha256 e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279) line 2 returns \"waiting\" whereas base formatting.py (rev 19b5939d2328d70274a0ed312dcc0d229f32080f, sha256 9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245) line 2 returned \"ready\"; the test file is captured at both revisions with identical blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37 and sha256 0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5 and its line 1 imports label from formatting while line 5 asserts label() == \"ready\". Running that unchanged test at head therefore raises AssertionError, matching the claimed regression. The manifest records the sole changed file as formatting.py and lists no other modified files, and client.py, policy.py, and schema.py have status 'missing' with no captured content, so the candidate's explicit refusal to assert impact on them is consistent with the capture limits. This is model-based support of a head-run failure, not formal proof of every consumer's behavior, but the captured contract violation itself is directly evidenced.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "2078aeb8016fd0c3a64fe38ece8bf2595c29b792e5cdb573c07746cf1b1f1861",
+       "counter_citations": [],
+       "reason": "Independently verified from the captured files: head formatting.py (rev 1661991abd288a4346c65099a0a8be1c954c0035, sha256 e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279) line 2 is 'return \"waiting\"'; head test_formatting.py (sha256 0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5) line 5 asserts label() == \"ready\" with the import at line 1; base formatting.py (rev 19b5939d2328d70274a0ed312dcc0d229f32080f, sha256 9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245) line 2 was 'return \"ready\"', consistent with the passing base test. The manifest shows test_formatting.py unchanged between base and head (identical blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37 on both sides), so the selected diff's only change is the label() return value with no matching test update, and the captured head test fails as claimed. The candidate makes no claims requiring the uncaptured client.py, policy.py, or schema.py (all status 'missing'), which the manifest records as omitted content.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "a0281b0d52317758c40ed348a7a654c9ebc6dff2578135139e9d67d88be67b7a",
+       "counter_citations": [],
+       "reason": "Independently verified from the captured files: head formatting.py (rev 1661991abd288a4346c65099a0a8be1c954c0035, sha256 e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279) line 2 returns \"waiting\"; the head test_formatting.py (sha256 0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5, identical to its base capture per manifest blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37) line 1 imports label from formatting and line 5 asserts label() == \"ready\"; base formatting.py (rev 19b5939d2328d70274a0ed312dcc0d229f32080f, sha256 9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245) line 2 returned \"ready\". The unchanged assertion therefore evaluates to False at head and the captured test fails, exactly as the candidate states. The diff.patch hunk (@@ -1,2 +1,2 @@, formatting.py) is the only selected change and contains no test update, satisfying the candidate's precondition that the diff did not touch test_formatting.py. The candidate's impact statement correctly limits itself to the captured test and labels effects on client.py, policy.py, and schema.py unknown, consistent with their manifest status 'missing'.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      }
+     ],
+     "reason": "undisputed",
+     "rounds": [],
+     "status": "complete"
+    },
+    "error": null,
+    "latency_seconds": 473.7486516099889,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 62277,
+     "output": 17423,
+     "total": 79700
+    }
+   },
+   "run_id": "tests-consumer-fixture/focused1/1",
+   "sha256_private": "faa63235e2f940357ddf3095a80ee4cc1ea6e74a10ea545a17cad86b7d602a73",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "719c7367c49272df513ede3158b9732e1c67ce524650108b5bea350c1816bde8",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [
+      "4c6d69439f8c13620088d931f840f6bd4063a9e08140aa68d661f012a7aa343a",
+      "ddfe7b9a91cce05f4a037ec184fa7ca63d4d76c5d17b454e55a156897be72b06",
+      "4eda7b1e5e9052e91b165529a2e317eb93554101a8ff91be40da76edfdcc438c",
+      "9ce93aeec356aeba3be6d287075ced8d69ae4eaccf92ec2b8431faef8f7e41f8"
+     ],
+     "final_assessments": [
+      {
+       "candidate_id": "4c6d69439f8c13620088d931f840f6bd4063a9e08140aa68d661f012a7aa343a",
+       "counter_citations": [],
+       "reason": "The selected diff hunk in diff.patch is confined to formatting.py line 2: captured base formatting.py (rev 19b5939d, 2 lines) shows `return \"ready\"` on line 2, while captured head formatting.py (rev 1661991a, 2 lines) shows `return \"waiting\"` on line 2. test_formatting.py is captured byte-identical on both sides (same entire-file sha256 0e1b73c8..., same blob_sha 75e01a42...), so the diff contains no companion test update. Its captured content at head has the sole assertion `assert label() == \"ready\"` on line 5. Since head label() returns \"waiting\", the assertion evaluates False and test_label fails at head; the logical path from captured code to the claimed CI breakage is complete. The manifest records client.py, policy.py, and schema.py as missing/not captured, so no claim about other consumers is made or assessable, which does not affect the test-failure claim.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "ddfe7b9a91cce05f4a037ec184fa7ca63d4d76c5d17b454e55a156897be72b06",
+       "counter_citations": [],
+       "reason": "Captured evidence matches every element of the claim. Base formatting.py line 2 (rev 19b5939d) is `return \"ready\"`; head formatting.py line 2 (rev 1661991a) is `return \"waiting\"`; diff.patch's only selected hunk is exactly this line. test_formatting.py is captured with identical entire-file sha256 (0e1b73c8...) on base and head, proving it is unchanged, and its head capture shows the import on line 1 and the sole assertion `assert label() == \"ready\"` on line 5, matching the candidate's preconditions. Executing test_label against head would therefore compare \"waiting\" to \"ready\", an assertion failure \u2014 a direct logical consequence of the captured files, consistent with the stated trigger, expected, and observed values. The candidate correctly abstains from claims about client.py, policy.py, and schema.py, which the manifest records as missing at both revisions.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "4eda7b1e5e9052e91b165529a2e317eb93554101a8ff91be40da76edfdcc438c",
+       "counter_citations": [],
+       "reason": "The claim is grounded in captured artifacts and the inference is direct. Head formatting.py line 2 (rev 1661991a, entire-file sha256 e17f2ad8...) reads `return \"waiting\"` while the base capture (rev 19b5939d, sha256 9f1bfef3...) reads `return \"ready\"`, matching the diff hunk as the sole selected change. test_formatting.py is captured byte-identical across base and head (identical sha256 0e1b73c8..., blob 75e01a42...), so no test update accompanies the behavior change; its lines 4-5 at head contain the unchanged assertion `assert label() == \"ready\"`. At head, label() returns \"waiting\", making that assertion False, so test_label fails and the previously green suite breaks \u2014 exactly the claimed expected/observed/impact chain. Nothing in the captured context contradicts this; the missing client.py, policy.py, and schema.py entries only limit broader consumer claims, which this candidate does not make.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "9ce93aeec356aeba3be6d287075ced8d69ae4eaccf92ec2b8431faef8f7e41f8",
+       "counter_citations": [],
+       "reason": "All captured evidence aligns with the claim. diff.patch contains a single selected hunk changing formatting.py line 2 from `return \"ready\"` (base rev 19b5939d) to `return \"waiting\"` (head rev 1661991a), and repository-context.json lists formatting.py as the only changed file. test_formatting.py is captured unchanged between revisions (identical entire-file sha256 0e1b73c8... and blob_sha 75e01a42... on both sides), with the import on line 1 and the sole assertion `assert label() == \"ready\"` on line 5. Running test_label at head therefore yields an assertion failure since label() returns \"waiting\", so the previously passing test breaks \u2014 the claimed CI impact follows directly from the captured code. The candidate's preconditions (test runner executes the file, unchanged assertion) are consistent with the captures; no artifact contradicts the claim, and the candidate makes no assertions about the missing client.py, policy.py, or schema.py.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      }
+     ],
+     "reason": "undisputed",
+     "rounds": [],
+     "status": "complete"
+    },
+    "error": null,
+    "latency_seconds": 711.6361940968782,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 62561,
+     "output": 17771,
+     "total": 80332
+    }
+   },
+   "run_id": "tests-consumer-fixture/focused1/2",
+   "sha256_private": "653fb8402dd7fcc5ec350e6574a36d4d07a62634e19bfe0c29699d80e90dcdf1",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "bf7d7522da51eeb37363171a6c34cf693ce7dc4d40dc04dff132e10792a04a41",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [
+      "9a881e20c60cc917d8dc153d49a6b44b8d0a20733a89a537685f1156832c2792",
+      "1c96d6bec9e058048b4b84d4b5efad121cad790bfd6deeb22c6412d972f8c443",
+      "68a7b231dc638f75e58f9de8bef6e7300fddbda14cd96b2ad07236d86ab59d09",
+      "07ac580bd41720875bbc3aaf51641f9d16681a44bd288a58529334f9d29bfe3f"
+     ],
+     "final_assessments": [
+      {
+       "candidate_id": "9a881e20c60cc917d8dc153d49a6b44b8d0a20733a89a537685f1156832c2792",
+       "counter_citations": [],
+       "reason": "The claim is grounded in captured artifacts. The selected diff hunk (@@ -1,2 +1,2 @@) rewrites formatting.py line 2 from `return \"ready\"` at base to `return \"waiting\"` at head, confirmed by the full base capture (2 lines, ending `return \"ready\"`) and full head capture (2 lines, ending `return \"waiting\"`). The captured test file test_formatting.py is byte-identical on base and head (same blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37 and same full-file sha256 0e1b73c8...94ce5 on both sides) and its line 5 is `assert label() == \"ready\"`. At base, label() returns \"ready\" so the assertion holds; at head it returns \"waiting\", so the unchanged assertion is False under ordinary Python execution and test_label fails. No captured artifact contradicts this; client.py, policy.py, and schema.py are captured as missing, and the candidates appropriately make no claims about them. Model-based support, not formal proof: the failure conclusion relies on standard Python comparison semantics, but every concrete premise cited (return values, test assertion, file identity) is present in the captures.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "1c96d6bec9e058048b4b84d4b5efad121cad790bfd6deeb22c6412d972f8c443",
+       "counter_citations": [],
+       "reason": "Every cited premise checks out against the captures. The diff hunk in diff.patch changes formatting.py line 2 (RIGHT side) from `return \"ready\"` to `return \"waiting\"`; the full base and head captures of formatting.py (2 lines each) show exactly that. test_formatting.py is captured in full on both sides with identical content sha256 0e1b73c8...94ce5 and identical blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37, and its line 5 is `assert label() == \"ready\"`. Thus the head revision's label() return value (\"waiting\") falsifies the unchanged assertion that passed at base (\"ready\"), so test_formatting.py::test_label fails at head. The claim correctly limits itself to the captured consumer and treats client.py/policy.py/schema.py (all captured with status \"missing\") as undetermined. No captured artifact supplies a counterexample such as a test update, compatibility shim, or different assertion. This is model-based support, not formal proof, but no evidence gap undermines the core failure claim.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "base",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "68a7b231dc638f75e58f9de8bef6e7300fddbda14cd96b2ad07236d86ab59d09",
+       "counter_citations": [],
+       "reason": "The captured evidence matches the claim. Head formatting.py (2 lines, sha256 e17f2ad8...1279) contains `return \"waiting\"` on line 2, while base formatting.py (2 lines, sha256 9f1bfef3...28245) contains `return \"ready\"` on line 2, and the selected diff hunk in diff.patch shows exactly this one-line change to the only modified file. The head-side capture of test_formatting.py (lines 4-5: `def test_label():` / `assert label() == \"ready\"`) is byte-identical to the base side (same blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37, same sha256 0e1b73c8...94ce5, line_count 5 on both sides per the manifest). Executing that unchanged test against the head revision makes the assertion False, so test_label fails. The candidate's precondition that files.json lists only formatting.py as modified is consistent with the diff, which contains only the formatting.py hunk. The unclaimed impact on client.py, policy.py, and schema.py is properly flagged as uncapturable (manifest status \"missing\"), which does not weaken the captured-test failure. Support is model-based, not formal proof, but rests entirely on captured artifacts with no contradiction.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "07ac580bd41720875bbc3aaf51641f9d16681a44bd288a58529334f9d29bfe3f",
+       "counter_citations": [],
+       "reason": "The claim is verified against captured full-file artifacts. formatting.py at head (revision 1661991abd..., sha256 e17f2ad8...1279, line_count 2) has `return \"waiting\"` on line 2; formatting.py at base (revision 19b5939d..., sha256 9f1bfef3...28245, line_count 2) has `return \"ready\"` on line 2; diff.patch's sole hunk (@@ -1,2 +1,2 @@) is exactly this change. test_formatting.py is captured in full at both revisions with identical content (sha256 0e1b73c8...94ce5, blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37, line_count 5), and line 5 is `assert label() == \"ready\"`. The two preconditions cited (head tree contains the changed formatting.py; head tree still contains the unchanged test asserting \"ready\") are both directly evidenced, so the assertion and the head return value cannot both hold and test_label fails at head. The candidate appropriately makes no claims about client.py, policy.py, or schema.py, which the manifest records as missing. No captured artifact contradicts any element of the claim; the conclusion is model-based support grounded in the captures, not formal proof.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "base",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      }
+     ],
+     "reason": "undisputed",
+     "rounds": [],
+     "status": "complete"
+    },
+    "error": null,
+    "latency_seconds": 744.104413296096,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 61850,
+     "output": 19117,
+     "total": 80967
+    }
+   },
+   "run_id": "tests-consumer-fixture/focused1/3",
+   "sha256_private": "b9c3cfebd02ea2dfc84d02b8234004648701fab5ac985bb7960b2e381f4c4878",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "21991013f1b10668a86fa6a87d708c35e9a591e6a9118907c95efe603d79e660",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [
+      "e623e193b36618330392aa60e60e7be9b980626fb1a1beebea0f83b668ee1def",
+      "193d5e0bf1705616bbcb1708b2c3d24a60f8037051d6693cf3b93182df0d6b08",
+      "ec3f4ee8cb38f322713cf8dde9789827c47beb52bf3a80ebd79b649f9285d6d1",
+      "4728f309d96772498a64cb6d8780b89999222ba99a05919f9e370c7061c579e7"
+     ],
+     "final_assessments": [
+      {
+       "candidate_id": "e623e193b36618330392aa60e60e7be9b980626fb1a1beebea0f83b668ee1def",
+       "counter_citations": [],
+       "reason": "Verified against captured artifacts: head formatting.py (revision 1661991abd288a4346c65099a0a8be1c954c0035, sha256 e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279, 2 lines) line 2 is 'return \"waiting\"', while base (revision 19b5939d2328d70274a0ed312dcc0d229f32080f, sha256 9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245) line 2 is 'return \"ready\"'. The captured test_formatting.py is unchanged between base and head (identical blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37 and sha256 0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5 in repository-context.json) and its line 5 asserts label() == \"ready\". diff.patch confirms the only selected change is formatting.py line 2. Given the captured code, executing test_label at head evaluates 'assert \"waiting\" == \"ready\"', which fails; this is model-based support grounded in the captured files, not formal proof. The related files client.py, policy.py, and schema.py are status 'missing' in the manifest, so no broader caller impact is asserted.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "193d5e0bf1705616bbcb1708b2c3d24a60f8037051d6693cf3b93182df0d6b08",
+       "counter_citations": [],
+       "reason": "The captured base formatting.py line 2 (revision 19b5939d2328d70274a0ed312dcc0d229f32080f, sha256 9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245) reads 'return \"ready\"' and the head line 2 (revision 1661991abd288a4346c65099a0a8be1c954c0035, sha256 e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279) reads 'return \"waiting\"', matching the diff.patch hunk @@ -1,2 +1,2 @@. The captured test_formatting.py is byte-identical on both sides (repository-context.json records the same blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37 and sha256 0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5 for base and head; both captured copies read 'assert label() == \"ready\"' at line 5). Therefore the previously passing behavior at base (test satisfied) is broken at head: the unchanged assertion now compares against 'waiting'. The candidate correctly does not ground any claim in client.py, policy.py, or schema.py, which the manifest lists as status 'missing'. This is model-based support from the captured files, not formal proof.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "ec3f4ee8cb38f322713cf8dde9789827c47beb52bf3a80ebd79b649f9285d6d1",
+       "counter_citations": [],
+       "reason": "Independently verified: head formatting.py (revision 1661991abd288a4346c65099a0a8be1c954c0035, sha256 e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279, line_count 2) returns \"waiting\" at line 2 where base (revision 19b5939d2328d70274a0ed312dcc0d229f32080f, sha256 9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245) returned \"ready\" at line 2. The captured test_formatting.py is identical at base and head per repository-context.json (same blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37 and sha256 0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5, line_count 5) and its line 5 asserts label() == \"ready\"; diff.patch contains no update to the test. Executing the unchanged assertion against the head implementation therefore fails, matching the candidate's observed/impact claim. All cited revisions, line ranges (within recorded line_count) and entire-file sha256 values check out. Support is model-based from captured code, not formal proof; the unasserted missing related files (client.py, policy.py, schema.py) do not affect this finding.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "4728f309d96772498a64cb6d8780b89999222ba99a05919f9e370c7061c579e7",
+       "counter_citations": [],
+       "reason": "The candidate's claims verify against the captured corpus. diff.patch's only selected hunk changes formatting.py line 2 from 'return \"ready\"' (base, revision 19b5939d2328d70274a0ed312dcc0d229f32080f, sha256 9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245) to 'return \"waiting\"' (head, revision 1661991abd288a4346c65099a0a8be1c954c0035, sha256 e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279). The captured test_formatting.py imports label from formatting (line 1) and asserts label() == \"ready\" (line 5); it is byte-identical between base and head (repository-context.json records identical blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37 and sha256 0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5 on both sides, line_count 5). No captured change updates the test, so test_label fails when run against head, consistent with the candidate's observed/impact claims. The candidate properly declines to assert impact on the manifest-listed but status 'missing' files client.py, policy.py, and schema.py. Assessment is model-based support from captured code, not formal proof.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      }
+     ],
+     "reason": "undisputed",
+     "rounds": [],
+     "status": "complete"
+    },
+    "error": null,
+    "latency_seconds": 834.0501952841878,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 69509,
+     "output": 19705,
+     "total": 89214
+    }
+   },
+   "run_id": "tests-consumer-fixture/focused3/1",
+   "sha256_private": "68783bf16ac225ba3bb556b9ec7181c3c6bc2e7665b71925e675027f976b39d8",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "11b8306378b2e65e1d099c9d7dcc5d56c193baa01878ab856fc00836131e7036",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [
+      "3fbe74effbddd7d0ac06c01844b166cb12972ce9601b21d5a955ac4b486c9757",
+      "f97c8dc344ab4c5e8a5476de848e04b516a9a51fde69a0ba966df66c9ca34d3c",
+      "de03f627813d025452e006d2affe4aad3178690405b3aa9aa01a1ad31939afca",
+      "0128272b29ffd229394f74b8e12abc54d8020c01b4b69962fe007137db7bdd45"
+     ],
+     "final_assessments": [
+      {
+       "candidate_id": "3fbe74effbddd7d0ac06c01844b166cb12972ce9601b21d5a955ac4b486c9757",
+       "counter_citations": [],
+       "reason": "The selected diff hunk @@ -1,2 +1,2 @@ changes formatting.py line 2 from returning 'ready' (base, sha256 9f1bfef3...) to 'waiting' (head, sha256 e17f2ad8...), and the anchor (formatting.py line 2, RIGHT) is inside that hunk. The captured test file is byte-identical at base and head (same blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37 and sha256 0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5) and asserts label() == 'ready', so under plain Python semantics the assertion fails at head. files.json confirms only formatting.py was modified, so no test update accompanies the change in this PR. Model-based support from captured artifacts, not formal proof: no counterexample exists in captured data, and the uncaptured related files (client.py, policy.py, schema.py) cannot override the unchanged test's assertion.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "f97c8dc344ab4c5e8a5476de848e04b516a9a51fde69a0ba966df66c9ca34d3c",
+       "counter_citations": [],
+       "reason": "Captured base formatting.py line 2 returns 'ready' and captured head formatting.py line 2 returns 'waiting'; both citations are within the captured files (line_count 2 each) and the head line is the changed hunk in diff.patch. The test file is captured unchanged on both sides (identical blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37 and sha256 0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5, line_count 5), asserting label() == 'ready' at line 5. files.json lists only formatting.py as modified, so no compensating test change exists in this PR; test_label's assertion therefore fails at head. This is model-based support from captured artifacts, not formal proof, and nothing captured refutes it.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "de03f627813d025452e006d2affe4aad3178690405b3aa9aa01a1ad31939afca",
+       "counter_citations": [],
+       "reason": "The regression claim is demonstrated by captured artifacts: head formatting.py line 2 returns 'waiting' versus base 'ready' (the changed hunk in diff.patch, and the cited anchor), while test_formatting.py is captured byte-identical at both revisions (same blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37 and sha256 0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5) still asserting label() == 'ready' at line 5, so the suite fails at head under plain Python semantics. The candidate's own caveat about uncaptured related files (client.py, policy.py, schema.py are recorded as missing in repository-context.json) qualifies only the intent of the change, not the test-failure regression itself, which rests solely on the unchanged test and the changed line. Model-based support from captured data, not formal proof; no captured evidence contradicts the claim.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "0128272b29ffd229394f74b8e12abc54d8020c01b4b69962fe007137db7bdd45",
+       "counter_citations": [],
+       "reason": "The captured head formatting.py line 2 (sha256 e17f2ad8...) returns 'waiting' where base line 2 (sha256 9f1bfef3...) returned 'ready'; this is exactly the hunk in diff.patch, and the anchor (formatting.py line 2, RIGHT) is inside it. The captured head-side test_formatting.py line 5 asserts label() == 'ready', and the test file is captured unchanged between base and head (identical blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37 and sha256 0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5, line_count 5). files.json confirms only formatting.py was modified, so no test update exists in the PR and the assertion fails at head. This is model-based support derived from the captured files, not formal proof, and no captured artifact contradicts it.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "base",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      }
+     ],
+     "reason": "undisputed",
+     "rounds": [],
+     "status": "complete"
+    },
+    "error": null,
+    "latency_seconds": 677.498568785144,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 69724,
+     "output": 14822,
+     "total": 84546
+    }
+   },
+   "run_id": "tests-consumer-fixture/focused3/2",
+   "sha256_private": "a28999666c5eb20dc26e52086492f72077363886df97b056c0f99fd13292bd1f",
+   "state": "available"
+  },
+  {
+   "attempt": 1,
+   "execution": {
+    "accounting_complete": true,
+    "discussion_trace": {
+     "artifact": "debate.json",
+     "artifact_sha256": "386da58563ac15e337605ddfeef375dd696468365d2639bce0cd49eb46e890e6",
+     "availability": "recorded",
+     "bypassed_candidate_ids": [
+      "4b1e56b3707b8a0a7177213ad61737dea41e500ea0494b19146b87c6b837bbac",
+      "d5484f544d6281ebfb7662983c1e2846112241dc2e427fa02ce2f0d3e0fb54f1",
+      "8927d902560704824d9925756ffe9ad7bb0a0b6a088772cde56f66102503a037",
+      "54530e8d015ec532ffa5f81adca652d819e7ea59dc625b66e5acf59c2481096c"
+     ],
+     "final_assessments": [
+      {
+       "candidate_id": "4b1e56b3707b8a0a7177213ad61737dea41e500ea0494b19146b87c6b837bbac",
+       "counter_citations": [],
+       "reason": "The captured head formatting.py (rev 1661991abd288a4346c65099a0a8be1c954c0035, line 2) returns \"waiting\", while the base (rev 19b5939d2328d70274a0ed312dcc0d229f32080f, line 2) returned \"ready\"; diff.patch shows this is the only change and files.json lists only formatting.py. The captured test_formatting.py is byte-identical on both sides (identical blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37 and sha256 0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5 per repository-context.json) and imports label from formatting (line 1) then asserts label() == \"ready\" (lines 4-5). Executing test_label against head would therefore raise AssertionError (\"waiting\" != \"ready\"), exactly as the candidate's observed field states. No captured code contradicts this; the uncaptured related files (client.py, policy.py, schema.py) are marked missing in repository-context.json, but the candidate's impact statement does not depend on their content.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "base",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "d5484f544d6281ebfb7662983c1e2846112241dc2e427fa02ce2f0d3e0fb54f1",
+       "counter_citations": [],
+       "reason": "The captured head formatting.py (rev 1661991abd288a4346c65099a0a8be1c954c0035, lines 1-2) defines label() returning \"waiting\", changed from \"ready\" in the base revision (19b5939d2328d70274a0ed312dcc0d229f32080f, line 2), and diff.patch confirms this is the sole hunk. The head-side test_formatting.py (line 5, inside test_label defined at line 4) asserts label() == \"ready\" and is unchanged from base (identical blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37 on both sides in repository-context.json), so the assertion fails with \"waiting\" != \"ready\" when run against head, matching the candidate's observed field and trigger. The candidate's second precondition (a caller relying on the base \"ready\" value) is hedged appropriately and is not needed for the core regression claim; the related caller files are status: missing in the manifest and are not asserted.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 1,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "8927d902560704824d9925756ffe9ad7bb0a0b6a088772cde56f66102503a037",
+       "counter_citations": [],
+       "reason": "The observed field is directly corroborated: head formatting.py (rev 1661991abd288a4346c65099a0a8be1c954c0035, line 2) returns \"waiting\" versus base (rev 19b5939d2328d70274a0ed312dcc0d229f32080f, line 2) returning \"ready\", and the head-side test_formatting.py line 5 asserts label() == \"ready\". The candidate's precondition that test_formatting.py is identical in base and head is confirmed by repository-context.json (same blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37 and sha256 0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5 on both sides), and the precondition that the only diff change is formatting.py line 2 is confirmed by diff.patch and files.json. Running test_label against head therefore fails with AssertionError, breaking the suite as claimed. The candidate explicitly disclaims impact via the missing (uncaptured) client.py/policy.py/schema.py, so no unsupported assertion remains. Model-based support: this is corroboration from captured code, not formal proof.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 5,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      },
+      {
+       "candidate_id": "54530e8d015ec532ffa5f81adca652d819e7ea59dc625b66e5acf59c2481096c",
+       "counter_citations": [],
+       "reason": "The candidate's observed field matches the captured evidence exactly: head formatting.py (rev 1661991abd288a4346c65099a0a8be1c954c0035, line 2) returns \"waiting\" while the unchanged test_formatting.py (lines 4-5, defining test_label with assert label() == \"ready\") still pins \"ready\", so the suite fails at head. The base revision (19b5939d2328d70274a0ed312dcc0d229f32080f, line 2) returned \"ready\", and diff.patch/files.json confirm formatting.py line 2 is the only modification with no test update in the change. The precondition of byte-identical test_formatting.py across sides is verified by the identical blob_sha 75e01a42e5d82ea23e1463dd479fa34304319a37 and sha256 0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5 in repository-context.json. The impact statement's mention of client.py/policy.py is explicitly hedged (\"may\", \"not captured here\") and those files are status: missing, so no uncaptured-content assertion is smuggled in; the core correctness claim stands on captured code alone.",
+       "status": "supported",
+       "supporting_citations": [
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "e17f2ad8bf3d9dc850b7f80fd80dc14aa221986780e83c239e7fe4b2cb8b1279",
+         "side": "head",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 5,
+         "path": "test_formatting.py",
+         "revision": "1661991abd288a4346c65099a0a8be1c954c0035",
+         "sha256": "0e1b73c825dd2535dda73d41fbb617685693c74899ff043b744dc58c44a94ce5",
+         "side": "head",
+         "start_line": 4,
+         "validation": "valid",
+         "validation_reason": null
+        },
+        {
+         "end_line": 2,
+         "path": "formatting.py",
+         "revision": "19b5939d2328d70274a0ed312dcc0d229f32080f",
+         "sha256": "9f1bfef3b13e641ebf96f8328046551437a4f5fa60f2a05ec3a617b765b28245",
+         "side": "base",
+         "start_line": 2,
+         "validation": "valid",
+         "validation_reason": null
+        }
+       ]
+      }
+     ],
+     "reason": "undisputed",
+     "rounds": [],
+     "status": "complete"
+    },
+    "error": null,
+    "latency_seconds": 754.6478912550956,
+    "status": "complete",
+    "usage": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 70519,
+     "output": 18093,
+     "total": 88612
+    }
+   },
+   "run_id": "tests-consumer-fixture/focused3/3",
+   "sha256_private": "a65dc3643061c961b7ced0400f8010b7b13e9bcd399e6802f85812ea8374ff9e",
+   "state": "available"
+  }
+ ]
+}

@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+PF_STATE=/home/user/Workspace/ViviDynamics/scrutare/.agents/state/glm-g5-2026-10-28
+PF_WORKTREE=/home/user/Workspace/ViviDynamics/scrutare-103-glm-g5
+PF_SKILLS=/home/user/Workspace/ViviDynamics/skills/skills/ship-issue/scripts
+PF_LANE=${1:?Python lane required}
+PF_HEAD=${2:?Exact committed head required}
+case "$PF_LANE" in 3.10|3.14) ;; *) exit 2;; esac
+export PATH=/home/user/.local/bin:/usr/local/bin:/usr/bin:/bin
+export SCRUTARE_TEST_NARE_EXECUTABLE=/home/user/Workspace/ViviDynamics/scrutare/.agents/state/nare-2026.10.12/.venv/bin/nare
+export DOCKER_CONFIG="$PF_WORKTREE/.agents/state/docker-config"
+export SCRUTARE_PYTHON="$PF_LANE"
+export PYTEST_ADDOPTS="--junitxml=$PF_STATE/preflight-$PF_LANE-pytest.xml"
+cd "$PF_WORKTREE"
+test "$(git rev-parse HEAD)" = "$PF_HEAD"
+"$PF_SKILLS/preflight" 103 > "$PF_STATE/preflight-$PF_LANE.json"
+/usr/bin/python3 - "$PF_STATE/preflight-$PF_LANE.json" "$PF_HEAD" <<'PY'
+import json,sys,xml.etree.ElementTree as ET
+x=json.load(open(sys.argv[1]))
+assert x['state']=='pass' and x['head_sha']==sys.argv[2]
+assert len(x['commands'])==6 and all(c['exit']==0 for c in x['commands'])
+suite=ET.parse(sys.argv[1].removesuffix('.json')+'-pytest.xml').getroot().find('testsuite')
+assert suite is not None and int(suite.attrib['tests'])>0
+assert all(int(suite.attrib[k])==0 for k in ('failures','errors','skipped'))
+print(json.dumps({'lane_result':sys.argv[1].rsplit('/',1)[-1], 'head_sha':x['head_sha'],
+                  'state':x['state'], 'duration_sec':x['duration_sec'],
+                  'tests':int(suite.attrib['tests']), 'skipped':0}))
+PY
+test "$(git rev-parse HEAD)" = "$PF_HEAD"
+"$PF_SKILLS/preflight" --check 103
