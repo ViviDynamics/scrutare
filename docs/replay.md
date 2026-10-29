@@ -120,8 +120,9 @@ tools and one turn, and otherwise carries exactly the session's own flags with
 the same rail, root, contract and budget values; the schema file must be the
 generated correction schema.
 `correction.stdout.jsonl` and `correction-session.json` are reconciled as a
-continuation of that same session (same session id and release, at most one
-more turn, cumulative usage) under the recorded `exit_code`, and the recorded
+continuation of that same session (same session id and release, one correction
+turn and at most one accounted tool-free summary ending in `error`/`max_turns`,
+cumulative usage) under the recorded `exit_code`, and the recorded
 outcome must follow from them: a corrected session's findings, and every
 answered or unanswered session's cumulative usage, must equal what they yield,
 and a refused or unanswered session must have failed with no findings, for the

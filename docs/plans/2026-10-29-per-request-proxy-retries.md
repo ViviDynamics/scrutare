@@ -22,4 +22,5 @@ The separately approved quality gate retains its holdout and spending boundaries
 - [x] Capability, native argv and provenance: failing boundary and wave tests.
 - [x] Replay rejects missing or altered controls: failing mutation tests.
 - [x] Pin nare 2026.10.31 at `96aeee3d9c58577fb8d74cc0c2fa8c68f36aac5b` and exercise installed compatibility.
+- [x] Reconcile the released usage shape, countdown and accounted turn-limit summary; preserve correction refusals and reject extra successful turns.
 - [ ] Both full Python/native Docker lanes, independent review, quality guard and exact-head CI.

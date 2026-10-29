@@ -79,6 +79,9 @@ a discovery session whose answer is refused only for correctable citation
 defects is resumed once, in the same attempt, for one tool-free turn under the
 same lease and budget limit; its usage stays cumulative in the session's
 outcome and the shared ledger.
+The pinned nare release may make one further tool-free summary request at the
+turn limit. Its usage is counted, and its `error`/`max_turns` result leaves the
+original refusal standing even when the summary contains a valid answer.
 The broader [`findings.protocol_correction`](config.md#protocol-correction-turn-opt-in)
 applies that same bound to deterministic full-answer refusals in discovery, assessment
 and focused discussion. It takes precedence if both correction settings are enabled.

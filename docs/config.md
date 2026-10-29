@@ -271,6 +271,11 @@ nare constrains every turn of a run with no tools, so the correction answer is
 decoded under its schema. The turn gets whatever is left of the session's
 timeout.
 
+On nare 2026.10.31, reaching this turn limit can trigger one additional
+tool-free summary request if the cumulative token budget still permits it.
+Scrutare accounts for that request but keeps the original refusal: nare ends
+with `error`/`max_turns`, so even a valid answer in the summary cannot correct it.
+
 The answer is citation-only, like anchor correction: exactly one entry per named
 citation, with its `revision`, `sha256`, `start_line` and `end_line`; the prompt
 spells out that shape, because nare does not restate a schema in a resumed

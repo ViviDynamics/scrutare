@@ -875,7 +875,7 @@ def assert_panel_evidence(result, inputs, config):
         assert persisted["policy"] == {"tools": ["read"], "root": str(inputs.root)}
         assert persisted["usage"] == terminal["usage"]
         if outcome.accounting_complete:
-            assert persisted["usage"] == {"cost": None, **{
+            assert persisted["usage"] == {"cost": None, "estimated": False, **{
                 key: getattr(outcome.usage, key)
                 for key in ("input", "output", "cache_read", "cache_write")
             }}

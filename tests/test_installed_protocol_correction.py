@@ -41,7 +41,10 @@ def test_installed_g3_placeholder_corrects_and_replays(tmp_path, installed, whee
         assert observed["calls"][0]["response_schema"] == load(
             attempt / "protocol-correction.schema.json"
         )
-    assert observed["calls"][0]["messages"][-1]["content"][-1]["text"] == record["prompt"]
+    blocks = observed["calls"][0]["messages"][-1]["content"]
+    assert [b["text"] for b in blocks if b.get("text", "").startswith(
+        "Scrutare could not accept")] == [record["prompt"]]
+    assert blocks[-1]["text"] == "1 turns left: wrap up and summarise."
     assert replay.returncode == 0, replay.stderr.decode()
     assert json.loads(replay.stdout)["issues"] == []
     assert json.loads(replay.stdout)["saved_verdict"]["byte_identical"] is True
@@ -134,7 +137,9 @@ def test_installed_no_valid_replacement_keeps_original_refusal(tmp_path, install
         succeeds=False,
     )
     assert load(attempt / "result.json")["protocol_correction"]["outcome"] == "no_answer"
-    assert len(resumed(attempt)["calls"]) == 1
+    calls = resumed(attempt)["calls"]
+    assert len(calls) == 2 and all(call["tools"] == [] for call in calls)
+    assert calls[-1]["messages"][-1]["content"][-1]["text"].startswith("Turn limit reached.")
     from scrutare.replay.audit import _protocol_correction_issues
 
     assert _protocol_correction_issues(run, load(run / "config.json")) == ()

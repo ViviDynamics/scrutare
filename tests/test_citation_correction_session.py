@@ -255,6 +255,48 @@ def test_no_correction_answer_fails_the_session_with_its_original_refusal(
     assert outcome.usage == TOTAL == ledger.usage
 
 
+@pytest.mark.parametrize("status,stop,extra_turns,reported_turns", [
+    ("done", "end_turn", 2, 3),
+    ("error", "budget", 2, 3),
+    ("error", None, 2, 3),
+    ("error", "max_turns", 3, 4),
+    ("error", "max_turns", 1, 3),
+    ("error", "max_turns", 2, 2),
+])
+def test_extra_correction_turns_require_a_single_accounted_turn_limit_summary(
+        capture, status, stop, extra_turns, reported_turns):
+    from test_session_output import event, fixture, usage
+
+    from scrutare.engine.session_output import (
+        CitationCorrectionOffered,
+        SessionProtocolError,
+        decode_citation_correction,
+        decode_session,
+    )
+
+    descriptor, _, _, _ = prepared(capture)
+    root = descriptor.inputs.root
+    first, saved = fixture(root, output=PAST_END, limit=1000)
+    with pytest.raises(CitationCorrectionOffered) as caught:
+        decode_session(
+            b"\n".join(json.dumps(e).encode() for e in first), json.dumps(saved).encode(),
+            persona="security", exit_code=0, expected_limit=1000, expected_root=root,
+            evidence_version=2, offer_citation_correction=True)
+    corrected = fix(("c0001", GOOD, 1, 3))
+    resumed, saved = fixture(root, status=status, stop=stop, output=corrected, limit=1000)
+    total = usage(**{k: v * (extra_turns + 1) for k, v in usage().items() if k != "cost"})
+    resumed[-1].update(usage=total, turns=reported_turns)
+    resumed[-1]["budget"]["used_tokens"] = 26 * (extra_turns + 1)
+    saved.update(usage=total, turns=reported_turns)
+    saved["policy"]["tools"] = []
+    stream = [*[event() for _ in range(extra_turns)], resumed[-1]]
+    with pytest.raises(SessionProtocolError):
+        decode_citation_correction(
+            b"\n".join(json.dumps(e).encode() for e in stream), json.dumps(saved).encode(),
+            offered=caught.value, persona="security", exit_code=0 if status == "done" else 1,
+            expected_limit=1000, expected_root=root)
+
+
 def test_correction_evidence_from_another_session_is_refused(capture, tmp_path):
     outcome, _, attempt = launch(capture, tmp_path, PAST_END,
                                  {"output": fix(("c0001", GOOD, 1, 3)), "session_id": "other"})

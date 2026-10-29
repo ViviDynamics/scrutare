@@ -428,11 +428,16 @@ def _decode_evidence(
             _fail()
         if "turns" in saved and _integer(saved["turns"]) != count:
             _fail()
-        # One correction turn at most (--max-turns 1), continuing exactly that session.
+        # --max-turns 1 allows one correction. Newer nare can then make one
+        # accounted, tool-free summary request, retaining error/max_turns. Its
+        # output is never a successful correction; every completed turn must
+        # have its own cost event and remain within this session's budget.
+        max_correction_turns = 2 if status == "error" and stop == "max_turns" else 1
         if baseline is not None and (
                 identity != baseline.session_id or version != baseline.nare_version
                 or contract != baseline.contract or baseline.turns is None
-                or not baseline.turns <= count <= baseline.turns + 1):
+                or not baseline.turns <= count <= baseline.turns + max_correction_turns
+                or count - baseline.turns != len(turns)):
             _fail()
         return _DecodedEvidence(identity, status, stop, exit_code, total_usage,
                                 output is not None, expected_limit,

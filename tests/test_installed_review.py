@@ -286,7 +286,7 @@ def test_installed_review_pipeline(
             assert session["output"] == terminal["output"]
             assert session["schema_retried"] is False
             if outcome["accounting_complete"]:
-                assert session["usage"] == {"cost": None, **{
+                assert session["usage"] == {"cost": None, "estimated": False, **{
                     key: outcome["usage"][key] for key in
                     ("input", "output", "cache_read", "cache_write")}}
             assert session["budget"]["tokens"] == invocation["invocation_limit"]
