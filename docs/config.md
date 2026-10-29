@@ -207,7 +207,7 @@ records `max_output_tokens` (with `null` where it is off), each session's
 ## Per-request proxy retries (opt-in)
 
 Set `models.default.proxy_num_retries: 0` on an OpenAI rail to ask a compatible
-proxy such as LiteLLM for zero retries on every request (nare 2026.10.31 or newer). Scrutare passes
+proxy such as LiteLLM for zero retries on every request (nare 2026.10.32 or newer). Scrutare passes
 `--proxy-num-retries 0` to nare, including tool and correction turns. This controls
 proxy retries; verify the proxy's support and fallback behavior separately.
 
@@ -271,7 +271,7 @@ nare constrains every turn of a run with no tools, so the correction answer is
 decoded under its schema. The turn gets whatever is left of the session's
 timeout.
 
-On nare 2026.10.31, reaching this turn limit can trigger one additional
+On nare 2026.10.32, reaching this turn limit can trigger one additional
 tool-free summary request if the cumulative token budget still permits it.
 Scrutare accounts for that request but keeps the original refusal: nare ends
 with `error`/`max_turns`, so even a valid answer in the summary cannot correct it.

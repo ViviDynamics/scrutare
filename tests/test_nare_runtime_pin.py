@@ -5,8 +5,8 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).parents[1]
-RELEASE = "2026.10.31"
-COMMIT = "96aeee3d9c58577fb8d74cc0c2fa8c68f36aac5b"
+RELEASE = "2026.10.32"
+COMMIT = "19b4e983e2f54e735649aeb6691ffbc46cf4460a"
 PREVIOUS = ("2026.10.12", "96672e1e6d23920fc6cdeebfcad7250c8c36cc5e")
 
 

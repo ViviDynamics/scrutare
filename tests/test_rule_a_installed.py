@@ -1,4 +1,4 @@
-"""Rule A exercised through the installed nare 2026.10.31 console, offline."""
+"""Rule A exercised through the installed nare 2026.10.32 console, offline."""
 import asyncio
 import json
 from pathlib import Path
