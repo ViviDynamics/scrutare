@@ -196,14 +196,33 @@ def _proxy_num_retries_issues(run_dir: Path, config_data: object) -> tuple[Audit
         return (AuditIssue("proxy_num_retries_evidence_missing", "sessions", "incomplete"),)
     try:
         config = parse_config(json.dumps(config_data))
-    except (ConfigError, TypeError, ValueError):
+        names = {p if isinstance(p, str) else p.name for p in config.personas}
+        if config.routing.enabled:
+            focus = decode_artifact(read_artifact(run_dir / "review-inputs/routing-focus.json"),
+                                    artifact="routing-focus.json")
+            effective = focus.get("effective_personas") if isinstance(focus, dict) else None
+            if (not isinstance(effective, list) or not effective
+                    or any(not isinstance(name, str) or not name for name in effective)):
+                raise ValueError
+            names = set(effective)
+        expected_rails = {name: config.models.for_persona(name) for name in names}
+        # Reproduce the executor identities reserved by debate and fanout, including collisions.
+        if config.strategy == "debate" and not config.findings.discussion.enabled:
+            chair = "debate-chair"
+            while chair in expected_rails:
+                chair += "-chair"
+            expected_rails[chair] = config.models.for_persona("senior-dev")
+        if config.findings.assessment.enabled:
+            assessor = "evidence-assessor"
+            while assessor in expected_rails:
+                assessor += "-assessor"
+            expected_rails[assessor] = config.models.default
+    except (ConfigError, ReplayError, TypeError, ValueError):
         return (AuditIssue("proxy_num_retries_config_invalid", "config.json", "invalid"),)
 
     def key(rail: Any) -> tuple[object, ...]:
         return (rail.provider, rail.model, rail.base_url, rail.proxy_num_retries)
 
-    configured = {key(r) for r in (config.models.default, *(r for _, r in config.models.overrides))}
-    personas = {p if isinstance(p, str) else p.name for p in config.personas}
     issues = []
     for attempt, document in invocations:
         try:
@@ -217,8 +236,8 @@ def _proxy_num_retries_issues(run_dir: Path, config_data: object) -> tuple[Audit
                 raise ValueError
             observed = (rail.get("provider"), rail.get("model"), rail.get("base_url"), retries)
             persona = document.get("persona")
-            if observed not in ({key(config.models.for_persona(persona))}
-                                if persona in personas else configured):
+            if (persona != attempt.parent.name or persona not in expected_rails
+                    or observed != key(expected_rails[persona])):
                 raise ValueError
             flags = [i for i, arg in enumerate(argv) if isinstance(arg, str)
                      and arg.partition("=")[0] == "--proxy-num-retries"]
@@ -350,7 +369,7 @@ _UNOFFERED = {"offered": False, "defects": 0, "outcome": None, "exit_code": None
 _OUTCOMES = ("corrected", "refused", "no_answer", "failed")
 # Flags the correction turn must share with its session's own invocation.
 _SHARED_FLAGS = ("--root", "--provider", "--base-url", "--contract", "--budget-tokens",
-                 "--structured-output", "--max-tokens")
+                 "--structured-output", "--max-tokens", "--proxy-num-retries")
 
 
 def _flag(argv: list[Any], name: str) -> object:
