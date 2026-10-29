@@ -33,6 +33,7 @@ Errors identify a field path or YAML location without echoing field values.
 | `models.default.model` | Explicit nonempty string | Required |
 | `models.default.structured_output` | `json_schema` (requires `provider: openai`), or `null` | `null` (off) |
 | `models.default.max_output_tokens` | Positive integer, or `null` | `null` (off) |
+| `models.default.proxy_num_retries` | Nonnegative integer (requires `provider: openai`), or `null` | `null` (off) |
 | `models.overrides` | Mapping from a configured persona name to partial model settings | `{}` |
 | `verdict.blocking_categories` | List drawn from the fixed vocabulary | `correctness`, `security`, `regression` |
 | `verdict.advisory_categories` | List drawn from the fixed vocabulary | `style`, `consistency`, `docs` |
@@ -203,6 +204,23 @@ records `max_output_tokens` (with `null` where it is off), each session's
 `invocation.json` records it in `rail` and its argv, and `result.json` records
 `{"limit": N, "reached": true|false}`. [Replay](replay.md) audits these records.
 
+## Per-request proxy retries (opt-in)
+
+Set `models.default.proxy_num_retries: 0` on an OpenAI rail to ask a compatible
+proxy such as LiteLLM for zero retries on every request (nare 2026.10.31 or newer). Scrutare passes
+`--proxy-num-retries 0` to nare, including tool and correction turns. This controls
+proxy retries; verify the proxy's support and fallback behavior separately.
+
+The setting accepts nonnegative integers, inherits through persona overrides,
+and can be cleared with `null`. Other providers refuse it. The inspected nare
+contract must advertise the capability before any session starts.
+
+When unset everywhere, request arguments and canonical configuration retain their
+previous bytes. When any rail opts in, canonical configuration and `fanout.json`
+record the setting on all rails (`null` where off). Each invocation records its
+rail and exact native flag; replay rejects a missing or altered retry control.
+The default remains off.
+
 ## Citation correction turn (opt-in)
 
 With [evidence v2](findings.md), one citation that does not match the captured
@@ -252,6 +270,11 @@ and its usage counts in the review's shared accounting. On a
 nare constrains every turn of a run with no tools, so the correction answer is
 decoded under its schema. The turn gets whatever is left of the session's
 timeout.
+
+On nare 2026.10.31, reaching this turn limit can trigger one additional
+tool-free summary request if the cumulative token budget still permits it.
+Scrutare accounts for that request but keeps the original refusal: nare ends
+with `error`/`max_turns`, so even a valid answer in the summary cannot correct it.
 
 The answer is citation-only, like anchor correction: exactly one entry per named
 citation, with its `revision`, `sha256`, `start_line` and `end_line`; the prompt

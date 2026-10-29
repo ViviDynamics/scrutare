@@ -179,6 +179,87 @@ def _terminal_cut_off(stdout: bytes) -> tuple[bool, bool]:
     return True, cut_off
 
 
+def _proxy_num_retries_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
+    """Bind the opt-in retry request to its recorded rail and exact native flag."""
+    attempts = _session_records(run_dir)
+    invocations = _invocations(attempts)
+    opted_in = _opted_in(config_data, "proxy_num_retries")
+    recorded = any(isinstance(d, dict) and (
+        isinstance(d.get("rail"), dict) and "proxy_num_retries" in d["rail"]
+        or isinstance(d.get("argv"), list) and any(
+            isinstance(a, str) and a.partition("=")[0] == "--proxy-num-retries"
+            for a in d["argv"]))
+        for _, d in invocations)
+    if not opted_in and not recorded:
+        return ()
+    if opted_in and not invocations:
+        return (AuditIssue("proxy_num_retries_evidence_missing", "sessions", "incomplete"),)
+    try:
+        config = parse_config(json.dumps(config_data))
+        names = {p if isinstance(p, str) else p.name for p in config.personas}
+        if config.routing.enabled:
+            from scrutare.engine.review_inputs import PreparedReviewInputs
+            from scrutare.engine.routing import plan_routing
+            files = decode_artifact(read_artifact(run_dir / "review-inputs/files.json"),
+                                    artifact="files.json")
+            metadata = decode_artifact(read_artifact(run_dir / "metadata.json"),
+                                       artifact="metadata.json")
+            if not isinstance(files, list) or not isinstance(metadata, dict):
+                raise ValueError
+            # Reconcile the entire prepared view with its coherent capture even
+            # when repository context is disabled. A changed copied path must
+            # never activate a procedure and displace a reserved executor.
+            PreparedReviewInputs((run_dir / "review-inputs").absolute(), metadata["head_sha"],
+                                 tuple(file["filename"] for file in files))
+            # Identity selection uses changed paths and trusted rules, never focus metadata.
+            # Supporting paths affect work groups only, not persona activation.
+            names = {p.name for p in plan_routing(files, (), config).personas}
+        expected_rails = {name: config.models.for_persona(name) for name in names}
+        # Reproduce the executor identities reserved by debate and fanout, including collisions.
+        if config.strategy == "debate" and not config.findings.discussion.enabled:
+            chair = "debate-chair"
+            while chair in expected_rails:
+                chair += "-chair"
+            expected_rails[chair] = config.models.for_persona("senior-dev")
+        if config.findings.assessment.enabled:
+            assessor = "evidence-assessor"
+            while assessor in expected_rails:
+                assessor += "-assessor"
+            expected_rails[assessor] = config.models.default
+    except (ConfigError, ReplayError, OSError, TypeError, ValueError, KeyError, RecursionError):
+        return (AuditIssue("proxy_num_retries_config_invalid", "config.json", "invalid"),)
+
+    def key(rail: Any) -> tuple[object, ...]:
+        return (rail.provider, rail.model, rail.base_url, rail.proxy_num_retries)
+
+    issues = []
+    for attempt, document in invocations:
+        try:
+            if not isinstance(document, dict):
+                raise ValueError
+            rail, argv = document["rail"], document["argv"]
+            if not isinstance(rail, dict) or not isinstance(argv, list):
+                raise ValueError
+            retries = rail.get("proxy_num_retries")
+            if "proxy_num_retries" in rail and (type(retries) is not int or retries < 0):
+                raise ValueError
+            observed = (rail.get("provider"), rail.get("model"), rail.get("base_url"), retries)
+            persona = document.get("persona")
+            if (persona != attempt.parent.name or persona not in expected_rails
+                    or observed != key(expected_rails[persona])):
+                raise ValueError
+            flags = [i for i, arg in enumerate(argv) if isinstance(arg, str)
+                     and arg.partition("=")[0] == "--proxy-num-retries"]
+            if len(flags) != (retries is not None) or any(
+                    argv[i] != "--proxy-num-retries"
+                    or argv[i + 1:i + 2] != [str(retries)] for i in flags):
+                raise ValueError
+        except (KeyError, TypeError, ValueError):
+            issues.append(AuditIssue("proxy_num_retries_unrecorded",
+                f"{attempt.relative_to(run_dir).as_posix()}/invocation.json", "invalid"))
+    return tuple(issues)
+
+
 def _max_output_tokens_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
     """Check that each session passed and recorded exactly the cap its configured rail set.
 
@@ -297,7 +378,7 @@ _UNOFFERED = {"offered": False, "defects": 0, "outcome": None, "exit_code": None
 _OUTCOMES = ("corrected", "refused", "no_answer", "failed")
 # Flags the correction turn must share with its session's own invocation.
 _SHARED_FLAGS = ("--root", "--provider", "--base-url", "--contract", "--budget-tokens",
-                 "--structured-output", "--max-tokens")
+                 "--structured-output", "--max-tokens", "--proxy-num-retries")
 
 
 def _flag(argv: list[Any], name: str) -> object:
@@ -845,6 +926,7 @@ def replay_run(run_dir: Path) -> ReplayResult:
     issues = (findings_issues + _yaml_issues(run_dir, policy) + _context_issues(run_dir, policy)
               + _structured_output_issues(run_dir, config_data)
               + _max_output_tokens_issues(run_dir, config_data)
+              + _proxy_num_retries_issues(run_dir, config_data)
               + _citation_correction_issues(run_dir, config_data)
               + _protocol_correction_issues(run_dir, config_data))
     posting = inspect_posting(run_dir)

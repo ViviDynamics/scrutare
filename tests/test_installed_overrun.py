@@ -91,7 +91,7 @@ def review(tmp_path, installed, wheel_cli, *, yaml, scenarios, category="correct
     for path in observations:
         observed = json.loads(path.read_bytes())
         assert observed["guard_violations"] == observed["credential_names"] == []
-        assert observed["version"] == "2026.10.12"
+        assert observed["version"] == "2026.10.31"
     payload = json.loads((run / "review-payload.json").read_bytes())
     return envelope, run, payload
 

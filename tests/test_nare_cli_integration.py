@@ -80,7 +80,7 @@ def installed():
         env={"PATH": "/usr/bin:/bin"},
         timeout=10,
     )
-    assert result.returncode == 0 and result.stdout.strip() == "2026.10.12", result.stderr
+    assert result.returncode == 0 and result.stdout.strip() == "2026.10.31", result.stderr
     return console, interpreter
 
 
@@ -108,7 +108,7 @@ def observations(outcome, *, http_sse=False):
     assert result["guard_violations"] == []
     assert result["credential_names"] == (["OPENAI_API_KEY"] if http_sse else [])
     assert result["nare_controls"] == {}
-    assert result["version"] == "2026.10.12"
+    assert result["version"] == "2026.10.31"
     assert result["python"].startswith("3.14.")
     assert all(Path(path).is_relative_to(outcome.artifact_directory) for path in result["writes"])
     return result
@@ -875,7 +875,7 @@ def assert_panel_evidence(result, inputs, config):
         assert persisted["policy"] == {"tools": ["read"], "root": str(inputs.root)}
         assert persisted["usage"] == terminal["usage"]
         if outcome.accounting_complete:
-            assert persisted["usage"] == {"cost": None, **{
+            assert persisted["usage"] == {"cost": None, "estimated": False, **{
                 key: getattr(outcome.usage, key)
                 for key in ("input", "output", "cache_read", "cache_write")
             }}

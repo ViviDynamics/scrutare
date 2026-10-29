@@ -1,4 +1,4 @@
-"""Installed wheel and native nare 2026.10.12: one citation correction, on and off, replayed."""
+"""Installed wheel and native nare 2026.10.31: one citation correction, on and off, replayed."""
 
 import base64
 import json
@@ -41,7 +41,7 @@ def fixed(provider, *, end_line=1, digest=None):
 
 def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=True,
            structured=False, succeeds=True, policy="citation_correction", assessment=False,
-           provider_error=False):
+           provider_error=False, correction_summary=None, limit=400):
     """Run `scrutare review` once against offline GitHub and native offline nare."""
     from scrutare.engine.repository_context import _artifact
 
@@ -64,9 +64,12 @@ def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=T
     replies = [tool(args={"path": "repository-context.json"}),
                tool(args={"path": _artifact("head", "src/caller.py")}, call_id="caller"),
                text(answer(provider))]
+    correction_replies = [] if correction is None else [text(correction(provider))]
+    if correction_summary is not None:
+        correction_replies.append(text(correction_summary(provider)))
     scenarios = [] if correction is None else [{
         "purpose": "review", "attempt": "attempt-0001", "prompt_prefix": PREFIX,
-        "scenario": {"replies": [text(correction(provider))], **flag}}]
+        "scenario": {"replies": correction_replies, **flag}}]
     if assessment:
         scenarios.extend([
             {"purpose": "review", "attempt": "attempt-0001",
@@ -87,7 +90,7 @@ def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=T
         "personas: [senior-dev]\n"
         "models: {default: {provider: openai, model: offline-model, "
         f'base_url: "https://offline.invalid/v1"{rail}}}}}\n'
-        "budgets: {per_persona_tokens: 400, review_max_tokens: 800}\n"
+        f"budgets: {{per_persona_tokens: {limit}, review_max_tokens: {limit * 2}}}\n"
         "context: {enabled: true, related_paths: [src/caller.py, tests/test_caller.py]}\n"
         "findings: {evidence: v2" + (f", {policy}: true" if enabled else "")
         + (", assessment: {enabled: true, tokens: 400}" if assessment else "") + "}\n")
@@ -116,7 +119,7 @@ def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=T
     for path in run.rglob("offline-observations*.json"):
         observed = load(path)
         assert observed["guard_violations"] == observed["credential_names"] == []
-        assert observed["version"] == "2026.10.12"
+        assert observed["version"] == "2026.10.31"
     replay = subprocess.run([str(console), "replay", str(run)], cwd=working, env=env,
                             capture_output=True, timeout=30)
     return result, run, attempt, replay, provider
@@ -144,7 +147,9 @@ def test_installed_a_past_end_citation_is_corrected_and_replays(tmp_path, instal
     assert len(observed["calls"]) == 1
     call = observed["calls"][0]
     assert call["tools"] == []
-    assert call["messages"][-1]["content"][-1]["text"] == record["prompt"]
+    blocks = call["messages"][-1]["content"]
+    assert [b["text"] for b in blocks if b.get("text", "").startswith(PREFIX)] == [record["prompt"]]
+    assert blocks[-1]["text"] == "1 turns left: wrap up and summarise."
     assert any(block.get("type") == "tool_result" for message in call["messages"]
                for block in message["content"])  # the reads it made are still in context
     saved = load(attempt / "correction-session.json")
@@ -224,8 +229,8 @@ def test_installed_an_undescribable_refusal_is_not_offered(tmp_path, installed, 
 
 def test_installed_a_correction_with_no_valid_answer_keeps_the_original_refusal(
         tmp_path, installed, wheel_cli):
-    # Off the constraint, a schema-invalid answer needs nare's schema retry, a second turn
-    # that --max-turns 1 does not allow: nare stops, and the original refusal stands.
+    # Off the constraint, a schema-invalid answer reaches the turn limit. Nare's
+    # tool-free summary request has no scripted reply here; the original refusal stands.
     _, run, attempt, _, _ = review(
         tmp_path, installed, wheel_cli, answer=lambda p: first_answer(p, end_line=2),
         correction=lambda p: {"corrections": []}, succeeds=False)
@@ -235,7 +240,72 @@ def test_installed_a_correction_with_no_valid_answer_keeps_the_original_refusal(
                                               "outcome": "no_answer", "exit_code": 1}
     terminal = json.loads((attempt / "correction.stdout.jsonl").read_text().splitlines()[-1])
     assert (terminal["status"], terminal["stop_reason"]) == ("error", "max_turns")
-    assert len(resumed(attempt)["calls"]) == 1
+    calls = resumed(attempt)["calls"]
+    assert len(calls) == 2 and all(call["tools"] == [] for call in calls)
+    assert calls[-1]["messages"][-1]["content"][-1]["text"].startswith("Turn limit reached.")
+    assert load(attempt / "correction-session.json")["turns"] == (
+        load(attempt / "session.json")["turns"] + 1)
     assert outcome["usage"]["total"] == terminal["usage"]["input"] + terminal["usage"]["output"]
     from scrutare.replay.audit import _citation_correction_issues
     assert _citation_correction_issues(run, load(run / "config.json")) == ()
+
+
+@pytest.mark.parametrize("policy", ["citation_correction", "protocol_correction"])
+def test_installed_turn_limit_summary_is_accounted_but_cannot_correct_the_refusal(
+        tmp_path, installed, wheel_cli, policy):
+    from test_installed_protocol_correction import placeholder
+
+    citation = policy == "citation_correction"
+    _, run, attempt, _, _ = review(
+        tmp_path, installed, wheel_cli,
+        answer=(lambda p: first_answer(p, end_line=2)) if citation else placeholder,
+        correction=lambda p: {"wrong": []},
+        correction_summary=fixed if citation else first_answer,
+        policy=policy, succeeds=False)
+    outcome = load(attempt / "result.json")
+    assert outcome[policy]["outcome"] == "no_answer"
+    assert outcome["status"] == "failed" and outcome["findings"] == []
+    assert not (run / "verdict.json").exists()
+    original = load(attempt / "session.json")
+    summary = load(attempt / "correction-session.json")
+    assert (summary["status"], summary["stop_reason"]) == ("error", "max_turns")
+    assert summary["turns"] == original["turns"] + 2
+    assert summary["output"] != original["output"]
+    assert outcome["usage"]["total"] == 75
+    assert outcome["usage"]["input"] == summary["usage"]["input"] == 50
+    assert outcome["usage"]["output"] == summary["usage"]["output"] == 25
+    calls = resumed(attempt)["calls"]
+    assert len(calls) == 2 and all(call["tools"] == [] for call in calls)
+    assert calls[-1]["messages"][-1]["content"][-1]["text"].startswith("Turn limit reached.")
+    from scrutare.replay.audit import _citation_correction_issues, _protocol_correction_issues
+
+    audit = _citation_correction_issues if citation else _protocol_correction_issues
+    assert audit(run, load(run / "config.json")) == ()
+
+
+@pytest.mark.parametrize("policy", ["citation_correction", "protocol_correction"])
+@pytest.mark.parametrize("limit", [59, 60])
+def test_installed_exhausted_correction_budget_prevents_the_summary_request(
+        tmp_path, installed, wheel_cli, policy, limit):
+    from test_installed_protocol_correction import placeholder
+
+    citation = policy == "citation_correction"
+    _, run, attempt, _, _ = review(
+        tmp_path, installed, wheel_cli,
+        answer=(lambda p: first_answer(p, end_line=2)) if citation else placeholder,
+        correction=lambda p: {"wrong": []},
+        correction_summary=fixed if citation else first_answer,
+        policy=policy, succeeds=False, limit=limit)
+    outcome = load(attempt / "result.json")
+    assert outcome[policy]["outcome"] == "no_answer"
+    assert outcome["status"] == "failed" and outcome["findings"] == []
+    assert not (run / "verdict.json").exists()
+    terminal = load(attempt / "correction-session.json")
+    assert (terminal["status"], terminal["stop_reason"]) == ("error", "budget")
+    assert terminal["turns"] == load(attempt / "session.json")["turns"] + 1
+    assert outcome["usage"]["total"] == 60
+    assert len(resumed(attempt)["calls"]) == 1
+    from scrutare.replay.audit import _citation_correction_issues, _protocol_correction_issues
+
+    audit = _citation_correction_issues if citation else _protocol_correction_issues
+    assert audit(run, load(run / "config.json")) == ()

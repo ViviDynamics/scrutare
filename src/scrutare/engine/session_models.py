@@ -83,10 +83,12 @@ class NareCapability:
     contract: int
     # Constrained-answer modes the runtime advertises for its OpenAI rail (nare 2026.10.12+).
     structured_output: tuple[str, ...] = ()
+    proxy_num_retries: bool = False
 
     def __post_init__(self) -> None:
         _text(self.version, "version")
         _integer(self.contract, "contract", positive=True)
+        _boolean(self.proxy_num_retries, "proxy_num_retries")
         if (not isinstance(self.structured_output, tuple)
                 or any(not isinstance(mode, str) or not mode for mode in self.structured_output)):
             raise ValueError("structured_output: expected a tuple of mode names")
