@@ -1,5 +1,0 @@
-{
- "returncode": 0,
- "stderr": "",
- "stdout": "{\"requests\": 554, \"supplements\": 0, \"native_cost_events\": 554, \"paid_calls\": 0, \"fallbacks\": 0, \"tokens\": 2631021}\n"
-}
