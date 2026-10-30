@@ -1,8 +1,0 @@
-{
-  "candidate_commit": "5736bc1ce4ad02c1b19acfa9f318d7ae9acfbc50",
-  "expected_tree": "747178797d8c957d34b3fdf3fc155e092fbfb9bf",
-  "patch_sha256": "8d6c1b56b8a930a84056c9ec0341a6a7066de000d414797901260a4947a172dd",
-  "reconstructed_tree": "747178797d8c957d34b3fdf3fc155e092fbfb9bf",
-  "source_base_commit": "eb372770b9b1371bbd566ba7b33e69c1a0a1bc51",
-  "verified": true
-}

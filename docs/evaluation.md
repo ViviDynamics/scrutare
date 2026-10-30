@@ -6,6 +6,10 @@ The original pilot under `evaluations/pilot` contains 20 defect cases and 10 cle
 controls across five domains; ten cases (seven defects, three clean) are held out.
 It is a pilot, not statistical evidence for a generally superior reviewer roster.
 
+Report packages under `evaluations/reports/` are kept local and are not tracked in
+this repository, because they can contain infrastructure details. References to
+them below name the local report directory.
+
 Run an explicit paid model job from a locked installation:
 
 ```sh
@@ -157,7 +161,7 @@ context-enabled arms; see its README). Activation comes from
 for checking. Pass `related-paths.json` as `context.related_paths`. No dispute is
 forced, and these cases can never serve as unseen validation.
 
-The [qualification and first routing/dispute measurements](../evaluations/reports/2026-10-13-qualification-rerun/README.md)
+The qualification and first routing/dispute measurements (local report `2026-10-13-qualification-rerun`)
 retain one frozen 36-cell schedule that passed its gate without a rerun (the
 second schedule with that configuration; the first failed), 24
 routed-versus-fixed cells in which specialists activated from paths alone, and
@@ -200,14 +204,14 @@ arm, including its assessor and focused discussion sessions. Report corrections 
 defect type and outcome, and their token use. Compare with the unchanged profile;
 protocol qualification does not establish semantic quality or authorize promotion.
 
-The [tools, reliability and separating-case measurements](../evaluations/reports/2026-10-13-tools-reliability-separating/README.md)
+The tools, reliability and separating-case measurements (local report `2026-10-13-tools-reliability-separating`)
 retain 321 cells in thirteen jobs and four withdrawn freezes. The unchanged profile
 passed 3 of the 4 qualification schedules run; captured Ruff evidence changed no
 outcome; the assessor rejected nothing because no wrong candidate reached it; and
 three discussion rounds started and none completed.
 Judgments are automated and provisional; no default changed.
 
-The [onprem/glm-5.3-flash qualification](../evaluations/reports/2026-10-14-glm-qualification/README.md)
+The onprem/glm-5.3-flash qualification (local report `2026-10-14-glm-qualification`)
 ran the profile that qualified `gpt-6.1-sol` against the maintainer's self-hosted
 model, with a 600-second session timeout, on a later commit and day than the
 `gpt-6.1-sol` schedules. It did not qualify: 14 of 36 cells completed and 2 of
@@ -217,7 +221,7 @@ twice (model or serving stack; not separated). One earlier schedule was
 interrupted by the operator's session ending and is retained unjudged. External
 spend was zero.
 
-The [constrained re-qualification](../evaluations/reports/2026-10-21-glm-structured-qualification/README.md)
+The constrained re-qualification (local report `2026-10-21-glm-structured-qualification`)
 ran the same schedule and gate with `structured_output: json_schema`, nare
 2026.10.12 and the released #78 source. It did not qualify either: 13 of 36
 cells completed, 4 of 6 aggregate defect cells produced evidence, and no assessed
@@ -226,7 +230,7 @@ earlier run), and none of the 31 constrained corrections failed schema validatio
 assessor overran the default 20,000-token reservation, and seven sessions timed
 out. External spend was zero.
 
-The [final schedule s2](../evaluations/reports/2026-10-21-glm-structured-s2-qualification/README.md),
+The final schedule s2 (local report `2026-10-21-glm-structured-s2-qualification`),
 the one further schedule that gate allowed, raised the ceiling to 200,000, the
 assessor reservation to 50,000 and the session timeout to 1800 s, each sized from
 the run before it. It launched under heavy concurrent load after the maintainer
@@ -236,7 +240,7 @@ completed. One assessor request generated for 30 minutes without an answer
 until the timeout, and one discovery session cited past a file's end. No session overran its budget or failed the
 schema, and external spend was zero. No further schedule may run under that gate.
 
-A [new gate, schedule c1](../evaluations/reports/2026-10-22-glm-capped-c1-qualification/README.md),
+A new gate, schedule c1 (local report `2026-10-22-glm-capped-c1-qualification`),
 kept s2's profile and #51's criteria and added a per-request output cap
 (`max_output_tokens: 20000`, #82), sized from s2's largest completed request
 (12,387 tokens). It launched under concurrent load after the maintainer waived
@@ -249,7 +253,7 @@ request was cut off at the cap as its budget ran out (recorded as a budget
 overrun; #84). External spend was zero. The gate allows one re-test only on a
 maintainer decision.
 
-A [development measurement of line counts and the citation correction](../evaluations/reports/2026-10-25-citation-correction-measurement/README.md)
+A development measurement of line counts and the citation correction (local report `2026-10-25-citation-correction-measurement`)
 (#91) ran three jobs at the same time on the released 2026.10.34: c1's profile,
 then `context.line_counts`, then line counts plus `findings.citation_correction`.
 Each covered the aggregate arm on four pilot defect cases with three repeats, for
@@ -467,10 +471,10 @@ including bypassed discussions and exhausted disputes. These development results
 cannot promote a default or substitute for independently adjudicated, unseen
 holdout evidence. Ordinary baseline/procedures/architecture modes remain available.
 
-The [published architecture development experiment](../evaluations/reports/2026-10-12-architectures/README.md)
+The published architecture development experiment (local report `2026-10-12-architectures`)
 retains 420 scheduled cells, including 185 complete, 116 failed and 119 invalid
 outcomes. Its 652 automated observation judgments leave 54 pending actual humans.
-The [focused protocol experiment](../evaluations/reports/2026-10-12-focused/README.md)
+The focused protocol experiment (local report `2026-10-12-focused`)
 retains 240 cells: three complete empty results, 178 failed and 59 invalid. Discovery
 failures prevented every native assessor invocation and all actual discussion
 rounds; the one-versus-three bounds were not exercised. No specialists activated

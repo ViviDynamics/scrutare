@@ -1,1 +1,0 @@
-{"budgets":{"per_persona_tokens":40000,"review_max_tokens":40000},"context":{"enabled":true,"related_paths":["client.py","policy.py","schema.py","formatting.py","test_formatting.py"]},"models":{"default":{"base_url":"https://litellm.vividynamics.com/v1","model":"gpt-6-luna","provider":"openai"}},"rounds":{"max":3}}

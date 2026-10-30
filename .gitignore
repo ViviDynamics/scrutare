@@ -18,3 +18,6 @@ coverage.xml
 repo.env
 
 .agents/state/
+
+# Evaluation report packages stay local; they can contain infrastructure details.
+evaluations/reports/
