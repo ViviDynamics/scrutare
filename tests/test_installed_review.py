@@ -267,7 +267,7 @@ def test_installed_review_pipeline(
             assert recorded["persona"] == attempt.parent.name
             assert recorded["usage"] == outcome["usage"]
             assert observed["guard_violations"] == observed["credential_names"] == []
-            assert observed["nare_controls"] == {} and observed["version"] == "2026.10.32"
+            assert observed["nare_controls"] == {} and observed["version"] == "2026.10.33"
             assert observed["arguments"] == invocation["argv"][1:]
             assert observed["selection"]["purpose"] == (
                 "reanchor" if attempt.name == "attempt-0002" else "review")

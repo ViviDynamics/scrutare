@@ -1,4 +1,4 @@
-"""Installed wheel and native nare 2026.10.32: one citation correction, on and off, replayed."""
+"""Installed wheel and native nare 2026.10.33: one citation correction, on and off, replayed."""
 
 import base64
 import json
@@ -119,7 +119,7 @@ def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=T
     for path in run.rglob("offline-observations*.json"):
         observed = load(path)
         assert observed["guard_violations"] == observed["credential_names"] == []
-        assert observed["version"] == "2026.10.32"
+        assert observed["version"] == "2026.10.33"
     replay = subprocess.run([str(console), "replay", str(run)], cwd=working, env=env,
                             capture_output=True, timeout=30)
     return result, run, attempt, replay, provider

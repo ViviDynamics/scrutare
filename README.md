@@ -116,7 +116,7 @@ uv tool install --python 3.10 \
 ```
 
 Wheel users also need the [GitHub CLI](https://cli.github.com/) on PATH and a
-separate [nare 2026.10.32 installation](docs/session-fanout.md). Use existing
+separate [nare 2026.10.33 installation](docs/session-fanout.md). Use existing
 authorized GitHub access with permission to read the PR and submit reviews,
 and credentials for the selected model provider. Every model call goes through
 nare. Scrutare does not install nare into its own environment.
@@ -201,7 +201,7 @@ uv run --locked --extra dev mypy src scripts/check-release.py scripts/auto-relea
 uv build --wheel
 ```
 
-CI also installs nare 2026.10.32 in a separate Python 3.14 environment pinned
+CI also installs nare 2026.10.33 in a separate Python 3.14 environment pinned
 to its public release commit and locked dependencies. Each matrix job runs
 offline tests through that installed CLI. To include the same proof locally,
 set `SCRUTARE_TEST_NARE_EXECUTABLE` to the absolute path of the separately
