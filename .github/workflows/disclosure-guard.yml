@@ -13,6 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # A diff GitHub refuses as too large is rebuilt from git history.
+          fetch-depth: 0
       - name: Block infrastructure detail from reaching this public repository
         env:
           GH_TOKEN: ${{ github.token }}
