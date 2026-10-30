@@ -1,2 +1,0 @@
-{"label": "g2 (first freeze, c8059bb)", "launched": false, "provider_calls": 0,
- "reason": "frozen at 2026-10-14T18:46:40Z on c8059bb, then found that PR #76 had merged (origin/main 5c4a8b6); the brief requires current origin/main including #76 with its opt-ins off, so this freeze was withdrawn before any call and g2 was re-frozen on 5c4a8b6. Its inputs, evaluation.json and gate.json are byte-identical to g1."}
