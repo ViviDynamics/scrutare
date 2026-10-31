@@ -1,6 +1,0 @@
-{
- "label": "l1",
- "never_launched": true,
- "at": 1791937812.8609335,
- "reason": "superseded by l1b before launch: its gate named the withdrawn jobs c1x and c1y as its baseline; no provider call was made"
-}

@@ -1,8 +1,0 @@
-"""Read the existing infrastructure credential and run a read-only evidence script."""
-import os,shlex,subprocess,sys
-from pathlib import Path
-K=next(shlex.split(l.partition('=')[2].strip())[0] for l in Path('/home/user/Workspace/example/infrastructure/.env').read_text().splitlines() if l.startswith('LITELLM_MASTER_KEY='))
-env=dict(os.environ,K=K)
-p=subprocess.run([sys.executable,'-I',str(Path(__file__).resolve().parent/sys.argv[1]),*sys.argv[2:]],env=env,capture_output=True)
-assert K.encode() not in p.stdout+p.stderr
-sys.stdout.buffer.write(p.stdout);sys.stderr.buffer.write(p.stderr);sys.exit(p.returncode)
