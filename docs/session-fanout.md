@@ -32,16 +32,37 @@ for outcome in result.outcomes:
 
 `NareRuntime` is an operational Python argument, with positive finite timeout
 and turn limits. It adds no YAML fields. Scrutare requires Python 3.10 or newer;
-install nare 2026.10.33 separately (supported minimum 2026.10.0) with the interpreter required by its
+install nare 2026.11.80 separately (supported minimum 2026.10.0) with the interpreter required by its
 release. For the pinned integration runtime, clone the public
-[ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.10.33),
-verify commit `be00818c969ed858650bb440ce24d4693bd0e727`, and run
+[ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.11.80),
+verify commit `4bca6d716cb3c5de37c0cbf9316aa063fafb570e`, and run
 `uv sync --project /path/to/nare-checkout --python 3.14 --locked --no-dev`.
 Point `NareRuntime.executable`, or the CLI option `--nare-executable`, at that
 checkout's `.venv/bin/nare`. The CLI defaults to `nare` on PATH. Nare is
 an external process, without a Scrutare production import or dependency.
 Inspection checks its version and contract once per wave before any session
 launch. All model calls go through nare.
+
+### Upgrading to contract 3
+
+The pinned runtime uses contract 3, first released in nare 2026.11.33. Its
+redaction rules preserve code expressions while redacting credential values;
+Scrutare continues to decode and replay historical contract 1/2 evidence.
+Unknown contracts and release/contract mismatches fail inspection before review.
+See nare's [machine contract](https://github.com/ViviDynamics/nare/blob/2026.11.80/docs/contract.md).
+
+On contract 3, every initial and resumed correction invocation explicitly sets
+`--max-cutoffs 0`, `--request-retries 0`, and `--max-corrections 1`. This retains
+Scrutare's existing recovery bounds instead of inheriting Nare's newer cutoff
+and provider-request retry defaults. The proxy's own `proxy_num_retries` setting
+is separate and unchanged. Recorded argv retains these controls; replay checks
+the policy and correction consistency. Read requirements, navigation tools and
+other newer capabilities are not enabled by this compatibility update.
+
+Nare's additive wire `usage.total` is checked against the four disjoint counters
+when present; saved sessions retain the counter-only shape. Cumulative resumed
+usage is still reconciled against the initial session and correction cost events.
+
 
 OpenAI sessions enable nare `--stream` only on validated runtimes 2026.10.4 or
 newer. Supported 2026.10.0 through 2026.10.3 keep buffered invocation; Anthropic
@@ -188,7 +209,7 @@ completed wave manifest. Captures and prepared input bytes remain unchanged.
 Provider failures retain logs and session evidence with uncertain accounting.
 Under contract 1, nare records a denied fabricated ask call as a blocked terminal
 session; the engine treats blocked sessions as failed without deriving a verdict.
-Under contract 2 (nare 2026.10.7 and newer), the denied ask is an ordinary error
+Under contracts 2 and 3 (nare 2026.10.7 and newer), the denied ask is an ordinary error
 tool result and the session continues to its answer.
 
 For panel execution, each admitted correction's `attempt-0002/` retains an
@@ -204,7 +225,7 @@ and replay contracts.
 ## Offline installed CLI proof
 
 Set `SCRUTARE_TEST_NARE_EXECUTABLE` to the absolute installed console path for
-nare 2026.10.33, then run:
+nare 2026.11.80, then run:
 
 ```sh
 uv run --python 3.10 --locked --extra dev pytest tests/test_nare_cli_integration.py
@@ -212,7 +233,10 @@ uv run --python 3.14 --locked --extra dev pytest tests/test_nare_cli_integration
 ```
 
 The helper uses that console script's separate Python 3.14 interpreter and
-replaces only `nare.cli.make_transport` with a deterministic `FakeProvider`.
+replaces `nare.cli.make_transport` with a deterministic `FakeProvider`.
+During metadata discovery only, the helper reports the unused OS shell sandbox
+as unavailable, avoiding its host-probing subprocess while retaining the strict
+network/process audit. Review execution still offers only `read`.
 Parser, loop, policy/dispatch, schema validation, token accounting, JSONL and
 persistence remain real. The proof verifies overlapping processes, isolated
 contexts, exact systems/rails, filtered and empty input boundaries, tool denials,

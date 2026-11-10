@@ -80,7 +80,7 @@ def installed():
         env={"PATH": "/usr/bin:/bin"},
         timeout=10,
     )
-    assert result.returncode == 0 and result.stdout.strip() == "2026.10.33", result.stderr
+    assert result.returncode == 0 and result.stdout.strip() == "2026.11.80", result.stderr
     return console, interpreter
 
 
@@ -108,7 +108,7 @@ def observations(outcome, *, http_sse=False):
     assert result["guard_violations"] == []
     assert result["credential_names"] == (["OPENAI_API_KEY"] if http_sse else [])
     assert result["nare_controls"] == {}
-    assert result["version"] == "2026.10.33"
+    assert result["version"] == "2026.11.80"
     assert result["python"].startswith("3.14.")
     assert all(Path(path).is_relative_to(outcome.artifact_directory) for path in result["writes"])
     return result
@@ -478,7 +478,8 @@ def test_actual_correction_schema_accepts_anchor_only_documents(tmp_path, instal
     terminal = json.loads(process.stdout.splitlines()[-1])
     assert process.returncode == 0 and terminal["status"] == "done"
     assert terminal["output"] == load(session)["output"] == document
-    assert terminal["usage"] == load(session)["usage"]
+    assert {k: v for k, v in terminal["usage"].items() if k != "total"} == {
+        k: v for k, v in load(session)["usage"].items() if k != "total"}
     assert len(observed["calls"]) == 1
     assert load(session)["policy"] == {"tools": ["read"], "root": str(root)}
 
@@ -620,7 +621,8 @@ def test_actual_resume_cumulative_delta_and_fresh_retry_remaining_bound(
     assert second is None and len(observed["calls"]) == 1
     persisted = load(session)
     terminal = json.loads((session.parent / "stdout.jsonl").read_text().splitlines()[-1])
-    assert terminal["usage"] == persisted["usage"]
+    assert {k: v for k, v in terminal["usage"].items() if k != "total"} == {
+        k: v for k, v in persisted["usage"].items() if k != "total"}
     assert terminal["status"] == persisted["status"] == "done"
     cumulative = TokenUsage(
         *(persisted["usage"][field] for field in ("input", "output", "cache_read", "cache_write"))
@@ -873,7 +875,8 @@ def assert_panel_evidence(result, inputs, config):
             (outcome.artifact_directory / "stdout.jsonl").read_text().splitlines()[-1]
         )
         assert persisted["policy"] == {"tools": ["read"], "root": str(inputs.root)}
-        assert persisted["usage"] == terminal["usage"]
+        assert {k: v for k, v in persisted["usage"].items() if k != "total"} == {
+            k: v for k, v in terminal["usage"].items() if k != "total"}
         if outcome.accounting_complete:
             assert persisted["usage"] == {"cost": None, "estimated": False, **{
                 key: getattr(outcome.usage, key)

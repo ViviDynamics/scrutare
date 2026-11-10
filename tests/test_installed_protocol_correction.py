@@ -1,4 +1,4 @@
-"""Installed wheel plus real nare 2026.10.33: protocol replacement and replay."""
+"""Installed wheel plus real nare 2026.11.80: protocol replacement and replay."""
 
 import copy
 import json
@@ -44,7 +44,8 @@ def test_installed_g3_placeholder_corrects_and_replays(tmp_path, installed, whee
     blocks = observed["calls"][0]["messages"][-1]["content"]
     assert [b["text"] for b in blocks if b.get("text", "").startswith(
         "Scrutare could not accept")] == [record["prompt"]]
-    assert blocks[-1]["text"] == "1 turns left: wrap up and summarise."
+    # Tool-free contract 3 invocations keep the countdown out of model text.
+    assert blocks[-1]["text"] == record["prompt"]
     assert replay.returncode == 0, replay.stderr.decode()
     assert json.loads(replay.stdout)["issues"] == []
     assert json.loads(replay.stdout)["saved_verdict"]["byte_identical"] is True

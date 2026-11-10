@@ -5,9 +5,9 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).parents[1]
-RELEASE = "2026.10.33"
-COMMIT = "be00818c969ed858650bb440ce24d4693bd0e727"
-PREVIOUS = ("2026.10.12", "96672e1e6d23920fc6cdeebfcad7250c8c36cc5e")
+RELEASE = "2026.11.80"
+COMMIT = "4bca6d716cb3c5de37c0cbf9316aa063fafb570e"
+PREVIOUS = ("2026.10.33", "be00818c969ed858650bb440ce24d4693bd0e727")
 
 
 def install_steps(workflow, job):

@@ -1,4 +1,4 @@
-"""Installed wheel and native nare 2026.10.33: one citation correction, on and off, replayed."""
+"""Installed wheel and native nare 2026.11.80: one citation correction, on and off, replayed."""
 
 import base64
 import json
@@ -119,7 +119,7 @@ def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=T
     for path in run.rglob("offline-observations*.json"):
         observed = load(path)
         assert observed["guard_violations"] == observed["credential_names"] == []
-        assert observed["version"] == "2026.10.33"
+        assert observed["version"] == "2026.11.80"
     replay = subprocess.run([str(console), "replay", str(run)], cwd=working, env=env,
                             capture_output=True, timeout=30)
     return result, run, attempt, replay, provider
@@ -149,7 +149,8 @@ def test_installed_a_past_end_citation_is_corrected_and_replays(tmp_path, instal
     assert call["tools"] == []
     blocks = call["messages"][-1]["content"]
     assert [b["text"] for b in blocks if b.get("text", "").startswith(PREFIX)] == [record["prompt"]]
-    assert blocks[-1]["text"] == "1 turns left: wrap up and summarise."
+    # Contract 3 adds the changed-schema instruction, without a tool-free countdown.
+    assert blocks[-1]["text"].startswith("The required JSON Schema has changed.")
     assert any(block.get("type") == "tool_result" for message in call["messages"]
                for block in message["content"])  # the reads it made are still in context
     saved = load(attempt / "correction-session.json")

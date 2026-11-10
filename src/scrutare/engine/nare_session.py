@@ -180,13 +180,16 @@ async def _probe(executable: Path, args: tuple[str, ...], root: Path,
 # nare 2026.10.7 moved to contract 2, which only changes when `ask` blocks. Sessions here
 # offer only `read`, so both contracts carry the same evidence; each from its own releases.
 _CONTRACT_2_FROM = (2026, 10, 7)
-SUPPORTED_CONTRACTS = (1, 2)
+_CONTRACT_3_FROM = (2026, 11, 33)
+SUPPORTED_CONTRACTS = (1, 2, 3)
 
 
 def _speaks(version: str, contract: object) -> bool:
     if type(contract) is not int or contract not in SUPPORTED_CONTRACTS:
         return False
-    return (tuple(map(int, version.split("."))) >= _CONTRACT_2_FROM) == (contract == 2)
+    release = tuple(map(int, version.split(".")))
+    expected = 3 if release >= _CONTRACT_3_FROM else 2 if release >= _CONTRACT_2_FROM else 1
+    return contract == expected
 
 
 def _structured_output(contract: dict[str, object]) -> tuple[str, ...]:
@@ -217,7 +220,7 @@ async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
             if (not isinstance(contract, dict) or not _speaks(version, contract.get("contract"))
                     or contract.get("nare") != version):
                 raise SessionRuntimeError(
-                    "contract: expected contract 1 (before 2026.10.7) or 2 and matching release")
+                    "contract: expected supported contract 1, 2 or 3 and matching release")
             retry_entry = contract.get("proxy_num_retries")
             retry_capable = retry_entry == {
                 "flag": "--proxy-num-retries", "providers": ["openai"],
@@ -450,6 +453,9 @@ def _rail_argv(rail: ModelRail, capability: NareCapability) -> list[str]:
     if (rail.provider == "openai"
             and tuple(map(int, capability.version.split("."))) >= (2026, 10, 4)):
         argv.append("--stream")
+    if capability.contract == 3:
+        # Preserve Scrutare's recovery policy rather than inherit newer CLI defaults.
+        argv.extend(("--max-cutoffs", "0", "--request-retries", "0", "--max-corrections", "1"))
     if rail.base_url is not None:
         argv.extend(("--base-url", rail.base_url))
     return argv
