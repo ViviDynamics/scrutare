@@ -519,3 +519,24 @@ def test_correction_decoder_never_started_has_zero_accounting(correction_descrip
     assert result.session_id is None and result.status is None
     assert result.usage == TokenUsage() and result.corrections == ()
     assert not result.output_available and not result.partial
+
+
+def test_contract_3_decodes_matching_saved_evidence_and_disjoint_usage(tmp_path):
+    events, saved = fixture(tmp_path)
+    events[-1].update(contract=3, nare="2026.11.80")
+    saved.update(contract=3, nare="2026.11.80")
+    events[0]["detail"]["total"] = events[-1]["usage"]["total"] = 26
+    result = decode(tmp_path, events, saved)
+    assert result.contract == 3 and result.usage == TokenUsage(3, 5, 7, 11)
+    assert result.output_available and not result.partial
+
+
+@pytest.mark.parametrize("location", ["event", "result", "saved"])
+@pytest.mark.parametrize("total", [25, True, -1, "26"])
+def test_advertised_usage_total_must_match_disjoint_counters(tmp_path, location, total):
+    events, saved = fixture(tmp_path)
+    target = {"event": events[0]["detail"], "result": events[-1]["usage"],
+              "saved": saved["usage"]}[location]
+    target["total"] = total
+    with pytest.raises(module().SessionProtocolError):
+        decode(tmp_path, events, saved)

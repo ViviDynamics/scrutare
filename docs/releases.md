@@ -20,23 +20,28 @@ trusted configuration and prerequisites.
 
 ## Wheel
 
-Scrutare supports Python 3.10 and newer. Install the published wheel:
+Scrutare supports Python 3.10 and newer. Published wheels are immutable GitHub
+release assets; use the installation instructions at the matching Scrutare tag
+for its compatible Nare runtime. Releases through 2026.10.47 use older Nare pins
+and cannot use this checkout's contract 3 integration.
+
+For contract 3 support, install this reviewed source checkout until a release
+containing the integration is published:
 
 ```sh
-uv tool install --python 3.10 \
-  https://github.com/ViviDynamics/scrutare/releases/download/2026.10.2/scrutare-2026.10.2-py3-none-any.whl
+uv tool install --python 3.10 .
 scrutare --version
 ```
 
 Install gh separately and use already authorized GitHub access. Install nare
-2026.10.33 in a separate Python 3.14 environment with its own locked dependencies:
+2026.11.80 in a separate Python 3.14 environment with its own locked dependencies:
 
 ```sh
-git clone --depth 1 --branch 2026.10.33 https://github.com/ViviDynamics/nare.git nare-2026.10.33
-test "$(git -C nare-2026.10.33 rev-parse HEAD)" = be00818c969ed858650bb440ce24d4693bd0e727
-uv sync --project nare-2026.10.33 --python 3.14 --locked --no-dev
+git clone --depth 1 --branch 2026.11.80 https://github.com/ViviDynamics/nare.git nare-2026.11.80
+test "$(git -C nare-2026.11.80 rev-parse HEAD)" = 4bca6d716cb3c5de37c0cbf9316aa063fafb570e
+uv sync --project nare-2026.11.80 --python 3.14 --locked --no-dev
 scrutare review --pr https://github.com/owner/repo/pull/12 \
-  --nare-executable "$PWD/nare-2026.10.33/.venv/bin/nare"
+  --nare-executable "$PWD/nare-2026.11.80/.venv/bin/nare"
 ```
 
 Prepare `scrutare.yaml` and authorized provider credentials before review. The

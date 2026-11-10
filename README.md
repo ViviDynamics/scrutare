@@ -64,14 +64,17 @@ models:
 
 ## Status
 
-The previously verified release is [2026.10.2](https://github.com/ViviDynamics/scrutare/releases/tag/2026.10.2),
-with the panel review CLI, Python API, offline replay, and reusable GitHub Action.
-`main` additionally delivers iterative review across pushes, bounded debate with
-a chair, and the MCP review server. These new source features need a subsequent
-release before they are available in a published wheel or image. Successful main
-CI now automatically tags and publishes releases; see [GitHub releases](https://github.com/ViviDynamics/scrutare/releases)
-for the newest wheel and matching image, and [release automation](docs/releases.md#release-contract)
-for versioning and recovery. The [GitHub App service](docs/app.md) is
+Scrutare implements panel and iterative review, bounded debate with a chair,
+and CLI, Python API, GitHub Action and MCP interfaces. Successful main CI
+automatically tags and publishes releases; see [GitHub releases](https://github.com/ViviDynamics/scrutare/releases)
+and [release automation](docs/releases.md#release-contract).
+
+This source checkout integrates nare 2026.11.80 and machine contract 3. Published
+Scrutare releases through 2026.10.47 require their older Nare pins; follow the
+instructions at the matching release tag, or install this checkout as below.
+Review-quality enhancements remain opt-in pending the measured promotion gate
+in [#51](https://github.com/ViviDynamics/scrutare/issues/51).
+The [GitHub App service](docs/app.md) is
 implemented on `main` as `scrutare-app`; issue
 [#18](https://github.com/ViviDynamics/scrutare/issues/18) stays open until it is
 deployed and has reviewed real pull requests under the App identity.
@@ -106,17 +109,16 @@ The design and milestone order are in
 
 ## Install and review a pull request
 
-Install the published `2026.10.2` wheel with Python 3.10 or newer. This release
-provides panel review; use a checkout of `main` for the new strategies and MCP
-server described above, following [local installation](docs/releases.md):
+Install this reviewed checkout with Python 3.10 or newer for contract 3 support.
+Use [version-specific release instructions](docs/releases.md) when installing a
+published wheel:
 
 ```sh
-uv tool install --python 3.10 \
-  https://github.com/ViviDynamics/scrutare/releases/download/2026.10.2/scrutare-2026.10.2-py3-none-any.whl
+uv tool install --python 3.10 .
 ```
 
-Wheel users also need the [GitHub CLI](https://cli.github.com/) on PATH and a
-separate [nare 2026.10.33 installation](docs/session-fanout.md). Use existing
+You also need the [GitHub CLI](https://cli.github.com/) on PATH and a
+separate [nare 2026.11.80 installation](docs/session-fanout.md). Use existing
 authorized GitHub access with permission to read the PR and submit reviews,
 and credentials for the selected model provider. Every model call goes through
 nare. Scrutare does not install nare into its own environment.
@@ -201,7 +203,7 @@ uv run --locked --extra dev mypy src scripts/check-release.py scripts/auto-relea
 uv build --wheel
 ```
 
-CI also installs nare 2026.10.33 in a separate Python 3.14 environment pinned
+CI also installs nare 2026.11.80 in a separate Python 3.14 environment pinned
 to its public release commit and locked dependencies. Each matrix job runs
 offline tests through that installed CLI. To include the same proof locally,
 set `SCRUTARE_TEST_NARE_EXECUTABLE` to the absolute path of the separately

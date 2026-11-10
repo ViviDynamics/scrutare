@@ -267,7 +267,7 @@ def test_installed_review_pipeline(
             assert recorded["persona"] == attempt.parent.name
             assert recorded["usage"] == outcome["usage"]
             assert observed["guard_violations"] == observed["credential_names"] == []
-            assert observed["nare_controls"] == {} and observed["version"] == "2026.10.33"
+            assert observed["nare_controls"] == {} and observed["version"] == "2026.11.80"
             assert observed["arguments"] == invocation["argv"][1:]
             assert observed["selection"]["purpose"] == (
                 "reanchor" if attempt.name == "attempt-0002" else "review")
@@ -282,7 +282,8 @@ def test_installed_review_pipeline(
                        for call in observed["calls"])
             assert all(Path(p).is_relative_to(attempt) for p in observed["writes"])
             terminal = json.loads((attempt / "stdout.jsonl").read_text().splitlines()[-1])
-            assert session["usage"] == terminal["usage"]
+            assert {k: v for k, v in session["usage"].items() if k != "total"} == {
+                k: v for k, v in terminal["usage"].items() if k != "total"}
             assert session["output"] == terminal["output"]
             assert session["schema_retried"] is False
             if outcome["accounting_complete"]:

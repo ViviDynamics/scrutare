@@ -18,8 +18,9 @@ exact bytes are retained. See the [configuration reference](config.md).
 
 `--nare-executable` is an operational option, not a YAML setting. It defaults to
 `nare` on PATH and can select a separate environment with its own interpreter.
-The tested runtime is nare 2026.10.33; the engine requires at least 2026.10.0 and
-contract 1 (releases before 2026.10.7) or contract 2. The `panel`, [iterative](iterative-review.md), and
+The tested runtime is nare 2026.11.80; the engine requires at least 2026.10.0 and
+contract 1 (releases before 2026.10.7), contract 2 (before 2026.11.33),
+or contract 3. The `panel`, [iterative](iterative-review.md), and
 [debate](debate.md) strategies execute reviews. A missing runtime is rejected
 before repository lookup, capture or model calls. Runtime version
 and protocol inspection remain engine checks. Built-in personas and custom

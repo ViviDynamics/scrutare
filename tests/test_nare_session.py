@@ -700,31 +700,33 @@ USAGE = {"input": 5, "output": 3, "cache_read": 4, "cache_write": 2, "cost": Non
     asyncio.run(scenario())
 
 
-@pytest.mark.parametrize("provider,version,stream", [
-    ("openai", "2026.10.0", False),
-    ("openai", "2026.10.1", False),
-    ("openai", "2026.10.2", False),
-    ("openai", "2026.10.3", False),
-    ("openai", "2026.10.4", True),
-    ("openai", "2026.10.10", True),
-    ("openai", "2027.1.0", True),
-    ("anthropic", "2026.10.0", False),
-    ("anthropic", "2026.10.4", False),
-    ("anthropic", "2027.1.0", False),
+@pytest.mark.parametrize("provider,version,contract,stream", [
+    ("openai", "2026.10.0", 1, False),
+    ("openai", "2026.10.1", 1, False),
+    ("openai", "2026.10.2", 1, False),
+    ("openai", "2026.10.3", 1, False),
+    ("openai", "2026.10.4", 1, True),
+    ("openai", "2026.10.10", 2, True),
+    ("openai", "2027.1.0", 3, True),
+    ("anthropic", "2026.10.0", 1, False),
+    ("anthropic", "2026.10.4", 1, False),
+    ("anthropic", "2027.1.0", 3, False),
 ])
 def test_streaming_argv_preserves_older_and_anthropic_runtimes(
-    capture, tmp_path, provider, version, stream
+    capture, tmp_path, provider, version, contract, stream
 ):
     descriptor, ledger, lease, attempt = setup(capture)
     path = running_executable(tmp_path)
-    # Each release speaks its own contract: 2 from nare 2026.10.7.
-    contract = 2 if tuple(map(int, version.split("."))) >= (2026, 10, 7) else 1
     body = path.read_text().replace("2026.10.0", version).replace(
         '"contract": 1', f'"contract": {contract}')
     if stream:
         body = body.replace('a = parser.parse_args()',
                             'parser.add_argument("--stream", action="store_true")\n'
                             'a = parser.parse_args()')
+    if contract == 3:
+        body = body.replace('a = parser.parse_args()',
+                            'for flag in ("max-cutoffs", "request-retries", "max-corrections"):\n'
+                            '    parser.add_argument("--" + flag)\na = parser.parse_args()')
     path.write_text(body)
     outcome = asyncio.run(module().run_persona_session(
         descriptor, ModelRail(provider, None, "fixture-model"), lease,

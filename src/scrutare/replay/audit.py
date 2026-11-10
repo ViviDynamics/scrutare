@@ -175,7 +175,11 @@ def _terminal_cut_off(stdout: bytes) -> tuple[bool, bool]:
         budget = records[-2]
         detail = budget.get("detail") if isinstance(budget, dict) else None
         cut_off = (isinstance(detail, dict) and detail.get("usage") == terminal.get("usage")
-                   and detail.get("budget") == terminal.get("budget"))
+                   and isinstance(detail.get("budget"), dict)
+                   and isinstance(terminal.get("budget"), dict)
+                   and all(key in detail["budget"] and key in terminal["budget"]
+                           and detail["budget"][key] == terminal["budget"][key]
+                           for key in ("tokens", "used_tokens", "used_usd")))
     return True, cut_off
 
 
@@ -378,7 +382,8 @@ _UNOFFERED = {"offered": False, "defects": 0, "outcome": None, "exit_code": None
 _OUTCOMES = ("corrected", "refused", "no_answer", "failed")
 # Flags the correction turn must share with its session's own invocation.
 _SHARED_FLAGS = ("--root", "--provider", "--base-url", "--contract", "--budget-tokens",
-                 "--structured-output", "--max-tokens", "--proxy-num-retries")
+                 "--structured-output", "--max-tokens", "--proxy-num-retries",
+                 "--max-cutoffs", "--request-retries", "--max-corrections")
 
 
 def _flag(argv: list[Any], name: str) -> object:
@@ -397,6 +402,47 @@ def _names(argv: list[Any]) -> list[str]:
 
 def _prefixed(argv: list[Any], prefix: str) -> list[str]:
     return [item for item in argv if isinstance(item, str) and item.startswith(prefix)]
+
+
+def _native_recovery_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
+    """Bind contract 3 recovery controls to all retained runtime identities."""
+    issues = []
+    for attempt, invocation in _invocations(_session_records(run_dir)):
+        record = invocation if isinstance(invocation, dict) else {}
+        argv = record.get("argv")
+        version = record.get("nare_version")
+        modern = (isinstance(version, str) and re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version)
+                  and tuple(map(int, version.split("."))) >= (2026, 11, 33))
+        identities = []
+        unreadable = False
+        for name in ("stdout.jsonl", "session.json"):
+            if not os.path.lexists(attempt / name):
+                continue
+            try:
+                raw = read_artifact(attempt / name)
+                identity = (_stream(raw)[1] if name == "stdout.jsonl"
+                            else decode_artifact(raw, artifact=name))
+                if not isinstance(identity, dict):
+                    raise ReplayError("invalid runtime identity")
+                identities.append(identity)
+            except ReplayError:
+                unreadable = True
+        if not (modern or record.get("contract") == 3
+                or isinstance(argv, list) and _flag(argv, "--contract") == "3"
+                or any(identity.get("contract") == 3 for identity in identities)):
+            continue
+        if (unreadable or not modern or type(record.get("contract")) is not int
+                or record.get("contract") != 3
+                or any(identity.get("contract") != 3 or identity.get("nare") != version
+                       for identity in identities)
+                or not isinstance(argv, list) or any(
+                    _flag(argv, flag) != value or _names(argv).count(flag) != 1
+                    for flag, value in (("--contract", "3"), ("--max-cutoffs", "0"),
+                                        ("--request-retries", "0"), ("--max-corrections", "1")))):
+            issues.append(AuditIssue("native_recovery_policy_invalid",
+                                     str(attempt.relative_to(run_dir) / "invocation.json"),
+                                     "invalid"))
+    return tuple(issues)
 
 
 def _citation_correction_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
@@ -927,6 +973,7 @@ def replay_run(run_dir: Path) -> ReplayResult:
               + _structured_output_issues(run_dir, config_data)
               + _max_output_tokens_issues(run_dir, config_data)
               + _proxy_num_retries_issues(run_dir, config_data)
+              + _native_recovery_issues(run_dir)
               + _citation_correction_issues(run_dir, config_data)
               + _protocol_correction_issues(run_dir, config_data))
     posting = inspect_posting(run_dir)

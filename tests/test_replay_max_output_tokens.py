@@ -266,3 +266,16 @@ def test_a_cut_off_needs_nare_s_own_budget_record_and_error_status(tmp_path, eve
     over_budget(session(tmp_path, CAP, reached=True), events, status)
     assert codes(replay_run(tmp_path)) == [
         ("max_output_tokens_result_disagrees", f"{WHERE}/result.json")]
+
+
+def test_cutoff_budget_replay_accepts_additive_terminal_control_counters(tmp_path):
+    bundle(tmp_path)
+    configure(tmp_path, {"default": CAP})
+    directory = session(tmp_path, CAP, reached=True)
+    over_budget(directory, [CUT_OFF, BUDGET])
+    path = directory / "stdout.jsonl"
+    records = [json.loads(line) for line in path.read_text().splitlines()]
+    records[-1]["budget"].update(schema_corrections=1, used_schema_corrections=0,
+                                 cutoffs=0, used_cutoffs=1, used_tool_calls=1)
+    path.write_text("".join(json.dumps(record) + "\n" for record in records))
+    assert codes(replay_run(tmp_path)) == []

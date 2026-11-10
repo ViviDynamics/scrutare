@@ -105,6 +105,13 @@ ToolCall = importlib.import_module("nare.transport").ToolCall
 
 observations["version"] = nare_cli.__version__
 
+# Contract discovery now probes the host OS sandbox with a subprocess. Review
+# sessions offer only read; inventory of an unused shell tool is outside this
+# offline proof. Keep the process/network audit strict and report no sandbox.
+if arguments == ["contract"]:
+    sandbox = importlib.import_module("nare.sandbox")
+    sandbox.availability = lambda: sandbox.Availability(None, "offline read-only proof")
+
 
 class FakeProvider:
     """A deterministic transport implemented at the vendor factory seam only."""

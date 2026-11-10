@@ -21,7 +21,9 @@ from scrutare.engine.strategy import run_review
 from scrutare.replay import replay_run
 
 assert installed  # pytest fixture, imported for its name
-MALFORMED = json.dumps(FINDING) + " stray tokens �"
+# Nare now accepts one JSON document surrounded by prose. Use a genuinely
+# schema-invalid document to exercise the constrained correction request.
+MALFORMED = json.dumps({"findings": "not an array"})
 
 
 def rail(capture, *, structured):

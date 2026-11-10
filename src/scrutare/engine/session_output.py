@@ -1,4 +1,4 @@
-"""Strict contract-1/2 decoding of nare evidence and caller-attributed candidates."""
+"""Strict contract-1/2/3 decoding of nare evidence and caller-attributed candidates."""
 
 from __future__ import annotations
 
@@ -236,6 +236,8 @@ def _usage(value: object) -> tuple[TokenUsage, float | None]:
     document = _object(value)
     counters = [_integer(document[field])
                 for field in ("input", "output", "cache_read", "cache_write")]
+    if "total" in document and _integer(document["total"]) != sum(counters):
+        _fail()
     cost = document["cost"]
     return TokenUsage(*counters), None if cost is None else _number(cost)
 
@@ -374,7 +376,7 @@ def _decode_evidence(
         if stop is not None:
             stop = _text(stop)
         contract = _integer(result["contract"], positive=True)
-        if contract not in (1, 2):
+        if contract not in (1, 2, 3):
             _fail()
         version = _text(result["nare"])
         count = _integer(result["turns"])
