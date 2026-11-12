@@ -7,6 +7,7 @@ import yaml
 
 from scrutare.config import (
     EFFORT_LEVELS,
+    REQUEST_RETRIES_MAX,
     REQUEST_RETRY_SECONDS,
     ConfigError,
     ModelRail,
@@ -139,3 +140,57 @@ def test_programmatic_rails_validate_like_configuration():
 def test_the_documented_defaults():
     assert EFFORT_LEVELS == ("low", "medium", "high", "xhigh", "max")
     assert REQUEST_RETRY_SECONDS == 60
+
+
+@pytest.mark.parametrize(("off", "value"), [("0", 0), ("null", None)])
+def test_an_override_that_turns_resends_off_drops_the_inherited_wait_bound(off, value):
+    config = parse_config(
+        OPENAI + ", request_retries: 2, request_retry_seconds: 45}\n  overrides:\n"
+        f"    security: {{request_retries: {off}}}\n    devops: {{model: other}}\n")
+    rail = config.models.for_persona("security")
+    assert (rail.request_retries, rail.request_retry_seconds) == (value, None)
+    # A rail that still resends keeps the bound it inherited.
+    assert config.models.for_persona("devops").request_retry_seconds == 45
+    canonical = config.to_dict()["models"]["overrides"]["security"]
+    assert (canonical["request_retries"], canonical["request_retry_seconds"]) == (value, None)
+    assert parse_config(yaml.safe_dump(config.to_dict())) == config
+
+
+def test_a_wait_bound_set_on_an_override_without_resends_is_still_refused():
+    with pytest.raises(ConfigError, match="overrides.security.request_retry_seconds: requires "
+                                          "request_retries above 0$"):
+        parse_config(OPENAI + ", request_retries: 2, request_retry_seconds: 45}\n  overrides:\n"
+                     "    security: {request_retries: 0, request_retry_seconds: 30}\n")
+
+
+HINT = r" \(inherited from models\.default; set it to null to clear it\)$"
+
+
+@pytest.mark.parametrize("field", ["cache_breakpoints: true", "cache_breakpoints: false",
+                                   "proxy_num_retries: 0"])
+def test_an_inherited_openai_only_option_says_how_to_clear_it(field):
+    name = field.split(":")[0]
+    with pytest.raises(ConfigError, match=f"overrides.security.{name}: requires provider "
+                                          "openai" + HINT):
+        parse_config(OPENAI + f", {field}}}\n  overrides:\n"
+                     "    security: {provider: anthropic}\n")
+    # A value the override sets itself is its own mistake, with no hint.
+    with pytest.raises(ConfigError, match=f"overrides.security.{name}: requires provider "
+                                          "openai$"):
+        parse_config(OPENAI + "}\n  overrides:\n"
+                     f"    security: {{provider: anthropic, {field}}}\n")
+    cleared = parse_config(OPENAI + f", {field}}}\n  overrides:\n"
+                           f"    security: {{provider: anthropic, {name}: null}}\n")
+    assert getattr(cleared.models.for_persona("security"), name) is None
+
+
+def test_request_retries_are_capped():
+    assert REQUEST_RETRIES_MAX == 10
+    assert parse_config(OPENAI + ", request_retries: 10}\n").models.default.request_retries == 10
+    message = "request_retries: expected at most 10 resends of one request$"
+    with pytest.raises(ConfigError, match="models.default." + message):
+        parse_config(OPENAI + ", request_retries: 11}\n")
+    with pytest.raises(ConfigError, match="models.overrides.security." + message):
+        parse_config(OPENAI + "}\n  overrides:\n    security: {request_retries: 1000000}\n")
+    with pytest.raises(ConfigError, match=message):
+        ModelRail("openai", None, "m", request_retries=11)

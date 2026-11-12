@@ -2,6 +2,7 @@
 
 import math
 import re
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -22,6 +23,9 @@ EFFORT_LEVELS: tuple[Effort, ...] = ("low", "medium", "high", "xhigh", "max")
 # Longest wait between one request's resends when a rail opts in to request retries and
 # sets no bound of its own. Passed explicitly, so a nare default never decides it.
 REQUEST_RETRY_SECONDS = 60
+# Most resends of one request a rail may ask for. nare itself takes any nonnegative count;
+# past a handful the waits between resends already exceed any sensible bound.
+REQUEST_RETRIES_MAX = 10
 # Opt-in rail fields in recorded order. Each stays out of every record until a rail sets it.
 RAIL_OPTIONS = ("structured_output", "max_output_tokens", "proxy_num_retries",
                 "request_retries", "request_retry_seconds", "cache_breakpoints", "effort")
@@ -556,8 +560,13 @@ def _proxy_num_retries(value: object, provider: str, path: str) -> None:
 
 
 def _request_retries(value: object, path: str) -> None:
-    if value is not None and (type(value) is not int or value < 0):
+    if value is None:
+        return
+    if type(value) is not int or value < 0:
         raise ConfigError(f"{path}: expected a nonnegative integer or null")
+    if value > REQUEST_RETRIES_MAX:
+        raise ConfigError(f"{path}: expected at most {REQUEST_RETRIES_MAX} resends of one "
+                          "request")
 
 
 def _request_retry_seconds(value: object, retries: object, path: str) -> None:
@@ -610,27 +619,33 @@ def _rail(value: object, path: str, default: ModelRail | None = None) -> ModelRa
             valid = False
         if not valid:
             raise ConfigError(f"{path}.base_url: expected an HTTP(S) URL with a host or null")
-    structured = fields.get("structured_output", default.structured_output if default else None)
-    try:
-        _structured_output(structured, provider, f"{path}.structured_output")
-    except ConfigError as error:
-        if "structured_output" in fields or default is None:
-            raise
-        raise ConfigError(f"{error} (inherited from models.default; set it to null "
-                          "to clear it)") from None
-    cap = fields.get("max_output_tokens", default.max_output_tokens if default else None)
-    _max_output_tokens(cap, f"{path}.max_output_tokens")
-    retries = fields.get("proxy_num_retries", default.proxy_num_retries if default else None)
-    _proxy_num_retries(retries, provider, f"{path}.proxy_num_retries")
-    def inherited(name: str) -> object:
-        return fields.get(name, getattr(default, name) if default else None)
+    def inherited(name: str, *, unless: bool = False) -> object:
+        """This rail's own value, else the default rail's unless that is not to be inherited."""
+        return fields.get(name, getattr(default, name) if default and not unless else None)
 
+    def checked(name: str, value: object, check: Callable[[object, str, str], None]) -> None:
+        """Validate one provider-bound field, saying so when the refused value was inherited."""
+        try:
+            check(value, provider, f"{path}.{name}")
+        except ConfigError as error:
+            if name in fields or default is None:
+                raise
+            raise ConfigError(f"{error} (inherited from models.default; set it to null "
+                              "to clear it)") from None
+
+    structured = inherited("structured_output")
+    checked("structured_output", structured, _structured_output)
+    cap = inherited("max_output_tokens")
+    _max_output_tokens(cap, f"{path}.max_output_tokens")
+    retries = inherited("proxy_num_retries")
+    checked("proxy_num_retries", retries, _proxy_num_retries)
     request_retries = inherited("request_retries")
     _request_retries(request_retries, f"{path}.request_retries")
-    retry_seconds = inherited("request_retry_seconds")
+    # The wait bound belongs to the resends, so a rail that makes none does not inherit it.
+    retry_seconds = inherited("request_retry_seconds", unless=not request_retries)
     _request_retry_seconds(retry_seconds, request_retries, f"{path}.request_retry_seconds")
     breakpoints = inherited("cache_breakpoints")
-    _cache_breakpoints(breakpoints, provider, f"{path}.cache_breakpoints")
+    checked("cache_breakpoints", breakpoints, _cache_breakpoints)
     effort = inherited("effort")
     _effort(effort, f"{path}.effort")
     return ModelRail(provider, base_url, model, cast("StructuredOutput | None", structured),

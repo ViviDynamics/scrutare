@@ -34,7 +34,7 @@ Errors identify a field path or YAML location without echoing field values.
 | `models.default.structured_output` | `json_schema`, or `null` | `null` (off) |
 | `models.default.max_output_tokens` | Positive integer, or `null` | `null` (off) |
 | `models.default.proxy_num_retries` | Nonnegative integer (requires `provider: openai`), or `null` | `null` (off) |
-| `models.default.request_retries` | Nonnegative integer, or `null` | `null` (never resend) |
+| `models.default.request_retries` | Integer from 0 to 10, or `null` | `null` (never resend) |
 | `models.default.request_retry_seconds` | Positive number (requires `request_retries` above 0), or `null` | `null` (60 when retries are on) |
 | `models.default.cache_breakpoints` | Boolean (requires `provider: openai`), or `null` | `null` (off) |
 | `models.default.effort` | `low`, `medium`, `high`, `xhigh`, `max`, or `null` | `null` (not sent) |
@@ -231,7 +231,8 @@ proxy such as LiteLLM for zero retries on every request (nare 2026.10.33 or newe
 proxy retries; verify the proxy's support and fallback behavior separately.
 
 The setting accepts nonnegative integers, inherits through persona overrides,
-and can be cleared with `null`. Other providers refuse it. The inspected nare
+and can be cleared with `null`. Other providers refuse it, and an override that
+changes the provider must clear the inherited value with `null`. The inspected nare
 contract must advertise the capability before any session starts.
 
 When unset everywhere, request arguments and canonical configuration retain their
@@ -267,9 +268,14 @@ transient (400, 401, 403, 404, 422, and a 500 on the openai rail) still ends
 the session on the first attempt. The session timeout is unchanged and covers
 the waiting, so a session can still time out while it waits.
 
-`request_retries` accepts a nonnegative integer on either provider, inherits
-through overrides, and is cleared with `null`. `request_retry_seconds` accepts
-a positive number and requires `request_retries` above 0 on the same rail.
+`request_retries` accepts an integer from 0 to 10 on either provider, inherits
+through overrides, and is cleared with `null`. The cap is Scrutare's: nare
+takes any count, and ten resends of one request already wait far longer than
+the default bound allows. `request_retry_seconds` accepts a positive number and
+requires `request_retries` above 0 on the same rail. The bound belongs to the
+resends, so an override that sets `request_retries` to 0 or `null` does not
+inherit the default rail's `request_retry_seconds`; setting the bound itself
+on such an override is refused.
 The runtime must be a contract 3 nare that lists `--request-retry-seconds`;
 otherwise the wave is refused before any session starts. This is separate from
 `proxy_num_retries`, which asks a proxy to retry upstream inside one of nare's
@@ -309,7 +315,9 @@ may refuse the request; nare's error then names the option. A cache hit shows
 up as `cache_read` in the session's usage.
 
 The setting is a boolean, off by default, inherited by overrides and cleared
-with `null`. Other providers refuse it: the anthropic rail always marks. The
+with `null`. Other providers refuse it: the anthropic rail always marks. An
+override that changes the provider and inherits the setting is refused with a
+message that says so; set `cache_breakpoints: null` on that override. The
 runtime must be a contract 3 nare that advertises the capability for the
 openai rail. When any rail sets it, the canonical configuration and
 `fanout.json` record it on every rail, `invocation.json` records it in `rail`
