@@ -105,7 +105,10 @@ and refused before any session when the runtime does not advertise it.
   the retry count is recorded. Ship only if that holds.
 - [ ] `cache_breakpoints` on the openai rail.
 - [ ] `effort`, with the levels the contract lists.
-- [ ] `structured_output: json_schema` on the anthropic rail.
+- [ ] `structured_output: json_schema` on the anthropic rail. nare withholds the
+  tools on the constrained turn with an empty tool list while earlier tool
+  blocks stay in the transcript. Prove the request shape offline and document
+  that a live Anthropic endpoint has not confirmed it.
 - [ ] Document each in docs/config.md with its default and its records.
 
 Retry accounting, as the contract states it: a failed attempt adds no turn, no
@@ -118,21 +121,31 @@ many resends it made, and the guide says reported usage is a lower bound there.
 
 ## Task 5: Dollar cost in artifacts
 
-Files: engine/session_models.py, engine/nare_session.py, engine/budgets.py or
-the review record, artifact and replay tests, docs.
-Interface: each session outcome and each review record carries
-`cost: {"usd": number | null, "source": "provider_reported" | "unknown"}`.
-Unknown is never zero: one session with unknown cost makes the review unknown.
+Files: engine/session_models.py, engine/session_output.py, engine/nare_session.py,
+engine/budgets.py, the strategy results, engine/review.py, artifact tests, guides.
+Interface: `SessionCost(usd, source)` with source `provider_reported` or
+`unknown`. Each session outcome carries one, the ledger sums them, and the
+ledger snapshot, `iterative.json` and the review receipt record the review's.
 
 - [ ] Failing tests for per-session and per-review cost, including unknown.
-- [ ] Carry the decoded cost through the outcome and the review record.
+- [ ] Decode nare's `cost` with its `estimated` flag. An amount is
+  `provider_reported` only when nare says none of it was calculated.
+- [ ] Sum in the ledger over sessions that used tokens; one unknown session
+  makes the review unknown, and unknown is never zero.
+
+nare can also calculate a cost from prices a gateway lists. That figure is
+recorded as unknown here: #116 reserves `estimated` for a frozen price table
+that replay can re-derive, and nare's discovered prices are neither frozen nor
+recorded. A streamed openai session reports no cost of its own, so such reviews
+stay unknown until the price table exists.
 
 Out of scope here: a pricing table, a report command and a dollar cap (#116).
 
 ## Task 6: Verification
 
 - [ ] Full suite on Python 3.10 and 3.14 with `SCRUTARE_TEST_NARE_EXECUTABLE`
-  at the 2026.11.94 build, `ruff check`, strict `mypy`.
+  at the 2026.11.94 build, `ruff check`, strict `mypy`. Compare failures with
+  the same suite on the unchanged base commit.
 - [ ] Disclosure guard when the private term list is present.
 
 ## Design note: read gates and forked sessions (not implemented)

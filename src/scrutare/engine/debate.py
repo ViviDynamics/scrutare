@@ -264,6 +264,7 @@ async def run_debate(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntim
         context.ledger.usage,
         context.ledger.accounting_complete,
         context.run_dir,
+        context.ledger.cost,
     )
     document = {
         "schema_version": 1,

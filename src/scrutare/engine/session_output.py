@@ -15,7 +15,7 @@ from scrutare.engine.assessment_inputs import AssessmentInput
 from scrutare.engine.debate_inputs import DebateInput
 from scrutare.engine.persona_inputs import PersonaReanchorInput
 from scrutare.engine.reanchor import parse_reanchor_output
-from scrutare.engine.session_models import TokenUsage
+from scrutare.engine.session_models import SessionCost, TokenUsage
 from scrutare.findings.citation_correction import (
     CitationDefect,
     apply_citation_correction,
@@ -48,6 +48,7 @@ class DecodedSession:
     cut_off: bool = False
     # Resent model requests over the session's life, when nare reports the count.
     retries: int | None = None
+    cost: SessionCost = SessionCost()
 
 
 @dataclass(frozen=True)
@@ -67,6 +68,7 @@ class DecodedReanchorSession:
     cut_off: bool = False
     # Resent model requests over the session's life, when nare reports the count.
     retries: int | None = None
+    cost: SessionCost = SessionCost()
 
 
 @dataclass(frozen=True)
@@ -87,6 +89,12 @@ class _DecodedEvidence:
     cut_off: bool = False
     cost: float | None = None
     retries: int | None = None
+    # Whether nare says the backend reported every dollar of `cost` (none calculated).
+    reported: bool = False
+
+    @property
+    def session_cost(self) -> SessionCost:
+        return _cost(self.cost, self.reported)
 
 
 class CitationCorrectionOffered(Exception):
@@ -247,6 +255,20 @@ def _usage(value: object) -> tuple[TokenUsage, float | None]:
     return TokenUsage(*counters), None if cost is None else _number(cost)
 
 
+def _reported(value: object) -> bool:
+    """Whether a usage record says its cost came from the backend and none was calculated.
+
+    nare marks `estimated` true when any part was calculated from prices. A record without
+    the field (an older nare) does not say, so its cost is not taken as reported.
+    """
+    return isinstance(value, dict) and value.get("estimated") is False
+
+
+def _cost(usd: float | None, reported: bool) -> SessionCost:
+    """A reported amount, or unknown: a missing or calculated cost is never an amount."""
+    return SessionCost(usd, "provider_reported") if usd is not None and reported else SessionCost()
+
+
 def _envelope(document: dict[str, Any]) -> str:
     kind = _text(document["type"])
     # A terminal result has its own contract rather than an event envelope.
@@ -308,8 +330,8 @@ def _retry(document: dict[str, Any]) -> bool:
     return document["type"] == "progress" and isinstance(document["detail"].get("retry"), dict)
 
 
-def decode_live_event(line: bytes) -> tuple[TokenUsage | None, bool]:
-    """One event's disjoint turn counters, if it is a cost event, and whether it is a resend.
+def decode_live_event(line: bytes) -> tuple[TokenUsage | None, bool, SessionCost | None]:
+    """One event's turn counters and cost, if it is a cost event, and whether it is a resend.
 
     A resent request has no cost event of its own: nare reports usage for completed replies
     only, so a retry never adds counters. Other additive event types are ignored.
@@ -317,9 +339,10 @@ def decode_live_event(line: bytes) -> tuple[TokenUsage | None, bool]:
     try:
         document = _json(line)
         kind = _envelope(document)
-        if kind == "result":
-            return None, False
-        return (_usage(document["detail"])[0] if kind == "cost" else None), _retry(document)
+        if kind != "cost":
+            return None, kind != "result" and _retry(document), None
+        usage, cost = _usage(document["detail"])
+        return usage, False, _cost(cost, _reported(document["detail"]))
     except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
         raise SessionProtocolError("Invalid nare event; inspect private capture.") from None
 
@@ -498,7 +521,7 @@ def _decode_evidence(
                                 or total_usage.total > expected_limit,
                                 version, contract, count, output, saved["output"],
                                 cut_off_at_max_tokens(records[:-1], status, stop), cost,
-                                retries)
+                                retries, _reported(result["usage"]))
     except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
         raise SessionProtocolError(
             "Session evidence is invalid or inconsistent; inspect private capture."
@@ -574,7 +597,7 @@ def decode_session(
             evidence.usage, findings, evidence.output_available and not discarded,
             evidence.budget_limit,
             evidence.partial, evidence.nare_version, evidence.contract, evidence.turns,
-            evidence.cut_off, evidence.retries,
+            evidence.cut_off, evidence.retries, evidence.session_cost,
         )
     except CitationValidationError:
         raise
@@ -611,6 +634,7 @@ def decode_citation_correction(
         ) from None
     # A correction run that never started reported nothing; the session's usage stands.
     usage = first.usage if evidence.status is None else evidence.usage
+    cost = first.session_cost if evidence.status is None else evidence.session_cost
     answered = evidence.status == "done" and not (discard_cut_off and evidence.cut_off)
     findings: tuple[Finding, ...] = ()
     if (isinstance(offered, ProtocolCorrectionOffered)
@@ -629,7 +653,7 @@ def decode_citation_correction(
                     evidence.session_id, evidence.status, evidence.stop_reason, evidence.exit_code,
                     usage, findings, answered, evidence.budget_limit, evidence.partial,
                     evidence.nare_version, evidence.contract, evidence.turns, evidence.cut_off,
-                    evidence.retries)
+                    evidence.retries, cost)
             corrected = apply_citation_correction(first.output, offered.defects, evidence.output)
             findings = _findings(corrected, persona, evidence_version=2,
                                  expected_root=expected_root,
@@ -647,7 +671,7 @@ def decode_citation_correction(
         evidence.session_id, evidence.status, evidence.stop_reason, evidence.exit_code,
         usage, findings, answered, evidence.budget_limit, evidence.partial,
         evidence.nare_version, evidence.contract, evidence.turns, evidence.cut_off,
-        evidence.retries,
+        evidence.retries, cost,
     )
 
 
@@ -675,7 +699,7 @@ def decode_reanchor_session(
             evidence.usage, corrections, evidence.output_available and not discarded,
             evidence.budget_limit,
             evidence.partial, evidence.nare_version, evidence.contract, evidence.turns,
-            evidence.cut_off, evidence.retries,
+            evidence.cut_off, evidence.retries, evidence.session_cost,
         )
     except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
         raise SessionProtocolError(

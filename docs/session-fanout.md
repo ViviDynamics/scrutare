@@ -191,6 +191,24 @@ nare exits 0. A successful `done` exactly at 15 under a limit of 15 may remain
 complete, with further admission closed. The response output flag
 `--max-tokens` does not impose a cumulative allowance.
 
+Dollar cost is carried beside the token counters, never in place of them. nare
+reports a `cost` on each request and on its result, and says whether any part
+was `estimated` (calculated from prices) or all of it came from the backend.
+Each session records `cost: {"usd": N, "source": "provider_reported"}` when
+nare reports an amount with `estimated: false`, and
+`{"usd": null, "source": "unknown"}` otherwise: when the backend reported
+nothing, when nare calculated the figure from discovered prices, or when an
+older nare does not say which. Unknown is never recorded as zero. The record is
+in the session's `result.json`, in every outcome a wave or panel record
+embeds, and in the ledger snapshot's `sessions`. The ledger's own `cost` is
+the review's total: the sum over sessions that used tokens when every one of
+them is reported, and unknown as soon as one is not, because a partial sum
+would read as a total. `panel.json`, `debate.json` and `fanout.json` carry it
+in `ledger`, `iterative.json` and the review receipt carry it as `cost`. A
+streamed openai session reports no cost of its own, since nare ignores
+streamed cost headers, so those reviews record unknown until a price table
+exists. Scrutare has no price table, cost report or dollar cap yet.
+
 Leases govern admission, and nare enforces thresholds after completed turns.
 An already admitted invocation may finish internal turns while sibling use
 exhausts the review allowance. Concurrent actual use can exceed the review

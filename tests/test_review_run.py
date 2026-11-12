@@ -57,7 +57,8 @@ def test_full_delivery_persists_exact_result_manifest_and_replays(
         "rule": "no_blocking_findings" if category is None else "any_blocking_finding",
         "panel_status": status, "usage": {"input": 10, "output": 0, "cache_read": 0,
                                           "cache_write": 0, "total": 10},
-        "accounting_complete": True, "review": asdict(poster.receipt),
+        "accounting_complete": True, "cost": {"usd": None, "source": "unknown"},
+        "review": asdict(poster.receipt),
     }
     assert poster.creates[0].event == event
     run = result.run_dir
@@ -447,7 +448,8 @@ def test_replies_only_run_with_nothing_to_reassess_posts_nothing(tmp_path, monke
         "run_dir": str(result.run_dir), "head_sha": SHA, "verdict": "changes_requested",
         "rule": "any_blocking_finding", "panel_status": "complete",
         "usage": {"input": 0, "output": 0, "cache_read": 0, "cache_write": 0, "total": 0},
-        "accounting_complete": True, "replies": []}
+        "accounting_complete": True, "cost": {"usd": None, "source": "unknown"},
+        "replies": []}
     run = result.run_dir
     assert (run / "result.json").read_bytes() == result.to_bytes()
     assert not (run / "posting.json").exists() and (run / "artifacts.json").is_file()

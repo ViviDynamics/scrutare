@@ -44,7 +44,10 @@ GitHub access. See
 Success writes exactly the UTF-8 bytes in `result.json` to stdout. The JSON
 includes schema/application versions, `status: posted`, absolute `run_dir`,
 captured `head_sha`, code-derived `verdict` and `rule`, `panel_status`, reported
-`usage`, `accounting_complete`, and the validated review receipt. An applicable
+`usage`, `accounting_complete`, the review's `cost` (`{"usd", "source"}`, with
+`source` `provider_reported` or `unknown`; see
+[session-fanout.md](session-fanout.md#admission-and-accounting)), and the
+validated review receipt. An applicable
 reviewer-request receipt is included separately. Success is emitted only after
 the result and manifest are installed. With `replies.enabled` the document also
 has `replies`, one entry per threaded response this run delivered. A

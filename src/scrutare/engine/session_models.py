@@ -59,6 +59,41 @@ class TokenUsage:
         }
 
 
+CostSource = Literal["provider_reported", "unknown"]
+
+
+@dataclass(frozen=True)
+class SessionCost:
+    """Dollars a backend reported for model requests, or unknown. Unknown is never zero."""
+
+    usd: float | None = None
+    source: CostSource = "unknown"
+
+    def __post_init__(self) -> None:
+        if self.source == "unknown":
+            if self.usd is not None:
+                raise ValueError("cost: an unknown cost carries no amount")
+        elif self.source != "provider_reported":
+            raise ValueError("cost: expected a provider_reported or unknown source")
+        else:
+            usd = self.usd
+            if (usd is None or type(usd) not in (int, float) or not math.isfinite(usd)
+                    or usd < 0):
+                raise ValueError("cost: expected a reported nonnegative finite amount")
+            object.__setattr__(self, "usd", float(usd))
+
+    def __add__(self, other: "SessionCost") -> "SessionCost":
+        """The sum of two reported amounts; unknown as soon as either part is."""
+        if not isinstance(other, SessionCost):
+            return NotImplemented
+        if self.usd is None or other.usd is None:
+            return SessionCost()
+        return SessionCost(self.usd + other.usd, "provider_reported")
+
+    def to_dict(self) -> dict[str, object]:
+        return {"usd": self.usd, "source": self.source}
+
+
 @dataclass(frozen=True)
 class NareRuntime:
     executable: Path
@@ -161,6 +196,8 @@ class SessionOutcome:
     nare_status: str | None = None
     stop_reason: str | None = None
     exit_code: int | None = None
+    # What the backend reported for this session's requests, or unknown.
+    cost: SessionCost = SessionCost()
 
     def __post_init__(self) -> None:
         _validate_execution_outcome(self)
@@ -196,6 +233,8 @@ class ReanchorOutcome:
     nare_status: str | None = None
     stop_reason: str | None = None
     exit_code: int | None = None
+    # What the backend reported for this session's requests, or unknown.
+    cost: SessionCost = SessionCost()
 
     def __post_init__(self) -> None:
         _validate_execution_outcome(self)
@@ -244,6 +283,8 @@ def _validate_execution_outcome(self: SessionOutcome | ReanchorOutcome) -> None:
             _text(getattr(self, field), field)
     if self.exit_code is not None and type(self.exit_code) is not int:
         raise ValueError("exit_code: expected an integer or null")
+    if not isinstance(self.cost, SessionCost):
+        raise ValueError("cost: expected SessionCost")
 
 
 def _execution_dict(self: SessionOutcome | ReanchorOutcome) -> dict[str, object]:
@@ -262,6 +303,7 @@ def _execution_dict(self: SessionOutcome | ReanchorOutcome) -> dict[str, object]
         "nare_status": self.nare_status,
         "stop_reason": self.stop_reason,
         "exit_code": self.exit_code,
+        "cost": self.cost.to_dict(),
     }
 
 

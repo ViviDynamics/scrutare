@@ -234,7 +234,8 @@ class FakeProvider:
             tool_calls=[ToolCall(**call) for call in reply.get("tool_calls", [])],
             usage=Usage(**usage),
             stop_reason=reply.get("stop_reason", "end_turn"),
-            cost=None,
+            # Dollars a backend reported for this reply, when the scenario scripts any.
+            cost=reply.get("cost"),
         )
 
 
@@ -286,7 +287,8 @@ if spec.get("default", {}).get("http_sse") is not None:
     async def http_boundary(request):
         if request.method == "GET" and request.url.path == "/v1/model/info":
             return httpx.Response(200, json={"data": [{"model_name": option("--model"),
-                "model_info": {"max_input_tokens": 100000}}]})
+                "model_info": {"max_input_tokens": 100000,
+                               **scenario.get("model_info", {})}}]})
         assert request.method == "POST" and request.url.path == "/v1/chat/completions"
         payload = json.loads(request.content)
         observations["calls"].append({"payload": payload})

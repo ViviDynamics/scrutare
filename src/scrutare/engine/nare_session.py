@@ -38,6 +38,7 @@ from scrutare.engine.session_models import (
     NareFlag,
     NareRuntime,
     ReanchorOutcome,
+    SessionCost,
     SessionOutcome,
     SessionStatus,
     TokenUsage,
@@ -481,13 +482,17 @@ class _Evidence:
     started: bool = False
     # Resent model requests seen in the stream. A resend reports no usage of its own.
     retries: int = 0
+    # Dollars the backend reported for the requests seen so far; None before any cost event.
+    cost: SessionCost | None = None
 
     def event(self, line: bytes, ledger: ReviewBudgetLedger, lease: BudgetLease) -> None:
         if not line.strip():
             return
         try:
-            usage, resent = decode_live_event(line)
+            usage, resent, cost = decode_live_event(line)
             self.retries += resent
+            if cost is not None:
+                self.cost = cost if self.cost is None else self.cost + cost
             if usage is not None:
                 cumulative = TokenUsage(*(getattr(self.usage, field) + getattr(usage, field)
                                           for field in
@@ -569,6 +574,7 @@ class _OutcomeMetadata(TypedDict):
     nare_status: str | None
     stop_reason: str | None
     exit_code: int | None
+    cost: SessionCost
 
 
 def _outcome(lease: BudgetLease, path: Path, evidence: _Evidence, *, status: SessionStatus,
@@ -585,6 +591,8 @@ def _outcome(lease: BudgetLease, path: Path, evidence: _Evidence, *, status: Ses
         "artifact_directory": path, "invocation_limit": lease.limit_tokens,
         "nare_status": None if decoded is None else decoded.status,
         "stop_reason": None if decoded is None else decoded.stop_reason, "exit_code": exit_code,
+        # A session whose stream reported no cost at all has an unknown cost, not a zero one.
+        "cost": SessionCost() if evidence.cost is None else evidence.cost,
     }
     if purpose == "reanchor":
         assert decoded is None or isinstance(decoded, DecodedReanchorSession)
@@ -713,7 +721,7 @@ async def _correct_citations(
         raise asyncio.TimeoutError
     if isinstance(offered, ProtocolCorrectionOffered):
         validate_prepared_inputs(descriptor.inputs)
-    correction = _Evidence(evidence.usage, started=True)
+    correction = _Evidence(evidence.usage, started=True, cost=evidence.cost)
     try:
         with ExitStack() as stack:
             stdout = stack.enter_context(_new_capture(directory, "correction.stdout.jsonl"))
@@ -727,6 +735,7 @@ async def _correct_citations(
     finally:
         # Usage is cumulative across both turns of the session, whatever happened.
         evidence.usage = correction.usage
+        evidence.cost = correction.cost
         evidence.corrupt = evidence.corrupt or correction.corrupt
         evidence.retries += correction.retries
     saved = _session_document(directory, "correction-session.json")
@@ -749,6 +758,7 @@ async def _correct_citations(
         record["outcome"] = "refused"
         raise SessionProtocolError("citation correction: refused corrected answer") from None
     evidence.usage = decoded.usage
+    evidence.cost = decoded.cost
     if decoded.status != "done" or not decoded.output_available:
         record["outcome"] = "no_answer"
         if offered.citation_reason is not None:
@@ -939,6 +949,7 @@ async def _run_session(
                     # Every usage seen so far is in the ledger; the turn continues from it.
                     ledger.observe(lease, offered.evidence.usage)
                     evidence.usage = offered.evidence.usage
+                    evidence.cost = offered.evidence.session_cost
                     reason, complete = "launch", False
                     decoded = await _correct_citations(
                         offered, descriptor, rail, lease, ledger=ledger, directory=directory,
@@ -955,6 +966,9 @@ async def _run_session(
                 raise SessionProtocolError("status: unsupported terminal budget stop")
             ledger.observe(lease, decoded.usage)
             evidence.usage = decoded.usage
+            if decoded.status is not None:
+                # nare's cumulative figure for the session is the one to keep.
+                evidence.cost = decoded.cost
             complete = decoded.status != "error" or decoded.stop_reason == "budget"
             if capped and decoded.cut_off:
                 # A response cut off at the configured cap is never an answer, whatever nare
@@ -1004,7 +1018,7 @@ async def _run_session(
         reason, status, complete = "protocol", "failed", False
     outcome = _outcome(lease, artifact_directory, evidence, status=status, reason=reason,
                        complete=complete, decoded=decoded, exit_code=exit_code, purpose=purpose)
-    ledger.settle(lease, evidence.usage, complete)
+    ledger.settle(lease, evidence.usage, complete, outcome.cost)
     if prepared_root is not None:
         try:
             structured: dict[str, object] = {}
