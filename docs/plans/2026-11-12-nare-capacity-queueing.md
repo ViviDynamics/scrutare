@@ -47,10 +47,10 @@ Interface: every installation uses release 2026.11.99 at commit
 - [x] Prove offline with the installed runtime that refusals are waited out and
   resent byte for byte, accounted apart from usage, fail past the limit, fail as
   before when off, and replay cleanly.
-- [ ] Run full tests including native Docker, lint, strict types, wheel and
+- [x] Run full tests including native Docker, lint, strict types, wheel and
   installed CLI smoke sequentially on Python 3.10 then Python 3.14.
-- [ ] Obtain independent branch review; fix substantive findings with tests.
-- [ ] Run disclosure guard, push feature branch, create and link PR.
+- [x] Obtain independent branch review; fix substantive findings with tests.
+- [x] Run disclosure guard, push feature branch, create and link PR.
 
 ## Pending decision
 
