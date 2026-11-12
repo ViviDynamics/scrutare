@@ -448,8 +448,11 @@ def _takes_value(capability: NareCapability, flag: str) -> bool:
 
 def _new_text(directory: int, name: str, text: str) -> None:
     """Create an owner-only file holding exactly these UTF-8 bytes, never replacing one."""
+    remaining = memoryview(text.encode("utf-8"))
     with _new_capture(directory, name) as stream:
-        stream.write(text.encode("utf-8"))
+        # The stream is unbuffered, so one write may take only part of the bytes.
+        while remaining:
+            remaining = remaining[stream.write(remaining):]
 
 
 def _same_text(directory: int, name: str, text: str) -> bool:
@@ -591,8 +594,11 @@ def _outcome(lease: BudgetLease, path: Path, evidence: _Evidence, *, status: Ses
         "artifact_directory": path, "invocation_limit": lease.limit_tokens,
         "nare_status": None if decoded is None else decoded.status,
         "stop_reason": None if decoded is None else decoded.stop_reason, "exit_code": exit_code,
-        # A session whose stream reported no cost at all has an unknown cost, not a zero one.
-        "cost": SessionCost() if evidence.cost is None else evidence.cost,
+        # Unknown, never a partial sum or a zero. A session whose accounting is incomplete
+        # (it was stopped before its result, or a request failed) saw at most a lower bound:
+        # the stream's sum so far, or the reported zero of nare's empty usage. One whose
+        # stream reported no cost at all has no amount either.
+        "cost": evidence.cost if complete and evidence.cost is not None else SessionCost(),
     }
     if purpose == "reanchor":
         assert decoded is None or isinstance(decoded, DecodedReanchorSession)

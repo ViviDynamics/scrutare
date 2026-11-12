@@ -198,7 +198,11 @@ Each session records `cost: {"usd": N, "source": "provider_reported"}` when
 nare reports an amount with `estimated: false`, and
 `{"usd": null, "source": "unknown"}` otherwise: when the backend reported
 nothing, when nare calculated the figure from discovered prices, or when an
-older nare does not say which. Unknown is never recorded as zero. The record is
+older nare does not say which. A session whose accounting is incomplete (it
+timed out, was cancelled, broke protocol, or ended on a failed request) also
+records unknown, whatever its stream had reported: that amount is a lower
+bound, and a session that completed no request would otherwise read as a
+reported zero. Unknown is never recorded as zero. The record is
 in the session's `result.json`, in every outcome a wave or panel record
 embeds, and in the ledger snapshot's `sessions`. The ledger's own `cost` is
 the review's total: the sum over sessions that used tokens when every one of

@@ -39,14 +39,23 @@ def test_costs_add_only_while_every_part_is_reported():
     assert SessionCost() + reported == SessionCost()
 
 
+COST_EVENT = ('print(json.dumps({"type": "cost", "text": "", "detail": USAGE, '
+              '"timestamp": "now"}), flush=True)\n')
+
+
 def costed_executable(tmp_path, *, cost="0.125", estimated="False", status="'done'",
-                      stop="'end_turn'", exit_code="0", key=True):
-    usage = ('USAGE = {"input": 4, "output": 2, "cache_read": 3, "cache_write": 1, '
-             f'"cost": {cost}' + (f', "estimated": {estimated}' if key else "") + "}")
+                      stop="'end_turn'", exit_code="0", key=True, used=(4, 2, 3, 1),
+                      event=True, extra=""):
+    counters = ", ".join(f'"{name}": {count}' for name, count in zip(
+        ("input", "output", "cache_read", "cache_write"), used))
+    usage = ("USAGE = {" + counters + f', "cost": {cost}'
+             + (f', "estimated": {estimated}' if key else "") + "}")
+    assert COST_EVENT in RUN_BODY
     body = (RUN_BODY.replace(
         'USAGE = {"input": INPUT, "output": 2, "cache_read": 3, "cache_write": 1, "cost": None}',
-        usage).replace("STATUS", status).replace("STOP", stop)
-        .replace("OUTPUT", "{'findings': []}").replace("EXTRA", "").replace("EXIT", exit_code)
+        usage).replace(COST_EVENT, COST_EVENT if event else "")
+        .replace("STATUS", status).replace("STOP", stop)
+        .replace("OUTPUT", "{'findings': []}").replace("EXTRA", extra).replace("EXIT", exit_code)
         .replace('"used_usd": None', '"used_usd": USAGE["cost"]'))
     assert usage in body
     return executable(tmp_path, body=body)
@@ -93,10 +102,41 @@ def test_a_reported_zero_is_a_known_zero(capture, tmp_path):
     assert ledger.snapshot()["cost"] == result["cost"]
 
 
-def test_a_failed_session_keeps_the_cost_its_stream_reported(capture, tmp_path):
+def test_a_session_whose_request_failed_has_an_unknown_cost(capture, tmp_path):
+    # The failing request may have been billed: what the stream reported is a lower bound.
     outcome, ledger, result = run(capture, tmp_path, status="'error'", stop="None", exit_code="1")
     assert (outcome.status, outcome.reason) == ("failed", "provider")
+    assert outcome.usage.total == 10 and outcome.accounting_complete is False
+    assert outcome.cost == SessionCost()
+    assert result["cost"] == UNKNOWN == ledger.snapshot()["cost"]
+
+
+def test_a_budget_stop_keeps_its_reported_cost(capture, tmp_path):
+    # A budget stop is a complete account: every request that ran reported its cost.
+    outcome, ledger, result = run(capture, tmp_path, status="'error'", stop="'budget'",
+                                  exit_code="1")
+    assert outcome.accounting_complete is True
     assert result["cost"] == {"usd": 0.125, "source": "provider_reported"}
+    assert ledger.snapshot()["cost"] == result["cost"]
+
+
+def test_a_session_with_incomplete_accounting_has_an_unknown_cost(capture, tmp_path):
+    # The stream reported 0.125 and then became unreadable: that amount is a lower bound.
+    outcome, ledger, result = run(capture, tmp_path, extra='print("not an event", flush=True)')
+    assert outcome.status == "failed" and outcome.accounting_complete is False
+    assert outcome.usage.total == 10
+    assert outcome.cost == SessionCost()
+    assert result["cost"] == UNKNOWN == ledger.snapshot()["cost"]
+
+
+def test_a_session_that_completed_no_request_has_an_unknown_cost(capture, tmp_path):
+    # nare's empty usage carries cost 0.0 and estimated false: nothing was reported for it.
+    outcome, ledger, result = run(capture, tmp_path, cost="0.0", used=(0, 0, 0, 0), event=False,
+                                  status="'error'", stop="None", exit_code="1")
+    assert (outcome.status, outcome.reason) == ("failed", "provider")
+    assert outcome.usage.total == 0 and outcome.accounting_complete is False
+    assert outcome.cost == SessionCost()
+    assert result["cost"] == UNKNOWN == ledger.snapshot()["cost"]
 
 
 def ledger_of(*names):
