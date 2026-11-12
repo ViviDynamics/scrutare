@@ -177,16 +177,17 @@ async def _wait_capture(
     loop = asyncio.get_running_loop()
     started = loop.time()
     try:
+        if credit is None:
+            return await asyncio.wait_for(asyncio.shield(capture), timeout)
         while True:
-            remaining = timeout if credit is None else (
-                started + timeout + credit() - loop.time())
+            remaining = started + timeout + credit() - loop.time()
             if remaining <= 0:
                 raise asyncio.TimeoutError
             try:
                 return await asyncio.wait_for(asyncio.shield(capture), remaining)
             except asyncio.TimeoutError:
-                if credit is None:
-                    raise
+                # The deadline may have moved while waiting; it is read again above.
+                continue
     except (asyncio.TimeoutError, asyncio.CancelledError):
         await _cleanup_capture(process, capture)
         raise
@@ -830,7 +831,8 @@ async def _correct_citations(
                                    rail.provider), artifact_directory / "cwd",
                 replace(runtime, timeout_seconds=remaining), stdout, stderr, correction,
                 ledger, lease,
-                lambda: _queue_credit(rail, first_queued + correction.queued_seconds) - credited)
+                (lambda: _queue_credit(rail, first_queued + correction.queued_seconds)
+                 - credited) if rail.capacity_queue else None)
         record["exit_code"] = exit_code
     finally:
         # Usage is cumulative across both turns of the session, whatever happened.
@@ -1004,7 +1006,10 @@ async def _run_session(
                     argv, _environment(artifact_directory / "home", artifact_directory / "tmp",
                                        rail.provider), artifact_directory / "cwd", runtime,
                     stdout, stderr, evidence, ledger, lease,
-                    lambda: _queue_credit(rail, evidence.queued_seconds),
+                    # Only a rail that queues can move its deadline; every other session
+                    # waits exactly as it always has.
+                    (lambda: _queue_credit(rail, evidence.queued_seconds))
+                    if rail.capacity_queue else None,
                 )
             reason = "protocol"
             saved = _session_document(directory)
