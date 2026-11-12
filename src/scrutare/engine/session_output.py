@@ -46,6 +46,8 @@ class DecodedSession:
     contract: int | None
     turns: int | None
     cut_off: bool = False
+    # Resent model requests over the session's life, when nare reports the count.
+    retries: int | None = None
 
 
 @dataclass(frozen=True)
@@ -63,6 +65,8 @@ class DecodedReanchorSession:
     contract: int | None
     turns: int | None
     cut_off: bool = False
+    # Resent model requests over the session's life, when nare reports the count.
+    retries: int | None = None
 
 
 @dataclass(frozen=True)
@@ -82,6 +86,7 @@ class _DecodedEvidence:
     saved_output: object
     cut_off: bool = False
     cost: float | None = None
+    retries: int | None = None
 
 
 class CitationCorrectionOffered(Exception):
@@ -282,15 +287,46 @@ def constrained_turns(stdout: bytes, mode: str | None, *, strict: bool = True) -
     return count
 
 
-def decode_cost_event(line: bytes) -> TokenUsage | None:
-    """Decode a single event's disjoint turn counters, ignoring additive event types."""
+def require_sent_effort(session_document: bytes | None, effort: str | None) -> None:
+    """Refuse a saved session that records another reasoning effort than the rail asked for.
+
+    nare records what each invocation sent, null when nothing. A session file from before
+    nare recorded it has no field and proves nothing either way.
+    """
+    if session_document is None:
+        return
+    try:
+        saved = _json(session_document)
+    except (ValueError, TypeError, OverflowError, RecursionError):
+        raise SessionProtocolError("Invalid saved session; inspect private capture.") from None
+    if "effort" in saved and saved["effort"] != effort:
+        raise SessionProtocolError("effort: saved session records another reasoning effort")
+
+
+def _retry(document: dict[str, Any]) -> bool:
+    """Whether an event is nare's record of one resent model request."""
+    return document["type"] == "progress" and isinstance(document["detail"].get("retry"), dict)
+
+
+def decode_live_event(line: bytes) -> tuple[TokenUsage | None, bool]:
+    """One event's disjoint turn counters, if it is a cost event, and whether it is a resend.
+
+    A resent request has no cost event of its own: nare reports usage for completed replies
+    only, so a retry never adds counters. Other additive event types are ignored.
+    """
     try:
         document = _json(line)
-        if _envelope(document) != "cost":
-            return None
-        return _usage(document["detail"])[0]
+        kind = _envelope(document)
+        if kind == "result":
+            return None, False
+        return (_usage(document["detail"])[0] if kind == "cost" else None), _retry(document)
     except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
         raise SessionProtocolError("Invalid nare event; inspect private capture.") from None
+
+
+def decode_cost_event(line: bytes) -> TokenUsage | None:
+    """Decode a single event's disjoint turn counters, ignoring additive event types."""
+    return decode_live_event(line)[0]
 
 
 def _budget(value: object, expected_limit: int, usage: TokenUsage | None = None,
@@ -410,10 +446,20 @@ def _decode_evidence(
                     if event_usage != total_usage or not _same_cost(event_cost, cost):
                         _fail()
                     _budget(detail["budget"], expected_limit, event_usage, event_cost)
+        # Each resend leaves one retry event, and nare counts them over the session's life.
+        resent = sum(_retry(record) for record in records[:-1])
+        retries = result.get("retries")
+        if retries is None:
+            if resent:
+                _fail()
+        elif _integer(retries) != resent + ((baseline.retries or 0) if baseline else 0):
+            _fail()
         output = result["output"]
         if output is None and status == "done":
             _fail()
         saved = _json(session_document)
+        if "retries" in saved and _integer(saved["retries"]) != (retries or 0):
+            _fail()
         if (_text(saved["id"]) != identity or _text(saved["status"]) != status
                 or saved["stop_reason"] != stop
                 or _integer(saved["contract"], positive=True) != contract
@@ -451,7 +497,8 @@ def _decode_evidence(
                                 (status == "error" and stop == "budget")
                                 or total_usage.total > expected_limit,
                                 version, contract, count, output, saved["output"],
-                                cut_off_at_max_tokens(records[:-1], status, stop), cost)
+                                cut_off_at_max_tokens(records[:-1], status, stop), cost,
+                                retries)
     except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
         raise SessionProtocolError(
             "Session evidence is invalid or inconsistent; inspect private capture."
@@ -527,7 +574,7 @@ def decode_session(
             evidence.usage, findings, evidence.output_available and not discarded,
             evidence.budget_limit,
             evidence.partial, evidence.nare_version, evidence.contract, evidence.turns,
-            evidence.cut_off,
+            evidence.cut_off, evidence.retries,
         )
     except CitationValidationError:
         raise
@@ -581,7 +628,8 @@ def decode_citation_correction(
                 return DecodedSession(
                     evidence.session_id, evidence.status, evidence.stop_reason, evidence.exit_code,
                     usage, findings, answered, evidence.budget_limit, evidence.partial,
-                    evidence.nare_version, evidence.contract, evidence.turns, evidence.cut_off)
+                    evidence.nare_version, evidence.contract, evidence.turns, evidence.cut_off,
+                    evidence.retries)
             corrected = apply_citation_correction(first.output, offered.defects, evidence.output)
             findings = _findings(corrected, persona, evidence_version=2,
                                  expected_root=expected_root,
@@ -599,6 +647,7 @@ def decode_citation_correction(
         evidence.session_id, evidence.status, evidence.stop_reason, evidence.exit_code,
         usage, findings, answered, evidence.budget_limit, evidence.partial,
         evidence.nare_version, evidence.contract, evidence.turns, evidence.cut_off,
+        evidence.retries,
     )
 
 
@@ -626,7 +675,7 @@ def decode_reanchor_session(
             evidence.usage, corrections, evidence.output_available and not discarded,
             evidence.budget_limit,
             evidence.partial, evidence.nare_version, evidence.contract, evidence.turns,
-            evidence.cut_off,
+            evidence.cut_off, evidence.retries,
         )
     except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
         raise SessionProtocolError(

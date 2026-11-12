@@ -54,8 +54,10 @@ See nare's [machine contract](https://github.com/ViviDynamics/nare/blob/2026.11.
 On contract 3, every initial and resumed correction invocation explicitly sets
 `--max-cutoffs 0`, `--request-retries 0`, and `--max-corrections 1`. This retains
 Scrutare's existing recovery bounds instead of inheriting Nare's newer cutoff
-and provider-request retry defaults. The proxy's own `proxy_num_retries` setting
-is separate and unchanged. Recorded argv retains these controls; replay checks
+and provider-request retry defaults. A rail that sets
+[`request_retries`](config.md#request-retries-opt-in) sends its own count
+instead of 0, with an explicit `--request-retry-seconds`. The proxy's own
+`proxy_num_retries` setting is separate and unchanged. Recorded argv retains these controls; replay checks
 the policy and correction consistency. Read requirements and navigation tools
 are not enabled.
 
@@ -119,6 +121,13 @@ any session launches. When any rail opts in, every rail in `fanout.json`
 records `structured_output`, with `null` where it is off, as in `config.json`. Each session
 counts nare's constrained-turn `progress` records into `result.json`; such a
 record on a session that did not ask for the constraint is a protocol failure.
+The constraint is sent on either provider that the runtime's `structured_output`
+entry names: the openai rail, and on contract 3 runtimes that list it the
+anthropic rail.
+A rail with [`cache_breakpoints`](config.md#prompt-cache-breakpoints-opt-in) or
+[`effort`](config.md#reasoning-effort-opt-in) adds `--cache-breakpoints` or
+`--effort LEVEL` to each of its sessions, and records them like
+`structured_output`.
 A rail with [`max_output_tokens: N`](config.md#per-request-output-token-cap-opt-in)
 adds `--max-tokens N` to each of its sessions, and records the cap in
 `fanout.json` like `structured_output`. A session on a capped rail whose last

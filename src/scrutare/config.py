@@ -1,5 +1,6 @@
 """Immutable configuration settings and YAML loading."""
 
+import math
 import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -16,6 +17,14 @@ Strategy = Literal["panel", "iterative", "debate"]
 Provider = Literal["anthropic", "openai"]
 StructuredOutput = Literal["json_schema"]
 STRUCTURED_OUTPUT_MODES: tuple[StructuredOutput, ...] = ("json_schema",)
+Effort = Literal["low", "medium", "high", "xhigh", "max"]
+EFFORT_LEVELS: tuple[Effort, ...] = ("low", "medium", "high", "xhigh", "max")
+# Longest wait between one request's resends when a rail opts in to request retries and
+# sets no bound of its own. Passed explicitly, so a nare default never decides it.
+REQUEST_RETRY_SECONDS = 60
+# Opt-in rail fields in recorded order. Each stays out of every record until a rail sets it.
+RAIL_OPTIONS = ("structured_output", "max_output_tokens", "proxy_num_retries",
+                "request_retries", "request_retry_seconds", "cache_breakpoints", "effort")
 PostMode = Literal["review", "comment"]
 Category = Literal["correctness", "security", "regression", "style", "consistency", "docs"]
 CATEGORIES: tuple[Category, ...] = (
@@ -48,28 +57,38 @@ class ModelRail:
     provider: Provider
     base_url: str | None
     model: str
-    # Opt-in decode-time schema constraint, sent through nare's OpenAI rail only.
+    # Opt-in decode-time schema constraint, sent where the inspected nare advertises the rail.
     structured_output: StructuredOutput | None = None
     # Opt-in per-request output token cap, passed to nare as --max-tokens on every request.
     max_output_tokens: int | None = None
     proxy_num_retries: int | None = None
+    # Opt-in resends of one model request after a transient failure (nare --request-retries).
+    # Unset keeps the pinned 0: the first transient failure ends the session.
+    request_retries: int | None = None
+    # Longest wait between one request's resends; only with request_retries above 0.
+    request_retry_seconds: int | float | None = None
+    # Opt-in prompt-cache breakpoints on the openai rail (nare --cache-breakpoints).
+    cache_breakpoints: bool | None = None
+    # Opt-in reasoning effort (nare --effort).
+    effort: Effort | None = None
 
     def __post_init__(self) -> None:
         _structured_output(self.structured_output, self.provider, "structured_output")
         _max_output_tokens(self.max_output_tokens, "max_output_tokens")
         _proxy_num_retries(self.proxy_num_retries, self.provider, "proxy_num_retries")
+        _request_retries(self.request_retries, "request_retries")
+        _request_retry_seconds(self.request_retry_seconds, self.request_retries,
+                               "request_retry_seconds")
+        _cache_breakpoints(self.cache_breakpoints, self.provider, "cache_breakpoints")
+        _effort(self.effort, "effort")
 
-    def record(self, *, structured_output: bool = False,
-               max_output_tokens: bool = False, proxy_num_retries: bool = False) -> dict[str, Any]:
+    def record(self, **explicit: bool) -> dict[str, Any]:
         """The rail as recorded; each opt-in field appears only when it is set or requested."""
         record: dict[str, Any] = {"provider": self.provider, "base_url": self.base_url,
                                   "model": self.model}
-        if structured_output or self.structured_output is not None:
-            record["structured_output"] = self.structured_output
-        if max_output_tokens or self.max_output_tokens is not None:
-            record["max_output_tokens"] = self.max_output_tokens
-        if proxy_num_retries or self.proxy_num_retries is not None:
-            record["proxy_num_retries"] = self.proxy_num_retries
+        for name in RAIL_OPTIONS:
+            if explicit.get(name) or getattr(self, name) is not None:
+                record[name] = getattr(self, name)
         return record
 
 
@@ -82,23 +101,23 @@ class ModelSettings:
         return next((rail for persona, rail in self.overrides if persona == name), self.default)
 
     @property
+    def rails(self) -> tuple[ModelRail, ...]:
+        return (self.default, *(rail for _, rail in self.overrides))
+
+    @property
     def structured_output(self) -> bool:
         """Whether any rail opts in; then every rail records the field explicitly."""
-        return any(rail.structured_output is not None
-                   for rail in (self.default, *(rail for _, rail in self.overrides)))
+        return any(rail.structured_output is not None for rail in self.rails)
 
     @property
     def caps_output(self) -> bool:
         """Whether any rail caps its output; then every rail records the field explicitly."""
-        return any(rail.max_output_tokens is not None
-                   for rail in (self.default, *(rail for _, rail in self.overrides)))
+        return any(rail.max_output_tokens is not None for rail in self.rails)
 
     def rail_record(self, rail: ModelRail) -> dict[str, Any]:
         """One rail recorded with every opt-in field any rail of these settings uses."""
-        return rail.record(structured_output=self.structured_output,
-                           max_output_tokens=self.caps_output,
-                           proxy_num_retries=any(r.proxy_num_retries is not None for r in
-                               (self.default, *(r for _, r in self.overrides))))
+        return rail.record(**{name: any(getattr(other, name) is not None
+                                        for other in self.rails) for name in RAIL_OPTIONS})
 
     def record(self) -> dict[str, Any]:
         return {"default": self.rail_record(self.default),
@@ -517,10 +536,9 @@ def _personas(value: object) -> tuple[str | PersonaDefinition, ...]:
 def _structured_output(value: object, provider: str, path: str) -> None:
     if value is None:
         return
+    # Either rail may ask; whether the installed nare can send it is decided at inspection.
     if not isinstance(value, str) or value not in STRUCTURED_OUTPUT_MODES:
         raise ConfigError(f"{path}: expected one of {', '.join(STRUCTURED_OUTPUT_MODES)} or null")
-    if provider != "openai":
-        raise ConfigError(f"{path}: requires provider openai")
 
 
 def _max_output_tokens(value: object, path: str) -> None:
@@ -537,9 +555,37 @@ def _proxy_num_retries(value: object, provider: str, path: str) -> None:
         raise ConfigError(f"{path}: requires provider openai")
 
 
+def _request_retries(value: object, path: str) -> None:
+    if value is not None and (type(value) is not int or value < 0):
+        raise ConfigError(f"{path}: expected a nonnegative integer or null")
+
+
+def _request_retry_seconds(value: object, retries: object, path: str) -> None:
+    if value is None:
+        return
+    if (type(value) not in (int, float) or not math.isfinite(cast(float, value))
+            or cast(float, value) <= 0):
+        raise ConfigError(f"{path}: expected a positive finite number or null")
+    if type(retries) is not int or retries <= 0:
+        raise ConfigError(f"{path}: requires request_retries above 0")
+
+
+def _cache_breakpoints(value: object, provider: str, path: str) -> None:
+    if value is None:
+        return
+    if type(value) is not bool:
+        raise ConfigError(f"{path}: expected a boolean or null")
+    if provider != "openai":
+        raise ConfigError(f"{path}: requires provider openai")
+
+
+def _effort(value: object, path: str) -> None:
+    if value is not None and (not isinstance(value, str) or value not in EFFORT_LEVELS):
+        raise ConfigError(f"{path}: expected one of {', '.join(EFFORT_LEVELS)} or null")
+
+
 def _rail(value: object, path: str, default: ModelRail | None = None) -> ModelRail:
-    fields = _mapping(value, path, ("provider", "base_url", "model", "structured_output",
-                                    "max_output_tokens", "proxy_num_retries"))
+    fields = _mapping(value, path, ("provider", "base_url", "model", *RAIL_OPTIONS))
     provider = cast(
         Provider,
         _choice(
@@ -576,8 +622,22 @@ def _rail(value: object, path: str, default: ModelRail | None = None) -> ModelRa
     _max_output_tokens(cap, f"{path}.max_output_tokens")
     retries = fields.get("proxy_num_retries", default.proxy_num_retries if default else None)
     _proxy_num_retries(retries, provider, f"{path}.proxy_num_retries")
+    def inherited(name: str) -> object:
+        return fields.get(name, getattr(default, name) if default else None)
+
+    request_retries = inherited("request_retries")
+    _request_retries(request_retries, f"{path}.request_retries")
+    retry_seconds = inherited("request_retry_seconds")
+    _request_retry_seconds(retry_seconds, request_retries, f"{path}.request_retry_seconds")
+    breakpoints = inherited("cache_breakpoints")
+    _cache_breakpoints(breakpoints, provider, f"{path}.cache_breakpoints")
+    effort = inherited("effort")
+    _effort(effort, f"{path}.effort")
     return ModelRail(provider, base_url, model, cast("StructuredOutput | None", structured),
-                     cast("int | None", cap), cast("int | None", retries))
+                     cast("int | None", cap), cast("int | None", retries),
+                     cast("int | None", request_retries),
+                     cast("int | float | None", retry_seconds),
+                     cast("bool | None", breakpoints), cast("Effort | None", effort))
 
 
 def _models(value: object, personas: tuple[str | PersonaDefinition, ...]) -> ModelSettings:

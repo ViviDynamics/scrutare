@@ -222,6 +222,12 @@ class FakeProvider:
             reply = {"content": [{"type": "text", "text": json.dumps(output)}]}
         if reply.get("error"):
             raise RuntimeError(reply["error"])
+        if reply.get("transient"):
+            # One failed attempt at this request, with the status a provider would return.
+            # The real loop decides whether it is resent; the next reply answers a resend.
+            failure = RuntimeError("offline transient provider failure")
+            failure.status_code = reply["transient"]
+            raise failure
         observations["calls"][-1]["end"] = time.monotonic()
         return Reply(
             content=reply["content"],
@@ -287,13 +293,43 @@ if spec.get("default", {}).get("http_sse") is not None:
         if payload.get("stream") is not True:
             return httpx.Response(400, json={"error": "offline endpoint requires SSE"})
         assert payload.get("stream_options") == {"include_usage": True}
+        turn = next(turns)
+        if turn.get("status") is not None:
+            # One attempt the endpoint refuses with an HTTP status, before any reply.
+            return httpx.Response(turn["status"], json={"error": "offline status"})
         return httpx.Response(200, headers={"content-type": "text/event-stream"},
-                              stream=SSEBytes(next(turns)))
+                              stream=SSEBytes(turn))
 
     def http_client(*args, **kwargs):
         return original_client(*args, **kwargs, transport=httpx.MockTransport(http_boundary))
 
     httpx.AsyncClient = http_client
+elif spec.get("default", {}).get("http_anthropic") is not None:
+    # Retain the real CLI factory and AnthropicTransport; replace only the SDK's HTTP client.
+    httpx = importlib.import_module("httpx2")
+    anthropic_transport = importlib.import_module("nare.transport.anthropic")
+    turns = iter(spec["default"]["http_anthropic"]["turns"])
+
+    async def anthropic_boundary(request):
+        assert request.method == "POST" and request.url.path == "/v1/messages"
+        payload = json.loads(request.content)
+        observations["calls"].append({"payload": payload})
+        turn = next(turns)
+        if turn.get("status") is not None:
+            return httpx.Response(turn["status"], json={
+                "type": "error", "error": {"type": "overloaded_error", "message": "offline"}})
+        return httpx.Response(200, json={
+            "id": f"msg_{len(observations['calls'])}", "type": "message", "role": "assistant",
+            "model": payload["model"], "stop_sequence": None, **turn["message"]})
+
+    build_client = anthropic_transport.AnthropicTransport._build_client
+
+    def offline_client(self, *, api_key, base_url, http_client, timeout):
+        return build_client(
+            self, api_key=api_key, base_url=base_url, timeout=timeout,
+            http_client=httpx.AsyncClient(transport=httpx.MockTransport(anthropic_boundary)))
+
+    anthropic_transport.AnthropicTransport._build_client = offline_client
 else:
     nare_cli.make_transport = make_transport
 sys.argv = [console, *arguments]

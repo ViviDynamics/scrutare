@@ -19,7 +19,13 @@ from typing import BinaryIO, Literal, TypedDict, TypeVar
 from urllib.parse import urlsplit
 
 from scrutare import __version__
-from scrutare.config import ModelRail, ModelSettings
+from scrutare.config import (
+    EFFORT_LEVELS,
+    REQUEST_RETRY_SECONDS,
+    ConfigError,
+    ModelRail,
+    ModelSettings,
+)
 from scrutare.engine.assessment_inputs import AssessmentInput
 from scrutare.engine.budgets import BudgetLease, ReviewBudgetLedger
 from scrutare.engine.debate_inputs import DebateInput
@@ -44,10 +50,11 @@ from scrutare.engine.session_output import (
     SessionProtocolError,
     constrained_turns,
     decode_citation_correction,
-    decode_cost_event,
+    decode_live_event,
     decode_reanchor_session,
     decode_session,
     findings_schema,
+    require_sent_effort,
 )
 from scrutare.findings.citation_correction import (
     citation_correction_enabled,
@@ -274,6 +281,19 @@ def _proxy_num_retries(contract: dict[str, object],
             and any(flag.name == "--proxy-num-retries" and flag.takes_value for flag in flags))
 
 
+def _cache_breakpoints(contract: dict[str, object],
+                       flags: tuple[NareFlag, ...] | None) -> tuple[str, ...]:
+    """The rails on which a contract 3 runtime marks prompt-cache breakpoints when asked."""
+    entry = contract.get("cache_breakpoints")
+    if (flags is None or not isinstance(entry, dict)
+            or entry.get("flag") != "--cache-breakpoints"
+            or not isinstance(entry.get("providers"), list)
+            or not any(flag.name == "--cache-breakpoints" and not flag.takes_value
+                       for flag in flags)):
+        return ()
+    return tuple(name for name in _PROVIDERS if name in entry["providers"])
+
+
 async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
     """Inspect external version and contract without constructing a provider or session."""
     executable = _executable(runtime)
@@ -293,7 +313,8 @@ async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
             modes, providers = _structured_output(contract, flags)
             return NareCapability(
                 version, contract["contract"], modes, _proxy_num_retries(contract, flags),
-                flags=flags, **({"structured_output_providers": providers} if modes else {}))
+                flags=flags, cache_breakpoints=_cache_breakpoints(contract, flags),
+                **({"structured_output_providers": providers} if modes else {}))
     except SessionRuntimeError:
         raise
     except (OSError, ValueError, asyncio.TimeoutError, RecursionError):
@@ -317,6 +338,18 @@ def _rail_refusal(rail: ModelRail, capability: NareCapability) -> str | None:
             and rail.provider in capability.structured_output_providers
             and (not modern or capability.advertises("--structured-output", mode))):
         return f"structured output {mode}"
+    # The options below exist only as contract 3 flags; older contracts never send them.
+    if rail.request_retries is not None and not (
+            modern and (rail.request_retries == 0
+                        or _takes_value(capability, "--request-retry-seconds"))):
+        return "request_retries"
+    if rail.cache_breakpoints and not (
+            rail.provider in capability.cache_breakpoints
+            and (flag := capability.flag("--cache-breakpoints")) is not None
+            and not flag.takes_value):
+        return "cache_breakpoints"
+    if rail.effort is not None and not capability.advertises("--effort", rail.effort):
+        return f"effort {rail.effort}"
     return None
 
 
@@ -339,9 +372,8 @@ def _rail(rail: ModelRail) -> None:
             or not isinstance(rail.model, str) or not rail.model.strip()
             or "\x00" in rail.model):
         raise SessionRuntimeError("rail: expected an explicit provider and nonempty model")
-    if rail.structured_output is not None and (
-            rail.structured_output != "json_schema" or rail.provider != "openai"):
-        raise SessionRuntimeError("rail.structured_output: expected json_schema on openai")
+    if rail.structured_output is not None and rail.structured_output != "json_schema":
+        raise SessionRuntimeError("rail.structured_output: expected json_schema")
     if rail.max_output_tokens is not None and (
             type(rail.max_output_tokens) is not int or rail.max_output_tokens <= 0):
         raise SessionRuntimeError("rail.max_output_tokens: expected a positive integer or null")
@@ -350,6 +382,13 @@ def _rail(rail: ModelRail) -> None:
             or rail.provider != "openai"):
         raise SessionRuntimeError(
             "rail.proxy_num_retries: expected a nonnegative integer on openai")
+    try:
+        # The newer opt-in fields are validated once, where configuration validates them.
+        ModelRail.__post_init__(rail)
+    except (ConfigError, TypeError):
+        raise SessionRuntimeError("rail: invalid opt-in option") from None
+    if rail.effort is not None and rail.effort not in EFFORT_LEVELS:
+        raise SessionRuntimeError("rail.effort: expected a reasoning effort level")
     if rail.base_url is not None:
         if not isinstance(rail.base_url, str):
             raise SessionRuntimeError("rail.base_url: expected an HTTP(S) URL or null")
@@ -400,8 +439,8 @@ SYSTEM_FILE = "system-prompt.txt"
 PROMPT_FILE = "task-prompt.txt"
 
 
-def _takes_file(capability: NareCapability, flag: str) -> bool:
-    """Whether the inspected runtime reads this prompt from a file (contract 3 data only)."""
+def _takes_value(capability: NareCapability, flag: str) -> bool:
+    """Whether the inspected runtime lists this option as one taking a value (contract 3)."""
     advertised = capability.flag(flag)
     return advertised is not None and advertised.takes_value
 
@@ -440,12 +479,15 @@ class _Evidence:
     stdout: bytes = b""
     corrupt: bool = False
     started: bool = False
+    # Resent model requests seen in the stream. A resend reports no usage of its own.
+    retries: int = 0
 
     def event(self, line: bytes, ledger: ReviewBudgetLedger, lease: BudgetLease) -> None:
         if not line.strip():
             return
         try:
-            usage = decode_cost_event(line)
+            usage, resent = decode_live_event(line)
+            self.retries += resent
             if usage is not None:
                 cumulative = TokenUsage(*(getattr(self.usage, field) + getattr(usage, field)
                                           for field in
@@ -571,7 +613,15 @@ def _rail_argv(rail: ModelRail, capability: NareCapability) -> list[str]:
         argv.append("--stream")
     if capability.contract == 3:
         # Preserve Scrutare's recovery policy rather than inherit newer CLI defaults.
-        argv.extend(("--max-cutoffs", "0", "--request-retries", "0", "--max-corrections", "1"))
+        # A rail may opt in to resends; unset keeps the pinned zero.
+        retries = rail.request_retries or 0
+        argv.extend(("--max-cutoffs", "0", "--request-retries", str(retries),
+                     "--max-corrections", "1"))
+        if retries:
+            # Explicit, so nare's own default wait never decides how long a session stalls.
+            seconds = rail.request_retry_seconds
+            argv.extend(("--request-retry-seconds",
+                         str(REQUEST_RETRY_SECONDS if seconds is None else seconds)))
         # The same for compaction (nare 2026.11.94): these are the values nare used before
         # the options existed, and in elide mode every request is unchanged.
         if capability.advertises("--compaction", "elide"):
@@ -592,6 +642,10 @@ def _rail_options(rail: ModelRail) -> list[str]:
         argv.extend(("--max-tokens", str(rail.max_output_tokens)))
     if rail.proxy_num_retries is not None:
         argv.extend(("--proxy-num-retries", str(rail.proxy_num_retries)))
+    if rail.cache_breakpoints:
+        argv.append("--cache-breakpoints")
+    if rail.effort is not None:
+        argv.extend(("--effort", rail.effort))
     return argv
 
 
@@ -619,8 +673,8 @@ async def _correct_citations(
         schema = citation_correction_schema(offered.defects)
     system = descriptor.persona.system_prompt
     prompt_name = stem + ".prompt.txt"
-    prompt_file = _takes_file(capability, "--prompt-file")
-    system_file = _takes_file(capability, "--system-file")
+    prompt_file = _takes_value(capability, "--prompt-file")
+    system_file = _takes_value(capability, "--system-file")
     # The system option stays on the resume. Without one nare resends the prompt its session
     # file recorded, which is the redacted copy, so the bytes could differ from the first run.
     argv = [str(executable), "run",
@@ -674,11 +728,13 @@ async def _correct_citations(
         # Usage is cumulative across both turns of the session, whatever happened.
         evidence.usage = correction.usage
         evidence.corrupt = evidence.corrupt or correction.corrupt
+        evidence.retries += correction.retries
     saved = _session_document(directory, "correction-session.json")
     if correction.corrupt:
         raise SessionProtocolError("session: corrupted correction evidence")
     # A constrained-turn record must match the rail, as in the first stream.
     constrained_turns(correction.stdout, rail.structured_output)
+    require_sent_effort(saved, rail.effort)
     validate_prepared_inputs(descriptor.inputs)
     try:
         decoded = decode_citation_correction(
@@ -782,8 +838,8 @@ async def _run_session(
                 os.mkdir(name, mode=0o700, dir_fd=directory)
             # Long text stays out of argv where the runtime reads it from a file. The bytes
             # nare decodes are the bytes argv would have carried.
-            prompt_file = _takes_file(capability, "--prompt-file")
-            system_file = _takes_file(capability, "--system-file")
+            prompt_file = _takes_value(capability, "--prompt-file")
+            system_file = _takes_value(capability, "--system-file")
             argv = [str(executable), "run",
                     *(("--prompt-file", str(artifact_directory / PROMPT_FILE)) if prompt_file
                       else input_args[:1]), *input_args[1:],
@@ -817,14 +873,10 @@ async def _run_session(
                 "persona": lease.persona, "session_key": lease.session_key, **binding,
                 "system_prompt_sha256": sha256(system.encode("utf-8")).hexdigest(),
                 "task_prompt_sha256": sha256(input_args[0].encode("utf-8")).hexdigest(),
+                # Each opt-in field is recorded only when this rail sets it.
                 "argv": argv, "rail": {"provider": rail.provider, "model": rail.model,
-                                        "base_url": rail.base_url,
-                                        **({"structured_output": rail.structured_output}
-                                           if rail.structured_output is not None else {}),
-                                        **({"max_output_tokens": rail.max_output_tokens}
-                                           if rail.max_output_tokens is not None else {}),
-                                        **({"proxy_num_retries": rail.proxy_num_retries}
-                                           if rail.proxy_num_retries is not None else {})},
+                                        **{name: value for name, value in rail.record().items()
+                                           if name not in ("provider", "model")}},
                 "allocated_tokens": lease.allocated_tokens, "invocation_limit": lease.limit_tokens,
                 "max_turns": runtime.max_turns, "timeout_seconds": runtime.timeout_seconds,
             }, prepared_root=prepared_root)
@@ -844,6 +896,10 @@ async def _run_session(
             if evidence.corrupt:
                 raise SessionProtocolError("session: corrupted event evidence")
             constrained = constrained_turns(evidence.stdout, rail.structured_output)
+            if evidence.retries and not rail.request_retries:
+                # nare was told never to resend, so a retry record is not this session's.
+                raise SessionProtocolError("session: unrequested request retry evidence")
+            require_sent_effort(saved, rail.effort)
             # Nothing nare kept from a session cut off at the cap is parsed or validated.
             capped = rail.max_output_tokens is not None
             if isinstance(descriptor, PersonaReanchorInput):
@@ -963,6 +1019,15 @@ async def _run_session(
             if isinstance(rail, ModelRail) and rail.max_output_tokens is not None:
                 structured["max_output_tokens"] = {"limit": rail.max_output_tokens,
                                                    "reached": outcome.reason == "output_cap"}
+            if isinstance(rail, ModelRail) and rail.request_retries is not None:
+                # Resends seen in the retained streams; a session that never started saw none.
+                structured["request_retries"] = {
+                    "limit": rail.request_retries,
+                    "retried": evidence.retries if evidence.started else None}
+            if isinstance(rail, ModelRail) and rail.cache_breakpoints is not None:
+                structured["cache_breakpoints"] = {"enabled": rail.cache_breakpoints}
+            if isinstance(rail, ModelRail) and rail.effort is not None:
+                structured["effort"] = {"level": rail.effort}
             if correction is not None:
                 structured[correction_key] = correction
             write_owned_json(artifact_directory / "result.json", {

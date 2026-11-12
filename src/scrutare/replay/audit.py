@@ -183,6 +183,46 @@ def _terminal_cut_off(stdout: bytes) -> tuple[bool, bool]:
     return True, cut_off
 
 
+def _expected_rails(run_dir: Path, config_data: object) -> dict[str, Any]:
+    """The rail each session identity of this run was configured to use.
+
+    Reproduces routing and the executor identities reserved by debate and fan-out.
+    Raises when the captured configuration or prepared view cannot support that.
+    """
+    config = parse_config(json.dumps(config_data))
+    names = {p if isinstance(p, str) else p.name for p in config.personas}
+    if config.routing.enabled:
+        from scrutare.engine.review_inputs import PreparedReviewInputs
+        from scrutare.engine.routing import plan_routing
+        files = decode_artifact(read_artifact(run_dir / "review-inputs/files.json"),
+                                artifact="files.json")
+        metadata = decode_artifact(read_artifact(run_dir / "metadata.json"),
+                                   artifact="metadata.json")
+        if not isinstance(files, list) or not isinstance(metadata, dict):
+            raise ValueError
+        # Reconcile the entire prepared view with its coherent capture even
+        # when repository context is disabled. A changed copied path must
+        # never activate a procedure and displace a reserved executor.
+        PreparedReviewInputs((run_dir / "review-inputs").absolute(), metadata["head_sha"],
+                             tuple(file["filename"] for file in files))
+        # Identity selection uses changed paths and trusted rules, never focus metadata.
+        # Supporting paths affect work groups only, not persona activation.
+        names = {p.name for p in plan_routing(files, (), config).personas}
+    expected_rails = {name: config.models.for_persona(name) for name in names}
+    # Reproduce the executor identities reserved by debate and fanout, including collisions.
+    if config.strategy == "debate" and not config.findings.discussion.enabled:
+        chair = "debate-chair"
+        while chair in expected_rails:
+            chair += "-chair"
+        expected_rails[chair] = config.models.for_persona("senior-dev")
+    if config.findings.assessment.enabled:
+        assessor = "evidence-assessor"
+        while assessor in expected_rails:
+            assessor += "-assessor"
+        expected_rails[assessor] = config.models.default
+    return expected_rails
+
+
 def _proxy_num_retries_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
     """Bind the opt-in retry request to its recorded rail and exact native flag."""
     attempts = _session_records(run_dir)
@@ -199,37 +239,7 @@ def _proxy_num_retries_issues(run_dir: Path, config_data: object) -> tuple[Audit
     if opted_in and not invocations:
         return (AuditIssue("proxy_num_retries_evidence_missing", "sessions", "incomplete"),)
     try:
-        config = parse_config(json.dumps(config_data))
-        names = {p if isinstance(p, str) else p.name for p in config.personas}
-        if config.routing.enabled:
-            from scrutare.engine.review_inputs import PreparedReviewInputs
-            from scrutare.engine.routing import plan_routing
-            files = decode_artifact(read_artifact(run_dir / "review-inputs/files.json"),
-                                    artifact="files.json")
-            metadata = decode_artifact(read_artifact(run_dir / "metadata.json"),
-                                       artifact="metadata.json")
-            if not isinstance(files, list) or not isinstance(metadata, dict):
-                raise ValueError
-            # Reconcile the entire prepared view with its coherent capture even
-            # when repository context is disabled. A changed copied path must
-            # never activate a procedure and displace a reserved executor.
-            PreparedReviewInputs((run_dir / "review-inputs").absolute(), metadata["head_sha"],
-                                 tuple(file["filename"] for file in files))
-            # Identity selection uses changed paths and trusted rules, never focus metadata.
-            # Supporting paths affect work groups only, not persona activation.
-            names = {p.name for p in plan_routing(files, (), config).personas}
-        expected_rails = {name: config.models.for_persona(name) for name in names}
-        # Reproduce the executor identities reserved by debate and fanout, including collisions.
-        if config.strategy == "debate" and not config.findings.discussion.enabled:
-            chair = "debate-chair"
-            while chair in expected_rails:
-                chair += "-chair"
-            expected_rails[chair] = config.models.for_persona("senior-dev")
-        if config.findings.assessment.enabled:
-            assessor = "evidence-assessor"
-            while assessor in expected_rails:
-                assessor += "-assessor"
-            expected_rails[assessor] = config.models.default
+        expected_rails = _expected_rails(run_dir, config_data)
     except (ConfigError, ReplayError, OSError, TypeError, ValueError, KeyError, RecursionError):
         return (AuditIssue("proxy_num_retries_config_invalid", "config.json", "invalid"),)
 
@@ -383,7 +393,9 @@ _OUTCOMES = ("corrected", "refused", "no_answer", "failed")
 # Flags the correction turn must share with its session's own invocation.
 _SHARED_FLAGS = ("--root", "--provider", "--base-url", "--contract", "--budget-tokens",
                  "--structured-output", "--max-tokens", "--proxy-num-retries",
-                 "--max-cutoffs", "--request-retries", "--max-corrections")
+                 "--max-cutoffs", "--request-retries", "--max-corrections",
+                 "--request-retry-seconds", "--effort", "--compaction",
+                 "--compaction-trigger", "--compaction-target")
 
 
 def _flag(argv: list[Any], name: str) -> object:
@@ -467,6 +479,165 @@ def _prompt_input_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
     return tuple(issues)
 
 
+def _recorded_retries(invocation: dict[str, Any]) -> str:
+    """The resend limit a session's own rail recorded; without one, the pinned zero.
+
+    The rail options audit binds that recorded rail to the captured configuration.
+    """
+    rail = invocation.get("rail")
+    retries = rail.get("request_retries") if isinstance(rail, dict) else None
+    return str(retries) if type(retries) is int and retries >= 0 else "0"
+
+
+# Opt-in rail fields that exist only as contract 3 flags, and the records they leave.
+_OPTION_FIELDS = ("request_retries", "request_retry_seconds", "cache_breakpoints", "effort")
+_OPTION_FLAGS = ("--request-retry-seconds", "--cache-breakpoints", "--effort")
+_OPTION_RECORDS = ("request_retries", "cache_breakpoints", "effort")
+
+
+def _retry_events(attempt: Path) -> int | None:
+    """Resent requests in an attempt's retained streams, or None without its first stream."""
+    total = 0
+    for name in ("stdout.jsonl", "correction.stdout.jsonl"):
+        if not os.path.lexists(attempt / name):
+            if name == "stdout.jsonl":
+                return None
+            continue
+        try:
+            lines = read_artifact(attempt / name).split(b"\n")
+        except ReplayError:
+            return None
+        for line in lines:
+            if not line.strip():
+                continue
+            try:
+                event = decode_artifact(line, artifact=name)
+            except (ReplayError, RecursionError):
+                continue
+            detail = event.get("detail") if isinstance(event, dict) else None
+            total += (isinstance(event, dict) and event.get("type") == "progress"
+                      and isinstance(detail, dict) and isinstance(detail.get("retry"), dict))
+    return total
+
+
+def _rail_option_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
+    """Bind opt-in request retries, cache breakpoints and effort to rail, argv and result.
+
+    Each launched session's recorded rail must equal its configured rail, argv must carry
+    exactly the flags those fields imply, and result.json exactly their records, with a
+    resend count the retained streams support. Runs that never set one of these fields and
+    never recorded one are not audited, so earlier bundles replay as before.
+    """
+    from scrutare.config import REQUEST_RETRY_SECONDS
+
+    attempts = _session_records(run_dir)
+    invocations = _invocations(attempts)
+
+    def recorded(document: object) -> bool:
+        if not isinstance(document, dict):
+            return False
+        rail, argv = document.get("rail"), document.get("argv")
+        return ((isinstance(rail, dict) and any(field in rail for field in _OPTION_FIELDS))
+                or (isinstance(argv, list)
+                    and any(name in _OPTION_FLAGS for name in _names(argv))))
+
+    opted_in = any(_opted_in(config_data, field) for field in _OPTION_FIELDS)
+    if not opted_in and not any(recorded(document) for _, document in invocations):
+        return ()
+    if opted_in and not invocations:
+        return (AuditIssue("rail_options_evidence_missing", "sessions", "incomplete"),)
+    try:
+        expected = _expected_rails(run_dir, config_data)
+    except (ConfigError, ReplayError, OSError, TypeError, ValueError, KeyError, RecursionError):
+        return (AuditIssue("rail_options_config_invalid", "config.json", "invalid"),)
+    issues = []
+    for attempt, document in invocations:
+        where = attempt.relative_to(run_dir).as_posix()
+        try:
+            if not isinstance(document, dict):
+                raise ValueError
+            rail, argv = document["rail"], document["argv"]
+            persona = document.get("persona")
+            if (not isinstance(rail, dict) or not isinstance(argv, list)
+                    or persona != attempt.parent.name or persona not in expected):
+                raise ValueError
+            want = expected[persona]
+            fields = ("provider", "model", "base_url", *_OPTION_FIELDS)
+            if (any(json.dumps(rail.get(field)) != json.dumps(getattr(want, field))
+                    for field in fields)
+                    or any((field in rail) != (getattr(want, field) is not None)
+                           for field in _OPTION_FIELDS)):
+                raise ValueError
+            names = _names(argv)
+            retries = want.request_retries
+            seconds = ([str(REQUEST_RETRY_SECONDS if want.request_retry_seconds is None
+                            else want.request_retry_seconds)] if retries else [])
+            wanted = (("--request-retries", None if retries is None else [str(retries)]),
+                      ("--request-retry-seconds", seconds),
+                      ("--effort", [] if want.effort is None else [want.effort]))
+            for flag, values in wanted:
+                # An unset resend limit is the pinned zero, checked with the recovery policy.
+                if values is not None and (names.count(flag) != len(values) or (
+                        values and _flag(argv, flag) != values[0])):
+                    raise ValueError
+            if (names.count("--cache-breakpoints") != int(bool(want.cache_breakpoints))
+                    or argv.count("--cache-breakpoints") != int(bool(want.cache_breakpoints))):
+                raise ValueError
+        except (KeyError, TypeError, ValueError):
+            issues.append(AuditIssue("rail_options_unrecorded", f"{where}/invocation.json",
+                                     "invalid"))
+            continue
+        if not os.path.lexists(attempt / "result.json"):
+            issues.append(AuditIssue("rail_options_evidence_missing", f"{where}/result.json",
+                                     "incomplete"))
+            continue
+        try:
+            outcome = decode_artifact(read_artifact(attempt / "result.json"),
+                                      artifact="result.json")
+        except ReplayError:
+            outcome = None
+        valid = isinstance(outcome, dict)
+        if isinstance(outcome, dict):
+            valid = ((outcome.get("cache_breakpoints") == {"enabled": want.cache_breakpoints}
+                      if want.cache_breakpoints is not None
+                      else "cache_breakpoints" not in outcome)
+                     and (outcome.get("effort") == {"level": want.effort}
+                          if want.effort is not None else "effort" not in outcome))
+            record = outcome.get("request_retries")
+            if retries is None:
+                valid = valid and "request_retries" not in outcome
+            else:
+                retried = record.get("retried") if isinstance(record, dict) else ()
+                valid = (valid and isinstance(record, dict)
+                         and set(record) == {"limit", "retried"}
+                         and type(record["limit"]) is int and record["limit"] == retries
+                         and (retried is None or (type(retried) is int and retried >= 0)))
+                if valid:
+                    seen = _retry_events(attempt)
+                    if seen is None and retried is not None:
+                        # A counted session started, so its event stream was captured.
+                        issues.append(AuditIssue("rail_options_evidence_missing",
+                                                 f"{where}/stdout.jsonl", "incomplete"))
+                        continue
+                    valid = (retried or 0) == (seen or 0) and (not retried or retries > 0)
+        if valid and want.effort is not None:
+            # nare records the effort each invocation sent; an older file has no field.
+            for name in ("session.json", "correction-session.json"):
+                if not os.path.lexists(attempt / name):
+                    continue
+                try:
+                    saved = decode_artifact(read_artifact(attempt / name), artifact=name)
+                except ReplayError:
+                    saved = None
+                if (not isinstance(saved, dict)
+                        or ("effort" in saved and saved["effort"] != want.effort)):
+                    valid = False
+        if not valid:
+            issues.append(AuditIssue("rail_options_result_disagrees", f"{where}/result.json",
+                                     "invalid"))
+    return tuple(issues)
+
+
 def _native_recovery_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
     """Bind contract 3 recovery controls to all retained runtime identities."""
     issues = []
@@ -501,7 +672,8 @@ def _native_recovery_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
                 or not isinstance(argv, list) or any(
                     _flag(argv, flag) != value or _names(argv).count(flag) != 1
                     for flag, value in (("--contract", "3"), ("--max-cutoffs", "0"),
-                                        ("--request-retries", "0"), ("--max-corrections", "1")))):
+                                        ("--request-retries", _recorded_retries(record)),
+                                        ("--max-corrections", "1")))):
             issues.append(AuditIssue("native_recovery_policy_invalid",
                                      str(attempt.relative_to(run_dir) / "invocation.json"),
                                      "invalid"))
@@ -1045,6 +1217,7 @@ def replay_run(run_dir: Path) -> ReplayResult:
               + _structured_output_issues(run_dir, config_data)
               + _max_output_tokens_issues(run_dir, config_data)
               + _proxy_num_retries_issues(run_dir, config_data)
+              + _rail_option_issues(run_dir, config_data)
               + _native_recovery_issues(run_dir)
               + _prompt_input_issues(run_dir)
               + _citation_correction_issues(run_dir, config_data)
