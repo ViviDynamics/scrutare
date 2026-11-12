@@ -145,6 +145,8 @@ class NareCapability:
     structured_output_providers: tuple[str, ...] = ("openai",)
     # Rails on which the runtime marks prompt-cache breakpoints when asked (contract 3).
     cache_breakpoints: tuple[str, ...] = ()
+    # Rails on which the runtime queues provider capacity refusals when asked (contract 3).
+    capacity_queue: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         _text(self.version, "version")
@@ -153,7 +155,7 @@ class NareCapability:
         if (not isinstance(self.structured_output, tuple)
                 or any(not isinstance(mode, str) or not mode for mode in self.structured_output)):
             raise ValueError("structured_output: expected a tuple of mode names")
-        for field in ("structured_output_providers", "cache_breakpoints"):
+        for field in ("structured_output_providers", "cache_breakpoints", "capacity_queue"):
             if (not isinstance(getattr(self, field), tuple) or any(
                     not isinstance(name, str) or not name for name in getattr(self, field))):
                 raise ValueError(f"{field}: expected a tuple of provider names")

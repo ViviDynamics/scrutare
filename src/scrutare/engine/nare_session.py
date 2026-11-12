@@ -10,7 +10,7 @@ import shutil
 import signal
 import stat
 import tempfile
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass, replace
 from hashlib import sha256
@@ -20,6 +20,8 @@ from urllib.parse import urlsplit
 
 from scrutare import __version__
 from scrutare.config import (
+    CAPACITY_REFUSALS,
+    CAPACITY_WAIT_SECONDS,
     EFFORT_LEVELS,
     REQUEST_RETRY_SECONDS,
     ConfigError,
@@ -161,14 +163,30 @@ async def _cleanup_capture(
 
 async def _wait_capture(
     process: asyncio.subprocess.Process, capture: asyncio.Future[_T], timeout: float, *,
-    cancelled: bool,
+    cancelled: bool, credit: Callable[[], float] | None = None,
 ) -> _T:
-    """Preserve capture while applying the common liveness and cancellation policy."""
+    """Preserve capture while applying the common liveness and cancellation policy.
+
+    ``credit`` returns the seconds by which the deadline has moved out so far (queue time
+    a session announced). It is read again whenever the deadline is reached, so the limit
+    ends a process that stays silent past what it was credited.
+    """
     if cancelled:
         await _cleanup_capture(process, capture)
         raise asyncio.CancelledError
+    loop = asyncio.get_running_loop()
+    started = loop.time()
     try:
-        return await asyncio.wait_for(asyncio.shield(capture), timeout)
+        while True:
+            remaining = timeout if credit is None else (
+                started + timeout + credit() - loop.time())
+            if remaining <= 0:
+                raise asyncio.TimeoutError
+            try:
+                return await asyncio.wait_for(asyncio.shield(capture), remaining)
+            except asyncio.TimeoutError:
+                if credit is None:
+                    raise
     except (asyncio.TimeoutError, asyncio.CancelledError):
         await _cleanup_capture(process, capture)
         raise
@@ -282,6 +300,37 @@ def _proxy_num_retries(contract: dict[str, object],
             and any(flag.name == "--proxy-num-retries" and flag.takes_value for flag in flags))
 
 
+# The options a queued session sends, with whether each takes a value, and the contract
+# entry's name for each.
+_CAPACITY_QUEUE_FLAGS = {"--capacity-queue": False, "--capacity-wait-seconds": True,
+                         "--capacity-refusals": True}
+_CAPACITY_QUEUE_ENTRY = {"enable": "--capacity-queue", "wait_seconds": "--capacity-wait-seconds",
+                         "refusals": "--capacity-refusals"}
+
+
+def _capacity_queue(contract: dict[str, object],
+                    flags: tuple[NareFlag, ...] | None) -> tuple[str, ...]:
+    """The rails on which a contract 3 runtime queues provider capacity refusals when asked.
+
+    The entry must name the three options Scrutare sends and the record and result field it
+    reconciles; the flag list must carry each option in the shape it is sent. An entry of
+    another shape advertises nothing, so only a wave that asks for the queue depends on it.
+    """
+    entry = contract.get("capacity_queue")
+    if flags is None or not isinstance(entry, dict):
+        return ()
+    named, providers = entry.get("flags"), entry.get("providers")
+    advertised = {flag.name: flag.takes_value for flag in flags}
+    if (not isinstance(named, dict) or not isinstance(providers, list)
+            or any(named.get(key) != flag for key, flag in _CAPACITY_QUEUE_ENTRY.items())
+            or entry.get("event_detail") != "capacity"
+            or entry.get("result_field") != "capacity_refusals"
+            or any(advertised.get(flag) is not takes_value
+                   for flag, takes_value in _CAPACITY_QUEUE_FLAGS.items())):
+        return ()
+    return tuple(name for name in _PROVIDERS if name in providers)
+
+
 def _cache_breakpoints(contract: dict[str, object],
                        flags: tuple[NareFlag, ...] | None) -> tuple[str, ...]:
     """The rails on which a contract 3 runtime marks prompt-cache breakpoints when asked."""
@@ -315,6 +364,7 @@ async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
             return NareCapability(
                 version, contract["contract"], modes, _proxy_num_retries(contract, flags),
                 flags=flags, cache_breakpoints=_cache_breakpoints(contract, flags),
+                capacity_queue=_capacity_queue(contract, flags),
                 **({"structured_output_providers": providers} if modes else {}))
     except SessionRuntimeError:
         raise
@@ -351,6 +401,14 @@ def _rail_refusal(rail: ModelRail, capability: NareCapability) -> str | None:
         return "cache_breakpoints"
     if rail.effort is not None and not capability.advertises("--effort", rail.effort):
         return f"effort {rail.effort}"
+    # A queued session must be streamed: only then does nare write each queue record before
+    # it waits, which is what the timeout credit reads.
+    if rail.capacity_queue and not (
+            rail.provider in capability.capacity_queue and _streams(capability)
+            and all((flag := capability.flag(name)) is not None
+                    and flag.takes_value is takes_value
+                    for name, takes_value in _CAPACITY_QUEUE_FLAGS.items())):
+        return "capacity_queue"
     return None
 
 
@@ -487,13 +545,20 @@ class _Evidence:
     retries: int = 0
     # Dollars the backend reported for the requests seen so far; None before any cost event.
     cost: SessionCost | None = None
+    # Capacity refusals nare queued, and the seconds it announced it would wait on them.
+    # A queued refusal was never dispatched, so it reports no usage either.
+    queued: int = 0
+    queued_seconds: float = 0.0
 
     def event(self, line: bytes, ledger: ReviewBudgetLedger, lease: BudgetLease) -> None:
         if not line.strip():
             return
         try:
-            usage, resent, cost = decode_live_event(line)
+            usage, resent, cost, wait = decode_live_event(line)
             self.retries += resent
+            if wait is not None:
+                self.queued += 1
+                self.queued_seconds += wait
             if cost is not None:
                 self.cost = cost if self.cost is None else self.cost + cost
             if usage is not None:
@@ -538,10 +603,29 @@ async def _stderr(stream: asyncio.StreamReader, destination: BinaryIO,
         raise
 
 
+def _capacity_limits(rail: ModelRail) -> tuple[int | float, int]:
+    """The queue limits a queued rail's sessions are sent: its own, else Scrutare's."""
+    seconds, refusals = rail.capacity_wait_seconds, rail.capacity_refusals
+    return (CAPACITY_WAIT_SECONDS if seconds is None else seconds,
+            CAPACITY_REFUSALS if refusals is None else refusals)
+
+
+def _queue_credit(rail: ModelRail, announced: float) -> float:
+    """Seconds of announced queue time credited against the session timeout.
+
+    A queued session is alive and waiting on purpose, so the waits nare announced move its
+    deadline out. The credit is bounded by the rail's wait limit over the whole session, and
+    a rail that did not ask for the queue earns none.
+    """
+    if not isinstance(rail, ModelRail) or not rail.capacity_queue:
+        return 0.0
+    return min(announced, float(_capacity_limits(rail)[0]))
+
+
 async def _execute(argv: list[str], environment: dict[str, str], cwd: Path,
                    runtime: NareRuntime, stdout: BinaryIO, stderr: BinaryIO,
                    evidence: _Evidence, ledger: ReviewBudgetLedger,
-                   lease: BudgetLease) -> int:
+                   lease: BudgetLease, credit: Callable[[], float] | None = None) -> int:
     process, cancelled = await _start_process(argv, environment, cwd)
     evidence.started = True
     assert process.stdout is not None and process.stderr is not None
@@ -550,7 +634,7 @@ async def _execute(argv: list[str], environment: dict[str, str], cwd: Path,
                               return_exceptions=True)
     try:
         results = await _wait_capture(
-            process, drainage, runtime.timeout_seconds, cancelled=cancelled,
+            process, drainage, runtime.timeout_seconds, cancelled=cancelled, credit=credit,
         )
         for result in results:
             if isinstance(result, BaseException):
@@ -660,6 +744,12 @@ def _rail_options(rail: ModelRail) -> list[str]:
         argv.append("--cache-breakpoints")
     if rail.effort is not None:
         argv.extend(("--effort", rail.effort))
+    if rail.capacity_queue:
+        # Both limits are explicit, so nare's own defaults never decide how long a session
+        # may queue.
+        seconds, refusals = _capacity_limits(rail)
+        argv.extend(("--capacity-queue", "--capacity-wait-seconds", str(seconds),
+                     "--capacity-refusals", str(refusals)))
     return argv
 
 
@@ -722,12 +812,15 @@ async def _correct_citations(
         "prompt": prompt, "prompt_sha256": sha256(prompt.encode("utf-8")).hexdigest(),
         "argv": argv, "max_turns": 1, "invocation_limit": lease.limit_tokens,
     }, prepared_root=root)
-    remaining = deadline - asyncio.get_running_loop().time()
+    # The turn continues the session's deadline, with the queue time credited so far.
+    credited = _queue_credit(rail, evidence.queued_seconds)
+    remaining = deadline + credited - asyncio.get_running_loop().time()
     if remaining <= 0:
         raise asyncio.TimeoutError
     if isinstance(offered, ProtocolCorrectionOffered):
         validate_prepared_inputs(descriptor.inputs)
     correction = _Evidence(evidence.usage, started=True, cost=evidence.cost)
+    first_queued = evidence.queued_seconds
     try:
         with ExitStack() as stack:
             stdout = stack.enter_context(_new_capture(directory, "correction.stdout.jsonl"))
@@ -736,7 +829,8 @@ async def _correct_citations(
                 argv, _environment(artifact_directory / "home", artifact_directory / "tmp",
                                    rail.provider), artifact_directory / "cwd",
                 replace(runtime, timeout_seconds=remaining), stdout, stderr, correction,
-                ledger, lease)
+                ledger, lease,
+                lambda: _queue_credit(rail, first_queued + correction.queued_seconds) - credited)
         record["exit_code"] = exit_code
     finally:
         # Usage is cumulative across both turns of the session, whatever happened.
@@ -744,9 +838,13 @@ async def _correct_citations(
         evidence.cost = correction.cost
         evidence.corrupt = evidence.corrupt or correction.corrupt
         evidence.retries += correction.retries
+        evidence.queued += correction.queued
+        evidence.queued_seconds += correction.queued_seconds
     saved = _session_document(directory, "correction-session.json")
     if correction.corrupt:
         raise SessionProtocolError("session: corrupted correction evidence")
+    if correction.queued and not rail.capacity_queue:
+        raise SessionProtocolError("session: unrequested capacity queue evidence")
     # A constrained-turn record must match the rail, as in the first stream.
     constrained_turns(correction.stdout, rail.structured_output)
     require_sent_effort(saved, rail.effort)
@@ -906,6 +1004,7 @@ async def _run_session(
                     argv, _environment(artifact_directory / "home", artifact_directory / "tmp",
                                        rail.provider), artifact_directory / "cwd", runtime,
                     stdout, stderr, evidence, ledger, lease,
+                    lambda: _queue_credit(rail, evidence.queued_seconds),
                 )
             reason = "protocol"
             saved = _session_document(directory)
@@ -915,6 +1014,9 @@ async def _run_session(
             if evidence.retries and not rail.request_retries:
                 # nare was told never to resend, so a retry record is not this session's.
                 raise SessionProtocolError("session: unrequested request retry evidence")
+            if evidence.queued and not rail.capacity_queue:
+                # nare was not told to queue, so a queued refusal is not this session's.
+                raise SessionProtocolError("session: unrequested capacity queue evidence")
             require_sent_effort(saved, rail.effort)
             # Nothing nare kept from a session cut off at the cap is parsed or validated.
             capped = rail.max_output_tokens is not None
@@ -1048,6 +1150,18 @@ async def _run_session(
                 structured["cache_breakpoints"] = {"enabled": rail.cache_breakpoints}
             if isinstance(rail, ModelRail) and rail.effort is not None:
                 structured["effort"] = {"level": rail.effort}
+            if isinstance(rail, ModelRail) and rail.capacity_queue is not None:
+                queue: dict[str, object] = {"enabled": rail.capacity_queue}
+                if rail.capacity_queue:
+                    # Refusals queued in the retained streams and the seconds nare announced
+                    # for them; a session that never started saw none.
+                    seconds, refusals = _capacity_limits(rail)
+                    started = evidence.started
+                    queue.update(
+                        wait_seconds=seconds, refusals_limit=refusals,
+                        queued=evidence.queued if started else None,
+                        waited_seconds=round(evidence.queued_seconds, 3) if started else None)
+                structured["capacity_queue"] = queue
             if correction is not None:
                 structured[correction_key] = correction
             write_owned_json(artifact_directory / "result.json", {

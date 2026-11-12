@@ -91,6 +91,8 @@ class _DecodedEvidence:
     retries: int | None = None
     # Whether nare says the backend reported every dollar of `cost` (none calculated).
     reported: bool = False
+    # Capacity refusals nare queued over the session's life, when it reports the count.
+    queued: int | None = None
 
     @property
     def session_cost(self) -> SessionCost:
@@ -330,19 +332,36 @@ def _retry(document: dict[str, Any]) -> bool:
     return document["type"] == "progress" and isinstance(document["detail"].get("retry"), dict)
 
 
-def decode_live_event(line: bytes) -> tuple[TokenUsage | None, bool, SessionCost | None]:
-    """One event's turn counters and cost, if it is a cost event, and whether it is a resend.
+def _queued(document: dict[str, Any]) -> float | None:
+    """The wait nare announced for one queued capacity refusal, or None for any other event.
+
+    nare writes the record before it sleeps. A refused request was never dispatched, so the
+    record is neither a resend nor a turn and carries no usage.
+    """
+    if document["type"] != "progress" or "capacity" not in document["detail"]:
+        return None
+    return _number(_object(document["detail"]["capacity"])["wait"])
+
+
+def decode_live_event(
+    line: bytes,
+) -> tuple[TokenUsage | None, bool, SessionCost | None, float | None]:
+    """One event's turn counters and cost, if it is a cost event, whether it is a resend,
+    and the announced wait if it is a queued capacity refusal.
 
     A resent request has no cost event of its own: nare reports usage for completed replies
-    only, so a retry never adds counters. Other additive event types are ignored.
+    only, so a retry never adds counters, and neither does a request a provider refused for
+    capacity before dispatch. Other additive event types are ignored.
     """
     try:
         document = _json(line)
         kind = _envelope(document)
+        if kind == "result":
+            return None, False, None, None
         if kind != "cost":
-            return None, kind != "result" and _retry(document), None
+            return None, _retry(document), None, _queued(document)
         usage, cost = _usage(document["detail"])
-        return usage, False, _cost(cost, _reported(document["detail"]))
+        return usage, False, _cost(cost, _reported(document["detail"])), None
     except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
         raise SessionProtocolError("Invalid nare event; inspect private capture.") from None
 
@@ -477,11 +496,23 @@ def _decode_evidence(
                 _fail()
         elif _integer(retries) != resent + ((baseline.retries or 0) if baseline else 0):
             _fail()
+        # Each queued capacity refusal leaves one record, counted like resends but apart
+        # from them, from turns and from usage.
+        waits = sum(_queued(record) is not None for record in records[:-1])
+        queued = result.get("capacity_refusals")
+        if queued is None:
+            if waits:
+                _fail()
+        elif _integer(queued) != waits + ((baseline.queued or 0) if baseline else 0):
+            _fail()
         output = result["output"]
         if output is None and status == "done":
             _fail()
         saved = _json(session_document)
         if "retries" in saved and _integer(saved["retries"]) != (retries or 0):
+            _fail()
+        if ("capacity_refusals" in saved
+                and _integer(saved["capacity_refusals"]) != (queued or 0)):
             _fail()
         if (_text(saved["id"]) != identity or _text(saved["status"]) != status
                 or saved["stop_reason"] != stop
@@ -521,7 +552,7 @@ def _decode_evidence(
                                 or total_usage.total > expected_limit,
                                 version, contract, count, output, saved["output"],
                                 cut_off_at_max_tokens(records[:-1], status, stop), cost,
-                                retries, _reported(result["usage"]))
+                                retries, _reported(result["usage"]), queued)
     except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
         raise SessionProtocolError(
             "Session evidence is invalid or inconsistent; inspect private capture."

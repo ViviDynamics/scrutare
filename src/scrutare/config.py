@@ -26,9 +26,19 @@ REQUEST_RETRY_SECONDS = 60
 # Most resends of one request a rail may ask for. nare itself takes any nonnegative count;
 # past a handful the waits between resends already exceed any sensible bound.
 REQUEST_RETRIES_MAX = 10
+# Limits passed with every queued session when a rail opts in to capacity queueing and sets
+# none of its own: the most seconds one request may spend queued, and the most refusals one
+# session queues. They are nare's defaults at the pinned release, passed explicitly so a
+# later nare default never decides them. The seconds also bound how far queueing can move
+# a session's timeout, hence the caps.
+CAPACITY_WAIT_SECONDS = 1800
+CAPACITY_REFUSALS = 50
+CAPACITY_WAIT_SECONDS_MAX = 3600
+CAPACITY_REFUSALS_MAX = 1000
 # Opt-in rail fields in recorded order. Each stays out of every record until a rail sets it.
 RAIL_OPTIONS = ("structured_output", "max_output_tokens", "proxy_num_retries",
-                "request_retries", "request_retry_seconds", "cache_breakpoints", "effort")
+                "request_retries", "request_retry_seconds", "cache_breakpoints", "effort",
+                "capacity_queue", "capacity_wait_seconds", "capacity_refusals")
 PostMode = Literal["review", "comment"]
 Category = Literal["correctness", "security", "regression", "style", "consistency", "docs"]
 CATEGORIES: tuple[Category, ...] = (
@@ -75,6 +85,13 @@ class ModelRail:
     cache_breakpoints: bool | None = None
     # Opt-in reasoning effort (nare --effort).
     effort: Effort | None = None
+    # Opt-in queueing of provider capacity refusals on the openai rail (nare
+    # --capacity-queue): a refused request is waited out and sent again unchanged.
+    capacity_queue: bool | None = None
+    # Most seconds one request may spend queued, and most refusals one session queues;
+    # only with capacity_queue true.
+    capacity_wait_seconds: int | float | None = None
+    capacity_refusals: int | None = None
 
     def __post_init__(self) -> None:
         _structured_output(self.structured_output, self.provider, "structured_output")
@@ -85,6 +102,10 @@ class ModelRail:
                                "request_retry_seconds")
         _cache_breakpoints(self.cache_breakpoints, self.provider, "cache_breakpoints")
         _effort(self.effort, "effort")
+        _capacity_queue(self.capacity_queue, self.provider, "capacity_queue")
+        _capacity_wait_seconds(self.capacity_wait_seconds, self.capacity_queue,
+                               "capacity_wait_seconds")
+        _capacity_refusals(self.capacity_refusals, self.capacity_queue, "capacity_refusals")
 
     def record(self, **explicit: bool) -> dict[str, Any]:
         """The rail as recorded; each opt-in field appears only when it is set or requested."""
@@ -588,6 +609,39 @@ def _cache_breakpoints(value: object, provider: str, path: str) -> None:
         raise ConfigError(f"{path}: requires provider openai")
 
 
+def _capacity_queue(value: object, provider: str, path: str) -> None:
+    if value is None:
+        return
+    if type(value) is not bool:
+        raise ConfigError(f"{path}: expected a boolean or null")
+    # nare queues only where a transport declares a capacity marker.
+    if provider != "openai":
+        raise ConfigError(f"{path}: requires provider openai")
+
+
+def _capacity_wait_seconds(value: object, queue: object, path: str) -> None:
+    if value is None:
+        return
+    if (type(value) not in (int, float) or not math.isfinite(cast(float, value))
+            or cast(float, value) <= 0):
+        raise ConfigError(f"{path}: expected a positive finite number or null")
+    if cast(float, value) > CAPACITY_WAIT_SECONDS_MAX:
+        raise ConfigError(f"{path}: expected at most {CAPACITY_WAIT_SECONDS_MAX} seconds")
+    if queue is not True:
+        raise ConfigError(f"{path}: requires capacity_queue: true")
+
+
+def _capacity_refusals(value: object, queue: object, path: str) -> None:
+    if value is None:
+        return
+    if type(value) is not int or value <= 0:
+        raise ConfigError(f"{path}: expected a positive integer or null")
+    if value > CAPACITY_REFUSALS_MAX:
+        raise ConfigError(f"{path}: expected at most {CAPACITY_REFUSALS_MAX} queued refusals")
+    if queue is not True:
+        raise ConfigError(f"{path}: requires capacity_queue: true")
+
+
 def _effort(value: object, path: str) -> None:
     if value is not None and (not isinstance(value, str) or value not in EFFORT_LEVELS):
         raise ConfigError(f"{path}: expected one of {', '.join(EFFORT_LEVELS)} or null")
@@ -648,11 +702,20 @@ def _rail(value: object, path: str, default: ModelRail | None = None) -> ModelRa
     checked("cache_breakpoints", breakpoints, _cache_breakpoints)
     effort = inherited("effort")
     _effort(effort, f"{path}.effort")
+    queue = inherited("capacity_queue")
+    checked("capacity_queue", queue, _capacity_queue)
+    # The limits belong to the queue, so a rail that does not queue does not inherit them.
+    queue_seconds = inherited("capacity_wait_seconds", unless=queue is not True)
+    _capacity_wait_seconds(queue_seconds, queue, f"{path}.capacity_wait_seconds")
+    queue_refusals = inherited("capacity_refusals", unless=queue is not True)
+    _capacity_refusals(queue_refusals, queue, f"{path}.capacity_refusals")
     return ModelRail(provider, base_url, model, cast("StructuredOutput | None", structured),
                      cast("int | None", cap), cast("int | None", retries),
                      cast("int | None", request_retries),
                      cast("int | float | None", retry_seconds),
-                     cast("bool | None", breakpoints), cast("Effort | None", effort))
+                     cast("bool | None", breakpoints), cast("Effort | None", effort),
+                     cast("bool | None", queue), cast("int | float | None", queue_seconds),
+                     cast("int | None", queue_refusals))
 
 
 def _models(value: object, personas: tuple[str | PersonaDefinition, ...]) -> ModelSettings:
