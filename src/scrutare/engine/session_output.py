@@ -15,7 +15,7 @@ from scrutare.engine.assessment_inputs import AssessmentInput
 from scrutare.engine.debate_inputs import DebateInput
 from scrutare.engine.persona_inputs import PersonaReanchorInput
 from scrutare.engine.reanchor import parse_reanchor_output
-from scrutare.engine.session_models import SessionCost, TokenUsage
+from scrutare.engine.session_models import CapacityUsage, SessionCost, TokenUsage
 from scrutare.findings.citation_correction import (
     CitationDefect,
     apply_citation_correction,
@@ -49,6 +49,7 @@ class DecodedSession:
     # Resent model requests over the session's life, when nare reports the count.
     retries: int | None = None
     cost: SessionCost = SessionCost()
+    capacity: CapacityUsage | None = None
 
 
 @dataclass(frozen=True)
@@ -69,6 +70,7 @@ class DecodedReanchorSession:
     # Resent model requests over the session's life, when nare reports the count.
     retries: int | None = None
     cost: SessionCost = SessionCost()
+    capacity: CapacityUsage | None = None
 
 
 @dataclass(frozen=True)
@@ -91,6 +93,7 @@ class _DecodedEvidence:
     retries: int | None = None
     # Whether nare says the backend reported every dollar of `cost` (none calculated).
     reported: bool = False
+    capacity: CapacityUsage | None = None
 
     @property
     def session_cost(self) -> SessionCost:
@@ -267,6 +270,71 @@ def _reported(value: object) -> bool:
 def _cost(usd: float | None, reported: bool) -> SessionCost:
     """A reported amount, or unknown: a missing or calculated cost is never an amount."""
     return SessionCost(usd, "provider_reported") if usd is not None and reported else SessionCost()
+
+
+def _capacity(result: dict[str, Any], saved: dict[str, Any],
+              baseline: CapacityUsage | None) -> CapacityUsage | None:
+    """nare's capacity counters (2026.11.95+), apart from usage, turns and retries.
+
+    The result line reports seconds rounded to milliseconds; the saved session keeps the
+    unrounded totals, which must round to the same values. Absent fields are an older
+    runtime, which reports none. Over a resumed session the counters only grow.
+    """
+    if "capacity_refusals" not in result and "capacity_limit" not in result:
+        if any(name in saved for name in ("capacity_refusals", "capacity_wait",
+                                          "capacity_limit", "capacity_slot_wait")):
+            _fail()
+        return None
+    refusals, wait, limit, slot = 0, 0.0, None, 0.0
+    if "capacity_refusals" in result or "capacity_wait_seconds" in result:
+        refusals = _integer(result["capacity_refusals"])
+        wait = _number(result["capacity_wait_seconds"])
+        if ("capacity_refusals" in saved
+                and (_integer(saved["capacity_refusals"]) != refusals
+                     or round(_number(saved["capacity_wait"]), 3) != wait)):
+            _fail()
+    if "capacity_limit" in result or "capacity_slot_wait_seconds" in result:
+        limit = result["capacity_limit"]
+        if limit is not None:
+            limit = _integer(limit, positive=True)
+        slot = _number(result["capacity_slot_wait_seconds"])
+        if "capacity_limit" in saved and (
+                saved["capacity_limit"] != limit or type(saved["capacity_limit"]) is bool
+                or round(_number(saved["capacity_slot_wait"]), 3) != slot):
+            _fail()
+    if baseline is not None and (refusals < baseline.refusals or wait < baseline.wait_seconds
+                                 or slot < baseline.slot_wait_seconds):
+        _fail()
+    return CapacityUsage(refusals, wait, limit, slot)
+
+
+def capacity_events(stdout: bytes) -> CapacityUsage:
+    """Capacity counters from a stream that ended without nare's result, read tolerantly.
+
+    Each queued refusal emits a progress event before its wait, and each slot wait or limit
+    change emits one with the limit. Unreadable lines are skipped.
+    """
+    refusals, wait, limit, slot = 0, 0.0, None, 0.0
+    for line in stdout.split(b"\n"):
+        if not line.strip():
+            continue
+        try:
+            document = _json(line)
+            if _envelope(document) != "progress":
+                continue
+            detail = document["detail"]
+            if isinstance(detail.get("capacity"), dict):
+                wait += _number(detail["capacity"]["wait"])
+                refusals += 1
+            elif isinstance(detail.get("capacity_limit"), dict):
+                record = detail["capacity_limit"]
+                current = _integer(record["limit"], positive=True)
+                if record.get("reason") == "slot":
+                    slot += _number(record["waited"])
+                limit = current
+        except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
+            continue
+    return CapacityUsage(refusals, round(wait, 3), limit, round(slot, 3), "events")
 
 
 def _envelope(document: dict[str, Any]) -> str:
@@ -515,13 +583,14 @@ def _decode_evidence(
             # Nare checks cumulative usage before admitting its summary; only
             # the final admitted request may cross the ceiling.
             _fail()
+        capacity = _capacity(result, saved, None if baseline is None else baseline.capacity)
         return _DecodedEvidence(identity, status, stop, exit_code, total_usage,
                                 output is not None, expected_limit,
                                 (status == "error" and stop == "budget")
                                 or total_usage.total > expected_limit,
                                 version, contract, count, output, saved["output"],
                                 cut_off_at_max_tokens(records[:-1], status, stop), cost,
-                                retries, _reported(result["usage"]))
+                                retries, _reported(result["usage"]), capacity)
     except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
         raise SessionProtocolError(
             "Session evidence is invalid or inconsistent; inspect private capture."
@@ -597,7 +666,7 @@ def decode_session(
             evidence.usage, findings, evidence.output_available and not discarded,
             evidence.budget_limit,
             evidence.partial, evidence.nare_version, evidence.contract, evidence.turns,
-            evidence.cut_off, evidence.retries, evidence.session_cost,
+            evidence.cut_off, evidence.retries, evidence.session_cost, evidence.capacity,
         )
     except CitationValidationError:
         raise
@@ -635,6 +704,7 @@ def decode_citation_correction(
     # A correction run that never started reported nothing; the session's usage stands.
     usage = first.usage if evidence.status is None else evidence.usage
     cost = first.session_cost if evidence.status is None else evidence.session_cost
+    capacity = first.capacity if evidence.status is None else evidence.capacity
     answered = evidence.status == "done" and not (discard_cut_off and evidence.cut_off)
     findings: tuple[Finding, ...] = ()
     if (isinstance(offered, ProtocolCorrectionOffered)
@@ -653,7 +723,7 @@ def decode_citation_correction(
                     evidence.session_id, evidence.status, evidence.stop_reason, evidence.exit_code,
                     usage, findings, answered, evidence.budget_limit, evidence.partial,
                     evidence.nare_version, evidence.contract, evidence.turns, evidence.cut_off,
-                    evidence.retries, cost)
+                    evidence.retries, cost, capacity)
             corrected = apply_citation_correction(first.output, offered.defects, evidence.output)
             findings = _findings(corrected, persona, evidence_version=2,
                                  expected_root=expected_root,
@@ -671,7 +741,7 @@ def decode_citation_correction(
         evidence.session_id, evidence.status, evidence.stop_reason, evidence.exit_code,
         usage, findings, answered, evidence.budget_limit, evidence.partial,
         evidence.nare_version, evidence.contract, evidence.turns, evidence.cut_off,
-        evidence.retries, cost,
+        evidence.retries, cost, capacity,
     )
 
 
@@ -699,7 +769,7 @@ def decode_reanchor_session(
             evidence.usage, corrections, evidence.output_available and not discarded,
             evidence.budget_limit,
             evidence.partial, evidence.nare_version, evidence.contract, evidence.turns,
-            evidence.cut_off, evidence.retries, evidence.session_cost,
+            evidence.cut_off, evidence.retries, evidence.session_cost, evidence.capacity,
         )
     except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
         raise SessionProtocolError(

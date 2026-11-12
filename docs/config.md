@@ -39,6 +39,7 @@ Errors identify a field path or YAML location without echoing field values.
 | `models.default.cache_breakpoints` | Boolean (requires `provider: openai`), or `null` | `null` (off) |
 | `models.default.effort` | `low`, `medium`, `high`, `xhigh`, `max`, or `null` | `null` (not sent) |
 | `models.overrides` | Mapping from a configured persona name to partial model settings | `{}` |
+| `models.capacity` | Capacity-refusal queueing on OpenAI rails: `mode` `off`, `fixed` or `adaptive` plus that mode's values | `mode: off` |
 | `verdict.blocking_categories` | List drawn from the fixed vocabulary | `correctness`, `security`, `regression` |
 | `verdict.advisory_categories` | List drawn from the fixed vocabulary | `style`, `consistency`, `docs` |
 | `github.post_mode` | `review` (blocking review), `comment` (never blocks) | `review` |
@@ -337,6 +338,89 @@ records it in `rail` and its argv, and `result.json` records
 `{"level": "high"}`. nare's session file records the effort each invocation
 sent; a file that records another level fails the session as a protocol
 failure.
+
+## Capacity-refusal queueing (opt-in)
+
+A shared proxy such as LiteLLM can refuse a request before it starts: HTTP 429
+naming `max_parallel_requests` once its deployment is full. The model produced
+nothing and nothing was charged. nare 2026.11.95 and newer can wait such a
+refusal out and resend the identical request; nare 2026.11.96 and newer can
+also adapt how many requests are in flight on the route. Scrutare passes this
+through only when asked:
+
+```yaml
+models:
+  default:
+    provider: openai
+    base_url: https://litellm.internal/v1
+    model: <model>
+  capacity:
+    mode: adaptive        # off (default), fixed or adaptive
+    wait_seconds: 1800    # most seconds one request may spend queued
+    refusals: 50          # most refusals one nare invocation queues
+    ceiling: 8            # adaptive: most requests in flight on the route
+    floor: 1              # adaptive: lowest limit a refusal can cut to
+    quiet_seconds: 60     # adaptive: seconds without a refusal before the limit rises
+```
+
+| Mode | Values (all required) | nare flags |
+| --- | --- | --- |
+| `off` | none | none; argv and every record keep their previous bytes |
+| `fixed` | `wait_seconds`, `refusals` | `--capacity-queue` with its two limits |
+| `adaptive` | `fixed`'s, plus `ceiling`, `floor`, `quiet_seconds` | also `--capacity-adaptive`, its bounds and `--capacity-shared-dir` |
+
+`wait_seconds` bounds one request's queue time. `refusals` bounds one nare
+invocation: a resumed correction turn is a new invocation and starts its own
+count. `wait_seconds` and `quiet_seconds` are positive numbers; `refusals`, `ceiling`
+and `floor` are positive integers, and `floor` must not exceed `ceiling`. A
+value the mode does not use is refused, and so is an enabled mode when no rail
+uses `provider: openai`. Scrutare does not fill in nare's own defaults: every
+value an enabled mode uses must be written, so the configuration states the
+whole policy. The example values are nare's defaults; Scrutare's default stays
+`off`. YAML reads an unquoted `off` as false, which is accepted as `off`.
+
+Only nare's OpenAI rail declares a capacity marker. Scrutare passes the flags on
+OpenAI rails only; an Anthropic rail in the same review runs exactly as before.
+The inspected nare contract must advertise the mode (`capacity_queue`, and
+`capacity_adaptive` for adaptive, each for the openai rail) and list every
+flag the mode sends among its run flags, or the wave is refused before any
+session starts. Nare's
+`NARE_CAPACITY_*` environment variables never reach a session, because the
+session environment is an allowlist.
+
+**Interaction with request retries.** Queueing is not a retry, and the two
+are configured apart. A queued refusal spends none of the rail's
+[`request_retries`](#request-retries-opt-in) (0 unless the rail sets it), and
+nare counts it in `capacity_refusals`, never in `retries`. A refusal past
+`wait_seconds` or `refusals`, or one that does not qualify (no marker, or after
+a streamed response has started), is handled exactly as without the queue: the
+retry policy judges it. With the default of zero retries the session fails as
+an ordinary `provider` failure. With retries on, nare treats that 429 as
+transient and resends it as a retry, recorded under `request_retries`. Queue
+time and retry waits both count toward the session's
+runtime timeout (`NareRuntime.timeout_seconds`, 600 seconds from the CLI): a
+queue that outlasts it ends the session as `timeout`, so a `wait_seconds` above
+the timeout only matters for callers that raise it.
+
+**One limit per review run.** In adaptive mode every session of one review run,
+including correction turns, names the same `capacity/` directory inside the run
+directory, so all concurrent persona processes on the route share one limit and
+its slots. nare keeps its slot locks and limit state there; a crashed holder
+frees its slot. The directory is created owner-only and must be on a local
+filesystem; neither Scrutare nor nare checks this. Separate runs, and the
+rounds of an iterative review, each have their own, so concurrent runs against
+one proxy do not share a limit: each may hold up to `ceiling` requests.
+
+**Accounting.** Refusals, queue time, the last limit and slot wait are recorded
+apart from token usage, turns and retries. Every session launched with the
+capacity flags records `capacity` in `result.json`, zeros included: `{"refusals", "wait_seconds", "limit",
+"slot_wait_seconds", "source"}`, where `source` is `result` when nare's
+terminal record reported the counters, or `events` when the session ended
+without one (a timeout, for example) and they were counted from nare's progress
+events. `fanout.json` adds the wave's totals under `result.capacity`. These
+counters spend no token budget and never count as failed coverage. Without the
+block, none of these fields appear. [Replay](replay.md) audits the flags and
+records.
 
 ## Citation correction turn (opt-in)
 

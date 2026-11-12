@@ -540,3 +540,85 @@ def test_advertised_usage_total_must_match_disjoint_counters(tmp_path, location,
     target["total"] = total
     with pytest.raises(module().SessionProtocolError):
         decode(tmp_path, events, saved)
+
+
+def capacity_shaped(tmp_path, *, refusals=2, wait=3.25, limit=4, slot_wait=0.5):
+    """A nare 2026.11.99 session: capacity fields on the result, saved session and events."""
+    events, saved = fixture(tmp_path)
+    events[-1].update(contract=3, nare="2026.11.99", retries=0, cutoffs=0,
+                      capacity_refusals=refusals, capacity_wait_seconds=wait,
+                      capacity_limit=limit, capacity_slot_wait_seconds=slot_wait)
+    saved.update(contract=3, nare="2026.11.99", retries=0, cutoffs=0,
+                 capacity_refusals=refusals, capacity_wait=wait, capacity_limit=limit,
+                 capacity_slot_wait=slot_wait)
+    progress = [
+        event("progress", {"capacity": {"attempt": 1, "wait": 2.7, "waited": 2.7, "refusals": 1,
+                                        "refusals_limit": 50, "status": 429,
+                                        "reason": "max_parallel_requests"}}),
+        event("progress", {"capacity_limit": {"limit": 4, "previous": 8, "reason": "refusal"}}),
+    ]
+    return progress + events, saved
+
+
+def test_nare_2026_11_99_capacity_fields_decode_without_changing_usage(tmp_path):
+    events, saved = capacity_shaped(tmp_path)
+    result = decode(tmp_path, events, saved)
+    assert result.contract == 3 and result.nare_version == "2026.11.99"
+    assert result.usage == TokenUsage(3, 5, 7, 11) and result.turns == 1
+    assert result.output_available and not result.partial
+
+
+def test_capacity_counters_are_exposed_apart_from_usage(tmp_path):
+    from scrutare.engine.session_models import CapacityUsage
+    events, saved = capacity_shaped(tmp_path)
+    assert decode(tmp_path, events, saved).capacity == CapacityUsage(2, 3.25, 4, 0.5)
+    events, saved = fixture(tmp_path)
+    assert decode(tmp_path, events, saved).capacity is None
+
+
+def test_queue_only_runtime_reports_no_limit(tmp_path):
+    from scrutare.engine.session_models import CapacityUsage
+    events, saved = capacity_shaped(tmp_path, limit=None)
+    for document in (events[-1], saved):
+        for name in ("capacity_limit", "capacity_slot_wait_seconds", "capacity_slot_wait"):
+            document.pop(name, None)
+    assert decode(tmp_path, events, saved).capacity == CapacityUsage(2, 3.25, None, 0.0)
+
+
+def test_saved_seconds_round_to_the_reported_milliseconds(tmp_path):
+    events, saved = capacity_shaped(tmp_path, wait=3.25, slot_wait=0.5)
+    saved.update(capacity_wait=3.2504, capacity_slot_wait=0.49961)
+    assert decode(tmp_path, events, saved).capacity.wait_seconds == 3.25
+
+
+@pytest.mark.parametrize("location,field,value", [
+    ("result", "capacity_refusals", -1), ("result", "capacity_refusals", True),
+    ("result", "capacity_refusals", 1.0), ("result", "capacity_wait_seconds", -0.5),
+    ("result", "capacity_wait_seconds", "1"), ("result", "capacity_limit", 0),
+    ("result", "capacity_limit", True), ("result", "capacity_slot_wait_seconds", None),
+    ("saved", "capacity_refusals", 3), ("saved", "capacity_wait", 3.5),
+    ("saved", "capacity_limit", 8), ("saved", "capacity_limit", None),
+    ("saved", "capacity_slot_wait", 0.75),
+])
+def test_invalid_or_disagreeing_capacity_counters_fail(tmp_path, location, field, value):
+    events, saved = capacity_shaped(tmp_path)
+    (events[-1] if location == "result" else saved)[field] = value
+    with pytest.raises(module().SessionProtocolError):
+        decode(tmp_path, events, saved)
+
+
+def test_saved_counters_without_reported_ones_fail(tmp_path):
+    events, saved = fixture(tmp_path)
+    saved["capacity_refusals"] = 0
+    with pytest.raises(module().SessionProtocolError):
+        decode(tmp_path, events, saved)
+
+
+def test_capacity_events_count_refusals_without_a_result(tmp_path):
+    from scrutare.engine.session_models import CapacityUsage
+    events, _ = capacity_shaped(tmp_path)
+    slot = event("progress", {"capacity_limit": {"limit": 2, "reason": "slot", "waited": 1.5}})
+    stream = b"\n".join(json.dumps(item).encode() for item in [*events[:-1], slot])
+    stream += b"\nnot json\n" + json.dumps(event("progress", {"capacity": {}})).encode()
+    assert module().capacity_events(stream) == CapacityUsage(1, 2.7, 2, 1.5, "events")
+    assert module().capacity_events(b"") == CapacityUsage(0, 0.0, None, 0.0, "events")

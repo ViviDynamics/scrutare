@@ -32,10 +32,10 @@ for outcome in result.outcomes:
 
 `NareRuntime` is an operational Python argument, with positive finite timeout
 and turn limits. It adds no YAML fields. Scrutare requires Python 3.10 or newer;
-install nare 2026.11.94 separately (supported minimum 2026.10.0) with the interpreter required by its
+install nare 2026.11.99 separately (supported minimum 2026.10.0) with the interpreter required by its
 release. For the pinned integration runtime, clone the public
-[ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.11.94),
-verify commit `66fd6459262798839c15ebaed37bd2f0c55daf46`, and run
+[ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.11.99),
+verify commit `05a7fe07f6539a9c92b81a44b4f59866fc53d670`, and run
 `uv sync --project /path/to/nare-checkout --python 3.14 --locked --no-dev`.
 Point `NareRuntime.executable`, or the CLI option `--nare-executable`, at that
 checkout's `.venv/bin/nare`. The CLI defaults to `nare` on PATH. Nare is
@@ -49,7 +49,7 @@ The pinned runtime uses contract 3, first released in nare 2026.11.33. Its
 redaction rules preserve code expressions while redacting credential values;
 Scrutare continues to decode and replay historical contract 1/2 evidence.
 Unknown contracts and release/contract mismatches fail inspection before review.
-See nare's [machine contract](https://github.com/ViviDynamics/nare/blob/2026.11.94/docs/contract.md).
+See nare's [machine contract](https://github.com/ViviDynamics/nare/blob/2026.11.99/docs/contract.md).
 
 On contract 3, every initial and resumed correction invocation explicitly sets
 `--max-cutoffs 0`, `--request-retries 0`, and `--max-corrections 1`. This retains
@@ -90,6 +90,15 @@ Where the runtime lists them, every contract 3 invocation also sets
 (nare 2026.11.94). These are the values nare used before the options existed,
 and in `elide` mode nare sends the same requests as before, so this changes no
 request. It keeps a later nare default from changing a review.
+
+Nare 2026.11.95 and 2026.11.96 add opt-in capacity-refusal queueing and adaptive
+in-flight limits. They change nothing unless `models.capacity` asks for them;
+see [capacity-refusal queueing](config.md#capacity-refusal-queueing-opt-in).
+When enabled, the capacity flags follow the recovery controls in every initial
+and resumed correction invocation on an OpenAI rail. The terminal record's
+`capacity_refusals`, `capacity_wait_seconds`, `capacity_limit` and
+`capacity_slot_wait_seconds` are checked against the saved session and kept
+apart from usage, turns and retries.
 
 Nare's additive wire `usage.total` is checked against the four disjoint counters
 when present; saved sessions retain the counter-only shape. Cumulative resumed
@@ -287,7 +296,7 @@ and replay contracts.
 ## Offline installed CLI proof
 
 Set `SCRUTARE_TEST_NARE_EXECUTABLE` to the absolute installed console path for
-nare 2026.11.94, then run:
+nare 2026.11.99, then run:
 
 ```sh
 uv run --python 3.10 --locked --extra dev pytest tests/test_nare_cli_integration.py

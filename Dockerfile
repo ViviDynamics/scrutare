@@ -19,11 +19,11 @@ RUN arch=$(dpkg --print-architecture) \
     && tar -xzf /tmp/gh.tar.gz --strip-components=2 -C /usr/local/bin \
        "gh_2.100.0_linux_${arch}/bin/gh"
 # Public tagged source, verified before installation; no build credentials.
-RUN git clone --depth 1 --branch 2026.11.94 https://github.com/ViviDynamics/nare.git /tmp/nare \
-    && test "$(git -C /tmp/nare rev-parse HEAD)" = "66fd6459262798839c15ebaed37bd2f0c55daf46" \
+RUN git clone --depth 1 --branch 2026.11.99 https://github.com/ViviDynamics/nare.git /tmp/nare \
+    && test "$(git -C /tmp/nare rev-parse HEAD)" = "05a7fe07f6539a9c92b81a44b4f59866fc53d670" \
     && UV_PROJECT_ENVIRONMENT=/opt/nare UV_PYTHON_DOWNLOADS=never \
        uv sync --project /tmp/nare --python /usr/local/bin/python --locked --no-dev --no-editable \
-    && test "$(/opt/nare/bin/nare --version)" = "2026.11.94"
+    && test "$(/opt/nare/bin/nare --version)" = "2026.11.99"
 ARG SCRUTARE_WHEEL
 COPY ${SCRUTARE_WHEEL} /tmp/wheels/
 RUN test -n "$SCRUTARE_WHEEL" \

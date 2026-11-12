@@ -104,6 +104,19 @@ without `result.json`, a started session without `stdout.jsonl`, or a capped
 run without any session attempt is `max_output_tokens_evidence_missing`
 (incomplete). Runs that never set a cap are not audited.
 
+[Capacity queueing](config.md#capacity-refusal-queueing-opt-in) is audited when
+`config.json` sets `models.capacity`, any session's argv carries a capacity flag,
+or any `result.json` records `capacity`. Each launched session's capacity flags,
+in order and with their values, must be exactly those its configured block gives
+its recorded `--provider`: none when off or on a non-OpenAI rail, and in
+adaptive mode a `--capacity-shared-dir` naming the `capacity` directory of the
+run that recorded the session (`capacity_unrecorded`, invalid). Its
+`result.json` must record valid `capacity` counters exactly when its argv
+carries the flags (`capacity_result_disagrees`, invalid). A correction turn must repeat the
+session's capacity flags and values. An unreadable block is
+`capacity_config_invalid` (invalid). Runs without the block, flags or records
+are not audited, so earlier bundles replay as before.
+
 The [citation correction](config.md#citation-correction-turn-opt-in) is
 recomputed when `config.json` sets `findings.citation_correction`. A discovery
 session is a launched review attempt whose schema is the evidence-v2 findings

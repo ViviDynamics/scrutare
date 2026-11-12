@@ -118,14 +118,14 @@ def test_contract_1_sessions_are_unchanged(capture, tmp_path):
     assert args[args.index("--contract") + 1] == "1"
 
 
-@pytest.mark.parametrize("version", ["2026.11.33", "2026.11.80"])
+@pytest.mark.parametrize("version", ["2026.11.33", "2026.11.80", "2026.11.99"])
 def test_contract_3_is_accepted_from_its_first_release(tmp_path, version):
     assert inspect(advertised(tmp_path, version=version, contract=3)) == contract3_capability(
         version=version)
 
 
 @pytest.mark.parametrize(("version", "contract"), [
-    ("2026.11.32", 3), ("2026.11.33", 2), ("2026.11.80", 4)])
+    ("2026.11.32", 3), ("2026.11.33", 2), ("2026.11.99", 4)])
 def test_contract_3_boundary_and_unknown_contract_fail_closed(tmp_path, version, contract):
     with pytest.raises(module().SessionRuntimeError, match="^contract:"):
         inspect(advertised(tmp_path, version=version, contract=contract))
@@ -135,7 +135,7 @@ def test_contract_3_session_bounds_native_recovery_and_records_contract(capture,
     descriptor, ledger, lease, attempt = setup(capture)
     path = streaming(running_executable(tmp_path))
     path.write_text(path.read_text().replace('"contract": 1', '"contract": 3')
-                    .replace('"2026.10.0"', '"2026.11.80"')
+                    .replace('"2026.10.0"', '"2026.11.99"')
                     .replace('a = parser.parse_args()',
                              'for flag in ("max-cutoffs", "request-retries", "max-corrections",\n'
                              '             "compaction", "compaction-trigger",\n'
@@ -144,10 +144,10 @@ def test_contract_3_session_bounds_native_recovery_and_records_contract(capture,
     outcome = asyncio.run(module().run_persona_session(
         descriptor, __import__("scrutare.config").config.ModelRail("openai", None, "m"), lease,
         ledger=ledger, artifact_directory=attempt, runtime=NareRuntime(path, 7, 5),
-        capability=contract3_capability(version="2026.11.80")))
+        capability=contract3_capability(version="2026.11.99")))
     assert outcome.status == "complete"
     invocation = json.loads((attempt / "invocation.json").read_bytes())
-    assert invocation["contract"] == 3 and invocation["nare_version"] == "2026.11.80"
+    assert invocation["contract"] == 3 and invocation["nare_version"] == "2026.11.99"
     for flag, value in (("--max-cutoffs", "0"), ("--request-retries", "0"),
                         ("--max-corrections", "1")):
         assert invocation["argv"][invocation["argv"].index(flag) + 1] == value

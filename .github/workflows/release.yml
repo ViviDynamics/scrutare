@@ -46,9 +46,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          nare_checkout="$RUNNER_TEMP/scrutare-nare-2026.11.94"
-          git clone --depth 1 --branch 2026.11.94 https://github.com/ViviDynamics/nare.git "$nare_checkout"
-          test "$(git -C "$nare_checkout" rev-parse HEAD)" = "66fd6459262798839c15ebaed37bd2f0c55daf46"
+          nare_checkout="$RUNNER_TEMP/scrutare-nare-2026.11.99"
+          git clone --depth 1 --branch 2026.11.99 https://github.com/ViviDynamics/nare.git "$nare_checkout"
+          test "$(git -C "$nare_checkout" rev-parse HEAD)" = "05a7fe07f6539a9c92b81a44b4f59866fc53d670"
           uv python install 3.14
           uv sync --project "$nare_checkout" --python 3.14 --locked --no-dev
           echo "SCRUTARE_TEST_NARE_EXECUTABLE=$nare_checkout/.venv/bin/nare" >> "$GITHUB_ENV"
@@ -118,9 +118,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          nare_checkout="$RUNNER_TEMP/scrutare-nare-2026.11.94"
-          git clone --depth 1 --branch 2026.11.94 https://github.com/ViviDynamics/nare.git "$nare_checkout"
-          test "$(git -C "$nare_checkout" rev-parse HEAD)" = "66fd6459262798839c15ebaed37bd2f0c55daf46"
+          nare_checkout="$RUNNER_TEMP/scrutare-nare-2026.11.99"
+          git clone --depth 1 --branch 2026.11.99 https://github.com/ViviDynamics/nare.git "$nare_checkout"
+          test "$(git -C "$nare_checkout" rev-parse HEAD)" = "05a7fe07f6539a9c92b81a44b4f59866fc53d670"
           uv python install 3.14
           uv sync --project "$nare_checkout" --python 3.14 --locked --no-dev
           echo "SCRUTARE_TEST_NARE_EXECUTABLE=$nare_checkout/.venv/bin/nare" >> "$GITHUB_ENV"

@@ -55,6 +55,9 @@ def system_prompt():
 
 session_path = option("--session") or option("--resume")
 artifact = Path(session_path).parent.resolve() if session_path else None
+# Adaptive capacity shares route state with the run's other sessions in this one directory.
+shared = option("--capacity-shared-dir")
+shared = Path(shared).resolve() if shared else None
 observations = {
     "pid": os.getpid(),
     "python": sys.version,
@@ -103,7 +106,8 @@ def audit(event, args):
     for target in targets:
         if isinstance(target, (str, bytes)):
             path = Path(os.fsdecode(target)).resolve()
-            if artifact is None or not path.is_relative_to(artifact):
+            if artifact is None or not (path.is_relative_to(artifact) or (
+                    shared is not None and path.is_relative_to(shared))):
                 observations["guard_violations"].append(event)
                 raise AssertionError("Mutation outside this invocation's artifacts: " + event)
             observations["writes"].append(str(path))
@@ -267,6 +271,9 @@ if spec.get("default", {}).get("http_sse") is not None:
     httpx = importlib.import_module("httpx2")
     scenario = spec["default"]["http_sse"]
     turns = iter(scenario["turns"])
+    # Optional capacity refusals: the first N completions are refused before any response,
+    # as a proxy at its max_parallel_requests limit refuses them (synthetic text only).
+    refusals = [scenario.get("capacity_refusals", 0)]
     original_client = httpx.AsyncClient
 
     class SSEBytes(httpx.AsyncByteStream):
@@ -294,6 +301,11 @@ if spec.get("default", {}).get("http_sse") is not None:
         observations["calls"].append({"payload": payload})
         if payload.get("stream") is not True:
             return httpx.Response(400, json={"error": "offline endpoint requires SSE"})
+        if refusals[0] > 0:
+            refusals[0] -= 1
+            observations["calls"][-1]["refused"] = True
+            return httpx.Response(429, headers={"retry-after": "0"}, json={"error": {
+                "message": "offline proxy at capacity: max_parallel_requests reached"}})
         assert payload.get("stream_options") == {"include_usage": True}
         turn = next(turns)
         if turn.get("status") is not None:

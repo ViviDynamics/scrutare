@@ -94,6 +94,42 @@ class SessionCost:
         return {"usd": self.usd, "source": self.source}
 
 
+def _seconds(value: object, field: str) -> None:
+    if (not isinstance(value, (int, float)) or isinstance(value, bool)
+            or not math.isfinite(value) or value < 0):
+        raise ValueError(f"{field}: expected a nonnegative finite number")
+
+
+@dataclass(frozen=True)
+class CapacityUsage:
+    """Provider capacity refusals nare waited out, kept apart from usage, turns and retries.
+
+    A queued refusal is not a request that was sent: nothing here is a token or a failure.
+    ``source`` is ``result`` when nare's terminal record reported the counters, or ``events``
+    when the session ended without one and they were counted from its progress events.
+    """
+
+    refusals: int = 0
+    wait_seconds: float = 0.0
+    limit: int | None = None
+    slot_wait_seconds: float = 0.0
+    source: Literal["result", "events"] = "result"
+
+    def __post_init__(self) -> None:
+        _integer(self.refusals, "refusals")
+        _seconds(self.wait_seconds, "wait_seconds")
+        _seconds(self.slot_wait_seconds, "slot_wait_seconds")
+        if self.limit is not None:
+            _integer(self.limit, "limit", positive=True)
+        if self.source not in ("result", "events"):
+            raise ValueError("source: expected result or events")
+
+    def to_dict(self) -> dict[str, object]:
+        return {"refusals": self.refusals, "wait_seconds": self.wait_seconds,
+                "limit": self.limit, "slot_wait_seconds": self.slot_wait_seconds,
+                "source": self.source}
+
+
 @dataclass(frozen=True)
 class NareRuntime:
     executable: Path
@@ -145,11 +181,16 @@ class NareCapability:
     structured_output_providers: tuple[str, ...] = ("openai",)
     # Rails on which the runtime marks prompt-cache breakpoints when asked (contract 3).
     cache_breakpoints: tuple[str, ...] = ()
+    # Capacity modes advertised for the OpenAI rail: fixed (2026.11.95+), adaptive (2026.11.96+).
+    capacity: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         _text(self.version, "version")
         _integer(self.contract, "contract", positive=True)
         _boolean(self.proxy_num_retries, "proxy_num_retries")
+        if (not isinstance(self.capacity, tuple)
+                or any(mode not in ("fixed", "adaptive") for mode in self.capacity)):
+            raise ValueError("capacity: expected a tuple of capacity modes")
         if (not isinstance(self.structured_output, tuple)
                 or any(not isinstance(mode, str) or not mode for mode in self.structured_output)):
             raise ValueError("structured_output: expected a tuple of mode names")
@@ -198,6 +239,8 @@ class SessionOutcome:
     exit_code: int | None = None
     # What the backend reported for this session's requests, or unknown.
     cost: SessionCost = SessionCost()
+    # Present only when the session asked nare to queue capacity refusals.
+    capacity: CapacityUsage | None = None
 
     def __post_init__(self) -> None:
         _validate_execution_outcome(self)
@@ -235,6 +278,8 @@ class ReanchorOutcome:
     exit_code: int | None = None
     # What the backend reported for this session's requests, or unknown.
     cost: SessionCost = SessionCost()
+    # Present only when the session asked nare to queue capacity refusals.
+    capacity: CapacityUsage | None = None
 
     def __post_init__(self) -> None:
         _validate_execution_outcome(self)
@@ -285,6 +330,8 @@ def _validate_execution_outcome(self: SessionOutcome | ReanchorOutcome) -> None:
         raise ValueError("exit_code: expected an integer or null")
     if not isinstance(self.cost, SessionCost):
         raise ValueError("cost: expected SessionCost")
+    if self.capacity is not None and not isinstance(self.capacity, CapacityUsage):
+        raise ValueError("capacity: expected CapacityUsage or null")
 
 
 def _execution_dict(self: SessionOutcome | ReanchorOutcome) -> dict[str, object]:
@@ -304,6 +351,8 @@ def _execution_dict(self: SessionOutcome | ReanchorOutcome) -> dict[str, object]
         "stop_reason": self.stop_reason,
         "exit_code": self.exit_code,
         "cost": self.cost.to_dict(),
+        # Absent unless capacity queueing was requested, so earlier records keep their bytes.
+        **({"capacity": self.capacity.to_dict()} if self.capacity is not None else {}),
     }
 
 
@@ -335,4 +384,15 @@ class FanOutResult:
             "usage": self.usage.to_dict(),
             "review_exhausted": self.review_exhausted,
             "review_overshoot_tokens": self.review_overshoot_tokens,
+            **({"capacity": capacity_totals(self.outcomes)}
+               if any(o.capacity is not None for o in self.outcomes) else {}),
         }
+
+
+def capacity_totals(outcomes: tuple[SessionOutcome | ReanchorOutcome, ...]) -> dict[str, object]:
+    """A wave's queued refusals and waits, summed apart from its token usage."""
+    recorded = [o.capacity for o in outcomes if o.capacity is not None]
+    return {"sessions": len(recorded),
+            "refusals": sum(c.refusals for c in recorded),
+            "wait_seconds": round(sum(c.wait_seconds for c in recorded), 3),
+            "slot_wait_seconds": round(sum(c.slot_wait_seconds for c in recorded), 3)}

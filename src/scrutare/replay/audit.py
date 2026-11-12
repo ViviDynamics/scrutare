@@ -395,7 +395,10 @@ _SHARED_FLAGS = ("--root", "--provider", "--base-url", "--contract", "--budget-t
                  "--structured-output", "--max-tokens", "--proxy-num-retries",
                  "--max-cutoffs", "--request-retries", "--max-corrections",
                  "--request-retry-seconds", "--effort", "--compaction",
-                 "--compaction-trigger", "--compaction-target")
+                 "--compaction-trigger", "--compaction-target",
+                 "--capacity-wait-seconds", "--capacity-refusals", "--capacity-ceiling",
+                 "--capacity-floor", "--capacity-quiet-seconds", "--capacity-shared-dir")
+_CAPACITY_SWITCHES = ("--capacity-queue", "--capacity-adaptive")
 
 
 def _flag(argv: list[Any], name: str) -> object:
@@ -676,6 +679,91 @@ def _native_recovery_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
                                         ("--max-corrections", "1")))):
             issues.append(AuditIssue("native_recovery_policy_invalid",
                                      str(attempt.relative_to(run_dir) / "invocation.json"),
+                                     "invalid"))
+    return tuple(issues)
+
+
+def _capacity_flags(argv: list[Any]) -> list[object]:
+    """Every capacity flag in order, each value flag with the item after it."""
+    found: list[object] = []
+    for index, item in enumerate(argv):
+        if isinstance(item, str) and item.startswith("--capacity"):
+            found.append(item)
+            if item not in _CAPACITY_SWITCHES:
+                found.append(argv[index + 1] if index + 1 < len(argv) else None)
+    return found
+
+
+def _capacity_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
+    """Bind each invocation's capacity flags to the configured block and its run's directory.
+
+    Runs that neither configured capacity nor passed a capacity flag are not audited, so
+    earlier bundles replay as before. A session that queued records its counters; one that
+    did not records none.
+    """
+    from scrutare.config import ModelRail
+    from scrutare.engine.nare_session import capacity_argv
+
+    invocations = _invocations(_session_records(run_dir))
+    models = config_data.get("models") if isinstance(config_data, dict) else None
+    flagged = any(isinstance(d, dict) and isinstance(d.get("argv"), list)
+                  and _capacity_flags(d["argv"]) for _, d in invocations)
+
+    def claimed(attempt: Path) -> bool:
+        try:
+            outcome = decode_artifact(read_artifact(attempt / "result.json"),
+                                      artifact="result.json")
+        except ReplayError:
+            return False
+        return isinstance(outcome, dict) and "capacity" in outcome
+
+    if not (isinstance(models, dict) and "capacity" in models) and not flagged and not any(
+            os.path.lexists(attempt / "result.json") and claimed(attempt)
+            for attempt, _ in invocations):
+        return ()
+    try:
+        capacity = parse_config(json.dumps(config_data)).models.capacity
+    except (ConfigError, TypeError, ValueError):
+        return (AuditIssue("capacity_config_invalid", "config.json.models", "invalid"),)
+    issues = []
+    for attempt, document in invocations:
+        where = attempt.relative_to(run_dir).as_posix()
+        try:
+            if not isinstance(document, dict) or not isinstance(document.get("argv"), list):
+                raise ValueError
+            argv = document["argv"]
+            provider, session = _flag(argv, "--provider"), _flag(argv, "--session")
+            if not isinstance(provider, str) or not isinstance(session, str):
+                raise ValueError
+            # The run that executed, as recorded: replay may read it from another path.
+            expected = capacity_argv(ModelRail(provider, None, "recorded"),  # type: ignore[arg-type]
+                                     capacity, Path(session).parents[3])
+            if _capacity_flags(argv) != expected:
+                raise ValueError
+        except (ValueError, TypeError, IndexError):
+            issues.append(AuditIssue("capacity_unrecorded", f"{where}/invocation.json",
+                                     "invalid"))
+            continue
+        if not os.path.lexists(attempt / "result.json"):
+            continue
+        try:
+            outcome = decode_artifact(read_artifact(attempt / "result.json"),
+                                      artifact="result.json")
+        except ReplayError:
+            outcome = None
+        record = outcome.get("capacity") if isinstance(outcome, dict) else None
+        valid = isinstance(outcome, dict) and (
+            "capacity" not in outcome if not expected else isinstance(record, dict) and set(
+                record) == {"refusals", "wait_seconds", "limit", "slot_wait_seconds", "source"})
+        if valid and expected:
+            from scrutare.engine.session_models import CapacityUsage
+            try:
+                assert isinstance(record, dict)
+                CapacityUsage(**record)
+            except (ValueError, TypeError):
+                valid = False
+        if not valid:
+            issues.append(AuditIssue("capacity_result_disagrees", f"{where}/result.json",
                                      "invalid"))
     return tuple(issues)
 
@@ -1220,6 +1308,7 @@ def replay_run(run_dir: Path) -> ReplayResult:
               + _rail_option_issues(run_dir, config_data)
               + _native_recovery_issues(run_dir)
               + _prompt_input_issues(run_dir)
+              + _capacity_issues(run_dir, config_data)
               + _citation_correction_issues(run_dir, config_data)
               + _protocol_correction_issues(run_dir, config_data))
     posting = inspect_posting(run_dir)
