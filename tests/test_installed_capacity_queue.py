@@ -94,7 +94,7 @@ def test_without_the_option_a_capacity_refusal_still_ends_the_session(
     assert ("capacity_queue" in invocation["rail"]) is bool(rail)
 
 
-def test_a_refusal_past_the_session_limit_fails_as_a_provider_failure(
+def test_a_refusal_past_the_refusal_limit_fails_as_a_provider_failure(
         capture, tmp_path, installed):
     turns = [{"frames": READ}, REFUSED, REFUSED, {"frames": FINAL}]
     result, outcome, observed = http_review(capture, tmp_path, installed, turns,

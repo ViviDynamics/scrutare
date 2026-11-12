@@ -28,7 +28,7 @@ REQUEST_RETRY_SECONDS = 60
 REQUEST_RETRIES_MAX = 10
 # Limits passed with every queued session when a rail opts in to capacity queueing and sets
 # none of its own: the most seconds one request may spend queued, and the most refusals one
-# session queues. They are nare's defaults at the pinned release, passed explicitly so a
+# nare invocation queues. They are nare's defaults at the pinned release, passed explicitly so a
 # later nare default never decides them. The seconds also bound how far queueing can move
 # a session's timeout, hence the caps.
 CAPACITY_WAIT_SECONDS = 1800
@@ -88,8 +88,8 @@ class ModelRail:
     # Opt-in queueing of provider capacity refusals on the openai rail (nare
     # --capacity-queue): a refused request is waited out and sent again unchanged.
     capacity_queue: bool | None = None
-    # Most seconds one request may spend queued, and most refusals one session queues;
-    # only with capacity_queue true.
+    # Most seconds one request may spend queued, and most refusals one nare invocation
+    # queues (a resumed correction turn is its own invocation); only with capacity_queue true.
     capacity_wait_seconds: int | float | None = None
     capacity_refusals: int | None = None
 

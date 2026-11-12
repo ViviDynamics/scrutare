@@ -375,7 +375,8 @@ error text carries the proxy's capacity marker (`max_parallel_requests`), and
 no response has started. It waits the `Retry-After` the proxy gives, or 2
 seconds doubling to 60 with jitter, and resends the identical request.
 `capacity_wait_seconds` is the most one request may spend queued and
-`capacity_refusals` the most refusals one session queues. Without them Scrutare
+`capacity_refusals` the most refusals one nare invocation queues. A resumed
+correction turn is a new invocation and starts its own count. Without them Scrutare
 passes 1800 and 50, nare's values at the pinned release, so a later nare
 default never decides them. A refusal past either limit, or a 429 without the
 marker, is handled as it is without the queue: it ends the session unless
