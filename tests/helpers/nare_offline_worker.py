@@ -129,6 +129,10 @@ if arguments == ["contract"]:
 class FakeProvider:
     """A deterministic transport implemented at the vendor factory seam only."""
 
+    # The marker nare's openai rail declares. The real loop decides whether a scripted
+    # refusal is queued; without --capacity-queue it never asks for the markers.
+    capacity_markers = ("max_parallel_requests",)
+
     def __init__(self, scenario):
         self.scenario = scenario
         replies = scenario.get("replies", [])
@@ -228,6 +232,13 @@ class FakeProvider:
             failure = RuntimeError("offline transient provider failure")
             failure.status_code = reply["transient"]
             raise failure
+        if reply.get("capacity") is not None:
+            # One request the provider refuses for capacity before dispatching it, with the
+            # Retry-After it names. The next reply answers the request sent again.
+            failure = RuntimeError("offline capacity refusal: max_parallel_requests")
+            failure.status_code = 429
+            failure.retry_after = str(reply["capacity"])
+            raise failure
         observations["calls"][-1]["end"] = time.monotonic()
         return Reply(
             content=reply["content"],
@@ -297,8 +308,10 @@ if spec.get("default", {}).get("http_sse") is not None:
         assert payload.get("stream_options") == {"include_usage": True}
         turn = next(turns)
         if turn.get("status") is not None:
-            # One attempt the endpoint refuses with an HTTP status, before any reply.
-            return httpx.Response(turn["status"], json={"error": "offline status"})
+            # One attempt the endpoint refuses with an HTTP status, before any reply. A turn
+            # may script the refusal's own body and headers (a capacity marker, Retry-After).
+            return httpx.Response(turn["status"], headers=turn.get("headers"),
+                                  json=turn.get("body", {"error": "offline status"}))
         # A turn may add response headers, as a proxy that identifies itself does.
         return httpx.Response(200, headers={"content-type": "text/event-stream",
                                             **turn.get("headers", {})},

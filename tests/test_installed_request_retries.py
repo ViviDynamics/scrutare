@@ -6,6 +6,7 @@ transient failure costs these tests that long.
 
 import asyncio
 import json
+from dataclasses import replace
 
 import pytest
 from test_fanout import configure
@@ -31,7 +32,7 @@ DROPPED = {"frames": answer(json.dumps(FINDING),
            "interrupt": True}
 
 
-def http_review(capture, tmp_path, installed, turns, **rail):
+def http_review(capture, tmp_path, installed, turns, *, timeout=None, **rail):
     document = configure(capture, personas=["senior-dev"], review=200, per=200).to_dict()
     document["models"]["default"] = {
         "provider": "openai", "model": "offline-model",
@@ -44,6 +45,8 @@ def http_review(capture, tmp_path, installed, turns, **rail):
     spec = load(specification)
     spec["environment"] = {"OPENAI_API_KEY": "offline-test-key"}
     specification.write_text(json.dumps(spec))
+    if timeout is not None:
+        runtime = replace(runtime, timeout_seconds=timeout)
     result = asyncio.run(run_review(capture, config, runtime=runtime))
     outcome = result.initial.outcomes[0]
     return result, outcome, observations(outcome, http_sse=True)

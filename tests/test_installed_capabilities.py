@@ -28,7 +28,8 @@ def test_installed_runtime_advertises_every_option_scrutare_gates(tmp_path, inst
         assert flag is not None and not flag.takes_value
     for option in ("--max-cutoffs", "--request-retries", "--request-retry-seconds",
                    "--max-corrections", "--proxy-num-retries", "--system-file",
-                   "--prompt-file", "--compaction-trigger", "--compaction-target"):
+                   "--prompt-file", "--compaction-trigger", "--compaction-target",
+                   "--capacity-wait-seconds", "--capacity-refusals"):
         flag = capability.flag(option)
         assert flag is not None and flag.takes_value and flag.choices is None
     assert capability.advertises("--compaction", "elide")
@@ -38,10 +39,13 @@ def test_installed_runtime_advertises_every_option_scrutare_gates(tmp_path, inst
     assert capability.structured_output == ("json_schema",)
     assert capability.structured_output_providers == ("anthropic", "openai")
     assert capability.proxy_num_retries
-    # The release lists its capacity options. No session is sent one.
+    # The release lists its capacity options. No session is sent one unless its rail asks,
+    # and the adaptive limit is never asked for.
     for switch in ("--capacity-queue", "--capacity-adaptive"):
         flag = capability.flag(switch)
         assert flag is not None and not flag.takes_value
+    # The queue is advertised for the openai rail only.
+    assert capability.capacity_queue == ("openai",)
 
 
 def test_installed_default_session_sends_no_capacity_option(capture, tmp_path, installed):
@@ -57,6 +61,7 @@ def test_installed_default_session_sends_no_capacity_option(capture, tmp_path, i
         0, 0.0, None, 0.0)
     saved = load(outcome.artifact_directory / "session.json")
     assert (saved["capacity_refusals"], saved["capacity_limit"]) == (0, None)
+    assert "capacity_queue" not in load(outcome.artifact_directory / "result.json")
 
 
 def test_installed_session_accepts_the_explicit_recovery_and_compaction_values(

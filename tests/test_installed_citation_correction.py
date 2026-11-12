@@ -42,7 +42,8 @@ def fixed(provider, *, end_line=1, digest=None):
 def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=True,
            structured=False, succeeds=True, policy="citation_correction", assessment=False,
            provider_error=False, correction_summary=None, limit=400, rail_options="",
-           first_failures=(), correction_failures=()):
+           first_failures=(), correction_failures=(), first_refusals=(),
+           correction_refusals=()):
     """Run `scrutare review` once against offline GitHub and native offline nare."""
     from scrutare.engine.repository_context import _artifact
 
@@ -63,11 +64,14 @@ def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=T
                 "content": base64.b64encode(data).decode()}
     flag = {"structured_output": True} if structured else {}
     # Each scripted transient status is one failed attempt before the reply that follows.
-    replies = [*({"transient": status} for status in first_failures),
+    # Each scripted capacity refusal names the Retry-After seconds of one refused request.
+    replies = [*({"capacity": seconds} for seconds in first_refusals),
+               *({"transient": status} for status in first_failures),
                tool(args={"path": "repository-context.json"}),
                tool(args={"path": _artifact("head", "src/caller.py")}, call_id="caller"),
                text(answer(provider))]
     correction_replies = [] if correction is None else [
+        *({"capacity": seconds} for seconds in correction_refusals),
         *({"transient": status} for status in correction_failures),
         text(correction(provider))]
     if correction_summary is not None:
