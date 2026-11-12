@@ -16,7 +16,7 @@ from scrutare.engine.budgets import ReviewBudgetLedger
 from scrutare.engine.persona_inputs import prepare_persona_inputs
 from scrutare.engine.review_inputs import prepare_review_inputs
 from scrutare.engine.session_artifacts import create_attempt_directory
-from scrutare.engine.session_models import NareCapability, NareRuntime, TokenUsage
+from scrutare.engine.session_models import NareCapability, NareFlag, NareRuntime, TokenUsage
 from scrutare.personas import PersonaDefinition
 
 
@@ -38,6 +38,29 @@ if sys.argv[1:] == ["contract"]:
 """ + body)
     path.chmod(0o700)
     return path
+
+
+# The options a contract 3 runtime lists under `flags`, as the pinned release shapes them.
+SWITCHES = ("--jsonl", "--yes", "--stream", "--cache-breakpoints")
+VALUES = ("--provider", "--model", "--base-url", "--tools", "--root", "--system", "--contract",
+          "--schema", "--budget-tokens", "--session", "--max-turns", "--resume", "--max-tokens",
+          "--max-cutoffs", "--request-retries", "--max-corrections", "--proxy-num-retries",
+          "--compaction-trigger", "--compaction-target")
+CHOICES = {"--structured-output": ["json_schema"], "--compaction": ["elide", "summary"]}
+def flag_map(*, without=(), extra=None):
+    flags = {name: {"takes_value": False, "choices": None} for name in SWITCHES}
+    flags.update({name: {"takes_value": True, "choices": None} for name in VALUES})
+    flags.update({name: {"takes_value": True, "choices": choices}
+                  for name, choices in CHOICES.items()})
+    flags.update(extra or {})
+    return {name: record for name, record in flags.items() if name not in without}
+
+
+def contract3_capability(*, without=(), extra=None, version="2026.11.94", **fields):
+    return NareCapability(version, 3, flags=tuple(
+        NareFlag(name, record["takes_value"],
+                 None if record["choices"] is None else tuple(record["choices"]))
+        for name, record in sorted(flag_map(without=without, extra=extra).items())), **fields)
 
 
 def test_inspection_accepts_supported_external_version_and_contract(tmp_path):
@@ -731,7 +754,10 @@ def test_streaming_argv_preserves_older_and_anthropic_runtimes(
     outcome = asyncio.run(module().run_persona_session(
         descriptor, ModelRail(provider, None, "fixture-model"), lease,
         ledger=ledger, artifact_directory=attempt, runtime=NareRuntime(path, 7, 5),
-        capability=NareCapability(version, contract)))
+        capability=(contract3_capability(
+            version=version, without=("--compaction", "--compaction-trigger",
+                                      "--compaction-target"))
+                    if contract == 3 else NareCapability(version, contract))))
     assert outcome.status == "complete"
     observed = json.loads((attempt / "cwd" / "observed.json").read_bytes())
     assert ("--stream" in observed["argv"]) is stream

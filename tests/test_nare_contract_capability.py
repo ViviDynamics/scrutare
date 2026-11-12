@@ -4,7 +4,15 @@ import asyncio
 import json
 
 import pytest
-from test_nare_session import executable, module, run, running_executable, setup
+from test_nare_session import (
+    contract3_capability,
+    executable,
+    flag_map,
+    module,
+    run,
+    running_executable,
+    setup,
+)
 from test_review_inputs import capture as capture
 
 from scrutare.engine.session_models import NareCapability, NareRuntime
@@ -16,6 +24,11 @@ STRUCTURED = {"flag": "--structured-output", "modes": ["json_schema"], "requires
 
 def advertised(tmp_path, *, version, contract, structured=None):
     path = executable(tmp_path, version=version, contract=contract)
+    if contract == 3:
+        # Every contract 3 release lists its run options; inspection refuses one that does not.
+        path.write_text(path.read_text().replace(
+            f'"nare": {version!r}}}', f'"nare": {version!r}, "flags": {flag_map()!r}}}'))
+        return path
     if structured is not None:
         path.write_text(path.read_text().replace(
             f'"nare": {version!r}}}',
@@ -107,7 +120,8 @@ def test_contract_1_sessions_are_unchanged(capture, tmp_path):
 
 @pytest.mark.parametrize("version", ["2026.11.33", "2026.11.80"])
 def test_contract_3_is_accepted_from_its_first_release(tmp_path, version):
-    assert inspect(advertised(tmp_path, version=version, contract=3)) == NareCapability(version, 3)
+    assert inspect(advertised(tmp_path, version=version, contract=3)) == contract3_capability(
+        version=version)
 
 
 @pytest.mark.parametrize(("version", "contract"), [
@@ -123,12 +137,14 @@ def test_contract_3_session_bounds_native_recovery_and_records_contract(capture,
     path.write_text(path.read_text().replace('"contract": 1', '"contract": 3')
                     .replace('"2026.10.0"', '"2026.11.80"')
                     .replace('a = parser.parse_args()',
-                             'for flag in ("max-cutoffs", "request-retries", "max-corrections"):\n'
+                             'for flag in ("max-cutoffs", "request-retries", "max-corrections",\n'
+                             '             "compaction", "compaction-trigger",\n'
+                             '             "compaction-target"):\n'
                              '    parser.add_argument("--" + flag)\na = parser.parse_args()'))
     outcome = asyncio.run(module().run_persona_session(
         descriptor, __import__("scrutare.config").config.ModelRail("openai", None, "m"), lease,
         ledger=ledger, artifact_directory=attempt, runtime=NareRuntime(path, 7, 5),
-        capability=NareCapability("2026.11.80", 3)))
+        capability=contract3_capability(version="2026.11.80")))
     assert outcome.status == "complete"
     invocation = json.loads((attempt / "invocation.json").read_bytes())
     assert invocation["contract"] == 3 and invocation["nare_version"] == "2026.11.80"

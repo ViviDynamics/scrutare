@@ -29,6 +29,7 @@ from scrutare.engine.review_inputs import ReviewInputError, validate_prepared_in
 from scrutare.engine.session_artifacts import SessionArtifactError, write_owned_json
 from scrutare.engine.session_models import (
     NareCapability,
+    NareFlag,
     NareRuntime,
     ReanchorOutcome,
     SessionOutcome,
@@ -192,19 +193,85 @@ def _speaks(version: str, contract: object) -> bool:
     return contract == expected
 
 
-def _structured_output(contract: dict[str, object]) -> tuple[str, ...]:
-    """The json_schema modes nare advertises for its OpenAI rail, or none.
+# Options every contract 3 invocation sends, with whether each takes a value. A runtime that
+# does not list one cannot be driven within Scrutare's recovery policy, so inspection fails.
+_CONTRACT_3_REQUIRED = {
+    "--provider": True, "--model": True, "--base-url": True, "--tools": True, "--root": True,
+    "--system": True, "--contract": True, "--schema": True, "--budget-tokens": True,
+    "--session": True, "--resume": True, "--max-turns": True, "--max-tokens": True,
+    "--max-cutoffs": True, "--request-retries": True, "--max-corrections": True,
+    "--jsonl": False, "--yes": False,
+}
+_PROVIDERS = ("anthropic", "openai")
+
+
+def _flags(contract: dict[str, object]) -> tuple[NareFlag, ...]:
+    """Every `nare run` option a contract 3 runtime advertises, or a refused inspection.
+
+    Each contract 3 release lists its options, so a missing or malformed list is a contract
+    object Scrutare does not understand, not an older runtime.
+    """
+    entry = contract.get("flags")
+    try:
+        if not isinstance(entry, dict):
+            raise ValueError
+        flags = []
+        for name, record in entry.items():
+            if not isinstance(record, dict) or type(record.get("takes_value")) is not bool:
+                raise ValueError
+            choices = record.get("choices")
+            if choices is not None and (not isinstance(choices, list) or any(
+                    not isinstance(choice, str) for choice in choices)):
+                raise ValueError
+            flags.append(NareFlag(name, record["takes_value"],
+                                  None if choices is None else tuple(choices)))
+        advertised = {flag.name: flag.takes_value for flag in flags}
+        if any(advertised.get(name) is not takes_value
+               for name, takes_value in _CONTRACT_3_REQUIRED.items()):
+            raise ValueError
+    except (ValueError, TypeError):
+        raise SessionRuntimeError("contract: expected advertised run flags") from None
+    return tuple(sorted(flags, key=lambda flag: flag.name))
+
+
+def _structured_output(contract: dict[str, object],
+                       flags: tuple[NareFlag, ...] | None = None,
+                       ) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """The json_schema modes nare advertises and the rails it sends them on, or none.
 
     An unfamiliar entry advertises nothing rather than failing inspection: waves that never
-    ask for the constraint must not depend on it, and require_structured_output refuses one
-    that does.
+    ask for the constraint must not depend on it, and require_rail_options refuses one that
+    does. Contracts 1 and 2 only ever advertised the OpenAI rail. A contract 3 runtime also
+    has to list the flag itself with the mode among its choices.
     """
     entry = contract.get("structured_output")
     if (not isinstance(entry, dict) or not isinstance(entry.get("modes"), list)
             or not isinstance(entry.get("providers"), list)
-            or entry.get("flag") != "--structured-output" or "openai" not in entry["providers"]):
-        return ()
-    return tuple(mode for mode in entry["modes"] if mode == "json_schema")
+            or entry.get("flag") != "--structured-output"):
+        return (), ()
+    modes = tuple(mode for mode in entry["modes"] if mode == "json_schema")
+    if flags is None:
+        providers: tuple[str, ...] = ("openai",) if "openai" in entry["providers"] else ()
+    else:
+        flag = next((flag for flag in flags if flag.name == "--structured-output"), None)
+        if flag is None or not flag.takes_value:
+            return (), ()
+        modes = tuple(mode for mode in modes if flag.choices is None or mode in flag.choices)
+        providers = tuple(name for name in _PROVIDERS if name in entry["providers"])
+    return (modes, providers) if modes and providers else ((), ())
+
+
+def _proxy_num_retries(contract: dict[str, object],
+                       flags: tuple[NareFlag, ...] | None = None) -> bool:
+    entry = contract.get("proxy_num_retries")
+    if flags is None:
+        return entry == {"flag": "--proxy-num-retries", "providers": ["openai"],
+                         "request_field": "num_retries", "default": None}
+    # Contract 3 entries may gain fields; the flag list says whether the option exists.
+    return (isinstance(entry, dict) and entry.get("flag") == "--proxy-num-retries"
+            and entry.get("request_field") == "num_retries"
+            and isinstance(entry.get("providers"), list) and "openai" in entry["providers"]
+            and any(flag.name == "--proxy-num-retries" and flag.takes_value for flag in flags))
 
 
 async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
@@ -221,12 +288,12 @@ async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
                     or contract.get("nare") != version):
                 raise SessionRuntimeError(
                     "contract: expected supported contract 1, 2 or 3 and matching release")
-            retry_entry = contract.get("proxy_num_retries")
-            retry_capable = retry_entry == {
-                "flag": "--proxy-num-retries", "providers": ["openai"],
-                "request_field": "num_retries", "default": None}
-            return NareCapability(version, contract["contract"], _structured_output(contract),
-                                  retry_capable)
+            # Contracts 1 and 2 keep their release-number rules, whatever they advertise.
+            flags = _flags(contract) if contract["contract"] == 3 else None
+            modes, providers = _structured_output(contract, flags)
+            return NareCapability(
+                version, contract["contract"], modes, _proxy_num_retries(contract, flags),
+                flags=flags, **({"structured_output_providers": providers} if modes else {}))
     except SessionRuntimeError:
         raise
     except (OSError, ValueError, asyncio.TimeoutError, RecursionError):
@@ -235,17 +302,36 @@ async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
         ) from None
 
 
-def require_structured_output(models: ModelSettings, capability: NareCapability) -> None:
-    """Refuse a wave before any session when a rail asks for a constraint nare cannot send."""
+def _rail_refusal(rail: ModelRail, capability: NareCapability) -> str | None:
+    """What this rail asks for that the inspected runtime cannot send, or None."""
+    if capability.contract == 3 and capability.flags is None:
+        return "contract 3 options without its advertised run flags"
+    modern = capability.contract == 3
+    if rail.proxy_num_retries is not None and not (
+            capability.proxy_num_retries
+            and (not modern or capability.advertises("--proxy-num-retries"))):
+        return "proxy_num_retries"
+    mode = rail.structured_output
+    if mode is not None and not (
+            mode in capability.structured_output
+            and rail.provider in capability.structured_output_providers
+            and (not modern or capability.advertises("--structured-output", mode))):
+        return f"structured output {mode}"
+    return None
+
+
+def require_rail_options(models: ModelSettings, capability: NareCapability) -> None:
+    """Refuse a wave before any session when a rail asks for an option nare cannot send."""
     for rail in (models.default, *(rail for _, rail in models.overrides)):
-        if rail.proxy_num_retries is not None and not capability.proxy_num_retries:
+        refusal = _rail_refusal(rail, capability)
+        if refusal is not None:
             raise SessionRuntimeError(
-                f"capability: nare {capability.version} cannot send proxy_num_retries")
-        mode = rail.structured_output
-        if mode is not None and mode not in getattr(capability, "structured_output", ()):
-            raise SessionRuntimeError(
-                f"capability: nare {capability.version} cannot send structured output {mode}; "
-                "use a nare release that advertises it (2026.10.12 or newer)")
+                f"capability: nare {capability.version} cannot send {refusal}; "
+                "use a nare release that advertises it")
+
+
+# The name this check had when structured output was the only gated option.
+require_structured_output = require_rail_options
 
 
 def _rail(rail: ModelRail) -> None:
@@ -448,14 +534,26 @@ def _offers_citation_correction(descriptor: object) -> bool:
             and citation_correction_enabled(descriptor.inputs.root))
 
 
+def _streams(capability: NareCapability) -> bool:
+    if capability.contract == 3:
+        return capability.advertises("--stream")
+    return tuple(map(int, capability.version.split("."))) >= (2026, 10, 4)
+
+
 def _rail_argv(rail: ModelRail, capability: NareCapability) -> list[str]:
     argv = ["--provider", rail.provider, "--model=" + rail.model]
-    if (rail.provider == "openai"
-            and tuple(map(int, capability.version.split("."))) >= (2026, 10, 4)):
+    if rail.provider == "openai" and _streams(capability):
         argv.append("--stream")
     if capability.contract == 3:
         # Preserve Scrutare's recovery policy rather than inherit newer CLI defaults.
         argv.extend(("--max-cutoffs", "0", "--request-retries", "0", "--max-corrections", "1"))
+        # The same for compaction (nare 2026.11.94): these are the values nare used before
+        # the options existed, and in elide mode every request is unchanged.
+        if capability.advertises("--compaction", "elide"):
+            argv.extend(("--compaction", "elide"))
+        if (capability.advertises("--compaction-trigger", "0.8")
+                and capability.advertises("--compaction-target", "0.6")):
+            argv.extend(("--compaction-trigger", "0.8", "--compaction-target", "0.6"))
     if rail.base_url is not None:
         argv.extend(("--base-url", rail.base_url))
     return argv
@@ -617,13 +715,10 @@ async def _run_session(
         _version(capability.version)
         if not _speaks(capability.version, capability.contract):
             raise SessionRuntimeError("capability: expected an inspected supported contract")
-        if rail.proxy_num_retries is not None and not capability.proxy_num_retries:
-            raise SessionRuntimeError("capability: nare cannot send proxy_num_retries")
-        if (rail.structured_output is not None
-                and rail.structured_output not in capability.structured_output):
+        refusal = _rail_refusal(rail, capability)
+        if refusal is not None:
             raise SessionRuntimeError(
-                f"capability: nare {capability.version} cannot send structured output "
-                f"{rail.structured_output}")
+                f"capability: nare {capability.version} cannot send {refusal}")
         if purpose == "reanchor" and lease.session_key != f"{lease.persona}/attempt-0002":
             raise SessionRuntimeError("session_key: expected the fresh correction identity")
         from scrutare.config import load_config

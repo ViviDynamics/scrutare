@@ -78,12 +78,36 @@ class NareRuntime:
 
 
 @dataclass(frozen=True)
+class NareFlag:
+    """One `nare run` option as `nare contract` advertises it under `flags`."""
+
+    name: str
+    takes_value: bool
+    choices: tuple[str, ...] | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.name, str) or not re.fullmatch(r"-{1,2}[A-Za-z0-9][A-Za-z0-9-]*",
+                                                              self.name):
+            raise ValueError("flag: expected an option name")
+        _boolean(self.takes_value, "takes_value")
+        if self.choices is not None and (
+                not isinstance(self.choices, tuple)
+                or any(not isinstance(choice, str) for choice in self.choices)):
+            raise ValueError("choices: expected a tuple of strings or null")
+
+
+@dataclass(frozen=True)
 class NareCapability:
     version: str
     contract: int
-    # Constrained-answer modes the runtime advertises for its OpenAI rail (nare 2026.10.12+).
+    # Constrained-answer modes the runtime advertises (nare 2026.10.12+), for the providers
+    # named by structured_output_providers.
     structured_output: tuple[str, ...] = ()
     proxy_num_retries: bool = False
+    # Every `nare run` option a contract 3 runtime advertises. Contracts 1 and 2 carry None:
+    # their optional flags are decided from the release number, as they always were.
+    flags: tuple[NareFlag, ...] | None = None
+    structured_output_providers: tuple[str, ...] = ("openai",)
 
     def __post_init__(self) -> None:
         _text(self.version, "version")
@@ -92,6 +116,28 @@ class NareCapability:
         if (not isinstance(self.structured_output, tuple)
                 or any(not isinstance(mode, str) or not mode for mode in self.structured_output)):
             raise ValueError("structured_output: expected a tuple of mode names")
+        if (not isinstance(self.structured_output_providers, tuple) or any(
+                not isinstance(name, str) or not name
+                for name in self.structured_output_providers)):
+            raise ValueError("structured_output_providers: expected a tuple of provider names")
+        if self.flags is not None and (
+                not isinstance(self.flags, tuple)
+                or any(not isinstance(flag, NareFlag) for flag in self.flags)
+                or len({flag.name for flag in self.flags}) != len(self.flags)):
+            raise ValueError("flags: expected distinct advertised options or null")
+
+    def flag(self, name: str) -> NareFlag | None:
+        """The advertised option of this name, or None (always None on contracts 1 and 2)."""
+        return next((flag for flag in self.flags or () if flag.name == name), None)
+
+    def advertises(self, name: str, value: str | None = None) -> bool:
+        """Whether the runtime lists this option and, for an option with choices, this value."""
+        flag = self.flag(name)
+        if flag is None:
+            return False
+        if value is None:
+            return True
+        return flag.takes_value and (flag.choices is None or value in flag.choices)
 
 
 @dataclass(frozen=True)

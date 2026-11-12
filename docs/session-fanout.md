@@ -56,17 +56,31 @@ On contract 3, every initial and resumed correction invocation explicitly sets
 Scrutare's existing recovery bounds instead of inheriting Nare's newer cutoff
 and provider-request retry defaults. The proxy's own `proxy_num_retries` setting
 is separate and unchanged. Recorded argv retains these controls; replay checks
-the policy and correction consistency. Read requirements, navigation tools and
-other newer capabilities are not enabled by this compatibility update.
+the policy and correction consistency. Read requirements and navigation tools
+are not enabled.
+
+Inspection also reads the `flags` map a contract 3 runtime prints in `nare
+contract`: every `nare run` option, whether it takes a value, and its choices.
+Each optional flag is sent only when that map lists it, so a capability is
+decided from the runtime's own data and not from its release number. A contract
+3 object without a well-formed `flags` map, or without an option Scrutare always
+sends, fails inspection. A rail option the runtime does not advertise is refused
+before any session launches. Contracts 1 and 2 keep their release-number rules.
+
+Where the runtime lists them, every contract 3 invocation also sets
+`--compaction elide`, `--compaction-trigger 0.8` and `--compaction-target 0.6`
+(nare 2026.11.94). These are the values nare used before the options existed,
+and in `elide` mode nare sends the same requests as before, so this changes no
+request. It keeps a later nare default from changing a review.
 
 Nare's additive wire `usage.total` is checked against the four disjoint counters
 when present; saved sessions retain the counter-only shape. Cumulative resumed
 usage is still reconciled against the initial session and correction cost events.
 
 
-OpenAI sessions enable nare `--stream` only on validated runtimes 2026.10.4 or
-newer. Supported 2026.10.0 through 2026.10.3 keep buffered invocation; Anthropic
-invocation is unchanged. Streaming progress stays in private captures and never
+OpenAI sessions enable nare `--stream` when a contract 3 runtime advertises the
+flag, and on contract 1 and 2 runtimes from 2026.10.4. Supported 2026.10.0
+through 2026.10.3 keep buffered invocation; Anthropic invocation is unchanged. Streaming progress stays in private captures and never
 becomes candidate findings. Interrupted streams or missing terminal usage fail
 without a verdict, with incomplete accounting retained. After-turn budgets
 remain soft allowances and provider billing remains uncertain. Published
