@@ -133,6 +133,28 @@ def test_contract_3_pins_compaction_only_where_advertised():
     assert "--compaction-trigger" not in argv and "--compaction-target" not in argv
 
 
+# Options nare 2026.11.100 lists that no session is sent.
+CAPACITY_FLAGS = {
+    **{name: {"takes_value": False, "choices": None}
+       for name in ("--capacity-queue", "--capacity-adaptive")},
+    **{name: {"takes_value": True, "choices": None}
+       for name in ("--capacity-wait-seconds", "--capacity-refusals", "--capacity-ceiling",
+                    "--capacity-floor", "--capacity-quiet-seconds", "--capacity-shared-dir")},
+}
+
+
+@pytest.mark.parametrize("rail", [
+    ModelRail("openai", "https://gateway.invalid/v1", "m"), ModelRail("anthropic", None, "m"),
+    ModelRail("openai", None, "m", request_retries=2, effort="high", cache_breakpoints=True)])
+def test_a_runtime_that_lists_the_capacity_flags_is_sent_none_of_them(rail):
+    # The same rail against the previous pin's flags and against the new pin's.
+    before = capability()
+    after = capability(extra=CAPACITY_FLAGS, version="2026.11.100")
+    assert rail_argv(rail, before) == rail_argv(rail, after)
+    sent = rail_argv(rail, after) + module()._rail_options(rail)
+    assert not any(item.startswith("--capacity") for item in sent)
+
+
 def test_legacy_contracts_send_no_compaction_or_recovery_flags():
     argv = rail_argv(ModelRail("openai", None, "m"), NareCapability("2026.10.12", 2))
     assert argv == ["--provider", "openai", "--model=m", "--stream"]
