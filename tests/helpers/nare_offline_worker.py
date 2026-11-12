@@ -40,6 +40,19 @@ def option(name, default=None):
     return default
 
 
+def recorded_prompt(argv):
+    """The task of one `run` argument list: its positional text, or its --prompt-file."""
+    if len(argv) > 2 and argv[1] == "--prompt-file":
+        return Path(argv[2]).read_bytes().decode("utf-8")
+    return argv[1] if len(argv) > 1 and argv[0] == "run" else None
+
+
+def system_prompt():
+    """The system prompt this run was given, as text or through --system-file."""
+    path = option("--system-file")
+    return option("--system") if path is None else Path(path).read_bytes().decode("utf-8")
+
+
 session_path = option("--session") or option("--resume")
 artifact = Path(session_path).parent.resolve() if session_path else None
 observations = {
@@ -158,9 +171,10 @@ class FakeProvider:
         # Generated replies keep any scripted usage, so a test can exceed a real budget.
         usage = reply.get("usage", {"input": 10, "output": 5})
         if reply.get("assess_candidates"):
-            prompt = arguments[1]
+            prompt = recorded_prompt(arguments)
             if option("--resume"):
-                prompt = json.loads((artifact / "invocation.json").read_bytes())["argv"][2]
+                prompt = recorded_prompt(
+                    json.loads((artifact / "invocation.json").read_bytes())["argv"][1:])
             pool, _ = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])
             status = reply["assess_candidates"]
             rows = []
@@ -176,7 +190,7 @@ class FakeProvider:
                 rows.append(dict(rows[0], candidate_id="never-given-fifth-id"))
             reply = {"content": [{"type": "text", "text": json.dumps({"assessments": rows})}]}
         if reply.get("propose_candidates"):
-            prompt = arguments[1]
+            prompt = recorded_prompt(arguments)
             pool, _ = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])
             output = {"proposals": [{"candidate_id": candidate["candidate_id"],
                 "action": reply["propose_candidates"], "reason": "Captured evidence position.",
@@ -186,7 +200,7 @@ class FakeProvider:
                 for candidate in pool["candidates"]]}
             reply = {"content": [{"type": "text", "text": json.dumps(output)}]}
         if reply.get("discuss_candidates"):
-            prompt = arguments[1]
+            prompt = recorded_prompt(arguments)
             pool, _ = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])
             action = reply["discuss_candidates"]
             rows = []
@@ -199,7 +213,7 @@ class FakeProvider:
                              "citations": citations})
             reply = {"content": [{"type": "text", "text": json.dumps({"proposals": rows})}]}
         if reply.get("select_pool"):
-            prompt = arguments[1]
+            prompt = recorded_prompt(arguments)
             pool, _ = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])
             output = {"findings": [{"candidate_id": f["candidate_id"], "category": f["category"]}
                                    for f in pool["verified_pool"]]}
@@ -226,15 +240,16 @@ def make_transport(provider, **kwargs):
     selection = {
         "purpose": invocation.get("purpose", "review"),
         "attempt": artifact.name if artifact is not None else None,
-        "prompt": arguments[1] if arguments and arguments[0] == "run" else None,
+        "prompt": recorded_prompt(arguments),
     }
     observations["selection"] = selection
-    scenario = spec.get("systems", {}).get(option("--system"), spec.get("default", {}))
+    system = system_prompt()
+    scenario = spec.get("systems", {}).get(system, spec.get("default", {}))
     for candidate in spec.get("scenarios", []):
         if (candidate["purpose"] == selection["purpose"]
                 and candidate["attempt"] == selection["attempt"]
                 and (selection["prompt"] or "").startswith(candidate["prompt_prefix"])
-                and candidate.get("system", option("--system")) == option("--system")):
+                and candidate.get("system", system) == system):
             scenario = candidate["scenario"]
             break
     return FakeProvider(scenario)

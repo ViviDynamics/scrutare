@@ -137,6 +137,19 @@ exit code may have stopped before its stream existed. A run that did not opt in 
 `citation_correction_unconfigured` (invalid). Runs that never opted in are not
 audited.
 
+A session whose recorded argv passes a prompt by file (`--prompt-file`,
+`--system-file`, on runtimes that advertise them) is bound to the retained file.
+Each flag must appear once, as its own argument, and name this attempt's own
+`task-prompt.txt` or `system-prompt.txt`; a file prompt must be the only prompt
+(no positional text beside it, no `--system` beside `--system-file`); and the
+file's SHA-256 must equal the `task_prompt_sha256` or `system_prompt_sha256`
+that `invocation.json` recorded (`prompt_input_invalid`, invalid). A recorded
+file that is no longer in the bundle is `prompt_input_evidence_missing`
+(incomplete). The correction audits read the task and correction prompts from
+these files, and require the correction turn to name the session's own system
+file. Sessions that carried their prompts in argv are not audited, so earlier
+bundles replay as before.
+
 Known formats must be structurally valid UTF-8 JSON. Duplicate object keys,
 nonfinite numbers, malformed fields, unsupported verdict or delivery schema
 versions, and required leaf symlinks or nonregular files cannot support a clean

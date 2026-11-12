@@ -395,6 +395,31 @@ def _new_capture(directory: int, name: str) -> BinaryIO:
     return os.fdopen(descriptor, "wb", buffering=0)
 
 
+# Owner-only prompt files in the attempt directory, used where the runtime lists the flags.
+SYSTEM_FILE = "system-prompt.txt"
+PROMPT_FILE = "task-prompt.txt"
+
+
+def _takes_file(capability: NareCapability, flag: str) -> bool:
+    """Whether the inspected runtime reads this prompt from a file (contract 3 data only)."""
+    advertised = capability.flag(flag)
+    return advertised is not None and advertised.takes_value
+
+
+def _new_text(directory: int, name: str, text: str) -> None:
+    """Create an owner-only file holding exactly these UTF-8 bytes, never replacing one."""
+    with _new_capture(directory, name) as stream:
+        stream.write(text.encode("utf-8"))
+
+
+def _same_text(directory: int, name: str, text: str) -> bool:
+    """Whether the retained private file still holds exactly these UTF-8 bytes."""
+    try:
+        return _session_document(directory, name) == text.encode("utf-8")
+    except OSError:
+        return False
+
+
 def _session_document(directory: int, name: str = "session.json") -> bytes | None:
     try:
         descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
@@ -593,8 +618,17 @@ async def _correct_citations(
         prompt = citation_correction_prompt(offered.defects)
         schema = citation_correction_schema(offered.defects)
     system = descriptor.persona.system_prompt
-    argv = [str(executable), "run", prompt, "--tools", "none", "--root", str(root),
-            "--system=" + system, *_rail_argv(rail, capability),
+    prompt_name = stem + ".prompt.txt"
+    prompt_file = _takes_file(capability, "--prompt-file")
+    system_file = _takes_file(capability, "--system-file")
+    # The system option stays on the resume. Without one nare resends the prompt its session
+    # file recorded, which is the redacted copy, so the bytes could differ from the first run.
+    argv = [str(executable), "run",
+            *(("--prompt-file", str(artifact_directory / prompt_name)) if prompt_file
+              else (prompt,)),
+            "--tools", "none", "--root", str(root),
+            *(("--system-file", str(artifact_directory / SYSTEM_FILE)) if system_file
+              else ("--system=" + system,)), *_rail_argv(rail, capability),
             "--jsonl", "--yes", "--contract", str(capability.contract),
             "--schema", str(artifact_directory / (stem + ".schema.json")),
             "--budget-tokens", str(lease.limit_tokens),
@@ -603,6 +637,13 @@ async def _correct_citations(
             "--max-turns", "1", *_rail_options(rail)]
     # Recorded as offered before anything is written, so any later failure says so.
     record.update(offered=True, defects=len(offered.defects), outcome="failed")
+    if system_file and not _same_text(directory, SYSTEM_FILE, system):
+        raise SessionArtifactError("system prompt: retained file changed before correction")
+    if prompt_file:
+        try:
+            _new_text(directory, prompt_name, prompt)
+        except OSError:
+            raise SessionArtifactError("correction prompt: cannot create private file") from None
     write_owned_json(artifact_directory / (stem + ".schema.json"),
                      schema, prepared_root=root)
     write_owned_json(artifact_directory / (stem + ".json"), {
@@ -739,8 +780,20 @@ async def _run_session(
                 raise SessionArtifactError("artifact_directory: expected an unused attempt")
             for name in ("cwd", "home", "tmp"):
                 os.mkdir(name, mode=0o700, dir_fd=directory)
-            argv = [str(executable), "run", *input_args, "--system=" + system,
+            # Long text stays out of argv where the runtime reads it from a file. The bytes
+            # nare decodes are the bytes argv would have carried.
+            prompt_file = _takes_file(capability, "--prompt-file")
+            system_file = _takes_file(capability, "--system-file")
+            argv = [str(executable), "run",
+                    *(("--prompt-file", str(artifact_directory / PROMPT_FILE)) if prompt_file
+                      else input_args[:1]), *input_args[1:],
+                    *(("--system-file", str(artifact_directory / SYSTEM_FILE)) if system_file
+                      else ("--system=" + system,)),
                     *_rail_argv(rail, capability)]
+            if prompt_file:
+                _new_text(directory, PROMPT_FILE, input_args[0])
+            if system_file:
+                _new_text(directory, SYSTEM_FILE, system)
             schema_name = ("reanchor.schema.json" if purpose == "reanchor"
                            else "findings.schema.json")
             schema = (descriptor.output_schema()

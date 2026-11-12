@@ -67,6 +67,22 @@ decided from the runtime's own data and not from its release number. A contract
 sends, fails inspection. A rail option the runtime does not advertise is refused
 before any session launches. Contracts 1 and 2 keep their release-number rules.
 
+Where the runtime lists `--system-file` and `--prompt-file`, the persona system
+prompt and the task prompt are written to owner-only `system-prompt.txt` and
+`task-prompt.txt` in the attempt directory and passed by path, so no prompt
+text is left in argv (visible in a process listing and bounded by the operating
+system). nare decodes the files as UTF-8 and keeps every byte, so the request
+is the one the argv form sent. `invocation.json` keeps `system_prompt_sha256`,
+`task_prompt_sha256` and the argv actually used; replay checks each recorded
+file against its digest (`prompt_input_invalid`, or
+`prompt_input_evidence_missing` when the file is gone). A correction turn
+writes its prompt to `citation-correction.prompt.txt` or
+`protocol-correction.prompt.txt` and names the session's own
+`system-prompt.txt` again. The system option stays on the resume on purpose:
+without one nare resends the prompt its session file recorded, and that record
+is the redacted copy. Each of the two inputs falls back to argv where its flag
+is not listed, as on contracts 1 and 2.
+
 Where the runtime lists them, every contract 3 invocation also sets
 `--compaction elide`, `--compaction-trigger 0.8` and `--compaction-target 0.6`
 (nare 2026.11.94). These are the values nare used before the options existed,
@@ -131,7 +147,8 @@ then copies only selected diff sections, minimal file records and safe context
 into `review-inputs/`. Existing copies must match the same bytes. Persona
 resolution preserves configured order and exact built-in or inline systems.
 Each invocation consumes the descriptor's prompt and read/root arguments
-verbatim, with a separate system and its resolved provider, model and base URL.
+verbatim (the prompt in argv or in its private file, as above), with a separate
+system and its resolved provider, model and base URL.
 An empty effective selection stays empty. The read root never expands to the
 raw capture, discussion artifacts, configuration or sibling session outputs.
 
@@ -260,8 +277,9 @@ It also runs the complete panel producer, including successful and denied
 corrections, shared remaining grants, partial and missing initial documents,
 fatal correction results, filtered correction tools, duplicate/conflicting
 source preservation, exact correction rails and replay of producer artifacts.
-Scenario selection reads existing purpose, positional prompt and attempt data;
-it never rewrites the persona system or changes the runner's invocation.
+Scenario selection reads existing purpose, the task prompt (positional or its
+`--prompt-file`) and attempt data; it never rewrites the persona system or
+changes the runner's invocation.
 The OpenAI SSE fixture replaces only the HTTP client boundary with fragmented
 SSE responses. It retains the actual installed parser, vendor transport, loop,
 tools, schema validation, accounting and persistence. It checks read tool-call

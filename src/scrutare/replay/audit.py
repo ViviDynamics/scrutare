@@ -404,6 +404,69 @@ def _prefixed(argv: list[Any], prefix: str) -> list[str]:
     return [item for item in argv if isinstance(item, str) and item.startswith(prefix)]
 
 
+# A prompt recorded as a file: its flag, the attempt's own file, and the digest that binds it.
+_INPUT_FILES = (("--prompt-file", "task-prompt.txt", "task_prompt_sha256"),
+                ("--system-file", "system-prompt.txt", "system_prompt_sha256"))
+
+
+def _own_file(argv: list[Any], flag: str, name: str) -> bool:
+    """Whether a file flag, given once as its own argument, names this attempt's own file."""
+    value, session = _flag(argv, flag), _flag(argv, "--session")
+    return (isinstance(value, str) and isinstance(session, str)
+            and _names(argv).count(flag) == 1 and value == str(Path(session).parent / name))
+
+
+def _task_prompt(attempt: Path, invocation: dict[str, Any]) -> str:
+    """The task a session was given: its positional prompt, or the file argv recorded."""
+    argv = invocation["argv"]
+    if "--prompt-file" in _names(argv):
+        if not _own_file(argv, "--prompt-file", "task-prompt.txt"):
+            raise ValueError("task prompt: expected the attempt's own file")
+        prompt: object = read_artifact(attempt / "task-prompt.txt").decode("utf-8")
+    else:
+        prompt = argv[2]
+    if (not isinstance(prompt, str) or sha256(prompt.encode()).hexdigest()
+            != invocation.get("task_prompt_sha256")):
+        raise ValueError("task prompt: recorded digest disagrees")
+    return prompt
+
+
+def _prompt_input_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
+    """Bind every prompt passed as a file to the attempt's retained bytes and digest.
+
+    Sessions that carried their prompts in argv record no file flag and are not audited, so
+    earlier bundles replay as before.
+    """
+    issues = []
+    for attempt, document in _invocations(_session_records(run_dir)):
+        argv = document.get("argv") if isinstance(document, dict) else None
+        if not isinstance(document, dict) or not isinstance(argv, list):
+            continue
+        names = _names(argv)
+        used = [entry for entry in _INPUT_FILES if entry[0] in names]
+        if not used:
+            continue
+        where = attempt.relative_to(run_dir).as_posix()
+        invalid = AuditIssue("prompt_input_invalid", f"{where}/invocation.json", "invalid")
+        # One source per prompt: the file, never also a positional prompt or --system text.
+        if (any(not _own_file(argv, flag, name) for flag, name, _ in used)
+                or ("--prompt-file" in names and argv[2:3] != ["--prompt-file"])
+                or ("--system-file" in names and "--system" in names)):
+            issues.append(invalid)
+            continue
+        for _, name, field in used:
+            try:
+                content = read_artifact(attempt / name)
+            except ReplayError:
+                issues.append(AuditIssue("prompt_input_evidence_missing", f"{where}/{name}",
+                                         "incomplete"))
+                continue
+            if sha256(content).hexdigest() != document.get(field):
+                issues.append(invalid)
+                break
+    return tuple(issues)
+
+
 def _native_recovery_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
     """Bind contract 3 recovery controls to all retained runtime identities."""
     issues = []
@@ -576,10 +639,8 @@ def _answer_correction_issues(run_dir: Path, config_data: object, *,
             try:
                 if not isinstance(original_schema, dict):
                     raise ValueError
-                context = protocol_context(original_schema, first_argv[2])
-                if (sha256(first_argv[2].encode()).hexdigest()
-                        != invocation.get("task_prompt_sha256")):
-                    raise ValueError("protocol correction: original task hash disagrees")
+                # Refused when the recorded task digest disagrees, whichever way it was given.
+                context = protocol_context(original_schema, _task_prompt(attempt, invocation))
                 if context.kind != "discovery":
                     from scrutare.findings.models import artifact_data
                     number = int(attempt.name.rsplit("-", 1)[1])
@@ -667,12 +728,23 @@ def _answer_correction_issues(run_dir: Path, config_data: object, *,
                  and request.get("refusal") == refusal and request.get("prompt") == prompt
                  and request.get("prompt_sha256") == sha256(prompt.encode()).hexdigest()
                  and request.get("max_turns") == 1 and request.get("invocation_limit") == limit
-                 and argv[:3] == [first_argv[0], "run", prompt]
+                 # The prompt in argv, or in the attempt's own file with exactly these bytes.
+                 and (argv[:3] == [first_argv[0], "run", prompt]
+                      if "--prompt-file" not in _names(argv) else
+                      argv[:3] == [first_argv[0], "run", "--prompt-file"]
+                      and _own_file(argv, "--prompt-file", stem + ".prompt.txt")
+                      and raw(attempt / (stem + ".prompt.txt")) == prompt.encode("utf-8"))
                  and _flag(argv, "--tools") == "none" and _flag(argv, "--max-turns") == "1"
                  and all(_flag(argv, name) == _flag(first_argv, name) for name in _SHARED_FLAGS)
-                 and all(_prefixed(argv, prefix) == _prefixed(first_argv, prefix)
-                         and len(_prefixed(argv, prefix)) == 1
-                         for prefix in ("--model=", "--system="))
+                 and _prefixed(argv, "--model=") == _prefixed(first_argv, "--model=")
+                 and len(_prefixed(argv, "--model=")) == 1
+                 # The same system prompt as the session: its text, or its retained file.
+                 and _prefixed(argv, "--system=") == _prefixed(first_argv, "--system=")
+                 and (len(_prefixed(argv, "--system=")) == 1
+                      if "--system-file" not in _names(first_argv) else
+                      not _prefixed(argv, "--system=")
+                      and _own_file(argv, "--system-file", "system-prompt.txt")
+                      and _flag(argv, "--system-file") == _flag(first_argv, "--system-file"))
                  and ("--stream" in argv) == ("--stream" in first_argv)
                  # Exactly the session's own flags, plus the resume: nothing added or dropped.
                  and sorted(_names(argv)) == sorted([*_names(first_argv), "--resume"])
@@ -974,6 +1046,7 @@ def replay_run(run_dir: Path) -> ReplayResult:
               + _max_output_tokens_issues(run_dir, config_data)
               + _proxy_num_retries_issues(run_dir, config_data)
               + _native_recovery_issues(run_dir)
+              + _prompt_input_issues(run_dir)
               + _citation_correction_issues(run_dir, config_data)
               + _protocol_correction_issues(run_dir, config_data))
     posting = inspect_posting(run_dir)
