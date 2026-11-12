@@ -128,6 +128,15 @@ A rail with [`cache_breakpoints`](config.md#prompt-cache-breakpoints-opt-in) or
 [`effort`](config.md#reasoning-effort-opt-in) adds `--cache-breakpoints` or
 `--effort LEVEL` to each of its sessions, and records them like
 `structured_output`.
+A rail with [`capacity_queue: true`](config.md#capacity-queueing-opt-in) adds
+`--capacity-queue` with explicit `--capacity-wait-seconds` and
+`--capacity-refusals` (nare 2026.11.100). nare then waits out a provider
+capacity refusal and resends the same request. A queued refusal adds no turn,
+no usage and no resend, and the seconds nare announces for it are credited
+against that session's timeout, up to the rail's wait bound. No other session
+is sent a capacity option, and a queue record on a session that did not ask
+for one is a protocol failure. nare's adaptive capacity limit is never
+requested.
 A rail with [`max_output_tokens: N`](config.md#per-request-output-token-cap-opt-in)
 adds `--max-tokens N` to each of its sessions, and records the cap in
 `fanout.json` like `structured_output`. A session on a capped rail whose last
@@ -278,7 +287,10 @@ and overshoot. The ledger and per-session records expose accounting confidence.
 Malformed or inconsistent protocol evidence fails and closes admission rather
 than inventing an empty success.
 
-Timeouts and caller cancellation terminate and reap owned process groups.
+Timeouts and caller cancellation terminate and reap owned process groups. A
+session on a rail with capacity queueing has its deadline moved out by the
+queue time nare announces, bounded by the rail's `capacity_wait_seconds`; every
+other session's deadline is its timeout.
 Cancellation waits for cleanup before propagating and does not publish a
 completed wave manifest. Captures and prepared input bytes remain unchanged.
 Provider failures retain logs and session evidence with uncertain accounting.

@@ -38,6 +38,9 @@ Errors identify a field path or YAML location without echoing field values.
 | `models.default.request_retry_seconds` | Positive number (requires `request_retries` above 0), or `null` | `null` (60 when retries are on) |
 | `models.default.cache_breakpoints` | Boolean (requires `provider: openai`), or `null` | `null` (off) |
 | `models.default.effort` | `low`, `medium`, `high`, `xhigh`, `max`, or `null` | `null` (not sent) |
+| `models.default.capacity_queue` | Boolean (requires `provider: openai`), or `null` | `null` (off) |
+| `models.default.capacity_wait_seconds` | Positive number up to 3600 (requires `capacity_queue: true`), or `null` | `null` (1800 when the queue is on) |
+| `models.default.capacity_refusals` | Integer from 1 to 1000 (requires `capacity_queue: true`), or `null` | `null` (50 when the queue is on) |
 | `models.overrides` | Mapping from a configured persona name to partial model settings | `{}` |
 | `verdict.blocking_categories` | List drawn from the fixed vocabulary | `correctness`, `security`, `regression` |
 | `verdict.advisory_categories` | List drawn from the fixed vocabulary | `style`, `consistency`, `docs` |
@@ -345,6 +348,80 @@ records it in `rail` and its argv, and `result.json` records
 `{"level": "high"}`. nare's session file records the effort each invocation
 sent; a file that records another level fails the session as a protocol
 failure.
+
+## Capacity queueing (opt-in)
+
+A proxy can refuse a request for capacity before it dispatches anything, for
+example LiteLLM answering HTTP 429 once a deployment's `max_parallel_requests`
+is reached. Nothing was generated and nothing was charged, but by default that
+refusal ends the session like any other failed request. A rail on the openai
+provider can let nare wait and send the same request again:
+
+```yaml
+models:
+  default:
+    provider: openai
+    base_url: https://litellm.example/v1
+    model: your-model
+    capacity_queue: true
+    capacity_wait_seconds: 900
+    capacity_refusals: 20
+```
+
+Every nare session on that rail, correction turns included, is launched with
+`--capacity-queue --capacity-wait-seconds 900 --capacity-refusals 20` (nare
+2026.11.100 or newer). nare queues a refusal only when it is HTTP 429, its
+error text carries the proxy's capacity marker (`max_parallel_requests`), and
+no response has started. It waits the `Retry-After` the proxy gives, or 2
+seconds doubling to 60 with jitter, and resends the identical request.
+`capacity_wait_seconds` is the most one request may spend queued and
+`capacity_refusals` the most refusals one session queues. Without them Scrutare
+passes 1800 and 50, nare's values at the pinned release, so a later nare
+default never decides them. A refusal past either limit, or a 429 without the
+marker, is handled as it is without the queue: it ends the session unless
+[`request_retries`](#request-retries-opt-in) resends it. The two are separate
+budgets, and a queued refusal is never counted as a resend.
+
+`capacity_queue` is a boolean, off by default, inherited by overrides and
+cleared with `null`. Only the openai provider accepts it, because nare's other
+rails declare no capacity marker and never queue; an override that changes the
+provider must clear the inherited value. The two limits require
+`capacity_queue: true` on the same rail, and an override that turns the queue
+off does not inherit them. The runtime must be a contract 3 nare that
+advertises the queue for the openai rail and lists `--stream`; otherwise the
+wave is refused before any session starts.
+
+Accounting. A refused request was never dispatched: nare adds no turn, no
+`cost` event and no usage for it. Scrutare counts tokens only from `cost`
+events and reconciles their sum with nare's result, so a queued or refused
+request never enters the token ledger. The installed proof checks this through
+the real transport, including a resumed correction turn. nare's count of
+queued refusals must equal the records in the stream, and a queue record on a
+session that did not ask for the queue fails it as a protocol failure.
+
+Timeout. The session timeout is a liveness limit, and a queued session is
+alive. nare writes each queue record before it waits, with the seconds it is
+about to wait, and Scrutare moves that session's deadline out by the same
+seconds. One session is credited at most its `capacity_wait_seconds` in total,
+so a session runs for at most its timeout plus that bound. Only announced
+waits count: a session that goes silent without a record is still stopped at
+its timeout. Limits outside the session are not moved. The App's job timeout
+and a CI job's own limit still apply, so size them for the queue you allow.
+
+Adaptive capacity (`--capacity-adaptive`, a shared limit on requests in flight)
+is not offered. The
+[plan](plans/2026-11-12-capacity-queueing.md) records why.
+
+When no rail sets the queue, argv, the canonical configuration and every
+record keep their previous bytes. When any rail sets it, every rail in
+`config.to_dict()` and `fanout.json` records the three fields (`null` where
+unset), each session's `invocation.json` records them in `rail` and its argv,
+and `result.json` records `{"enabled": false}`, or with the queue on
+`{"enabled": true, "wait_seconds": S, "refusals_limit": N, "queued": M,
+"waited_seconds": W}`. `M` counts the queue records in the retained streams
+and `W` is the sum of their announced waits, rounded to milliseconds (both
+`null` for a session that never started). [Replay](replay.md) audits these
+records.
 
 ## Citation correction turn (opt-in)
 

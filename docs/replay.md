@@ -138,20 +138,25 @@ exit code may have stopped before its stream existed. A run that did not opt in 
 audited.
 
 [Request retries](config.md#request-retries-opt-in),
-[cache breakpoints](config.md#prompt-cache-breakpoints-opt-in) and
-[reasoning effort](config.md#reasoning-effort-opt-in) are audited together when
+[cache breakpoints](config.md#prompt-cache-breakpoints-opt-in),
+[reasoning effort](config.md#reasoning-effort-opt-in) and
+[capacity queueing](config.md#capacity-queueing-opt-in) are audited together when
 `config.json` sets one of them on any rail or any session's `invocation.json`
 records one. Each launched session's recorded rail, including these fields,
 must equal its configured rail (a reserved executor uses the rail its identity
 is given), and argv must carry exactly what the rail implies: `--request-retries
 N` once, `--request-retry-seconds S` once exactly when `N` is above 0 (60 when
 the rail sets no bound), `--cache-breakpoints` once exactly when the rail
-enables it, and `--effort LEVEL` once exactly when the rail sets it
-(`rail_options_unrecorded`, invalid). `result.json` must carry
-`request_retries`, `cache_breakpoints` and `effort` exactly when the rail sets
-them, with the configured limit, flag and level; the recorded resend count
-must equal the retry records in the retained `stdout.jsonl` and
-`correction.stdout.jsonl`; and a saved session that records a reasoning effort
+enables it, `--effort LEVEL` once exactly when the rail sets it, and
+`--capacity-queue`, `--capacity-wait-seconds S` and `--capacity-refusals N`
+once each exactly when the rail enables the queue (1800 and 50 when the rail
+sets no limit) (`rail_options_unrecorded`, invalid). `result.json` must carry
+`request_retries`, `cache_breakpoints`, `effort` and `capacity_queue` exactly
+when the rail sets them, with the configured limit, flag and level; the
+recorded resend count must equal the retry records in the retained
+`stdout.jsonl` and `correction.stdout.jsonl`; the recorded queue count and
+waited seconds must equal the queue records in those streams and the sum of
+their announced waits; and a saved session that records a reasoning effort
 must record the rail's (`rail_options_result_disagrees`, invalid). A launched
 session without `result.json`, a counted session without `stdout.jsonl`, or an
 opted-in run without any session attempt is `rail_options_evidence_missing`
