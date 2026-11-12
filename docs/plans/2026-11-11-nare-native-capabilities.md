@@ -137,7 +137,9 @@ nare can also calculate a cost from prices a gateway lists. That figure is
 recorded as unknown here: #116 reserves `estimated` for a frozen price table
 that replay can re-derive, and nare's discovered prices are neither frozen nor
 recorded. A streamed openai session reports no cost of its own, so such reviews
-stay unknown until the price table exists.
+stay unknown until the price table exists. (True of nare 2026.11.94. From
+2026.11.100 a streamed turn behind a LiteLLM proxy reports one; see
+[the next plan](2026-11-12-nare-2026-11-100.md).)
 
 Out of scope here: a pricing table, a report command and a dollar cap (#116).
 

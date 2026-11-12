@@ -208,10 +208,23 @@ embeds, and in the ledger snapshot's `sessions`. The ledger's own `cost` is
 the review's total: the sum over sessions that used tokens when every one of
 them is reported, and unknown as soon as one is not, because a partial sum
 would read as a total. `panel.json`, `debate.json` and `fanout.json` carry it
-in `ledger`, `iterative.json` and the review receipt carry it as `cost`. A
-streamed openai session reports no cost of its own, since nare ignores
-streamed cost headers, so those reviews record unknown until a price table
-exists. Scrutare has no price table, cost report or dollar cap yet.
+in `ledger`, `iterative.json` and the review receipt carry it as `cost`.
+
+Where a reported amount comes from depends on whether the reply is streamed.
+A reply that is not (every anthropic session) carries it in a LiteLLM proxy's
+response headers. Openai sessions are streamed, and a stream's headers arrive before
+the reply is metered, so nare ignores them there. From nare 2026.11.100 a
+streamed openai turn instead takes `usage.cost` from the final usage chunk,
+and only from a response that carries `x-litellm-*` headers, because another
+gateway's `usage.cost` may count in other units. So a streamed openai session
+behind a LiteLLM proxy that reports the charge records a `provider_reported`
+amount, where the previous pinned release recorded unknown. This is the one
+record a default configuration can see change with the pin: no request and no
+token count differs. A streamed session still records unknown when the gateway
+is not LiteLLM, when it reports no `usage.cost`, when any one turn has none,
+or when nare filled the figure from the gateway's listed prices
+(`estimated: true`). Scrutare has no price table, cost report or dollar cap
+yet.
 
 Leases govern admission, and nare enforces thresholds after completed turns.
 An already admitted invocation may finish internal turns while sibling use

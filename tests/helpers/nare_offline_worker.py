@@ -299,7 +299,9 @@ if spec.get("default", {}).get("http_sse") is not None:
         if turn.get("status") is not None:
             # One attempt the endpoint refuses with an HTTP status, before any reply.
             return httpx.Response(turn["status"], json={"error": "offline status"})
-        return httpx.Response(200, headers={"content-type": "text/event-stream"},
+        # A turn may add response headers, as a proxy that identifies itself does.
+        return httpx.Response(200, headers={"content-type": "text/event-stream",
+                                            **turn.get("headers", {})},
                               stream=SSEBytes(turn))
 
     def http_client(*args, **kwargs):
