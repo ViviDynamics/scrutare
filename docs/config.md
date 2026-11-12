@@ -141,7 +141,7 @@ fields; an override can set it alone or clear an inherited value with `null`.
 It is refused before any session launches when the nare runtime does not
 advertise the capability for that rail's provider: the openai rail from nare
 2026.10.12, the anthropic rail on contract 3 runtimes that list it (the pinned
-2026.11.94 does). Use it only with a backend that enforces `response_format`
+2026.11.100 does). Use it only with a backend that enforces `response_format`
 json_schema, such as vLLM; an OpenAI-compatible server that ignores the field
 answers unconstrained, and validation still decides.
 
