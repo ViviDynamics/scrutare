@@ -185,16 +185,28 @@ Assessment: not a replacement, and only partly a complement.
   a read gate can express, the in-session hold saves a process start and keeps
   the cache prefix.
 
-What it would save: nothing for the defects Scrutare corrects today. A real
-saving needs nare to accept caller checks in-session.
+What it would save: nothing for the defects Scrutare corrects today, through
+the flags alone. The saving is in nare's caller check. `nare.run(check=fn)`
+calls a function with the parsed answer and the run's read records and puts its
+errors into the same in-session correction as schema errors, with tools still
+offered. Scrutare's citation validation is exactly such a check, and run there
+it would replace the second process, the resumed transcript and the extra
+artifacts of the correction turn with one more turn of the same session.
 
-What blocks it: (1) the logical-path to artifact-name mapping; fixed either by
-capturing artifacts under their logical paths per side, which changes the read
-root layout and every prompt (request bytes, so opt-in and gated), or by nare
-accepting a path map for cited reads; (2) nare has no hook for a caller-defined
-check, so revision, digest and line-bound defects still need Scrutare's own
-turn; (3) `--max-corrections 1` is shared between schema and read corrections,
-so a read hold would spend the one schema correction a session has.
+What blocks it: (1) the check is a Python entry point only. The contract says
+the command line takes no check, because it needs code that `nare run` does not
+load, and Scrutare cannot import nare (Python 3.10 against 3.12 or newer). It
+needs either a nare command-line route for a check, such as an external command
+given the answer and reads on stdin, as `--command-tools` does for tools, or a
+Scrutare-owned runner on nare's interpreter, which moves validation code across
+the boundary this design keeps; (2) the logical-path to artifact-name mapping,
+for the read flags; fixed either by capturing artifacts under their logical
+paths per side, which changes the read root layout and every prompt (request
+bytes, so opt-in and gated), or by nare accepting a path map for cited reads;
+(3) `--max-corrections 1` is shared between schema, read and check corrections,
+so a hold would spend the one schema correction a session has; (4) an
+in-session correction is a model turn the default path does not make, so it
+stays opt-in until the gate.
 
 A smaller step that is available now: `--require-read diff.patch` and
 `files.json` would guarantee the reviewer opened the diff. It adds a possible
