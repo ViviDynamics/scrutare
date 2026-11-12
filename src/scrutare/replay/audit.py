@@ -1,6 +1,7 @@
 """Read-only verdict reconstruction from the run's captured deciding evidence."""
 
 import json
+import math
 import os
 import re
 from hashlib import sha256
@@ -395,7 +396,8 @@ _SHARED_FLAGS = ("--root", "--provider", "--base-url", "--contract", "--budget-t
                  "--structured-output", "--max-tokens", "--proxy-num-retries",
                  "--max-cutoffs", "--request-retries", "--max-corrections",
                  "--request-retry-seconds", "--effort", "--compaction",
-                 "--compaction-trigger", "--compaction-target")
+                 "--compaction-trigger", "--compaction-target", "--capacity-queue",
+                 "--capacity-wait-seconds", "--capacity-refusals")
 
 
 def _flag(argv: list[Any], name: str) -> object:
@@ -490,14 +492,21 @@ def _recorded_retries(invocation: dict[str, Any]) -> str:
 
 
 # Opt-in rail fields that exist only as contract 3 flags, and the records they leave.
-_OPTION_FIELDS = ("request_retries", "request_retry_seconds", "cache_breakpoints", "effort")
-_OPTION_FLAGS = ("--request-retry-seconds", "--cache-breakpoints", "--effort")
-_OPTION_RECORDS = ("request_retries", "cache_breakpoints", "effort")
+_OPTION_FIELDS = ("request_retries", "request_retry_seconds", "cache_breakpoints", "effort",
+                  "capacity_queue", "capacity_wait_seconds", "capacity_refusals")
+_OPTION_FLAGS = ("--request-retry-seconds", "--cache-breakpoints", "--effort",
+                 "--capacity-queue", "--capacity-wait-seconds", "--capacity-refusals")
+_OPTION_RECORDS = ("request_retries", "cache_breakpoints", "effort", "capacity_queue")
 
 
-def _retry_events(attempt: Path) -> int | None:
-    """Resent requests in an attempt's retained streams, or None without its first stream."""
-    total = 0
+def _stream_events(attempt: Path) -> tuple[int, int, float] | None:
+    """What an attempt's retained streams show: resent requests, queued capacity refusals
+    and the seconds announced for them. None without its first stream.
+
+    The seconds are summed as the session summed them: each stream from zero, then added.
+    """
+    retries = queued = 0
+    waited = 0.0
     for name in ("stdout.jsonl", "correction.stdout.jsonl"):
         if not os.path.lexists(attempt / name):
             if name == "stdout.jsonl":
@@ -507,6 +516,7 @@ def _retry_events(attempt: Path) -> int | None:
             lines = read_artifact(attempt / name).split(b"\n")
         except ReplayError:
             return None
+        seconds = 0.0
         for line in lines:
             if not line.strip():
                 continue
@@ -515,9 +525,58 @@ def _retry_events(attempt: Path) -> int | None:
             except (ReplayError, RecursionError):
                 continue
             detail = event.get("detail") if isinstance(event, dict) else None
-            total += (isinstance(event, dict) and event.get("type") == "progress"
-                      and isinstance(detail, dict) and isinstance(detail.get("retry"), dict))
-    return total
+            if (not isinstance(event, dict) or event.get("type") != "progress"
+                    or not isinstance(detail, dict)):
+                continue
+            retries += isinstance(detail.get("retry"), dict)
+            capacity = detail.get("capacity")
+            if isinstance(capacity, dict):
+                queued += 1
+                wait = capacity.get("wait")
+                if isinstance(wait, (int, float)) and not isinstance(wait, bool):
+                    seconds += float(wait)
+        waited += seconds
+    return retries, queued, waited
+
+
+def _retry_events(attempt: Path) -> int | None:
+    """Resent requests in an attempt's retained streams, or None without its first stream."""
+    seen = _stream_events(attempt)
+    return None if seen is None else seen[0]
+
+
+def _queue_record_valid(record: object, want: Any, attempt: Path) -> bool | None:
+    """Whether a result's capacity_queue record is the one its rail and streams imply.
+
+    None means a counted session has no retained first stream to check the count against.
+    """
+    from scrutare.config import CAPACITY_REFUSALS, CAPACITY_WAIT_SECONDS
+
+    if want.capacity_queue is None:
+        return record is None
+    if not want.capacity_queue:
+        return record == {"enabled": False}
+    seconds = (CAPACITY_WAIT_SECONDS if want.capacity_wait_seconds is None
+               else want.capacity_wait_seconds)
+    refusals = CAPACITY_REFUSALS if want.capacity_refusals is None else want.capacity_refusals
+    if (not isinstance(record, dict)
+            or set(record) != {"enabled", "wait_seconds", "refusals_limit", "queued",
+                               "waited_seconds"}
+            or record["enabled"] is not True
+            or json.dumps(record["wait_seconds"]) != json.dumps(seconds)
+            or json.dumps(record["refusals_limit"]) != json.dumps(refusals)):
+        return False
+    queued, waited = record["queued"], record["waited_seconds"]
+    if queued is None and waited is None:
+        # A session that never started saw nothing; a retained stream must agree.
+        seen = _stream_events(attempt)
+        return seen is None or seen[1] == 0
+    if type(queued) is not int or queued < 0 or type(waited) not in (int, float):
+        return False
+    seen = _stream_events(attempt)
+    if seen is None:
+        return None
+    return queued == seen[1] and math.isclose(waited, round(seen[2], 3), abs_tol=1e-9)
 
 
 def _rail_option_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
@@ -528,7 +587,7 @@ def _rail_option_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue,
     resend count the retained streams support. Runs that never set one of these fields and
     never recorded one are not audited, so earlier bundles replay as before.
     """
-    from scrutare.config import REQUEST_RETRY_SECONDS
+    from scrutare.config import CAPACITY_REFUSALS, CAPACITY_WAIT_SECONDS, REQUEST_RETRY_SECONDS
 
     attempts = _session_records(run_dir)
     invocations = _invocations(attempts)
@@ -583,6 +642,18 @@ def _rail_option_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue,
             if (names.count("--cache-breakpoints") != int(bool(want.cache_breakpoints))
                     or argv.count("--cache-breakpoints") != int(bool(want.cache_breakpoints))):
                 raise ValueError
+            # A queued rail sends the switch and both limits once; any other rail none.
+            queues = bool(want.capacity_queue)
+            limits = ((("--capacity-wait-seconds", CAPACITY_WAIT_SECONDS
+                        if want.capacity_wait_seconds is None else want.capacity_wait_seconds),
+                       ("--capacity-refusals", CAPACITY_REFUSALS
+                        if want.capacity_refusals is None else want.capacity_refusals)))
+            if (names.count("--capacity-queue") != int(queues)
+                    or argv.count("--capacity-queue") != int(queues)
+                    or any(names.count(flag) != int(queues)
+                           or (queues and _flag(argv, flag) != str(value))
+                           for flag, value in limits)):
+                raise ValueError
         except (KeyError, TypeError, ValueError):
             issues.append(AuditIssue("rail_options_unrecorded", f"{where}/invocation.json",
                                      "invalid"))
@@ -620,6 +691,13 @@ def _rail_option_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue,
                                                  f"{where}/stdout.jsonl", "incomplete"))
                         continue
                     valid = (retried or 0) == (seen or 0) and (not retried or retries > 0)
+            if valid:
+                queue = _queue_record_valid(outcome.get("capacity_queue"), want, attempt)
+                if queue is None:
+                    issues.append(AuditIssue("rail_options_evidence_missing",
+                                             f"{where}/stdout.jsonl", "incomplete"))
+                    continue
+                valid = queue
         if valid and want.effort is not None:
             # nare records the effort each invocation sent; an older file has no field.
             for name in ("session.json", "correction-session.json"):
