@@ -1,4 +1,4 @@
-"""Installed wheel and native nare 2026.11.80: one citation correction, on and off, replayed."""
+"""Installed wheel and native nare 2026.11.94: one citation correction, on and off, replayed."""
 
 import base64
 import json
@@ -41,7 +41,8 @@ def fixed(provider, *, end_line=1, digest=None):
 
 def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=True,
            structured=False, succeeds=True, policy="citation_correction", assessment=False,
-           provider_error=False, correction_summary=None, limit=400):
+           provider_error=False, correction_summary=None, limit=400, rail_options="",
+           first_failures=(), correction_failures=()):
     """Run `scrutare review` once against offline GitHub and native offline nare."""
     from scrutare.engine.repository_context import _artifact
 
@@ -61,10 +62,14 @@ def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=T
                 "sha": blob, "size": len(data), "encoding": "base64",
                 "content": base64.b64encode(data).decode()}
     flag = {"structured_output": True} if structured else {}
-    replies = [tool(args={"path": "repository-context.json"}),
+    # Each scripted transient status is one failed attempt before the reply that follows.
+    replies = [*({"transient": status} for status in first_failures),
+               tool(args={"path": "repository-context.json"}),
                tool(args={"path": _artifact("head", "src/caller.py")}, call_id="caller"),
                text(answer(provider))]
-    correction_replies = [] if correction is None else [text(correction(provider))]
+    correction_replies = [] if correction is None else [
+        *({"transient": status} for status in correction_failures),
+        text(correction(provider))]
     if correction_summary is not None:
         correction_replies.append(text(correction_summary(provider)))
     scenarios = [] if correction is None else [{
@@ -85,7 +90,7 @@ def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=T
          "scenarios": scenarios}))
     working = tmp_path / "outside-checkout"
     working.mkdir()
-    rail = ', structured_output: json_schema' if structured else ''
+    rail = (', structured_output: json_schema' if structured else '') + rail_options
     (working / "scrutare.yaml").write_text(
         "personas: [senior-dev]\n"
         "models: {default: {provider: openai, model: offline-model, "
@@ -119,7 +124,7 @@ def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=T
     for path in run.rglob("offline-observations*.json"):
         observed = load(path)
         assert observed["guard_violations"] == observed["credential_names"] == []
-        assert observed["version"] == "2026.11.80"
+        assert observed["version"] == "2026.11.94"
     replay = subprocess.run([str(console), "replay", str(run)], cwd=working, env=env,
                             capture_output=True, timeout=30)
     return result, run, attempt, replay, provider

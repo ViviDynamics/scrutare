@@ -32,10 +32,10 @@ for outcome in result.outcomes:
 
 `NareRuntime` is an operational Python argument, with positive finite timeout
 and turn limits. It adds no YAML fields. Scrutare requires Python 3.10 or newer;
-install nare 2026.11.80 separately (supported minimum 2026.10.0) with the interpreter required by its
+install nare 2026.11.94 separately (supported minimum 2026.10.0) with the interpreter required by its
 release. For the pinned integration runtime, clone the public
-[ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.11.80),
-verify commit `4bca6d716cb3c5de37c0cbf9316aa063fafb570e`, and run
+[ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.11.94),
+verify commit `66fd6459262798839c15ebaed37bd2f0c55daf46`, and run
 `uv sync --project /path/to/nare-checkout --python 3.14 --locked --no-dev`.
 Point `NareRuntime.executable`, or the CLI option `--nare-executable`, at that
 checkout's `.venv/bin/nare`. The CLI defaults to `nare` on PATH. Nare is
@@ -49,24 +49,56 @@ The pinned runtime uses contract 3, first released in nare 2026.11.33. Its
 redaction rules preserve code expressions while redacting credential values;
 Scrutare continues to decode and replay historical contract 1/2 evidence.
 Unknown contracts and release/contract mismatches fail inspection before review.
-See nare's [machine contract](https://github.com/ViviDynamics/nare/blob/2026.11.80/docs/contract.md).
+See nare's [machine contract](https://github.com/ViviDynamics/nare/blob/2026.11.94/docs/contract.md).
 
 On contract 3, every initial and resumed correction invocation explicitly sets
 `--max-cutoffs 0`, `--request-retries 0`, and `--max-corrections 1`. This retains
 Scrutare's existing recovery bounds instead of inheriting Nare's newer cutoff
-and provider-request retry defaults. The proxy's own `proxy_num_retries` setting
-is separate and unchanged. Recorded argv retains these controls; replay checks
-the policy and correction consistency. Read requirements, navigation tools and
-other newer capabilities are not enabled by this compatibility update.
+and provider-request retry defaults. A rail that sets
+[`request_retries`](config.md#request-retries-opt-in) sends its own count
+instead of 0, with an explicit `--request-retry-seconds`. The proxy's own
+`proxy_num_retries` setting is separate and unchanged. Recorded argv retains these controls; replay checks
+the policy and correction consistency. Read requirements and navigation tools
+are not enabled.
+
+Inspection also reads the `flags` map a contract 3 runtime prints in `nare
+contract`: every `nare run` option, whether it takes a value, and its choices.
+Each optional flag is sent only when that map lists it, so a capability is
+decided from the runtime's own data and not from its release number. A contract
+3 object without a well-formed `flags` map, or without an option Scrutare always
+sends, fails inspection. A rail option the runtime does not advertise is refused
+before any session launches. Contracts 1 and 2 keep their release-number rules.
+
+Where the runtime lists `--system-file` and `--prompt-file`, the persona system
+prompt and the task prompt are written to owner-only `system-prompt.txt` and
+`task-prompt.txt` in the attempt directory and passed by path, so no prompt
+text is left in argv (visible in a process listing and bounded by the operating
+system). nare decodes the files as UTF-8 and keeps every byte, so the request
+is the one the argv form sent. `invocation.json` keeps `system_prompt_sha256`,
+`task_prompt_sha256` and the argv actually used; replay checks each recorded
+file against its digest (`prompt_input_invalid`, or
+`prompt_input_evidence_missing` when the file is gone). A correction turn
+writes its prompt to `citation-correction.prompt.txt` or
+`protocol-correction.prompt.txt` and names the session's own
+`system-prompt.txt` again. The system option stays on the resume on purpose:
+without one nare resends the prompt its session file recorded, and that record
+is the redacted copy. Each of the two inputs falls back to argv where its flag
+is not listed, as on contracts 1 and 2.
+
+Where the runtime lists them, every contract 3 invocation also sets
+`--compaction elide`, `--compaction-trigger 0.8` and `--compaction-target 0.6`
+(nare 2026.11.94). These are the values nare used before the options existed,
+and in `elide` mode nare sends the same requests as before, so this changes no
+request. It keeps a later nare default from changing a review.
 
 Nare's additive wire `usage.total` is checked against the four disjoint counters
 when present; saved sessions retain the counter-only shape. Cumulative resumed
 usage is still reconciled against the initial session and correction cost events.
 
 
-OpenAI sessions enable nare `--stream` only on validated runtimes 2026.10.4 or
-newer. Supported 2026.10.0 through 2026.10.3 keep buffered invocation; Anthropic
-invocation is unchanged. Streaming progress stays in private captures and never
+OpenAI sessions enable nare `--stream` when a contract 3 runtime advertises the
+flag, and on contract 1 and 2 runtimes from 2026.10.4. Supported 2026.10.0
+through 2026.10.3 keep buffered invocation; Anthropic invocation is unchanged. Streaming progress stays in private captures and never
 becomes candidate findings. Interrupted streams or missing terminal usage fail
 without a verdict, with incomplete accounting retained. After-turn budgets
 remain soft allowances and provider billing remains uncertain. Published
@@ -89,6 +121,13 @@ any session launches. When any rail opts in, every rail in `fanout.json`
 records `structured_output`, with `null` where it is off, as in `config.json`. Each session
 counts nare's constrained-turn `progress` records into `result.json`; such a
 record on a session that did not ask for the constraint is a protocol failure.
+The constraint is sent on either provider that the runtime's `structured_output`
+entry names: the openai rail, and on contract 3 runtimes that list it the
+anthropic rail.
+A rail with [`cache_breakpoints`](config.md#prompt-cache-breakpoints-opt-in) or
+[`effort`](config.md#reasoning-effort-opt-in) adds `--cache-breakpoints` or
+`--effort LEVEL` to each of its sessions, and records them like
+`structured_output`.
 A rail with [`max_output_tokens: N`](config.md#per-request-output-token-cap-opt-in)
 adds `--max-tokens N` to each of its sessions, and records the cap in
 `fanout.json` like `structured_output`. A session on a capped rail whose last
@@ -117,7 +156,8 @@ then copies only selected diff sections, minimal file records and safe context
 into `review-inputs/`. Existing copies must match the same bytes. Persona
 resolution preserves configured order and exact built-in or inline systems.
 Each invocation consumes the descriptor's prompt and read/root arguments
-verbatim, with a separate system and its resolved provider, model and base URL.
+verbatim (the prompt in argv or in its private file, as above), with a separate
+system and its resolved provider, model and base URL.
 An empty effective selection stays empty. The read root never expands to the
 raw capture, discussion artifacts, configuration or sibling session outputs.
 
@@ -150,6 +190,28 @@ A `done` response using 15 tokens under a limit of 1 is partial even though
 nare exits 0. A successful `done` exactly at 15 under a limit of 15 may remain
 complete, with further admission closed. The response output flag
 `--max-tokens` does not impose a cumulative allowance.
+
+Dollar cost is carried beside the token counters, never in place of them. nare
+reports a `cost` on each request and on its result, and says whether any part
+was `estimated` (calculated from prices) or all of it came from the backend.
+Each session records `cost: {"usd": N, "source": "provider_reported"}` when
+nare reports an amount with `estimated: false`, and
+`{"usd": null, "source": "unknown"}` otherwise: when the backend reported
+nothing, when nare calculated the figure from discovered prices, or when an
+older nare does not say which. A session whose accounting is incomplete (it
+timed out, was cancelled, broke protocol, or ended on a failed request) also
+records unknown, whatever its stream had reported: that amount is a lower
+bound, and a session that completed no request would otherwise read as a
+reported zero. Unknown is never recorded as zero. The record is
+in the session's `result.json`, in every outcome a wave or panel record
+embeds, and in the ledger snapshot's `sessions`. The ledger's own `cost` is
+the review's total: the sum over sessions that used tokens when every one of
+them is reported, and unknown as soon as one is not, because a partial sum
+would read as a total. `panel.json`, `debate.json` and `fanout.json` carry it
+in `ledger`, `iterative.json` and the review receipt carry it as `cost`. A
+streamed openai session reports no cost of its own, since nare ignores
+streamed cost headers, so those reviews record unknown until a price table
+exists. Scrutare has no price table, cost report or dollar cap yet.
 
 Leases govern admission, and nare enforces thresholds after completed turns.
 An already admitted invocation may finish internal turns while sibling use
@@ -225,7 +287,7 @@ and replay contracts.
 ## Offline installed CLI proof
 
 Set `SCRUTARE_TEST_NARE_EXECUTABLE` to the absolute installed console path for
-nare 2026.11.80, then run:
+nare 2026.11.94, then run:
 
 ```sh
 uv run --python 3.10 --locked --extra dev pytest tests/test_nare_cli_integration.py
@@ -246,8 +308,9 @@ It also runs the complete panel producer, including successful and denied
 corrections, shared remaining grants, partial and missing initial documents,
 fatal correction results, filtered correction tools, duplicate/conflicting
 source preservation, exact correction rails and replay of producer artifacts.
-Scenario selection reads existing purpose, positional prompt and attempt data;
-it never rewrites the persona system or changes the runner's invocation.
+Scenario selection reads existing purpose, the task prompt (positional or its
+`--prompt-file`) and attempt data; it never rewrites the persona system or
+changes the runner's invocation.
 The OpenAI SSE fixture replaces only the HTTP client boundary with fragmented
 SSE responses. It retains the actual installed parser, vendor transport, loop,
 tools, schema validation, accounting and persistence. It checks read tool-call

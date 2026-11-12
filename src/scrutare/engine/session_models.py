@@ -59,6 +59,41 @@ class TokenUsage:
         }
 
 
+CostSource = Literal["provider_reported", "unknown"]
+
+
+@dataclass(frozen=True)
+class SessionCost:
+    """Dollars a backend reported for model requests, or unknown. Unknown is never zero."""
+
+    usd: float | None = None
+    source: CostSource = "unknown"
+
+    def __post_init__(self) -> None:
+        if self.source == "unknown":
+            if self.usd is not None:
+                raise ValueError("cost: an unknown cost carries no amount")
+        elif self.source != "provider_reported":
+            raise ValueError("cost: expected a provider_reported or unknown source")
+        else:
+            usd = self.usd
+            if (usd is None or type(usd) not in (int, float) or not math.isfinite(usd)
+                    or usd < 0):
+                raise ValueError("cost: expected a reported nonnegative finite amount")
+            object.__setattr__(self, "usd", float(usd))
+
+    def __add__(self, other: "SessionCost") -> "SessionCost":
+        """The sum of two reported amounts; unknown as soon as either part is."""
+        if not isinstance(other, SessionCost):
+            return NotImplemented
+        if self.usd is None or other.usd is None:
+            return SessionCost()
+        return SessionCost(self.usd + other.usd, "provider_reported")
+
+    def to_dict(self) -> dict[str, object]:
+        return {"usd": self.usd, "source": self.source}
+
+
 @dataclass(frozen=True)
 class NareRuntime:
     executable: Path
@@ -78,12 +113,38 @@ class NareRuntime:
 
 
 @dataclass(frozen=True)
+class NareFlag:
+    """One `nare run` option as `nare contract` advertises it under `flags`."""
+
+    name: str
+    takes_value: bool
+    choices: tuple[str, ...] | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.name, str) or not re.fullmatch(r"-{1,2}[A-Za-z0-9][A-Za-z0-9-]*",
+                                                              self.name):
+            raise ValueError("flag: expected an option name")
+        _boolean(self.takes_value, "takes_value")
+        if self.choices is not None and (
+                not isinstance(self.choices, tuple)
+                or any(not isinstance(choice, str) for choice in self.choices)):
+            raise ValueError("choices: expected a tuple of strings or null")
+
+
+@dataclass(frozen=True)
 class NareCapability:
     version: str
     contract: int
-    # Constrained-answer modes the runtime advertises for its OpenAI rail (nare 2026.10.12+).
+    # Constrained-answer modes the runtime advertises (nare 2026.10.12+), for the providers
+    # named by structured_output_providers.
     structured_output: tuple[str, ...] = ()
     proxy_num_retries: bool = False
+    # Every `nare run` option a contract 3 runtime advertises. Contracts 1 and 2 carry None:
+    # their optional flags are decided from the release number, as they always were.
+    flags: tuple[NareFlag, ...] | None = None
+    structured_output_providers: tuple[str, ...] = ("openai",)
+    # Rails on which the runtime marks prompt-cache breakpoints when asked (contract 3).
+    cache_breakpoints: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         _text(self.version, "version")
@@ -92,6 +153,28 @@ class NareCapability:
         if (not isinstance(self.structured_output, tuple)
                 or any(not isinstance(mode, str) or not mode for mode in self.structured_output)):
             raise ValueError("structured_output: expected a tuple of mode names")
+        for field in ("structured_output_providers", "cache_breakpoints"):
+            if (not isinstance(getattr(self, field), tuple) or any(
+                    not isinstance(name, str) or not name for name in getattr(self, field))):
+                raise ValueError(f"{field}: expected a tuple of provider names")
+        if self.flags is not None and (
+                not isinstance(self.flags, tuple)
+                or any(not isinstance(flag, NareFlag) for flag in self.flags)
+                or len({flag.name for flag in self.flags}) != len(self.flags)):
+            raise ValueError("flags: expected distinct advertised options or null")
+
+    def flag(self, name: str) -> NareFlag | None:
+        """The advertised option of this name, or None (always None on contracts 1 and 2)."""
+        return next((flag for flag in self.flags or () if flag.name == name), None)
+
+    def advertises(self, name: str, value: str | None = None) -> bool:
+        """Whether the runtime lists this option and, for an option with choices, this value."""
+        flag = self.flag(name)
+        if flag is None:
+            return False
+        if value is None:
+            return True
+        return flag.takes_value and (flag.choices is None or value in flag.choices)
 
 
 @dataclass(frozen=True)
@@ -113,6 +196,8 @@ class SessionOutcome:
     nare_status: str | None = None
     stop_reason: str | None = None
     exit_code: int | None = None
+    # What the backend reported for this session's requests, or unknown.
+    cost: SessionCost = SessionCost()
 
     def __post_init__(self) -> None:
         _validate_execution_outcome(self)
@@ -148,6 +233,8 @@ class ReanchorOutcome:
     nare_status: str | None = None
     stop_reason: str | None = None
     exit_code: int | None = None
+    # What the backend reported for this session's requests, or unknown.
+    cost: SessionCost = SessionCost()
 
     def __post_init__(self) -> None:
         _validate_execution_outcome(self)
@@ -196,6 +283,8 @@ def _validate_execution_outcome(self: SessionOutcome | ReanchorOutcome) -> None:
             _text(getattr(self, field), field)
     if self.exit_code is not None and type(self.exit_code) is not int:
         raise ValueError("exit_code: expected an integer or null")
+    if not isinstance(self.cost, SessionCost):
+        raise ValueError("cost: expected SessionCost")
 
 
 def _execution_dict(self: SessionOutcome | ReanchorOutcome) -> dict[str, object]:
@@ -214,6 +303,7 @@ def _execution_dict(self: SessionOutcome | ReanchorOutcome) -> dict[str, object]
         "nare_status": self.nare_status,
         "stop_reason": self.stop_reason,
         "exit_code": self.exit_code,
+        "cost": self.cost.to_dict(),
     }
 
 

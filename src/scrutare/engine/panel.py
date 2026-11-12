@@ -31,7 +31,13 @@ from scrutare.engine.session_artifacts import (
     create_attempt_directory,
     write_owned_json,
 )
-from scrutare.engine.session_models import FanOutResult, NareRuntime, ReanchorOutcome, TokenUsage
+from scrutare.engine.session_models import (
+    FanOutResult,
+    NareRuntime,
+    ReanchorOutcome,
+    SessionCost,
+    TokenUsage,
+)
 from scrutare.findings import dedupe_findings, derive_verdict, parse_diff
 from scrutare.findings.models import artifact_data as asdict
 from scrutare.findings.verdict import Degradation, Verdict
@@ -55,6 +61,8 @@ class PanelResult:
     usage: TokenUsage
     accounting_complete: bool
     run_dir: Path
+    # Reported dollars for every session of the review, or unknown (never zero).
+    cost: SessionCost = SessionCost()
 
 
 def _validate_binding(context: _ExecutionContext, hashes: dict[str, str]) -> None:
@@ -234,7 +242,8 @@ async def run_panel(run_dir: Path, config: ReviewConfig, *, runtime: NareRuntime
     except SessionArtifactError:
         status, reason, verdict = "failed", "artifacts", None
     result = PanelResult(status, verdict, initial, corrections, verification, context.ledger.usage,
-                         context.ledger.accounting_complete, context.run_dir)
+                         context.ledger.accounting_complete, context.run_dir,
+                         context.ledger.cost)
     document = _document(context, result, reason, hashes, config_hash, descriptors)
     if degradation is not None and verdict is not None:
         document["degraded"] = degradation.to_dict()

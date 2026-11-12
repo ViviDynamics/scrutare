@@ -118,11 +118,15 @@ def test_installed_debate_pipeline(
         observations = load(attempt / "offline-observations.json")
         session = load(attempt / "session.json")
         assert observations["guard_violations"] == observations["credential_names"] == []
-        assert observations["version"] == "2026.11.80"
+        assert observations["version"] == "2026.11.94"
         assert session["policy"] == {"tools": ["read"], "root": str(run / "review-inputs")}
         assert session["budget"]["tokens"] == invocation["invocation_limit"]
         if attempt.parent.name == "debate-chair":
-            prompt = invocation["argv"][2]
+            # The pinned runtime reads the task from the attempt's own private file.
+            assert invocation["argv"][2] == "--prompt-file"
+            assert invocation["argv"][3].endswith("/debate-chair/" + attempt.name
+                                                  + "/task-prompt.txt")
+            prompt = (attempt / "task-prompt.txt").read_text(encoding="utf-8")
             assert '"verified_pool"' in prompt and '"positions"' in prompt
             assert '"persona":"security"' in prompt
     replay = subprocess.run(

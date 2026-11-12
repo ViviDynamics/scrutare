@@ -127,6 +127,7 @@ async def run_focused_debate(
         context.ledger.usage,
         context.ledger.accounting_complete,
         context.run_dir,
+        context.ledger.cost,
     )
     document = {
         "schema_version": 2,

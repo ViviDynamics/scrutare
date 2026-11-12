@@ -137,6 +137,42 @@ exit code may have stopped before its stream existed. A run that did not opt in 
 `citation_correction_unconfigured` (invalid). Runs that never opted in are not
 audited.
 
+[Request retries](config.md#request-retries-opt-in),
+[cache breakpoints](config.md#prompt-cache-breakpoints-opt-in) and
+[reasoning effort](config.md#reasoning-effort-opt-in) are audited together when
+`config.json` sets one of them on any rail or any session's `invocation.json`
+records one. Each launched session's recorded rail, including these fields,
+must equal its configured rail (a reserved executor uses the rail its identity
+is given), and argv must carry exactly what the rail implies: `--request-retries
+N` once, `--request-retry-seconds S` once exactly when `N` is above 0 (60 when
+the rail sets no bound), `--cache-breakpoints` once exactly when the rail
+enables it, and `--effort LEVEL` once exactly when the rail sets it
+(`rail_options_unrecorded`, invalid). `result.json` must carry
+`request_retries`, `cache_breakpoints` and `effort` exactly when the rail sets
+them, with the configured limit, flag and level; the recorded resend count
+must equal the retry records in the retained `stdout.jsonl` and
+`correction.stdout.jsonl`; and a saved session that records a reasoning effort
+must record the rail's (`rail_options_result_disagrees`, invalid). A launched
+session without `result.json`, a counted session without `stdout.jsonl`, or an
+opted-in run without any session attempt is `rail_options_evidence_missing`
+(incomplete), and a captured configuration that cannot be read for this is
+`rail_options_config_invalid` (invalid). The contract 3 recovery check accepts
+`--request-retries N` only when it equals the limit the session's own rail
+recorded, and `0` otherwise. Runs that never set these fields are not audited.
+
+A session whose recorded argv passes a prompt by file (`--prompt-file`,
+`--system-file`, on runtimes that advertise them) is bound to the retained file.
+Each flag must appear once, as its own argument, and name this attempt's own
+`task-prompt.txt` or `system-prompt.txt`; a file prompt must be the only prompt
+(no positional text beside it, no `--system` beside `--system-file`); and the
+file's SHA-256 must equal the `task_prompt_sha256` or `system_prompt_sha256`
+that `invocation.json` recorded (`prompt_input_invalid`, invalid). A recorded
+file that is no longer in the bundle is `prompt_input_evidence_missing`
+(incomplete). The correction audits read the task and correction prompts from
+these files, and require the correction turn to name the session's own system
+file. Sessions that carried their prompts in argv are not audited, so earlier
+bundles replay as before.
+
 Known formats must be structurally valid UTF-8 JSON. Duplicate object keys,
 nonfinite numbers, malformed fields, unsupported verdict or delivery schema
 versions, and required leaf symlinks or nonregular files cannot support a clean

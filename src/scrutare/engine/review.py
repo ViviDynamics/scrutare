@@ -24,7 +24,7 @@ from scrutare.engine.recovery import (
 )
 from scrutare.engine.review_inputs import ReviewInputError
 from scrutare.engine.session_artifacts import SessionArtifactError, write_owned_bytes
-from scrutare.engine.session_models import NareRuntime, TokenUsage
+from scrutare.engine.session_models import NareRuntime, SessionCost, TokenUsage
 from scrutare.engine.strategy import StrategyNotImplementedError, run_review
 from scrutare.findings import Verdict
 from scrutare.poster import (
@@ -80,6 +80,8 @@ class ReviewRunResult:
     # Present only for an opt-in phase overrun fallback, so callers need not read verdict.json.
     degraded: dict[str, Any] | None = None
     recovery: dict[str, Any] | None = None
+    # Dollars the backends reported for this review's sessions, or unknown (never zero).
+    cost: SessionCost = SessionCost()
 
     def to_dict(self) -> dict[str, Any]:
         data: dict[str, Any] = {
@@ -88,6 +90,7 @@ class ReviewRunResult:
             "run_dir": str(self.run_dir), "head_sha": self.head_sha,
             "verdict": self.verdict, "rule": self.rule, "panel_status": self.panel_status,
             "usage": self.usage.to_dict(), "accounting_complete": self.accounting_complete,
+            "cost": self.cost.to_dict(),
         }
         if self.recovery is not None:
             data["recovery"] = self.recovery
@@ -237,7 +240,8 @@ async def review_pr(
                                  panel.status, panel.usage, panel.accounting_complete,
                                  receipt, request, replies,
                                  verdict.degradation.to_dict()
-                                 if verdict.degradation is not None else None, recovery)
+                                 if verdict.degradation is not None else None, recovery,
+                                 panel.cost)
         write_owned_bytes(run_dir / "result.json", result.to_bytes(),
                           prepared_root=run_dir / "review-inputs")
         await asyncio.sleep(0)

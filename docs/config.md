@@ -31,9 +31,13 @@ Errors identify a field path or YAML location without echoing field values.
 | `models.default.provider` | `anthropic`, `openai` | `anthropic` |
 | `models.default.base_url` | HTTP or HTTPS URL with a host, or `null` | `null` |
 | `models.default.model` | Explicit nonempty string | Required |
-| `models.default.structured_output` | `json_schema` (requires `provider: openai`), or `null` | `null` (off) |
+| `models.default.structured_output` | `json_schema`, or `null` | `null` (off) |
 | `models.default.max_output_tokens` | Positive integer, or `null` | `null` (off) |
 | `models.default.proxy_num_retries` | Nonnegative integer (requires `provider: openai`), or `null` | `null` (off) |
+| `models.default.request_retries` | Nonnegative integer, or `null` | `null` (never resend) |
+| `models.default.request_retry_seconds` | Positive number (requires `request_retries` above 0), or `null` | `null` (60 when retries are on) |
+| `models.default.cache_breakpoints` | Boolean (requires `provider: openai`), or `null` | `null` (off) |
+| `models.default.effort` | `low`, `medium`, `high`, `xhigh`, `max`, or `null` | `null` (not sent) |
 | `models.overrides` | Mapping from a configured persona name to partial model settings | `{}` |
 | `verdict.blocking_categories` | List drawn from the fixed vocabulary | `correctness`, `security`, `regression` |
 | `verdict.advisory_categories` | List drawn from the fixed vocabulary | `style`, `consistency`, `docs` |
@@ -51,7 +55,7 @@ budgets, filter paths, derive a verdict, or post reviews. Configured capture use
 the typed path settings to prepare a filtered reviewer view. See the
 [path filters guide](path-filters.md) for the glob dialect, rename exclusions,
 artifact format, and persona input API. Configuration has no API-key,
-credential, retry, or arbitrary extension fields.
+credential, or arbitrary extension fields.
 
 ## Personas
 
@@ -134,12 +138,27 @@ citation validation, and an answer that fails it fails the session as before.
 
 The setting is off by default and inherited by overrides like the other rail
 fields; an override can set it alone or clear an inherited value with `null`.
-It is refused at configuration load for a rail whose provider is not `openai`,
-and refused before any session launches when the nare runtime does not
-advertise the capability (nare 2026.10.12 or newer). Use it only with a
-backend that enforces `response_format` json_schema, such as vLLM; an
-OpenAI-compatible server that ignores the field answers unconstrained, and
-validation still decides.
+It is refused before any session launches when the nare runtime does not
+advertise the capability for that rail's provider: the openai rail from nare
+2026.10.12, the anthropic rail on contract 3 runtimes that list it (the pinned
+2026.11.94 does). Use it only with a backend that enforces `response_format`
+json_schema, such as vLLM; an OpenAI-compatible server that ignores the field
+answers unconstrained, and validation still decides.
+
+On the anthropic rail nare sends Anthropic's structured outputs instead,
+`output_config.format` with the schema passed through the SDK's
+`transform_schema`, on the same turns. Every schema Scrutare sends passes
+nare's startup check for that rail. Two limits apply there. Anthropic enforces
+only part of JSON Schema at decode time (types, `required`, `enum`, closed
+objects), which covers Scrutare's schemas. And nare withholds the tools on the
+constrained turn by sending an empty tool list while the earlier `read` calls
+and their results are still in the transcript. The offline proof shows that
+request shape through the real transport. It has not been run against a live
+Anthropic endpoint, and the [citation correction](#citation-correction-turn-opt-in)
+requires the openai rail because Anthropic refused tool blocks in a request
+that defines no tools. Treat the anthropic constraint as unproven until a live
+run confirms the correction turn is accepted. A refusal fails the session as a
+provider failure; it cannot produce a wrong answer.
 
 When no rail sets it, the canonical configuration, rail records,
 `invocation.json` and `result.json` are byte-identical to earlier releases.
@@ -220,6 +239,104 @@ previous bytes. When any rail opts in, canonical configuration and `fanout.json`
 record the setting on all rails (`null` where off). Each invocation records its
 rail and exact native flag; replay rejects a missing or altered retry control.
 The default remains off.
+
+## Request retries (opt-in)
+
+Scrutare starts every contract 3 session with `--request-retries 0`, so one
+transient provider failure (a timeout, a dropped connection, HTTP 429, 502,
+503, 504 or 529) ends the session, and with it the review and every token it
+had spent. A rail can let nare resend the failed request instead:
+
+```yaml
+models:
+  default:
+    provider: openai
+    base_url: https://litellm.example/v1
+    model: your-model
+    request_retries: 3
+    request_retry_seconds: 120
+```
+
+Every nare session on that rail, correction turns included, is launched with
+`--request-retries 3 --request-retry-seconds 120`. nare resends one failed
+model request up to that many times, waiting 2, 4, 8 and 16 seconds and then 30
+each (longer when the provider sends `Retry-After`), and never waits past the
+seconds bound for one request. The count is per request, not per session.
+Without `request_retry_seconds` Scrutare passes 60. A failure that is not
+transient (400, 401, 403, 404, 422, and a 500 on the openai rail) still ends
+the session on the first attempt. The session timeout is unchanged and covers
+the waiting, so a session can still time out while it waits.
+
+`request_retries` accepts a nonnegative integer on either provider, inherits
+through overrides, and is cleared with `null`. `request_retry_seconds` accepts
+a positive number and requires `request_retries` above 0 on the same rail.
+The runtime must be a contract 3 nare that lists `--request-retry-seconds`;
+otherwise the wave is refused before any session starts. This is separate from
+`proxy_num_retries`, which asks a proxy to retry upstream inside one of nare's
+attempts.
+
+Accounting. A failed attempt adds no turn, no `cost` event and no usage, and
+the resent request carries the same bytes, so a caching backend's prefix still
+hits. Scrutare counts tokens from `cost` events and reconciles their sum with
+nare's result, so a resend is never counted twice; the installed proof checks
+this through the real transport, including a resumed correction turn. What no
+one reports is anything a provider charged for the abandoned attempt, for
+example a reply that was generated and then lost when the connection dropped.
+With retries on, treat a session's usage as a lower bound by at most its
+resends, each of one request. `accounting_complete` keeps its meaning: every
+token nare reported was counted once.
+
+When no rail sets it, argv, the canonical configuration and every record keep
+their previous bytes. When any rail sets it, every rail in `config.to_dict()`
+and `fanout.json` records `request_retries` (`null` where it is off), each
+session's `invocation.json` records it in `rail` and its argv, and
+`result.json` records `{"limit": N, "retried": M}`, where `M` counts the
+resends in the retained streams (`null` for a session that never started).
+A retry record on a session that asked for none, or a count that disagrees
+with nare's own, fails the session as a protocol failure.
+[Replay](replay.md) audits these records.
+
+## Prompt-cache breakpoints (opt-in)
+
+`cache_breakpoints: true` on an openai rail adds `--cache-breakpoints` to each
+of its sessions. nare then marks two positions in every request with
+`cache_control: {"type": "ephemeral"}`: the newest block of the transcript and
+the last tool. Chat Completions has no breakpoint of its own, so this only
+helps behind a proxy that forwards the marker to a caching backend, such as
+LiteLLM in front of Anthropic or Bedrock. A server with automatic prefix
+caching (OpenAI, vLLM) needs no marker, and one that does not know the field
+may refuse the request; nare's error then names the option. A cache hit shows
+up as `cache_read` in the session's usage.
+
+The setting is a boolean, off by default, inherited by overrides and cleared
+with `null`. Other providers refuse it: the anthropic rail always marks. The
+runtime must be a contract 3 nare that advertises the capability for the
+openai rail. When any rail sets it, the canonical configuration and
+`fanout.json` record it on every rail, `invocation.json` records it in `rail`
+and its argv, and `result.json` records `{"enabled": true|false}`.
+
+## Reasoning effort (opt-in)
+
+`effort: high` adds `--effort high` to each session on that rail. On the
+anthropic rail nare sends `output_config: {"effort": "high"}` with adaptive
+thinking; on the openai rail it sends `reasoning_effort: "high"`, and what a
+level means belongs to the server behind `base_url`. A model that does not take
+a level answers with its own error, which fails the session as a provider
+failure. The accepted levels are `low`, `medium`, `high`, `xhigh` and `max`;
+the runtime must list the level among its `--effort` choices.
+
+Thinking counts toward the output cap, so nare raises its default cap when
+effort is set and `max_output_tokens` is not: 64000 on a streamed turn, and the
+model's nonstreaming ceiling otherwise. Scrutare's anthropic sessions are not
+streamed. Set `max_output_tokens` to choose the cap yourself.
+
+The setting is off by default, accepted on either provider, inherited by
+overrides and cleared with `null`. When any rail sets it, the canonical
+configuration and `fanout.json` record it on every rail, `invocation.json`
+records it in `rail` and its argv, and `result.json` records
+`{"level": "high"}`. nare's session file records the effort each invocation
+sent; a file that records another level fails the session as a protocol
+failure.
 
 ## Citation correction turn (opt-in)
 

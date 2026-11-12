@@ -59,29 +59,30 @@ def test_an_override_can_opt_in_alone():
 
 
 @pytest.mark.parametrize(("text", "path"), [
-    ("models: {default: {model: m, structured_output: json_schema}}\n",
-     "models.default.structured_output: requires provider openai"),
-    (OPENAI + ", structured_output: json_schema}\n"
-     "  overrides:\n    senior-dev: {provider: anthropic}\n",
-     "models.overrides.senior-dev.structured_output: requires provider openai"),
     (OPENAI + ", structured_output: grammar}\n",
      "models.default.structured_output: expected one of json_schema"),
     (OPENAI + ", structured_output: true}\n",
      "models.default.structured_output: expected one of json_schema"),
 ])
-def test_unsupported_backends_and_modes_fail_at_configuration(text, path):
+def test_unsupported_modes_fail_at_configuration(text, path):
     with pytest.raises(ConfigError, match=path):
         parse_config(text)
 
 
-def test_programmatic_rails_refuse_an_unsupported_backend():
-    with pytest.raises(ConfigError, match="structured_output: requires provider openai"):
-        ModelRail("anthropic", None, "m", "json_schema")
+def test_programmatic_rails_refuse_an_unsupported_mode():
     with pytest.raises(ConfigError, match="structured_output: expected one of json_schema"):
         ModelRail("openai", None, "m", cast(Any, "grammar"))
 
 
-def test_an_inherited_constraint_on_an_anthropic_override_says_how_to_clear_it():
-    with pytest.raises(ConfigError, match="inherited from models.default; set it to null"):
-        parse_config(OPENAI + ", structured_output: json_schema}\n"
-                     "  overrides:\n    senior-dev: {provider: anthropic}\n")
+def test_the_anthropic_rail_accepts_the_constraint_and_overrides_inherit_it():
+    # nare 2026.11.94 constrains answers on the anthropic rail too. Whether the installed
+    # runtime can do it is decided at inspection, not at configuration load.
+    config = parse_config("models: {default: {model: m, structured_output: json_schema}}\n")
+    assert config.models.default.provider == "anthropic"
+    assert config.models.default.structured_output == "json_schema"
+    assert ModelRail("anthropic", None, "m", "json_schema").structured_output == "json_schema"
+    mixed = parse_config(OPENAI + ", structured_output: json_schema}\n"
+                         "  overrides:\n    senior-dev: {provider: anthropic}\n")
+    override = mixed.models.for_persona("senior-dev")
+    assert (override.provider, override.structured_output) == ("anthropic", "json_schema")
+    assert parse_config(yaml.safe_dump(mixed.to_dict())) == mixed

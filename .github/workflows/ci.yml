@@ -25,9 +25,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          nare_checkout="$RUNNER_TEMP/scrutare-nare-2026.11.80"
-          git clone --depth 1 --branch 2026.11.80 https://github.com/ViviDynamics/nare.git "$nare_checkout"
-          test "$(git -C "$nare_checkout" rev-parse HEAD)" = "4bca6d716cb3c5de37c0cbf9316aa063fafb570e"
+          nare_checkout="$RUNNER_TEMP/scrutare-nare-2026.11.94"
+          git clone --depth 1 --branch 2026.11.94 https://github.com/ViviDynamics/nare.git "$nare_checkout"
+          test "$(git -C "$nare_checkout" rev-parse HEAD)" = "66fd6459262798839c15ebaed37bd2f0c55daf46"
           uv python install 3.14
           uv sync --project "$nare_checkout" --python 3.14 --locked --no-dev
           test -x "$nare_checkout/.venv/bin/nare"

@@ -34,7 +34,8 @@ if result.verdict is not None:
 `scrutare.engine.panel.PanelResult`. Its fields are `status` (`complete`,
 `partial`, or `failed`), optional `verdict`, the initial `FanOutResult` snapshot,
 ordered typed `corrections`, optional terminal `verification`, final `usage`,
-`accounting_complete`, and `run_dir`. The supplied config must match the captured
+`accounting_complete`, `run_dir`, and `cost` (the reported dollars of every
+session, or unknown). The supplied config must match the captured
 snapshots. Runtime inspection and preparation errors can raise before a result
 exists; unsafe artifact ownership and final publication errors also raise.
 

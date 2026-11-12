@@ -237,7 +237,10 @@ def test_snapshot_without_phases_keeps_its_shape():
     snapshot = ledger.snapshot()
     assert "phases" not in snapshot
     assert set(snapshot["configured"]) == {"review_max_tokens", "per_persona_tokens"}
-    assert all(set(s) == {"session_key", "persona", "usage"} for s in snapshot["sessions"])
+    # Every session also states its reported dollar cost, or that it is unknown (#116).
+    assert all(set(s) == {"session_key", "persona", "usage", "cost"}
+               for s in snapshot["sessions"])
+    assert snapshot["cost"] == {"usd": None, "source": "unknown"}
 
 
 # Scripted nare: each phase chooses its usage and terminal shape. "over" is the shape of the

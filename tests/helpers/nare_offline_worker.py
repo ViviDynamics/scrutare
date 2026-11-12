@@ -40,6 +40,19 @@ def option(name, default=None):
     return default
 
 
+def recorded_prompt(argv):
+    """The task of one `run` argument list: its positional text, or its --prompt-file."""
+    if len(argv) > 2 and argv[1] == "--prompt-file":
+        return Path(argv[2]).read_bytes().decode("utf-8")
+    return argv[1] if len(argv) > 1 and argv[0] == "run" else None
+
+
+def system_prompt():
+    """The system prompt this run was given, as text or through --system-file."""
+    path = option("--system-file")
+    return option("--system") if path is None else Path(path).read_bytes().decode("utf-8")
+
+
 session_path = option("--session") or option("--resume")
 artifact = Path(session_path).parent.resolve() if session_path else None
 observations = {
@@ -158,9 +171,10 @@ class FakeProvider:
         # Generated replies keep any scripted usage, so a test can exceed a real budget.
         usage = reply.get("usage", {"input": 10, "output": 5})
         if reply.get("assess_candidates"):
-            prompt = arguments[1]
+            prompt = recorded_prompt(arguments)
             if option("--resume"):
-                prompt = json.loads((artifact / "invocation.json").read_bytes())["argv"][2]
+                prompt = recorded_prompt(
+                    json.loads((artifact / "invocation.json").read_bytes())["argv"][1:])
             pool, _ = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])
             status = reply["assess_candidates"]
             rows = []
@@ -176,7 +190,7 @@ class FakeProvider:
                 rows.append(dict(rows[0], candidate_id="never-given-fifth-id"))
             reply = {"content": [{"type": "text", "text": json.dumps({"assessments": rows})}]}
         if reply.get("propose_candidates"):
-            prompt = arguments[1]
+            prompt = recorded_prompt(arguments)
             pool, _ = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])
             output = {"proposals": [{"candidate_id": candidate["candidate_id"],
                 "action": reply["propose_candidates"], "reason": "Captured evidence position.",
@@ -186,7 +200,7 @@ class FakeProvider:
                 for candidate in pool["candidates"]]}
             reply = {"content": [{"type": "text", "text": json.dumps(output)}]}
         if reply.get("discuss_candidates"):
-            prompt = arguments[1]
+            prompt = recorded_prompt(arguments)
             pool, _ = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])
             action = reply["discuss_candidates"]
             rows = []
@@ -199,7 +213,7 @@ class FakeProvider:
                              "citations": citations})
             reply = {"content": [{"type": "text", "text": json.dumps({"proposals": rows})}]}
         if reply.get("select_pool"):
-            prompt = arguments[1]
+            prompt = recorded_prompt(arguments)
             pool, _ = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])
             output = {"findings": [{"candidate_id": f["candidate_id"], "category": f["category"]}
                                    for f in pool["verified_pool"]]}
@@ -208,13 +222,20 @@ class FakeProvider:
             reply = {"content": [{"type": "text", "text": json.dumps(output)}]}
         if reply.get("error"):
             raise RuntimeError(reply["error"])
+        if reply.get("transient"):
+            # One failed attempt at this request, with the status a provider would return.
+            # The real loop decides whether it is resent; the next reply answers a resend.
+            failure = RuntimeError("offline transient provider failure")
+            failure.status_code = reply["transient"]
+            raise failure
         observations["calls"][-1]["end"] = time.monotonic()
         return Reply(
             content=reply["content"],
             tool_calls=[ToolCall(**call) for call in reply.get("tool_calls", [])],
             usage=Usage(**usage),
             stop_reason=reply.get("stop_reason", "end_turn"),
-            cost=None,
+            # Dollars a backend reported for this reply, when the scenario scripts any.
+            cost=reply.get("cost"),
         )
 
 
@@ -226,15 +247,16 @@ def make_transport(provider, **kwargs):
     selection = {
         "purpose": invocation.get("purpose", "review"),
         "attempt": artifact.name if artifact is not None else None,
-        "prompt": arguments[1] if arguments and arguments[0] == "run" else None,
+        "prompt": recorded_prompt(arguments),
     }
     observations["selection"] = selection
-    scenario = spec.get("systems", {}).get(option("--system"), spec.get("default", {}))
+    system = system_prompt()
+    scenario = spec.get("systems", {}).get(system, spec.get("default", {}))
     for candidate in spec.get("scenarios", []):
         if (candidate["purpose"] == selection["purpose"]
                 and candidate["attempt"] == selection["attempt"]
                 and (selection["prompt"] or "").startswith(candidate["prompt_prefix"])
-                and candidate.get("system", option("--system")) == option("--system")):
+                and candidate.get("system", system) == system):
             scenario = candidate["scenario"]
             break
     return FakeProvider(scenario)
@@ -265,20 +287,51 @@ if spec.get("default", {}).get("http_sse") is not None:
     async def http_boundary(request):
         if request.method == "GET" and request.url.path == "/v1/model/info":
             return httpx.Response(200, json={"data": [{"model_name": option("--model"),
-                "model_info": {"max_input_tokens": 100000}}]})
+                "model_info": {"max_input_tokens": 100000,
+                               **scenario.get("model_info", {})}}]})
         assert request.method == "POST" and request.url.path == "/v1/chat/completions"
         payload = json.loads(request.content)
         observations["calls"].append({"payload": payload})
         if payload.get("stream") is not True:
             return httpx.Response(400, json={"error": "offline endpoint requires SSE"})
         assert payload.get("stream_options") == {"include_usage": True}
+        turn = next(turns)
+        if turn.get("status") is not None:
+            # One attempt the endpoint refuses with an HTTP status, before any reply.
+            return httpx.Response(turn["status"], json={"error": "offline status"})
         return httpx.Response(200, headers={"content-type": "text/event-stream"},
-                              stream=SSEBytes(next(turns)))
+                              stream=SSEBytes(turn))
 
     def http_client(*args, **kwargs):
         return original_client(*args, **kwargs, transport=httpx.MockTransport(http_boundary))
 
     httpx.AsyncClient = http_client
+elif spec.get("default", {}).get("http_anthropic") is not None:
+    # Retain the real CLI factory and AnthropicTransport; replace only the SDK's HTTP client.
+    httpx = importlib.import_module("httpx2")
+    anthropic_transport = importlib.import_module("nare.transport.anthropic")
+    turns = iter(spec["default"]["http_anthropic"]["turns"])
+
+    async def anthropic_boundary(request):
+        assert request.method == "POST" and request.url.path == "/v1/messages"
+        payload = json.loads(request.content)
+        observations["calls"].append({"payload": payload})
+        turn = next(turns)
+        if turn.get("status") is not None:
+            return httpx.Response(turn["status"], json={
+                "type": "error", "error": {"type": "overloaded_error", "message": "offline"}})
+        return httpx.Response(200, json={
+            "id": f"msg_{len(observations['calls'])}", "type": "message", "role": "assistant",
+            "model": payload["model"], "stop_sequence": None, **turn["message"]})
+
+    build_client = anthropic_transport.AnthropicTransport._build_client
+
+    def offline_client(self, *, api_key, base_url, http_client, timeout):
+        return build_client(
+            self, api_key=api_key, base_url=base_url, timeout=timeout,
+            http_client=httpx.AsyncClient(transport=httpx.MockTransport(anthropic_boundary)))
+
+    anthropic_transport.AnthropicTransport._build_client = offline_client
 else:
     nare_cli.make_transport = make_transport
 sys.argv = [console, *arguments]

@@ -18,7 +18,7 @@ exact bytes are retained. See the [configuration reference](config.md).
 
 `--nare-executable` is an operational option, not a YAML setting. It defaults to
 `nare` on PATH and can select a separate environment with its own interpreter.
-The tested runtime is nare 2026.11.80; the engine requires at least 2026.10.0 and
+The tested runtime is nare 2026.11.94; the engine requires at least 2026.10.0 and
 contract 1 (releases before 2026.10.7), contract 2 (before 2026.11.33),
 or contract 3. The `panel`, [iterative](iterative-review.md), and
 [debate](debate.md) strategies execute reviews. A missing runtime is rejected
@@ -44,7 +44,10 @@ GitHub access. See
 Success writes exactly the UTF-8 bytes in `result.json` to stdout. The JSON
 includes schema/application versions, `status: posted`, absolute `run_dir`,
 captured `head_sha`, code-derived `verdict` and `rule`, `panel_status`, reported
-`usage`, `accounting_complete`, and the validated review receipt. An applicable
+`usage`, `accounting_complete`, the review's `cost` (`{"usd", "source"}`, with
+`source` `provider_reported` or `unknown`; see
+[session-fanout.md](session-fanout.md#admission-and-accounting)), and the
+validated review receipt. An applicable
 reviewer-request receipt is included separately. Success is emitted only after
 the result and manifest are installed. With `replies.enabled` the document also
 has `replies`, one entry per threaded response this run delivered. A

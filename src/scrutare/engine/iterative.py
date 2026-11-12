@@ -419,7 +419,8 @@ async def run_iterative(run_dir: Path, config: ReviewConfig, *,
                             "stale_dependency_findings": stale_dependencies,
                             "reviewed_files": list(patches)
                             if reviewed else [], "initial": result.initial.to_dict(),
-                            "usage": result.usage.to_dict()}
+                            "usage": result.usage.to_dict(),
+                            "cost": result.cost.to_dict()}
         write_owned_json(run / "iterative.json", document, prepared_root=inputs.root)
         if reply_document is not None:
             write_owned_json(run / "replies.json", reply_document, prepared_root=inputs.root)

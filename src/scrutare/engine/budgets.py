@@ -5,7 +5,14 @@ from dataclasses import dataclass
 from types import MappingProxyType
 
 from scrutare.config import BudgetSettings
-from scrutare.engine.session_models import TokenUsage, _boolean, _integer, _persona, _text
+from scrutare.engine.session_models import (
+    SessionCost,
+    TokenUsage,
+    _boolean,
+    _integer,
+    _persona,
+    _text,
+)
 
 
 @dataclass(frozen=True)
@@ -98,6 +105,8 @@ class ReviewBudgetLedger:
         # grant cannot shrink a later grant. Every grant stays within its share of the ceiling.
         self._protected = bool(protect_reservations or phases)
         self._sessions: dict[str, tuple[str, TokenUsage]] = {}
+        # What each settled session's backend reported in dollars; absent means unknown.
+        self._costs: dict[str, SessionCost] = {}
         self._active: dict[str, BudgetLease] = {}
         self._usage = TokenUsage()
         self._accounting_complete = True
@@ -109,6 +118,21 @@ class ReviewBudgetLedger:
     @property
     def usage(self) -> TokenUsage:
         return self._usage
+
+    @property
+    def cost(self) -> SessionCost:
+        """Reported dollars across every session that used tokens, or unknown.
+
+        One session with usage and no reported cost makes the whole review unknown: a
+        partial sum would read as a total. A review that used nothing has nothing reported.
+        """
+        total: SessionCost | None = None
+        for key, (_, usage) in sorted(self._sessions.items()):
+            if usage.total == 0:
+                continue
+            cost = self._costs.get(key, SessionCost())
+            total = cost if total is None else total + cost
+        return SessionCost() if total is None else total
 
     @property
     def exhausted(self) -> bool:
@@ -232,11 +256,16 @@ class ReviewBudgetLedger:
         self._usage = _add(self._usage, delta)
 
     def settle(
-        self, lease: BudgetLease, final_usage: TokenUsage, accounting_complete: bool
+        self, lease: BudgetLease, final_usage: TokenUsage, accounting_complete: bool,
+        cost: SessionCost | None = None,
     ) -> None:
         self._validate_lease(lease)
         _boolean(accounting_complete, "accounting_complete")
+        if cost is not None and not isinstance(cost, SessionCost):
+            raise ValueError("cost: expected SessionCost")
         self.observe(lease, final_usage)
+        # Cumulative for the session, like its usage: a resumed attempt replaces it.
+        self._costs[lease.session_key] = SessionCost() if cost is None else cost
         del self._active[lease.persona]
         self._accounting_complete = self._accounting_complete and accounting_complete
 
@@ -272,6 +301,7 @@ class ReviewBudgetLedger:
             },
             "allocations": dict(self._allocations),
             "usage": self.usage.to_dict(),
+            "cost": self.cost.to_dict(),
             "personas": [
                 {
                     "persona": name,
@@ -285,7 +315,8 @@ class ReviewBudgetLedger:
                 for name in self._names
             ],
             "sessions": [
-                {"session_key": key, "persona": persona, "usage": usage.to_dict()}
+                {"session_key": key, "persona": persona, "usage": usage.to_dict(),
+                 "cost": self._costs.get(key, SessionCost()).to_dict()}
                 for key, (persona, usage) in sorted(self._sessions.items())
             ],
             "active_reservations": [
