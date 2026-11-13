@@ -1,0 +1,10 @@
+# Reviews of this repository's pull requests by the Vivi Scrutare GitHub App.
+# The App reads this file from the default branch, so a change here applies
+# only once it is merged. Comment mode: a review never blocks a merge.
+models:
+  default:
+    provider: openai
+    base_url: https://litellm.vividynamics.com/v1
+    model: gpt-6.1-sol
+github:
+  post_mode: comment
