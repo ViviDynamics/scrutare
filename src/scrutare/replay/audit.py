@@ -395,7 +395,10 @@ _SHARED_FLAGS = ("--root", "--provider", "--base-url", "--contract", "--budget-t
                  "--structured-output", "--max-tokens", "--proxy-num-retries",
                  "--max-cutoffs", "--request-retries", "--max-corrections",
                  "--request-retry-seconds", "--effort", "--compaction",
-                 "--compaction-trigger", "--compaction-target")
+                 "--compaction-trigger", "--compaction-target", "--capacity-queue",
+                 "--capacity-wait-seconds", "--capacity-refusals", "--capacity-adaptive",
+                 "--capacity-ceiling", "--capacity-floor", "--capacity-quiet-seconds",
+                 "--capacity-shared-dir")
 
 
 def _flag(argv: list[Any], name: str) -> object:
@@ -634,6 +637,125 @@ def _rail_option_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue,
                     valid = False
         if not valid:
             issues.append(AuditIssue("rail_options_result_disagrees", f"{where}/result.json",
+                                     "invalid"))
+    return tuple(issues)
+
+
+_CAPACITY_SWITCHES = ("--capacity-queue", "--capacity-adaptive")
+
+
+def _capacity_flags(argv: list[Any]) -> list[object]:
+    """Every capacity flag in order, each value flag with the item after it."""
+    found: list[object] = []
+    for index, item in enumerate(argv):
+        if isinstance(item, str) and item.startswith("--capacity"):
+            found.append(item)
+            if item not in _CAPACITY_SWITCHES:
+                found.append(argv[index + 1] if index + 1 < len(argv) else None)
+    return found
+
+
+def _capacity_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
+    """Bind each session's capacity flags and counters to the configured block, the
+    recording run's directory and the retained streams.
+
+    Each invocation's capacity flags must be exactly those the block gives its recorded
+    provider. A session that passed them records its counters, and one that did not records
+    none. The recorded refusals, queue seconds and slot seconds are recomputed from the
+    queue and limit records in the retained streams: exactly when the record was itself
+    taken from the streams, and to nare's millisecond rounding when it is nare's own
+    result. Runs that neither configured capacity nor passed a capacity flag nor recorded
+    counters are not audited, so earlier bundles replay as before.
+    """
+    from scrutare.config import ModelRail
+    from scrutare.engine.nare_session import capacity_argv
+    from scrutare.engine.session_models import CapacityUsage
+    from scrutare.engine.session_output import capacity_events
+
+    invocations = _invocations(_session_records(run_dir))
+    models = config_data.get("models") if isinstance(config_data, dict) else None
+    flagged = any(isinstance(d, dict) and isinstance(d.get("argv"), list)
+                  and _capacity_flags(d["argv"]) for _, d in invocations)
+
+    def claimed(attempt: Path) -> bool:
+        try:
+            outcome = decode_artifact(read_artifact(attempt / "result.json"),
+                                      artifact="result.json")
+        except ReplayError:
+            return False
+        return isinstance(outcome, dict) and "capacity" in outcome
+
+    if not (isinstance(models, dict) and "capacity" in models) and not flagged and not any(
+            os.path.lexists(attempt / "result.json") and claimed(attempt)
+            for attempt, _ in invocations):
+        return ()
+    try:
+        capacity = parse_config(json.dumps(config_data)).models.capacity
+    except (ConfigError, TypeError, ValueError):
+        return (AuditIssue("capacity_config_invalid", "config.json.models", "invalid"),)
+    issues = []
+    for attempt, document in invocations:
+        where = attempt.relative_to(run_dir).as_posix()
+        try:
+            if not isinstance(document, dict) or not isinstance(document.get("argv"), list):
+                raise ValueError
+            argv = document["argv"]
+            provider, session = _flag(argv, "--provider"), _flag(argv, "--session")
+            if not isinstance(provider, str) or not isinstance(session, str):
+                raise ValueError
+            # The run that executed, as recorded: replay may read it from another path.
+            expected = capacity_argv(ModelRail(provider, None, "recorded"),  # type: ignore[arg-type]
+                                     capacity, Path(session).parents[3])
+            if _capacity_flags(argv) != expected:
+                raise ValueError
+        except (ValueError, TypeError, IndexError):
+            issues.append(AuditIssue("capacity_unrecorded", f"{where}/invocation.json",
+                                     "invalid"))
+            continue
+        if not os.path.lexists(attempt / "result.json"):
+            continue
+        try:
+            outcome = decode_artifact(read_artifact(attempt / "result.json"),
+                                      artifact="result.json")
+        except ReplayError:
+            outcome = None
+        record = outcome.get("capacity") if isinstance(outcome, dict) else None
+        valid = isinstance(outcome, dict) and (
+            "capacity" not in outcome if not expected else isinstance(record, dict) and set(
+                record) == {"refusals", "wait_seconds", "limit", "slot_wait_seconds", "source"})
+        if valid and expected:
+            assert isinstance(record, dict)
+            try:
+                recorded = CapacityUsage(**record)
+            except (ValueError, TypeError):
+                valid = False
+            else:
+                streams = []
+                for name in ("stdout.jsonl", "correction.stdout.jsonl"):
+                    if os.path.lexists(attempt / name):
+                        try:
+                            streams.append(read_artifact(attempt / name))
+                        except ReplayError:
+                            streams = []
+                            break
+                    elif name == "stdout.jsonl":
+                        break
+                if not streams:
+                    issues.append(AuditIssue("capacity_evidence_missing",
+                                             f"{where}/stdout.jsonl", "incomplete"))
+                    continue
+                # Joined as the session joined them when it counted a stream without a result.
+                seen = capacity_events(streams[0] + b"\n" + b"".join(streams[1:]))
+                if recorded.source == "events":
+                    valid = recorded == seen
+                else:
+                    valid = (recorded.refusals == seen.refusals
+                             and abs(recorded.wait_seconds - seen.wait_seconds) <= 0.0015
+                             and abs(recorded.slot_wait_seconds - seen.slot_wait_seconds)
+                             <= 0.0015
+                             and (seen.limit is None or recorded.limit is not None))
+        if not valid:
+            issues.append(AuditIssue("capacity_result_disagrees", f"{where}/result.json",
                                      "invalid"))
     return tuple(issues)
 
@@ -1218,6 +1340,7 @@ def replay_run(run_dir: Path) -> ReplayResult:
               + _max_output_tokens_issues(run_dir, config_data)
               + _proxy_num_retries_issues(run_dir, config_data)
               + _rail_option_issues(run_dir, config_data)
+              + _capacity_issues(run_dir, config_data)
               + _native_recovery_issues(run_dir)
               + _prompt_input_issues(run_dir)
               + _citation_correction_issues(run_dir, config_data)
