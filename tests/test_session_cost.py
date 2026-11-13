@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from pathlib import Path
 
 import pytest
 from test_nare_session import RUN_BODY, executable, module, setup
@@ -178,3 +179,122 @@ def test_a_later_attempt_of_one_session_replaces_its_cost():
     second = ledger.admit("a", "a/session", TokenUsage(5))
     ledger.settle(second, TokenUsage(9), True, SessionCost(0.4, "provider_reported"))
     assert ledger.cost == SessionCost(0.4, "provider_reported")
+
+
+# One streamed openai-rail session as the installed nare 2026.11.100 console wrote it behind
+# a proxy that reports its charge on the final usage chunk (see the fixture's README).
+STREAMED = Path(__file__).parent / "fixtures/nare-streamed-cost"
+STREAMED_ROOT = Path("/fixture/review-inputs")
+REPORTED = SessionCost(0.375, "provider_reported")
+
+
+def streamed():
+    events = [json.loads(line) for line in
+              (STREAMED / "stdout.jsonl").read_text().splitlines()]
+    return events, json.loads((STREAMED / "session.json").read_text())
+
+
+def decode_streamed(events, saved):
+    from scrutare.engine.session_output import decode_session
+
+    stdout = "".join(json.dumps(event) + "\n" for event in events).encode()
+    return decode_session(stdout, json.dumps(saved).encode(), persona="senior-dev",
+                          exit_code=0, expected_limit=200, expected_root=STREAMED_ROOT)
+
+
+def live_cost(events):
+    """The cost a session sums from its stream as it runs, before any result."""
+    from scrutare.engine.session_output import decode_live_event
+
+    total = None
+    for event in events:
+        cost = decode_live_event(json.dumps(event).encode())[2]
+        if cost is not None:
+            total = cost if total is None else total + cost
+    return total
+
+
+def test_the_streamed_fixture_is_the_shape_the_pinned_console_writes():
+    events, saved = streamed()
+    costs = [event["detail"] for event in events if event["type"] == "cost"]
+    assert [(c["cost"], c["estimated"], c["total"]) for c in costs] == [
+        (0.125, False, 15), (0.25, False, 29)]
+    result = events[-1]
+    assert (result["type"], result["nare"], result["contract"]) == (
+        "result", "2026.11.100", 3)
+    assert result["usage"] == {"input": 32, "output": 12, "cache_read": 0, "cache_write": 0,
+                               "cost": 0.375, "estimated": False, "total": 44}
+    assert result["budget"]["used_usd"] == 0.375
+    assert saved["usage"] == {key: value for key, value in result["usage"].items()
+                              if key != "total"}
+
+
+def test_a_streamed_reported_cost_is_decoded_as_provider_reported():
+    events, saved = streamed()
+    # The bytes exactly as nare wrote them, then the same documents re-encoded.
+    from scrutare.engine.session_output import decode_session
+    verbatim = decode_session(
+        (STREAMED / "stdout.jsonl").read_bytes(), (STREAMED / "session.json").read_bytes(),
+        persona="senior-dev", exit_code=0, expected_limit=200, expected_root=STREAMED_ROOT)
+    decoded = decode_streamed(events, saved)
+    assert verbatim == decoded
+    assert decoded.cost == REPORTED == live_cost(events)
+    assert decoded.usage == TokenUsage(32, 12, 0, 0) and decoded.status == "done"
+    assert len(decoded.findings) == 1
+
+
+def estimate(usage):
+    usage["estimated"] = True
+
+
+def unreported(usage):
+    usage["cost"] = None
+    usage["estimated"] = False
+
+
+@pytest.mark.parametrize(("turn", "change"), [(0, estimate), (1, estimate), (1, unreported)])
+def test_a_streamed_session_with_a_calculated_or_missing_turn_cost_is_unknown(turn, change):
+    events, saved = streamed()
+    costs = [event for event in events if event["type"] == "cost"]
+    change(costs[turn]["detail"])
+    result = events[-1]
+    if costs[turn]["detail"]["cost"] is None:
+        # nare has no total once one turn has none.
+        for usage in (result["usage"], saved["usage"]):
+            usage["cost"] = None
+        result["budget"]["used_usd"] = None
+    else:
+        for usage in (result["usage"], saved["usage"]):
+            usage["estimated"] = True
+    decoded = decode_streamed(events, saved)
+    assert decoded.cost == SessionCost() == live_cost(events)
+    assert decoded.usage == TokenUsage(32, 12, 0, 0)
+
+
+def test_a_streamed_result_without_the_estimated_flag_is_unknown():
+    # An older nare does not say whether it calculated the figure.
+    events, saved = streamed()
+    for usage in (events[-1]["usage"], saved["usage"]):
+        del usage["estimated"]
+    assert decode_streamed(events, saved).cost == SessionCost()
+
+
+@pytest.mark.parametrize("change", [
+    lambda events, saved: events[-1]["usage"].update(cost=0.5),
+    lambda events, saved: saved["usage"].update(cost=0.5),
+    lambda events, saved: events[-1]["budget"].update(used_usd=0.5),
+    lambda events, saved: [e for e in events if e["type"] == "cost"][0]["detail"].update(
+        cost=0.25),
+    lambda events, saved: [e for e in events if e["type"] == "cost"][1]["detail"].update(
+        cost=None),
+    lambda events, saved: events[-1]["usage"].update(cost=None),
+    lambda events, saved: events[-1]["usage"].update(cost=-0.375),
+    lambda events, saved: events[-1]["usage"].update(cost="0.375"),
+])
+def test_streamed_costs_that_do_not_reconcile_are_a_protocol_failure(change):
+    from scrutare.engine.session_output import SessionProtocolError
+
+    events, saved = streamed()
+    change(events, saved)
+    with pytest.raises(SessionProtocolError):
+        decode_streamed(events, saved)

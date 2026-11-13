@@ -102,7 +102,7 @@ def anthropic_review(capture, tmp_path, installed, *, structured, effort=None):
     observed = load(outcome.artifact_directory / "offline-observations.json")
     assert observed["guard_violations"] == [] and observed["nare_controls"] == {}
     assert observed["credential_names"] == ["ANTHROPIC_API_KEY"]
-    assert observed["version"] == "2026.11.94"
+    assert observed["version"] == "2026.11.100"
     return result, outcome, [call["payload"] for call in observed["calls"]]
 
 

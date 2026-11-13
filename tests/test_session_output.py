@@ -540,3 +540,37 @@ def test_advertised_usage_total_must_match_disjoint_counters(tmp_path, location,
     target["total"] = total
     with pytest.raises(module().SessionProtocolError):
         decode(tmp_path, events, saved)
+
+
+def queue_record(wait, attempt):
+    """One queued capacity refusal as nare 2026.11.100 writes it."""
+    return event("progress", {"capacity": {
+        "attempt": attempt, "wait": wait, "waited": wait, "refusals": attempt,
+        "refusals_limit": 50, "status": 429, "reason": "max_parallel_requests"}})
+
+
+@pytest.mark.parametrize(("refusals", "wait", "limit", "slot_wait"), [
+    (0, 0.0, None, 0.0), (2, 3.25, 4, 0.5)])
+def test_capacity_fields_and_records_of_the_pinned_release_add_no_usage(
+        tmp_path, refusals, wait, limit, slot_wait):
+    # nare 2026.11.100 always writes the four capacity fields, at zero or null while its
+    # queue is off, which is all a session is ever sent. A refused request was never
+    # dispatched, so its records carry no usage whatever they say.
+    events, saved = fixture(tmp_path)
+    for target in (events[-1], saved):
+        target.update(contract=3, nare="2026.11.100")
+    events[-1].update(capacity_refusals=refusals, capacity_wait_seconds=wait,
+                      capacity_limit=limit, capacity_slot_wait_seconds=slot_wait)
+    saved.update(capacity_refusals=refusals, capacity_wait=wait, capacity_limit=limit,
+                 capacity_slot_wait=slot_wait)
+    records = [queue_record(wait / refusals, attempt + 1) for attempt in range(refusals)]
+    if limit is not None:
+        records.append(event("progress", {"capacity_limit": {
+            "limit": limit, "reason": "slot", "waited": slot_wait}}))
+    events[:0] = records
+    result = decode(tmp_path, events, saved)
+    assert (result.status, result.contract) == ("done", 3)
+    assert result.usage == TokenUsage(3, 5, 7, 11) and result.retries is None
+    stream = [json.dumps(item).encode() for item in events]
+    assert [module().decode_cost_event(line) for line in stream] == (
+        [None] * len(records) + [TokenUsage(3, 5, 7, 11), None])

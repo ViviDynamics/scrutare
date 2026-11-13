@@ -32,10 +32,10 @@ for outcome in result.outcomes:
 
 `NareRuntime` is an operational Python argument, with positive finite timeout
 and turn limits. It adds no YAML fields. Scrutare requires Python 3.10 or newer;
-install nare 2026.11.94 separately (supported minimum 2026.10.0) with the interpreter required by its
+install nare 2026.11.100 separately (supported minimum 2026.10.0) with the interpreter required by its
 release. For the pinned integration runtime, clone the public
-[ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.11.94),
-verify commit `66fd6459262798839c15ebaed37bd2f0c55daf46`, and run
+[ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.11.100),
+verify commit `1086d5d155a139ce1deab2668bcbecf806b6df04`, and run
 `uv sync --project /path/to/nare-checkout --python 3.14 --locked --no-dev`.
 Point `NareRuntime.executable`, or the CLI option `--nare-executable`, at that
 checkout's `.venv/bin/nare`. The CLI defaults to `nare` on PATH. Nare is
@@ -49,7 +49,7 @@ The pinned runtime uses contract 3, first released in nare 2026.11.33. Its
 redaction rules preserve code expressions while redacting credential values;
 Scrutare continues to decode and replay historical contract 1/2 evidence.
 Unknown contracts and release/contract mismatches fail inspection before review.
-See nare's [machine contract](https://github.com/ViviDynamics/nare/blob/2026.11.94/docs/contract.md).
+See nare's [machine contract](https://github.com/ViviDynamics/nare/blob/2026.11.100/docs/contract.md).
 
 On contract 3, every initial and resumed correction invocation explicitly sets
 `--max-cutoffs 0`, `--request-retries 0`, and `--max-corrections 1`. This retains
@@ -208,10 +208,23 @@ embeds, and in the ledger snapshot's `sessions`. The ledger's own `cost` is
 the review's total: the sum over sessions that used tokens when every one of
 them is reported, and unknown as soon as one is not, because a partial sum
 would read as a total. `panel.json`, `debate.json` and `fanout.json` carry it
-in `ledger`, `iterative.json` and the review receipt carry it as `cost`. A
-streamed openai session reports no cost of its own, since nare ignores
-streamed cost headers, so those reviews record unknown until a price table
-exists. Scrutare has no price table, cost report or dollar cap yet.
+in `ledger`, `iterative.json` and the review receipt carry it as `cost`.
+
+Where a reported amount comes from depends on whether the reply is streamed.
+A reply that is not (every anthropic session) carries it in a LiteLLM proxy's
+response headers. Openai sessions are streamed, and a stream's headers arrive before
+the reply is metered, so nare ignores them there. From nare 2026.11.100 a
+streamed openai turn instead takes `usage.cost` from the final usage chunk,
+and only from a response that carries `x-litellm-*` headers, because another
+gateway's `usage.cost` may count in other units. So a streamed openai session
+behind a LiteLLM proxy that reports the charge records a `provider_reported`
+amount, where the previous pinned release recorded unknown. This is the one
+record a default configuration can see change with the pin: no request and no
+token count differs. A streamed session still records unknown when the gateway
+is not LiteLLM, when it reports no `usage.cost`, when any one turn has none,
+or when nare filled the figure from the gateway's listed prices
+(`estimated: true`). Scrutare has no price table, cost report or dollar cap
+yet.
 
 Leases govern admission, and nare enforces thresholds after completed turns.
 An already admitted invocation may finish internal turns while sibling use
@@ -287,7 +300,7 @@ and replay contracts.
 ## Offline installed CLI proof
 
 Set `SCRUTARE_TEST_NARE_EXECUTABLE` to the absolute installed console path for
-nare 2026.11.94, then run:
+nare 2026.11.100, then run:
 
 ```sh
 uv run --python 3.10 --locked --extra dev pytest tests/test_nare_cli_integration.py
