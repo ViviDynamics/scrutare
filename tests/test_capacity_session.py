@@ -545,12 +545,14 @@ def test_an_announced_queue_wait_is_credited_against_the_session_timeout(capture
 
 
 def test_a_completed_slot_wait_is_credited_from_its_record(capture, tmp_path):
-    # 1.5 seconds waiting for a slot, reported once it ended, then 1.5 seconds of work.
-    script = {"events": "import time\ntime.sleep(1.5)\n" + slot(4, 1.5) + "time.sleep(1.5)\n",
-              "limit": 4, "slot_wait": 1.5}
-    outcome, ledger, _ = launch(capture, native(tmp_path, **script), ADAPTIVE, timeout=2.0)
+    # 2 seconds waiting for a slot, reported once it ended, then 1.5 seconds of work: 3.5
+    # seconds under a 3 second timeout. The record has a second to arrive before the
+    # deadline, and the work a second and a half to finish inside the credited one.
+    script = {"events": "import time\ntime.sleep(2.0)\n" + slot(4, 2.0) + "time.sleep(1.5)\n",
+              "limit": 4, "slot_wait": 2.0}
+    outcome, ledger, _ = launch(capture, native(tmp_path, **script), ADAPTIVE, timeout=3.0)
     assert (outcome.status, outcome.reason) == ("complete", "done")
-    assert outcome.capacity == CapacityUsage(0, 0.0, 4, 1.5, "result")
+    assert outcome.capacity == CapacityUsage(0, 0.0, 4, 2.0, "result")
 
 
 @pytest.mark.parametrize("capacity,script", [

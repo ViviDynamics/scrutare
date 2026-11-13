@@ -365,7 +365,7 @@ models:
     model: your-model
   capacity:
     mode: adaptive        # off (default), fixed or adaptive
-    wait_seconds: 1800    # most seconds one request may spend queued
+    wait_seconds: 1800    # most seconds one request may spend queued (see Timeout)
     refusals: 50          # most refusals one nare invocation queues
     ceiling: 8            # adaptive: most requests in flight on the route
     floor: 1              # adaptive: lowest limit a refusal can cut to
@@ -383,9 +383,11 @@ default and overrides alike, and to no other rail, because only nare's openai
 rail declares a capacity marker. An enabled mode with no openai rail is
 refused. A rail has no capacity field of its own.
 
-`wait_seconds` bounds one request's queue time. `refusals` bounds one nare
-invocation: a resumed correction turn is a new invocation and starts its own
-count. `wait_seconds` and `quiet_seconds` are positive numbers; `refusals`,
+`wait_seconds` bounds one request's queue time in nare. It is also the most
+waiting Scrutare credits one whole session against its timeout, so a session
+whose requests together queue for longer than that can still end as `timeout`
+(see Timeout below). `refusals` bounds one nare invocation: a resumed
+correction turn is a new invocation and starts its own count. `wait_seconds` and `quiet_seconds` are positive numbers; `refusals`,
 `ceiling` and `floor` are positive integers, and `floor` must not exceed
 `ceiling`. The most each may be is 3600 seconds for `wait_seconds` and
 `quiet_seconds`, 1000 for `refusals` and 64 for `ceiling`. A value the mode does

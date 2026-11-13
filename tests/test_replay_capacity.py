@@ -144,6 +144,14 @@ def test_the_recorded_counters_must_match_the_retained_stream(capture, tmp_path)
     assert codes(capture) == [("capacity_evidence_missing", "stdout.jsonl", "incomplete")]
 
 
+def test_a_session_sent_the_flags_must_keep_its_result(capture, tmp_path):
+    # A launched session always writes its result, so a missing one is lost evidence.
+    outcome, _, attempt = launch(capture, queued(tmp_path), FIXED)
+    assert codes(capture) == []
+    (attempt / "result.json").unlink()
+    assert codes(capture) == [("capacity_evidence_missing", "result.json", "incomplete")]
+
+
 def test_counters_taken_from_events_are_recomputed_exactly(capture, tmp_path):
     path = limited(tmp_path, events=refusal(0.25) + cut(4, 8) + slot(4, 0.25)
                    + "import time\ntime.sleep(30)\n")

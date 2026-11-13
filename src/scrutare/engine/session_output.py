@@ -453,7 +453,9 @@ def capacity_events(stdout: bytes) -> CapacityUsage:
     """Capacity counters from streams that ended without nare's result, read tolerantly.
 
     Each queued refusal leaves a queue record, and each completed slot wait or change of the
-    limit a limit record. Unreadable lines and malformed records are skipped.
+    limit a limit record. Unreadable lines and malformed records are skipped, and so is a
+    record whose seconds cannot be added to the sum so far: this runs outside the session's
+    error handling and must not raise.
     """
     refusals, wait, limit, slot = 0, 0.0, None, 0.0
     for line in stdout.split(b"\n"):
@@ -466,10 +468,10 @@ def capacity_events(stdout: bytes) -> CapacityUsage:
             record = _capacity_record(document)
         except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
             continue
-        if record.queue_wait is not None:
+        if record.queue_wait is not None and math.isfinite(wait + record.queue_wait):
             refusals += 1
             wait += record.queue_wait
-        if record.limit is not None:
+        if record.limit is not None and math.isfinite(slot + (record.slot_wait or 0.0)):
             limit = record.limit
             slot += record.slot_wait or 0.0
     return CapacityUsage(refusals, round(wait, 3), limit, round(slot, 3), "events")

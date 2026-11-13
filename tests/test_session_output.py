@@ -724,3 +724,19 @@ def test_capacity_events_count_refusals_without_a_result(tmp_path):
     stream += b"\nnot json\n" + json.dumps(event("progress", {"capacity": {}})).encode()
     assert module().capacity_events(stream) == CapacityUsage(1, 2.7, 2, 1.5, "events")
     assert module().capacity_events(b"") == CapacityUsage(0, 0.0, None, 0.0, "events")
+
+
+def test_capacity_events_skip_waits_that_cannot_be_summed():
+    # Not nare's output: two finite waits whose sum is not. The tolerant reader skips the
+    # record it cannot add instead of raising out of the session.
+    def queue(wait):
+        return json.dumps({"type": "progress", "text": "", "timestamp": "now",
+                           "detail": {"capacity": {"wait": wait}}}).encode() + b"\n"
+    def slot(waited):
+        return json.dumps({"type": "progress", "text": "", "timestamp": "now", "detail": {
+            "capacity_limit": {"limit": 2, "reason": "slot", "waited": waited}}}).encode() + b"\n"
+    from scrutare.engine.session_models import CapacityUsage
+    stream = queue(1e308) + queue(1e308) + queue(2.5) + slot(1e308) + slot(1e308) + slot(0.5)
+    counted = module().capacity_events(stream)
+    # The second of each pair is skipped; the small ones still add.
+    assert counted == CapacityUsage(2, 1e308, 2, 1e308, "events")

@@ -713,6 +713,10 @@ def _capacity_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ..
                                      "invalid"))
             continue
         if not os.path.lexists(attempt / "result.json"):
+            # A launched session always writes its result, even when cancelled.
+            if expected:
+                issues.append(AuditIssue("capacity_evidence_missing", f"{where}/result.json",
+                                         "incomplete"))
             continue
         try:
             outcome = decode_artifact(read_artifact(attempt / "result.json"),

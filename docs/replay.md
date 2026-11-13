@@ -174,8 +174,9 @@ queue records, and the queue and slot seconds equal the sums those records
 carry. A record with `source: events` was counted from the streams and must
 match exactly; one with `source: result` is nare's own and must match to
 nare's millisecond rounding, and cannot report no limit where the stream shows
-one (`capacity_result_disagrees`, invalid). A recorded session without its
-first stream is `capacity_evidence_missing` (incomplete). A correction turn
+one (`capacity_result_disagrees`, invalid). A session that was sent the flags
+and has no `result.json`, or a recorded session without its first stream, is
+`capacity_evidence_missing` (incomplete). A correction turn
 must repeat the session's capacity flags and values. An unreadable block is
 `capacity_config_invalid` (invalid). Runs without the block, flags or records
 are not audited, so earlier bundles replay as before. Replay does not check
