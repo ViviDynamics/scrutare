@@ -492,8 +492,9 @@ class _Evidence:
         if not line.strip():
             return
         try:
-            usage, resent, cost = decode_live_event(line)
-            self.retries += resent
+            event = decode_live_event(line)
+            usage, cost = event.usage, event.cost
+            self.retries += event.resent
             if cost is not None:
                 self.cost = cost if self.cost is None else self.cost + cost
             if usage is not None:

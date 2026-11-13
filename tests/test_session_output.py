@@ -574,3 +574,153 @@ def test_capacity_fields_and_records_of_the_pinned_release_add_no_usage(
     stream = [json.dumps(item).encode() for item in events]
     assert [module().decode_cost_event(line) for line in stream] == (
         [None] * len(records) + [TokenUsage(3, 5, 7, 11), None])
+
+
+def limit_record(limit, reason, **fields):
+    return event("progress", {"capacity_limit": {"limit": limit, "reason": reason, **fields}})
+
+
+def capacity_shaped(tmp_path, *, waits=(2.7, 0.55), limit=4, slot_waits=(0.5,)):
+    """A nare 2026.11.100 session whose queue and limit records, result line and saved
+    session agree: two queued refusals, one cut of the limit and one wait for a slot."""
+    events, saved = fixture(tmp_path)
+    wait, slot_wait = round(sum(waits), 3), round(sum(slot_waits), 3)
+    events[-1].update(contract=3, nare="2026.11.100", retries=0, cutoffs=0,
+                      capacity_refusals=len(waits), capacity_wait_seconds=wait,
+                      capacity_limit=limit, capacity_slot_wait_seconds=slot_wait)
+    saved.update(contract=3, nare="2026.11.100", retries=0, cutoffs=0,
+                 capacity_refusals=len(waits), capacity_wait=sum(waits), capacity_limit=limit,
+                 capacity_slot_wait=sum(slot_waits))
+    progress = [queue_record(seconds, index + 1) for index, seconds in enumerate(waits)]
+    if limit is not None:
+        progress.insert(1, limit_record(limit, "refusal", previous=8))
+        progress.extend(limit_record(limit, "slot", waited=seconds) for seconds in slot_waits)
+    return progress + events, saved
+
+
+def test_nare_2026_11_100_capacity_fields_decode_without_changing_usage(tmp_path):
+    events, saved = capacity_shaped(tmp_path)
+    result = decode(tmp_path, events, saved)
+    assert result.contract == 3 and result.nare_version == "2026.11.100"
+    assert result.usage == TokenUsage(3, 5, 7, 11) and result.turns == 1
+    assert result.output_available and not result.partial
+
+
+def test_capacity_counters_are_exposed_apart_from_usage(tmp_path):
+    from scrutare.engine.session_models import CapacityUsage
+    events, saved = capacity_shaped(tmp_path)
+    assert decode(tmp_path, events, saved).capacity == CapacityUsage(2, 3.25, 4, 0.5)
+    events, saved = fixture(tmp_path)
+    assert decode(tmp_path, events, saved).capacity is None
+
+
+def test_queue_only_runtime_reports_no_limit(tmp_path):
+    from scrutare.engine.session_models import CapacityUsage
+    events, saved = capacity_shaped(tmp_path, limit=None, slot_waits=())
+    for document in (events[-1], saved):
+        for name in ("capacity_limit", "capacity_slot_wait_seconds", "capacity_slot_wait"):
+            document.pop(name, None)
+    assert decode(tmp_path, events, saved).capacity == CapacityUsage(2, 3.25, None, 0.0)
+
+
+def test_saved_seconds_round_to_the_reported_milliseconds(tmp_path):
+    events, saved = capacity_shaped(tmp_path)
+    saved.update(capacity_wait=3.2504, capacity_slot_wait=0.49961)
+    assert decode(tmp_path, events, saved).capacity.wait_seconds == 3.25
+
+
+@pytest.mark.parametrize("location,field,value", [
+    ("result", "capacity_refusals", -1), ("result", "capacity_refusals", True),
+    ("result", "capacity_refusals", 1.0), ("result", "capacity_wait_seconds", -0.5),
+    ("result", "capacity_wait_seconds", "1"), ("result", "capacity_limit", 0),
+    ("result", "capacity_limit", True), ("result", "capacity_slot_wait_seconds", None),
+    ("saved", "capacity_refusals", 3), ("saved", "capacity_wait", 3.5),
+    ("saved", "capacity_limit", 8), ("saved", "capacity_limit", None),
+    ("saved", "capacity_slot_wait", 0.75),
+])
+def test_invalid_or_disagreeing_capacity_counters_fail(tmp_path, location, field, value):
+    events, saved = capacity_shaped(tmp_path)
+    (events[-1] if location == "result" else saved)[field] = value
+    with pytest.raises(module().SessionProtocolError):
+        decode(tmp_path, events, saved)
+
+
+def test_saved_counters_without_reported_ones_fail(tmp_path):
+    events, saved = fixture(tmp_path)
+    saved["capacity_refusals"] = 0
+    with pytest.raises(module().SessionProtocolError):
+        decode(tmp_path, events, saved)
+
+
+def drop(kind, index=0):
+    def change(events, saved):
+        found = [item for item in events[:-1] if item["type"] == "progress"
+                 and kind in item["detail"]]
+        events.remove(found[index])
+    return change
+
+
+@pytest.mark.parametrize("change", [
+    # One queue record fewer or more than nare counted.
+    drop("capacity"),
+    lambda events, saved: events.insert(0, queue_record(0.0, 3)),
+    # The same number of records, announcing other seconds than nare totalled.
+    lambda events, saved: events[0]["detail"]["capacity"].update(wait=2.5),
+    lambda events, saved: (events[-1].update(capacity_wait_seconds=3.5),
+                           saved.update(capacity_wait=3.5)),
+    # A slot wait nare totalled but no record reports, and the reverse.
+    drop("capacity_limit", 1),
+    lambda events, saved: events.insert(0, limit_record(4, "slot", waited=0.25)),
+    # Limit records on a session whose result reports no limit.
+    lambda events, saved: (events[-1].update(capacity_limit=None, capacity_slot_wait_seconds=0.5),
+                           saved.update(capacity_limit=None)),
+    # A runtime that reports no counters cannot have queued anything.
+    lambda events, saved: [document.pop(name, None) for document in (events[-1], saved)
+                           for name in ("capacity_refusals", "capacity_wait_seconds",
+                                        "capacity_wait", "capacity_limit",
+                                        "capacity_slot_wait_seconds", "capacity_slot_wait")],
+])
+def test_capacity_records_must_reconcile_with_the_reported_counters(tmp_path, change):
+    events, saved = capacity_shaped(tmp_path)
+    assert decode(tmp_path, events, saved).capacity is not None
+    change(events, saved)
+    with pytest.raises(module().SessionProtocolError):
+        decode(tmp_path, events, saved)
+
+
+@pytest.mark.parametrize("record", [
+    {"capacity": []}, {"capacity": "queued"}, {"capacity": {"attempt": 1}},
+    {"capacity": {"wait": -1}}, {"capacity": {"wait": "2"}}, {"capacity": {"wait": True}},
+    {"capacity_limit": 4}, {"capacity_limit": {"reason": "slot", "waited": 0.5}},
+    {"capacity_limit": {"limit": 0, "reason": "quiet"}},
+    {"capacity_limit": {"limit": 4, "reason": "slot"}},
+    {"capacity_limit": {"limit": 4, "reason": "slot", "waited": -1}},
+])
+def test_a_malformed_capacity_record_fails(tmp_path, record):
+    events, saved = capacity_shaped(tmp_path)
+    events.insert(0, event("progress", record))
+    with pytest.raises(module().SessionProtocolError):
+        decode(tmp_path, events, saved)
+    with pytest.raises(module().SessionProtocolError):
+        module().decode_live_event(json.dumps(events[0]).encode())
+
+
+def test_live_events_report_announced_and_completed_waits(tmp_path):
+    events, _ = capacity_shaped(tmp_path)
+    live = [module().decode_live_event(json.dumps(item).encode()) for item in events]
+    assert [item.queue_wait for item in live] == [2.7, None, 0.55, None, None, None]
+    assert [item.slot_wait for item in live] == [None, None, None, 0.5, None, None]
+    assert [item.limit for item in live] == [None, 4, None, 4, None, None]
+    assert [item.usage for item in live][-2:] == [TokenUsage(3, 5, 7, 11), None]
+    assert not any(item.resent for item in live)
+    assert all(item.cost is None for item in live[:4])
+
+
+def test_capacity_events_count_refusals_without_a_result(tmp_path):
+    from scrutare.engine.session_models import CapacityUsage
+    events, _ = capacity_shaped(tmp_path, waits=(2.7,), slot_waits=())
+    slot = limit_record(2, "slot", waited=1.5)
+    stream = b"\n".join(json.dumps(item).encode() for item in [*events[:-1], slot])
+    stream += b"\nnot json\n" + json.dumps(event("progress", {"capacity": {}})).encode()
+    assert module().capacity_events(stream) == CapacityUsage(1, 2.7, 2, 1.5, "events")
+    assert module().capacity_events(b"") == CapacityUsage(0, 0.0, None, 0.0, "events")
