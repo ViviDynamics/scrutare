@@ -10,7 +10,7 @@ import shutil
 import signal
 import stat
 import tempfile
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass, replace
 from hashlib import sha256
@@ -22,6 +22,7 @@ from scrutare import __version__
 from scrutare.config import (
     EFFORT_LEVELS,
     REQUEST_RETRY_SECONDS,
+    CapacitySettings,
     ConfigError,
     ModelRail,
     ModelSettings,
@@ -34,6 +35,7 @@ from scrutare.engine.reanchor import reanchor_schema
 from scrutare.engine.review_inputs import ReviewInputError, validate_prepared_inputs
 from scrutare.engine.session_artifacts import SessionArtifactError, write_owned_json
 from scrutare.engine.session_models import (
+    CapacityUsage,
     NareCapability,
     NareFlag,
     NareRuntime,
@@ -49,6 +51,7 @@ from scrutare.engine.session_output import (
     DecodedSession,
     ProtocolCorrectionOffered,
     SessionProtocolError,
+    capacity_events,
     constrained_turns,
     decode_citation_correction,
     decode_live_event,
@@ -161,14 +164,32 @@ async def _cleanup_capture(
 
 async def _wait_capture(
     process: asyncio.subprocess.Process, capture: asyncio.Future[_T], timeout: float, *,
-    cancelled: bool,
+    cancelled: bool, credit: Callable[[], float] | None = None,
 ) -> _T:
-    """Preserve capture while applying the common liveness and cancellation policy."""
+    """Preserve capture while applying the common liveness and cancellation policy.
+
+    ``credit`` returns the seconds by which the deadline has moved out so far (capacity
+    waits a session reported). It is read again whenever the deadline is reached, so the
+    limit ends a process that stays silent past what it was credited. Without one the wait
+    is the single bounded wait it always was.
+    """
     if cancelled:
         await _cleanup_capture(process, capture)
         raise asyncio.CancelledError
     try:
-        return await asyncio.wait_for(asyncio.shield(capture), timeout)
+        if credit is None:
+            return await asyncio.wait_for(asyncio.shield(capture), timeout)
+        loop = asyncio.get_running_loop()
+        started = loop.time()
+        while True:
+            remaining = started + timeout + credit() - loop.time()
+            if remaining <= 0:
+                raise asyncio.TimeoutError
+            try:
+                return await asyncio.wait_for(asyncio.shield(capture), remaining)
+            except asyncio.TimeoutError:
+                # The deadline may have moved while waiting; it is read again above.
+                continue
     except (asyncio.TimeoutError, asyncio.CancelledError):
         await _cleanup_capture(process, capture)
         raise
@@ -282,6 +303,54 @@ def _proxy_num_retries(contract: dict[str, object],
             and any(flag.name == "--proxy-num-retries" and flag.takes_value for flag in flags))
 
 
+# The options each capacity mode sends, with whether each takes a value; the contract
+# entry's name for each; and the record and result field Scrutare reconciles.
+_CAPACITY_QUEUE = ({"--capacity-queue": False, "--capacity-wait-seconds": True,
+                    "--capacity-refusals": True},
+                   {"enable": "--capacity-queue", "wait_seconds": "--capacity-wait-seconds",
+                    "refusals": "--capacity-refusals"}, "capacity", "capacity_refusals")
+_CAPACITY_ADAPTIVE = ({"--capacity-adaptive": False, "--capacity-ceiling": True,
+                       "--capacity-floor": True, "--capacity-quiet-seconds": True,
+                       "--capacity-shared-dir": True},
+                      {"enable": "--capacity-adaptive", "ceiling": "--capacity-ceiling",
+                       "floor": "--capacity-floor", "quiet_seconds": "--capacity-quiet-seconds",
+                       "shared_dir": "--capacity-shared-dir"},
+                      "capacity_limit", "capacity_limit")
+
+
+def _capacity_modes(contract: dict[str, object],
+                    flags: tuple[NareFlag, ...] | None) -> tuple[str, ...]:
+    """The capacity modes a contract 3 runtime offers on its openai rail, or none.
+
+    `fixed` is the queue (nare 2026.11.95), `adaptive` the queue with a shared in-flight
+    limit (2026.11.96). Each needs its contract entry, naming the options Scrutare sends and
+    the record and result field it reconciles, and the flag list carrying each option in the
+    shape it is sent. An entry of another shape offers nothing, so only a review that asks
+    for a mode depends on it.
+    """
+    if flags is None:
+        return ()
+    advertised = {flag.name: flag.takes_value for flag in flags}
+
+    def offered(name: str, shape: tuple[dict[str, bool], dict[str, str], str, str]) -> bool:
+        options, named, detail, field = shape
+        entry = contract.get(name)
+        if not isinstance(entry, dict):
+            return False
+        listed, providers = entry.get("flags"), entry.get("providers")
+        return (isinstance(listed, dict) and isinstance(providers, list)
+                and "openai" in providers
+                and all(listed.get(key) == flag for key, flag in named.items())
+                and entry.get("event_detail") == detail and entry.get("result_field") == field
+                and all(advertised.get(flag) is takes_value
+                        for flag, takes_value in options.items()))
+
+    if not offered("capacity_queue", _CAPACITY_QUEUE):
+        return ()
+    return ("fixed", "adaptive") if offered("capacity_adaptive", _CAPACITY_ADAPTIVE) else (
+        "fixed",)
+
+
 def _cache_breakpoints(contract: dict[str, object],
                        flags: tuple[NareFlag, ...] | None) -> tuple[str, ...]:
     """The rails on which a contract 3 runtime marks prompt-cache breakpoints when asked."""
@@ -315,6 +384,7 @@ async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
             return NareCapability(
                 version, contract["contract"], modes, _proxy_num_retries(contract, flags),
                 flags=flags, cache_breakpoints=_cache_breakpoints(contract, flags),
+                capacity=_capacity_modes(contract, flags),
                 **({"structured_output_providers": providers} if modes else {}))
     except SessionRuntimeError:
         raise
@@ -354,8 +424,26 @@ def _rail_refusal(rail: ModelRail, capability: NareCapability) -> str | None:
     return None
 
 
+def _require_capacity(capacity: CapacitySettings, capability: NareCapability) -> None:
+    """Refuse a configured capacity mode the inspected runtime cannot run as Scrutare runs it.
+
+    The runtime must offer the mode, and must stream: only a streamed turn writes a queue
+    record before it waits, which is what the deadline credit reads.
+    """
+    if capacity.mode == "off":
+        return
+    refusal = f"capability: nare {capability.version} cannot queue capacity refusals in mode "
+    if capacity.mode not in getattr(capability, "capacity", ()):
+        raise SessionRuntimeError(
+            f"{refusal}{capacity.mode}; use a nare release that advertises it "
+            f"({'2026.11.95' if capacity.mode == 'fixed' else '2026.11.96'} or newer)")
+    if not _streams(capability):
+        raise SessionRuntimeError(f"{refusal}{capacity.mode} without --stream")
+
+
 def require_rail_options(models: ModelSettings, capability: NareCapability) -> None:
     """Refuse a wave before any session when a rail asks for an option nare cannot send."""
+    _require_capacity(models.capacity, capability)
     for rail in (models.default, *(rail for _, rail in models.overrides)):
         refusal = _rail_refusal(rail, capability)
         if refusal is not None:
@@ -487,6 +575,15 @@ class _Evidence:
     retries: int = 0
     # Dollars the backend reported for the requests seen so far; None before any cost event.
     cost: SessionCost | None = None
+    # Capacity records seen in the stream: queued refusals and the seconds nare announced
+    # for them, limit records, and the slot waits nare reported once they had ended. A
+    # refused request was never dispatched, so none of this is usage.
+    queued: int = 0
+    queue_seconds: float = 0.0
+    limits: int = 0
+    slot_seconds: float = 0.0
+    # The resumed correction turn's stream, kept for counters when no result decodes.
+    correction_stdout: bytes = b""
 
     def event(self, line: bytes, ledger: ReviewBudgetLedger, lease: BudgetLease) -> None:
         if not line.strip():
@@ -495,6 +592,12 @@ class _Evidence:
             event = decode_live_event(line)
             usage, cost = event.usage, event.cost
             self.retries += event.resent
+            if event.queue_wait is not None:
+                self.queued += 1
+                self.queue_seconds += event.queue_wait
+            if event.limit is not None:
+                self.limits += 1
+                self.slot_seconds += event.slot_wait or 0.0
             if cost is not None:
                 self.cost = cost if self.cost is None else self.cost + cost
             if usage is not None:
@@ -542,7 +645,7 @@ async def _stderr(stream: asyncio.StreamReader, destination: BinaryIO,
 async def _execute(argv: list[str], environment: dict[str, str], cwd: Path,
                    runtime: NareRuntime, stdout: BinaryIO, stderr: BinaryIO,
                    evidence: _Evidence, ledger: ReviewBudgetLedger,
-                   lease: BudgetLease) -> int:
+                   lease: BudgetLease, credit: Callable[[], float] | None = None) -> int:
     process, cancelled = await _start_process(argv, environment, cwd)
     evidence.started = True
     assert process.stdout is not None and process.stderr is not None
@@ -551,7 +654,7 @@ async def _execute(argv: list[str], environment: dict[str, str], cwd: Path,
                               return_exceptions=True)
     try:
         results = await _wait_capture(
-            process, drainage, runtime.timeout_seconds, cancelled=cancelled,
+            process, drainage, runtime.timeout_seconds, cancelled=cancelled, credit=credit,
         )
         for result in results:
             if isinstance(result, BaseException):
@@ -579,11 +682,13 @@ class _OutcomeMetadata(TypedDict):
     stop_reason: str | None
     exit_code: int | None
     cost: SessionCost
+    capacity: CapacityUsage | None
 
 
 def _outcome(lease: BudgetLease, path: Path, evidence: _Evidence, *, status: SessionStatus,
              reason: str, complete: bool, decoded: DecodedSession | DecodedReanchorSession | None,
              exit_code: int | None, purpose: Literal["review", "reanchor"],
+             capacity: CapacityUsage | None = None,
              ) -> SessionOutcome | ReanchorOutcome:
     metadata: _OutcomeMetadata = {
         "persona": lease.persona, "status": status, "reason": reason,
@@ -600,6 +705,7 @@ def _outcome(lease: BudgetLease, path: Path, evidence: _Evidence, *, status: Ses
         # the stream's sum so far, or the reported zero of nare's empty usage. One whose
         # stream reported no cost at all has no amount either.
         "cost": evidence.cost if complete and evidence.cost is not None else SessionCost(),
+        "capacity": capacity,
     }
     if purpose == "reanchor":
         assert decoded is None or isinstance(decoded, DecodedReanchorSession)
@@ -622,7 +728,71 @@ def _streams(capability: NareCapability) -> bool:
     return tuple(map(int, capability.version.split("."))) >= (2026, 10, 4)
 
 
-def _rail_argv(rail: ModelRail, capability: NareCapability) -> list[str]:
+CAPACITY_DIRECTORY = "capacity"
+
+
+def capacity_argv(rail: ModelRail, capacity: CapacitySettings, run_dir: Path) -> list[str]:
+    """The capacity flags one invocation passes: none when off or off the openai rail.
+
+    Every value is explicit, so no nare default applies. Adaptive sessions of one review run
+    name the run's own directory, so every persona process shares one limit per route.
+    """
+    if capacity.mode == "off" or rail.provider != "openai":
+        return []
+    argv = ["--capacity-queue", "--capacity-wait-seconds", str(capacity.wait_seconds),
+            "--capacity-refusals", str(capacity.refusals)]
+    if capacity.mode == "adaptive":
+        argv.extend(("--capacity-adaptive", "--capacity-ceiling", str(capacity.ceiling),
+                     "--capacity-floor", str(capacity.floor),
+                     "--capacity-quiet-seconds", str(capacity.quiet_seconds),
+                     "--capacity-shared-dir", str(run_dir / CAPACITY_DIRECTORY)))
+    return argv
+
+
+def _capacity_directory(run_dir: Path) -> None:
+    """Create, or reuse, the run's private shared capacity directory; never through a link.
+
+    It sits beside the run's sessions and review inputs, outside every persona's read root,
+    and its place is never taken from configuration.
+    """
+    path = run_dir / CAPACITY_DIRECTORY
+    try:
+        os.mkdir(path, mode=0o700)
+    except FileExistsError:
+        pass
+    info = os.lstat(path)
+    if (not stat.S_ISDIR(info.st_mode) or info.st_uid != os.geteuid()
+            or stat.S_IMODE(info.st_mode) & 0o077):
+        raise SessionArtifactError("capacity: expected a private run directory")
+
+
+def _capacity_credit(capacity: CapacitySettings, queue_seconds: float,
+                     slot_seconds: float) -> float:
+    """Seconds of reported capacity waiting credited against the session timeout.
+
+    A session waiting on a capacity refusal, or for a slot under the shared limit, is alive
+    and waiting on purpose. Queue waits are credited as nare announces them, slot waits once
+    nare reports them. Both share one bound over the whole session, the configured
+    wait_seconds, and a session that was not asked to queue earns none.
+    """
+    if capacity.mode == "off" or capacity.wait_seconds is None:
+        return 0.0
+    return min(queue_seconds + slot_seconds, float(capacity.wait_seconds))
+
+
+def _unasked_capacity(sent: list[str], *, queued: bool, limited: bool) -> bool:
+    """Whether a session shows capacity evidence nare was not asked to produce.
+
+    A session sent no capacity flag queues nothing and has no limit. One sent the queue
+    alone still has no limit and waits for no slot.
+    """
+    if not sent:
+        return queued or limited
+    return limited and "--capacity-adaptive" not in sent
+
+
+def _rail_argv(rail: ModelRail, capability: NareCapability,
+               capacity: list[str] | None = None) -> list[str]:
     argv = ["--provider", rail.provider, "--model=" + rail.model]
     if rail.provider == "openai" and _streams(capability):
         argv.append("--stream")
@@ -644,6 +814,8 @@ def _rail_argv(rail: ModelRail, capability: NareCapability) -> list[str]:
         if (capability.advertises("--compaction-trigger", "0.8")
                 and capability.advertises("--compaction-target", "0.6")):
             argv.extend(("--compaction-trigger", "0.8", "--compaction-target", "0.6"))
+    # Capacity queueing is not a retry: --request-retries keeps its meaning beside it.
+    argv.extend(capacity or ())
     if rail.base_url is not None:
         argv.extend(("--base-url", rail.base_url))
     return argv
@@ -669,7 +841,8 @@ async def _correct_citations(
     descriptor: PersonaReviewInput, rail: ModelRail,
     lease: BudgetLease, *, ledger: ReviewBudgetLedger, directory: int, artifact_directory: Path,
     executable: Path, runtime: NareRuntime, capability: NareCapability, evidence: _Evidence,
-    deadline: float, record: dict[str, object],
+    deadline: float, record: dict[str, object], capacity: list[str],
+    settings: CapacitySettings,
 ) -> DecodedSession:
     """Resume the refused session for one tool-free correction turn within its own budget.
 
@@ -697,7 +870,7 @@ async def _correct_citations(
               else (prompt,)),
             "--tools", "none", "--root", str(root),
             *(("--system-file", str(artifact_directory / SYSTEM_FILE)) if system_file
-              else ("--system=" + system,)), *_rail_argv(rail, capability),
+              else ("--system=" + system,)), *_rail_argv(rail, capability, capacity),
             "--jsonl", "--yes", "--contract", str(capability.contract),
             "--schema", str(artifact_directory / (stem + ".schema.json")),
             "--budget-tokens", str(lease.limit_tokens),
@@ -723,7 +896,10 @@ async def _correct_citations(
         "prompt": prompt, "prompt_sha256": sha256(prompt.encode("utf-8")).hexdigest(),
         "argv": argv, "max_turns": 1, "invocation_limit": lease.limit_tokens,
     }, prepared_root=root)
-    remaining = deadline - asyncio.get_running_loop().time()
+    # The turn continues the session's deadline, with the capacity waits credited so far.
+    first = (evidence.queue_seconds, evidence.slot_seconds)
+    credited = _capacity_credit(settings, *first) if capacity else 0.0
+    remaining = deadline + credited - asyncio.get_running_loop().time()
     if remaining <= 0:
         raise asyncio.TimeoutError
     if isinstance(offered, ProtocolCorrectionOffered):
@@ -737,7 +913,10 @@ async def _correct_citations(
                 argv, _environment(artifact_directory / "home", artifact_directory / "tmp",
                                    rail.provider), artifact_directory / "cwd",
                 replace(runtime, timeout_seconds=remaining), stdout, stderr, correction,
-                ledger, lease)
+                ledger, lease,
+                (lambda: _capacity_credit(settings, first[0] + correction.queue_seconds,
+                                          first[1] + correction.slot_seconds) - credited)
+                if capacity else None)
         record["exit_code"] = exit_code
     finally:
         # Usage is cumulative across both turns of the session, whatever happened.
@@ -745,9 +924,16 @@ async def _correct_citations(
         evidence.cost = correction.cost
         evidence.corrupt = evidence.corrupt or correction.corrupt
         evidence.retries += correction.retries
+        evidence.queued += correction.queued
+        evidence.queue_seconds += correction.queue_seconds
+        evidence.limits += correction.limits
+        evidence.slot_seconds += correction.slot_seconds
+        evidence.correction_stdout = correction.stdout
     saved = _session_document(directory, "correction-session.json")
     if correction.corrupt:
         raise SessionProtocolError("session: corrupted correction evidence")
+    if _unasked_capacity(capacity, queued=correction.queued > 0, limited=correction.limits > 0):
+        raise SessionProtocolError("session: unrequested capacity evidence")
     # A constrained-turn record must match the rail, as in the first stream.
     constrained_turns(correction.stdout, rail.structured_output)
     require_sent_effort(saved, rail.effort)
@@ -803,6 +989,9 @@ async def _run_session(
     correction: dict[str, object] | None = None
     answered = False
     protocol = None
+    # The capacity flags this session's invocations carry, and whether one was recorded.
+    capacity: list[str] = []
+    invoked = False
     correction_key = "citation_correction"
     deadline = asyncio.get_running_loop().time() + getattr(runtime, "timeout_seconds", 0)
     try:
@@ -837,9 +1026,13 @@ async def _run_session(
             raise SessionRuntimeError("session_key: expected the fresh correction identity")
         from scrutare.config import load_config
         from scrutare.engine.discussion_inputs import DiscussionInput
+        run_config = load_config(prepared_root.parent / "config.yaml")
+        settings = run_config.models.capacity
+        _require_capacity(settings, capability)
+        capacity = capacity_argv(rail, settings, prepared_root.parent)
         protocol_enabled = (purpose == "review" and not isinstance(descriptor, PersonaReanchorInput)
             and (not isinstance(descriptor, DebateInput) or isinstance(descriptor, DiscussionInput))
-            and load_config(prepared_root.parent / "config.yaml").findings.protocol_correction)
+            and run_config.findings.protocol_correction)
         if protocol_enabled:
             correction_key = "protocol_correction"
             correction = {"offered": False, "defects": 0, "outcome": None, "exit_code": None}
@@ -853,6 +1046,8 @@ async def _run_session(
                 raise SessionArtifactError("artifact_directory: expected an unused attempt")
             for name in ("cwd", "home", "tmp"):
                 os.mkdir(name, mode=0o700, dir_fd=directory)
+            if "--capacity-shared-dir" in capacity:
+                _capacity_directory(prepared_root.parent)
             # Long text stays out of argv where the runtime reads it from a file. The bytes
             # nare decodes are the bytes argv would have carried.
             prompt_file = _takes_value(capability, "--prompt-file")
@@ -862,7 +1057,7 @@ async def _run_session(
                       else input_args[:1]), *input_args[1:],
                     *(("--system-file", str(artifact_directory / SYSTEM_FILE)) if system_file
                       else ("--system=" + system,)),
-                    *_rail_argv(rail, capability)]
+                    *_rail_argv(rail, capability, capacity)]
             if prompt_file:
                 _new_text(directory, PROMPT_FILE, input_args[0])
             if system_file:
@@ -897,6 +1092,7 @@ async def _run_session(
                 "allocated_tokens": lease.allocated_tokens, "invocation_limit": lease.limit_tokens,
                 "max_turns": runtime.max_turns, "timeout_seconds": runtime.timeout_seconds,
             }, prepared_root=prepared_root)
+            invoked = True
             with ExitStack() as stack:
                 stdout = stack.enter_context(_new_capture(directory, "stdout.jsonl"))
                 stderr = stack.enter_context(_new_capture(directory, "stderr.txt"))
@@ -907,6 +1103,10 @@ async def _run_session(
                     argv, _environment(artifact_directory / "home", artifact_directory / "tmp",
                                        rail.provider), artifact_directory / "cwd", runtime,
                     stdout, stderr, evidence, ledger, lease,
+                    # Only a session asked to queue can move its deadline; every other
+                    # session waits exactly as it always has.
+                    (lambda: _capacity_credit(settings, evidence.queue_seconds,
+                                              evidence.slot_seconds)) if capacity else None,
                 )
             reason = "protocol"
             saved = _session_document(directory)
@@ -916,6 +1116,10 @@ async def _run_session(
             if evidence.retries and not rail.request_retries:
                 # nare was told never to resend, so a retry record is not this session's.
                 raise SessionProtocolError("session: unrequested request retry evidence")
+            if _unasked_capacity(capacity, queued=evidence.queued > 0,
+                                 limited=evidence.limits > 0):
+                # nare was not told to queue or to limit, so the record is not this session's.
+                raise SessionProtocolError("session: unrequested capacity evidence")
             require_sent_effort(saved, rail.effort)
             # Nothing nare kept from a session cut off at the cap is parsed or validated.
             capped = rail.max_output_tokens is not None
@@ -962,7 +1166,8 @@ async def _run_session(
                         offered, descriptor, rail, lease, ledger=ledger, directory=directory,
                         artifact_directory=artifact_directory, executable=executable,
                         runtime=runtime, capability=capability, evidence=evidence,
-                        deadline=deadline, record=correction)
+                        deadline=deadline, record=correction, capacity=capacity,
+                        settings=settings)
                     reason, answered = "protocol", True
             if decoded.status is not None and (
                     decoded.nare_version != capability.version
@@ -971,6 +1176,12 @@ async def _run_session(
             if (decoded.status in ("done", "blocked") and decoded.stop_reason == "budget"
                     and not decoded.partial):
                 raise SessionProtocolError("status: unsupported terminal budget stop")
+            reported = decoded.capacity
+            if reported is not None and _unasked_capacity(
+                    capacity, queued=reported.refusals > 0 or reported.wait_seconds > 0,
+                    limited=reported.limit is not None or reported.slot_wait_seconds > 0):
+                # The same rule for nare's own counters as for its records.
+                raise SessionProtocolError("session: unrequested capacity evidence")
             ledger.observe(lease, decoded.usage)
             evidence.usage = decoded.usage
             if decoded.status is not None:
@@ -1023,8 +1234,15 @@ async def _run_session(
                 reason = "artifacts"
     except (SessionProtocolError, ValueError, TypeError, OverflowError, RecursionError):
         reason, status, complete = "protocol", "failed", False
+    queue: CapacityUsage | None = None
+    if capacity and invoked:
+        # Recorded for every session whose invocation asked to queue, and only those. nare's
+        # own counters when its result reported them; otherwise what the streams showed.
+        queue = (decoded.capacity if decoded is not None and decoded.capacity is not None
+                 else capacity_events(evidence.stdout + b"\n" + evidence.correction_stdout))
     outcome = _outcome(lease, artifact_directory, evidence, status=status, reason=reason,
-                       complete=complete, decoded=decoded, exit_code=exit_code, purpose=purpose)
+                       complete=complete, decoded=decoded, exit_code=exit_code, purpose=purpose,
+                       capacity=queue)
     ledger.settle(lease, evidence.usage, complete, outcome.cost)
     if prepared_root is not None:
         try:
@@ -1059,7 +1277,7 @@ async def _run_session(
         except (SessionArtifactError, AttributeError):
             outcome = _outcome(lease, artifact_directory, evidence, status="failed",
                                reason="artifacts", complete=complete, decoded=decoded,
-                               exit_code=exit_code, purpose=purpose)
+                               exit_code=exit_code, purpose=purpose, capacity=queue)
     if cancelled:
         raise asyncio.CancelledError
     return outcome
