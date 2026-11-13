@@ -94,8 +94,8 @@ request. It keeps a later nare default from changing a review.
 Nare 2026.11.95 and 2026.11.96 add opt-in capacity-refusal queueing and adaptive
 in-flight limits. They change nothing unless `models.capacity` asks for them;
 see [capacity-refusal queueing](config.md#capacity-refusal-queueing-opt-in).
-When enabled, the capacity flags follow the recovery controls in every initial
-and resumed correction invocation on an OpenAI rail. The terminal record's
+When enabled, the capacity flags follow the recovery controls and compaction
+values in every initial and resumed correction invocation on an OpenAI rail. The terminal record's
 `capacity_refusals`, `capacity_wait_seconds`, `capacity_limit` and
 `capacity_slot_wait_seconds` are checked against the saved session and kept
 apart from usage, turns and retries.

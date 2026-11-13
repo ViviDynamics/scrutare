@@ -7,7 +7,8 @@ capacity-refusal queueing (nare #291) and adaptive in-flight limits (nare #292)
 as one opt-in, validated `models.capacity` block. A proxy that refuses a request
 for capacity charged nothing, so waiting and resending the identical request is
 admission, not a retry. Keep it distinct from Scrutare's recovery policy:
-`--request-retries 0` stays, refusals are accounted apart from usage and retries,
+the rail's request retries (0 unless set) are unchanged, refusals are accounted apart
+from usage and retries,
 and a refusal past nare's limits is an ordinary session failure.
 
 Every value an enabled mode uses is explicit, so no nare default is inherited.
@@ -25,8 +26,9 @@ engine/session_models.py, replay/audit.py and their tests.
   progress events) decodes unchanged before any code change.
 - [x] Validate `models.capacity` (off, fixed, adaptive; required values; OpenAI
   rail) and record it only when enabled.
-- [x] Read advertised capacity modes from `nare contract`; refuse a wave whose
-  configured mode the runtime lacks before any session.
+- [x] Read advertised capacity modes from `nare contract`, requiring every flag a
+  mode sends among the advertised run flags; refuse a wave whose configured mode
+  the runtime lacks before any session.
 - [x] Pass explicit capacity flags after the recovery controls on initial and
   resumed correction invocations of OpenAI rails; create the run's shared
   directory owner-only for adaptive mode.
@@ -51,6 +53,15 @@ Interface: every installation uses release 2026.11.99 at commit
   installed CLI smoke sequentially on Python 3.10 then Python 3.14.
 - [x] Obtain independent branch review; fix substantive findings with tests.
 - [x] Run disclosure guard, push feature branch, create and link PR.
+
+## Rebase onto #122
+
+#122 (nare 2026.11.94, capabilities from contract flags, opt-in rail options)
+landed first. The branch now builds on it: capacity modes also require their run
+flags in the advertised `flags` map, the capacity flags follow the compaction
+values, the previous pin in the pin test is 2026.11.94, and an installed proof
+shows a refusal past the queue falling to opted-in `request_retries` as one
+retry, counted apart from the queued refusal.
 
 ## Pending decision
 

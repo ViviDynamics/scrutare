@@ -8,7 +8,7 @@ import stat
 
 import pytest
 from test_nare_contract_capability import advertised, inspect
-from test_nare_session import module, running_executable
+from test_nare_session import contract3_capability, flag_map, module, running_executable
 from test_review_inputs import capture as capture
 from test_structured_output_wave import configure, wave
 
@@ -19,7 +19,6 @@ from scrutare.engine.review_inputs import prepare_review_inputs
 from scrutare.engine.session_artifacts import create_attempt_directory
 from scrutare.engine.session_models import (
     CapacityUsage,
-    NareCapability,
     NareRuntime,
     TokenUsage,
 )
@@ -28,7 +27,15 @@ from scrutare.personas.definition import PersonaDefinition
 OPENAI = {"default": {"provider": "openai", "model": "m"}}
 FIXED = {"mode": "fixed", "wait_seconds": 1800, "refusals": 50}
 ADAPTIVE = {**FIXED, "mode": "adaptive", "ceiling": 8, "floor": 1, "quiet_seconds": 60}
-CAPABLE = NareCapability("2026.11.99", 3, capacity=("fixed", "adaptive"))
+SWITCH, VALUE = {"takes_value": False, "choices": None}, {"takes_value": True, "choices": None}
+QUEUE_FLAGS = {"--capacity-queue": SWITCH, "--capacity-wait-seconds": VALUE,
+               "--capacity-refusals": VALUE}
+ADAPTIVE_FLAGS = {"--capacity-adaptive": SWITCH, "--capacity-ceiling": VALUE,
+                  "--capacity-floor": VALUE, "--capacity-quiet-seconds": VALUE,
+                  "--capacity-shared-dir": VALUE}
+CAPACITY_FLAGS = {**QUEUE_FLAGS, **ADAPTIVE_FLAGS}
+CAPABLE = contract3_capability(version="2026.11.99", extra=CAPACITY_FLAGS,
+                               capacity=("fixed", "adaptive"))
 QUEUE_ENTRY = {"flags": {"enable": "--capacity-queue", "wait_seconds": "--capacity-wait-seconds",
                          "refusals": "--capacity-refusals"}, "providers": ["openai"]}
 ADAPTIVE_ENTRY = {"flags": {"enable": "--capacity-adaptive", "ceiling": "--capacity-ceiling",
@@ -103,15 +110,39 @@ def test_capacity_needs_an_openai_rail():
     ({"capacity_adaptive": ADAPTIVE_ENTRY}, ()),
 ])
 def test_runtime_reads_exact_advertised_capacity_modes(tmp_path, entries, modes):
+    assert inspect(capacity_runtime(tmp_path, entries, CAPACITY_FLAGS)).capacity == modes
+
+
+BOTH = {"capacity_queue": QUEUE_ENTRY, "capacity_adaptive": ADAPTIVE_ENTRY}
+
+
+@pytest.mark.parametrize("flags,modes", [
+    ({}, ()),
+    (QUEUE_FLAGS, ("fixed",)),
+    ({**CAPACITY_FLAGS, "--capacity-shared-dir": SWITCH}, ("fixed",)),
+    ({**CAPACITY_FLAGS, "--capacity-queue": VALUE}, ()),
+    ({k: v for k, v in CAPACITY_FLAGS.items() if k != "--capacity-refusals"}, ()),
+])
+def test_capacity_modes_need_their_run_flags_listed(tmp_path, flags, modes):
+    # The contract entry alone is not enough: every flag a mode sends must be a listed option.
+    assert inspect(capacity_runtime(tmp_path, BOTH, flags)).capacity == modes
+
+
+def capacity_runtime(tmp_path, entries, flags):
     path = advertised(tmp_path, version="2026.11.99", contract=3)
-    path.write_text(path.read_text().replace(
-        '"nare": \'2026.11.99\'}', f'"nare": \'2026.11.99\', **{entries!r}}}'))
-    assert inspect(path).capacity == modes
+    old = f'"nare": \'2026.11.99\', "flags": {flag_map()!r}}}'
+    new = (f'"nare": \'2026.11.99\', "flags": {flag_map(extra=flags)!r}, '
+           f'**{entries!r}}}')
+    text = path.read_text()
+    assert text.count(old) == 1
+    path.write_text(text.replace(old, new))
+    return path
 
 
 @pytest.mark.parametrize("capacity,capability,minimum", [
-    (FIXED, NareCapability("2026.11.80", 3), "2026.11.95"),
-    (ADAPTIVE, NareCapability("2026.11.95", 3, capacity=("fixed",)), "2026.11.96"),
+    (FIXED, contract3_capability(version="2026.11.94"), "2026.11.95"),
+    (ADAPTIVE, contract3_capability(version="2026.11.95", extra=QUEUE_FLAGS,
+                                    capacity=("fixed",)), "2026.11.96"),
 ])
 def test_incapable_wave_refuses_before_any_launch(capture, monkeypatch, capacity, capability,
                                                   minimum):
@@ -157,6 +188,7 @@ def native(tmp_path, *, counters=True, extra="", status="done", exit_code=0):
             .replace(SAVED, '"contract": 3, "nare": "2026.11.99"' + stored + "}")
             .replace("a = parser.parse_args()",
                      'for flag in ("max-cutoffs", "request-retries", "max-corrections",\n'
+                     '             "compaction", "compaction-trigger", "compaction-target",\n'
                      '             "capacity-wait-seconds", "capacity-refusals",\n'
                      '             "capacity-ceiling", "capacity-floor",\n'
                      '             "capacity-quiet-seconds", "capacity-shared-dir"):\n'
@@ -190,8 +222,12 @@ def launch(capture, path, capacity=None, *, rail=None, capability=CAPABLE, timeo
 
 
 def recovery(argv):
-    index = argv.index("--max-corrections")
-    return argv[index + 2:]
+    """What follows the recovery controls and the explicit compaction values."""
+    index = argv.index("--max-corrections") + 2
+    while argv[index] in ("--request-retry-seconds", "--compaction", "--compaction-trigger",
+                          "--compaction-target"):
+        index += 2
+    return argv[index:]
 
 
 def test_off_argv_and_records_are_unchanged(capture, tmp_path):
@@ -256,8 +292,9 @@ def test_linked_shared_directory_is_refused(capture, tmp_path):
 
 def test_incapable_session_never_starts(capture, tmp_path):
     outcome, ledger, attempt = launch(capture, native(tmp_path), ADAPTIVE,
-                                      capability=NareCapability("2026.11.99", 3,
-                                                                capacity=("fixed",)))
+                                      capability=contract3_capability(
+                                          version="2026.11.99", extra=CAPACITY_FLAGS,
+                                          capacity=("fixed",)))
     assert outcome.status == "failed"
     assert not (attempt / "cwd/observed.json").exists()
 

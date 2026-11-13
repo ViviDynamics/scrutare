@@ -730,8 +730,9 @@ def _rail_argv(rail: ModelRail, capability: NareCapability,
         if (capability.advertises("--compaction-trigger", "0.8")
                 and capability.advertises("--compaction-target", "0.6")):
             argv.extend(("--compaction-trigger", "0.8", "--compaction-target", "0.6"))
-        # Capacity queueing is not a retry: the resend limit above keeps its meaning.
-        argv.extend(capacity or ())
+    # Capacity queueing is not a retry: the resend limit above keeps its meaning. Only a
+    # contract 3 runtime advertises it, and require_rail_options refuses any other.
+    argv.extend(capacity or ())
     if rail.base_url is not None:
         argv.extend(("--base-url", rail.base_url))
     return argv

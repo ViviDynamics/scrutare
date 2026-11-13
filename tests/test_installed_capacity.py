@@ -18,11 +18,11 @@ FIXED = {"mode": "fixed", "wait_seconds": 30, "refusals": 5}
 ADAPTIVE = {**FIXED, "mode": "adaptive", "ceiling": 4, "floor": 1, "quiet_seconds": 60}
 
 
-def review(capture, tmp_path, installed, capacity, refusals):
+def review(capture, tmp_path, installed, capacity, refusals, **rail):
     document = configure(capture, personas=["senior-dev"], review=200, per=200).to_dict()
     document["models"]["default"] = {
         "provider": "openai", "model": "offline-model",
-        "base_url": "https://offline.invalid/v1", "structured_output": "json_schema"}
+        "base_url": "https://offline.invalid/v1", "structured_output": "json_schema", **rail}
     if capacity is not None:
         document["models"]["capacity"] = capacity
     config = parse_config(json.dumps(document))
@@ -91,3 +91,21 @@ def test_refusals_past_the_configured_limit_fall_back_to_failure(capture, tmp_pa
     assert outcome.status == "failed" and outcome.reason == "provider"
     assert [call.get("refused", False) for call in calls] == [True, True]
     assert outcome.capacity is not None and outcome.capacity.refusals == 1
+
+
+def test_a_refusal_past_the_queue_falls_to_opted_in_request_retries(
+        capture, tmp_path, installed):
+    # One refusal is queued; the second is past the queue's limit, so the retry policy takes
+    # it as a transient failure and resends it once. Each is counted in its own record.
+    result, outcome, calls = review(capture, tmp_path, installed, {**FIXED, "refusals": 1}, 2,
+                                    request_retries=1, request_retry_seconds=30)
+    assert result.status == "complete", (outcome.reason, calls)
+    assert [call.get("refused", False) for call in calls] == [True, True, False, False, False]
+    assert calls[0]["payload"] == calls[1]["payload"] == calls[2]["payload"]
+    assert outcome.capacity is not None and outcome.capacity.refusals == 1
+    assert outcome.usage.input == 12 + 20 + 30
+    result_record = load(outcome.artifact_directory / "result.json")
+    assert result_record["capacity"]["refusals"] == 1
+    assert result_record["request_retries"] == {"limit": 1, "retried": 1}
+    replayed = replay_run(capture)
+    assert replayed.saved_identical and replayed.issues == () and replayed.exit_code == 0
