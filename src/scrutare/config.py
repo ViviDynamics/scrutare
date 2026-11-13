@@ -96,10 +96,72 @@ class ModelRail:
         return record
 
 
+CapacityMode = Literal["off", "fixed", "adaptive"]
+CAPACITY_MODES: tuple[CapacityMode, ...] = ("off", "fixed", "adaptive")
+_CAPACITY_VALUES = ("wait_seconds", "refusals", "ceiling", "floor", "quiet_seconds")
+_CAPACITY_FIELDS: dict[str, tuple[str, ...]] = {
+    "off": (), "fixed": ("wait_seconds", "refusals"), "adaptive": _CAPACITY_VALUES}
+# The most each value may be, with the unit its refusal names. The wait also bounds how far
+# queueing can move a session's deadline. nare itself accepts more in every case.
+CAPACITY_BOUNDS = {"wait_seconds": 3600, "refusals": 1000, "ceiling": 64, "quiet_seconds": 3600}
+_CAPACITY_UNITS = {"wait_seconds": "seconds", "refusals": "queued refusals",
+                   "ceiling": "requests in flight", "quiet_seconds": "seconds"}
+
+
+@dataclass(frozen=True)
+class CapacitySettings:
+    """Opt-in nare capacity queueing on openai rails; ``off`` changes nothing.
+
+    ``fixed`` waits out a provider capacity refusal and resends the same request.
+    ``adaptive`` also shares one in-flight limit among the sessions of a review run.
+    Every value a mode uses is explicit: Scrutare inherits none of nare's defaults.
+    """
+
+    mode: CapacityMode = "off"
+    # Most seconds one request may spend queued, and most refusals one nare invocation
+    # queues (a resumed correction turn is its own invocation).
+    wait_seconds: int | float | None = None
+    refusals: int | None = None
+    # Adaptive only: the limit's bounds, and the seconds without a refusal before it rises.
+    ceiling: int | None = None
+    floor: int | None = None
+    quiet_seconds: int | float | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.mode, str) or self.mode not in CAPACITY_MODES:
+            raise ConfigError(f"models.capacity.mode: expected one of {', '.join(CAPACITY_MODES)}")
+        used = _CAPACITY_FIELDS[self.mode]
+        for name in _CAPACITY_VALUES:
+            value = getattr(self, name)
+            path = f"models.capacity.{name}"
+            if name not in used:
+                if value is not None:
+                    raise ConfigError(f"{path}: not used by mode {self.mode}")
+                continue
+            if name in ("wait_seconds", "quiet_seconds"):
+                if (type(value) not in (int, float) or not math.isfinite(value)
+                        or value <= 0):
+                    raise ConfigError(f"{path}: expected a positive finite number")
+            elif type(value) is not int or value <= 0:
+                raise ConfigError(f"{path}: expected a positive integer")
+            if name in CAPACITY_BOUNDS and value > CAPACITY_BOUNDS[name]:
+                raise ConfigError(f"{path}: expected at most {CAPACITY_BOUNDS[name]} "
+                                  f"{_CAPACITY_UNITS[name]}")
+        if self.mode == "adaptive":
+            assert self.floor is not None and self.ceiling is not None
+            if self.floor > self.ceiling:
+                raise ConfigError("models.capacity.floor: must not exceed ceiling")
+
+    def record(self) -> dict[str, Any]:
+        return {"mode": self.mode, **{name: getattr(self, name)
+                                      for name in _CAPACITY_FIELDS[self.mode]}}
+
+
 @dataclass(frozen=True)
 class ModelSettings:
     default: ModelRail
     overrides: tuple[tuple[str, ModelRail], ...] = ()
+    capacity: CapacitySettings = CapacitySettings()
 
     def for_persona(self, name: str) -> ModelRail:
         return next((rail for persona, rail in self.overrides if persona == name), self.default)
@@ -125,7 +187,10 @@ class ModelSettings:
 
     def record(self) -> dict[str, Any]:
         return {"default": self.rail_record(self.default),
-                "overrides": {name: self.rail_record(rail) for name, rail in self.overrides}}
+                "overrides": {name: self.rail_record(rail) for name, rail in self.overrides},
+                # Off is never recorded, so configurations without it keep their bytes.
+                **({"capacity": self.capacity.record()}
+                   if self.capacity.mode != "off" else {})}
 
 
 @dataclass(frozen=True)
@@ -655,8 +720,17 @@ def _rail(value: object, path: str, default: ModelRail | None = None) -> ModelRa
                      cast("bool | None", breakpoints), cast("Effort | None", effort))
 
 
+def _capacity(value: object) -> CapacitySettings:
+    fields = _mapping(value, "models.capacity", ("mode", *_CAPACITY_VALUES))
+    mode = fields.get("mode", "off")
+    # YAML 1.1 reads an unquoted `off` as false.
+    mode = _choice("off" if mode is False else mode, "models.capacity.mode", CAPACITY_MODES)
+    return CapacitySettings(cast(CapacityMode, mode),
+                            *(fields.get(name) for name in _CAPACITY_VALUES))
+
+
 def _models(value: object, personas: tuple[str | PersonaDefinition, ...]) -> ModelSettings:
-    fields = _mapping(value, "models", ("default", "overrides"))
+    fields = _mapping(value, "models", ("default", "overrides", "capacity"))
     default = _rail(fields.get("default", {}), "models.default")
     overrides = _mapping(fields.get("overrides", {}), "models.overrides", None)
     names = {p.name if isinstance(p, PersonaDefinition) else p for p in personas}
@@ -666,7 +740,12 @@ def _models(value: object, personas: tuple[str | PersonaDefinition, ...]) -> Mod
         if name not in names:
             raise ConfigError(f"{path}: expected a configured persona name")
         result.append((name, _rail(rail, path, default)))
-    return ModelSettings(default, tuple(result))
+    capacity = _capacity(fields.get("capacity", {}))
+    if capacity.mode != "off" and all(
+            rail.provider != "openai" for rail in (default, *(rail for _, rail in result))):
+        # Only nare's openai rail declares a capacity marker; elsewhere the block does nothing.
+        raise ConfigError("models.capacity.mode: requires provider openai on at least one rail")
+    return ModelSettings(default, tuple(result), capacity)
 
 
 def _categories(value: object, path: str) -> tuple[Category, ...]:
