@@ -5,6 +5,7 @@ import asyncio
 import json
 import os
 import re
+import shutil
 import stat
 
 import pytest
@@ -291,6 +292,24 @@ def test_off_argv_records_and_wait_path_are_unchanged(capture, tmp_path, monkeyp
     # The same rail against a runtime that lists none of the capacity flags.
     assert module()._rail_argv(rail, CAPABLE) == module()._rail_argv(
         rail, contract3_capability(version="2026.11.94"))
+
+
+def test_an_explicit_off_block_leaves_every_artifact_as_without_the_block(capture, tmp_path):
+    # Two copies of one capture: one configured with no block, one with `mode: off`.
+    other = tmp_path / "explicit-off" / capture.name
+    shutil.copytree(capture, other)
+    path = native(tmp_path)
+    plain, _, first = launch(capture, path)
+    explicit, _, second = launch(other, path, {"mode": "off"})
+    assert plain.status == explicit.status == "complete"
+    assert (capture / "config.json").read_bytes() == (other / "config.json").read_bytes()
+    for name in ("invocation.json", "result.json", "stdout.jsonl", "session.json",
+                 "findings.schema.json"):
+        assert ((first / name).read_bytes().replace(str(capture).encode(), b"<run>")
+                == (second / name).read_bytes().replace(str(other).encode(), b"<run>")), name
+    assert sorted(item.name for item in first.iterdir()) == sorted(
+        item.name for item in second.iterdir())
+    assert not (other / "capacity").exists()
 
 
 def test_fixed_mode_queues_without_a_shared_directory(capture, tmp_path):
