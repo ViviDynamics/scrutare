@@ -110,7 +110,10 @@ def observations(outcome, *, http_sse=False):
     assert result["nare_controls"] == {}
     assert result["version"] == "2026.11.100"
     assert result["python"].startswith("3.14.")
-    assert all(Path(path).is_relative_to(outcome.artifact_directory) for path in result["writes"])
+    # Only adaptive capacity writes outside the attempt: its run's shared directory.
+    shared = (outcome.artifact_directory.parents[2] / "capacity").resolve()
+    assert all(Path(path).is_relative_to(outcome.artifact_directory.resolve())
+               or Path(path).is_relative_to(shared) for path in result["writes"])
     return result
 
 
