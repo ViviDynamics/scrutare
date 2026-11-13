@@ -110,7 +110,14 @@ def observations(outcome, *, http_sse=False):
     assert result["nare_controls"] == {}
     assert result["version"] == "2026.11.100"
     assert result["python"].startswith("3.14.")
-    assert all(Path(path).is_relative_to(outcome.artifact_directory) for path in result["writes"])
+    # A session writes inside its attempt. Only one that was sent a shared capacity
+    # directory (adaptive capacity) may also write there, and only there.
+    allowed = [outcome.artifact_directory.resolve()]
+    argv = load(outcome.artifact_directory / "invocation.json")["argv"]
+    if "--capacity-shared-dir" in argv:
+        allowed.append(Path(argv[argv.index("--capacity-shared-dir") + 1]).resolve())
+    assert all(any(Path(path).is_relative_to(root) for root in allowed)
+               for path in result["writes"])
     return result
 
 

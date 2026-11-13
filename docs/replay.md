@@ -160,6 +160,29 @@ opted-in run without any session attempt is `rail_options_evidence_missing`
 `--request-retries N` only when it equals the limit the session's own rail
 recorded, and `0` otherwise. Runs that never set these fields are not audited.
 
+[Capacity queueing](config.md#capacity-queueing-opt-in) is audited when
+`config.json` sets `models.capacity`, any session's argv carries a capacity
+flag, or any `result.json` records `capacity`. Each launched session's capacity
+flags, in order and with their values, must be exactly those its configured
+block gives its recorded `--provider`: none when off or on a rail that is not
+openai, and in adaptive mode a `--capacity-shared-dir` naming the `capacity`
+directory of the run that recorded the session (`capacity_unrecorded`,
+invalid). Its `result.json` must record well-formed `capacity` counters exactly
+when its argv carries the flags, and the counters must be the ones the retained
+`stdout.jsonl` and `correction.stdout.jsonl` support: the refusals equal the
+queue records, and the queue and slot seconds equal the sums those records
+carry. A record with `source: events` was counted from the streams and must
+match exactly; one with `source: result` is nare's own and must match to
+nare's millisecond rounding, and cannot report no limit where the stream shows
+one (`capacity_result_disagrees`, invalid). A session that was sent the flags
+and has no `result.json`, or a recorded session without its first stream, is
+`capacity_evidence_missing` (incomplete). A correction turn
+must repeat the session's capacity flags and values. An unreadable block is
+`capacity_config_invalid` (invalid). Runs without the block, flags or records
+are not audited, so earlier bundles replay as before. Replay does not check
+the `fanout.json` capacity totals against the per-session records, as with the
+other fan-out totals.
+
 A session whose recorded argv passes a prompt by file (`--prompt-file`,
 `--system-file`, on runtimes that advertise them) is bound to the retained file.
 Each flag must appear once, as its own argument, and name this attempt's own

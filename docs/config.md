@@ -39,6 +39,7 @@ Errors identify a field path or YAML location without echoing field values.
 | `models.default.cache_breakpoints` | Boolean (requires `provider: openai`), or `null` | `null` (off) |
 | `models.default.effort` | `low`, `medium`, `high`, `xhigh`, `max`, or `null` | `null` (not sent) |
 | `models.overrides` | Mapping from a configured persona name to partial model settings | `{}` |
+| `models.capacity` | Capacity queueing on openai rails: `mode` `off`, `fixed` or `adaptive`, plus that mode's values | `mode: off` |
 | `verdict.blocking_categories` | List drawn from the fixed vocabulary | `correctness`, `security`, `regression` |
 | `verdict.advisory_categories` | List drawn from the fixed vocabulary | `style`, `consistency`, `docs` |
 | `github.post_mode` | `review` (blocking review), `comment` (never blocks) | `review` |
@@ -345,6 +346,138 @@ records it in `rail` and its argv, and `result.json` records
 `{"level": "high"}`. nare's session file records the effort each invocation
 sent; a file that records another level fails the session as a protocol
 failure.
+
+## Capacity queueing (opt-in)
+
+A shared proxy such as LiteLLM can refuse a request before it dispatches
+anything: HTTP 429 naming `max_parallel_requests` once its deployment is full.
+The model produced nothing and nothing was charged, but by default that refusal
+ends the session like any other failed request. nare can wait such a refusal
+out and resend the identical request, and can also limit how many requests the
+review's sessions have in flight on the route. Scrutare passes this through
+only when asked:
+
+```yaml
+models:
+  default:
+    provider: openai
+    base_url: https://litellm.example/v1
+    model: your-model
+  capacity:
+    mode: adaptive        # off (default), fixed or adaptive
+    wait_seconds: 1800    # most seconds one request may spend queued (see Timeout)
+    refusals: 50          # most refusals one nare invocation queues
+    ceiling: 8            # adaptive: most requests in flight on the route
+    floor: 1              # adaptive: lowest limit a refusal can cut to
+    quiet_seconds: 60     # adaptive: seconds without a refusal before the limit rises
+```
+
+| Mode | Values (all required) | nare flags |
+| --- | --- | --- |
+| `off` | none | none; argv and every record keep their previous bytes |
+| `fixed` | `wait_seconds`, `refusals` | `--capacity-queue` with its two limits |
+| `adaptive` | `fixed`'s, plus `ceiling`, `floor`, `quiet_seconds` | also `--capacity-adaptive`, its bounds and `--capacity-shared-dir` |
+
+The block is review-wide. It applies to every rail with `provider: openai`,
+default and overrides alike, and to no other rail, because only nare's openai
+rail declares a capacity marker. An enabled mode with no openai rail is
+refused. A rail has no capacity field of its own.
+
+`wait_seconds` bounds one request's queue time in nare. It is also the most
+waiting Scrutare credits one whole session against its timeout, so a session
+whose requests together queue for longer than that can still end as `timeout`
+(see Timeout below). `refusals` bounds one nare invocation: a resumed
+correction turn is a new invocation and starts its own count. `wait_seconds` and `quiet_seconds` are positive numbers; `refusals`,
+`ceiling` and `floor` are positive integers, and `floor` must not exceed
+`ceiling`. The most each may be is 3600 seconds for `wait_seconds` and
+`quiet_seconds`, 1000 for `refusals` and 64 for `ceiling`. A value the mode does
+not use is refused. Scrutare does not fill in nare's own defaults: every value
+an enabled mode uses must be written, so the configuration states the whole
+policy. The example values are nare's defaults and have not been measured for
+reviews. YAML reads an unquoted `off` as false, which is accepted as `off`.
+
+The inspected runtime must be a contract 3 nare that offers the mode: its
+`capacity_queue` entry and flags for `fixed`, and also its `capacity_adaptive`
+entry and flags for `adaptive` (nare 2026.11.95 and 2026.11.96). It must also
+list `--stream`, for the timeout rule below. Otherwise the wave is refused
+before any session starts. nare's `NARE_CAPACITY_*` environment variables never
+reach a session, because the session environment is an allowlist.
+
+**What nare queues.** A refusal qualifies only when it is HTTP 429, its error
+text carries the proxy's capacity marker (`max_parallel_requests`), and no
+response has started. nare waits the `Retry-After` the proxy gives, or 2
+seconds doubling to 60 with jitter, and resends the identical request, so a
+caching backend's prefix still hits. Queueing is not a retry. Scrutare still
+passes `--request-retries 0` unless a rail sets
+[`request_retries`](#request-retries-opt-in), and a queued refusal spends none
+of that budget. A refusal past `wait_seconds` or `refusals`, or one that does
+not qualify, is handled exactly as without the queue: the retry policy judges
+it, and with zero retries the session fails as an ordinary `provider` failure.
+
+**One limit per review run.** In adaptive mode every session of one review run,
+correction turns included, names the same `capacity/` directory inside the run
+directory, so all concurrent persona processes on a route share one limit and
+its slots. A refusal cuts the limit to half, never below `floor`; after
+`quiet_seconds` without one it rises by one, never above `ceiling`. nare keeps
+its slot locks and limit state there, and a process that crashes frees its
+slot. Scrutare creates the directory owner-only, beside `sessions/` and
+`review-inputs/` and outside every persona's read root, and refuses one that is
+a link or that others can enter. Its place is never read from configuration.
+It must be on a local filesystem, because nare uses `flock`; neither Scrutare
+nor nare checks this. Separate review runs each have their own directory, so
+concurrent runs against one proxy do not share a limit: each may hold up to
+`ceiling` requests.
+
+**Accounting.** A refused request was never dispatched: nare adds no turn, no
+`cost` event and no usage for it. Scrutare counts tokens only from `cost`
+events and reconciles their sum with nare's result, so a queued or refused
+request never enters the token ledger, spends no budget and never counts as
+failed coverage. Refusals, queue time, the last limit and slot wait are
+recorded apart from token usage, turns and retries. Every session launched
+with the capacity flags records `capacity` in `result.json`, zeros included:
+`{"refusals", "wait_seconds", "limit", "slot_wait_seconds", "source"}`.
+`source` is `result` when nare's terminal record reported the counters, or
+`events` when the session ended without one (a timeout, for example) and they
+were counted from the queue and limit records in its streams. `fanout.json`
+adds the wave's totals under `result.capacity`.
+
+**Checks.** nare's result line must agree with its saved session, and nothing
+may shrink over a resumed correction turn. The stream must agree with both:
+the number of queue records and the sum of the waits they announce equal nare's
+totals, and so do the slot waits it reports. Evidence a session did not ask for
+fails it as a protocol failure: any capacity record or nonzero counter on a
+session that was sent no capacity flag, and any limit, limit record or slot
+wait on a session that was sent the queue alone.
+
+**Timeout.** The session timeout (`NareRuntime.timeout_seconds`, 600 seconds
+from the CLI) is a liveness limit, and a session waiting on capacity is alive.
+So waiting that nare reports is credited:
+
+- Queue waits. nare writes each queue record before it waits, with the seconds
+  it is about to wait, and Scrutare moves that session's deadline out by the
+  same seconds. This needs a streamed session, which is why the runtime must
+  list `--stream`.
+- Slot waits, once they end. In adaptive mode a request that finds the limit
+  full waits for a slot. nare reports that wait only after it has ended, and
+  Scrutare credits it then.
+- One bound. A session is credited at most `wait_seconds` in total, for both
+  kinds of waiting together, so it runs for at most its timeout plus
+  `wait_seconds`. A correction turn continues the same deadline and credit.
+- Only records earn credit. A session that goes silent is still stopped at its
+  deadline.
+
+What is not covered: a slot wait still in progress. nare writes nothing while
+a request polls for a slot, and that poll has no bound, so from outside it
+cannot be told from a hang. A session whose single slot wait outlasts its
+remaining time is stopped as `timeout`, with incomplete accounting and a
+`capacity` record counted from its stream. Under heavy contention adaptive mode
+can therefore still end a healthy session; a lower `ceiling`, a longer session
+timeout or `fixed` mode avoids it. Limits outside the session are not moved
+either: the App's job timeout and a CI job's own limit still apply.
+
+With `mode: off` or no block, argv, the canonical configuration, every record
+and the session's wait are what they were. [Replay](replay.md) audits the flags
+and the counters of a run that used the block.
 
 ## Citation correction turn (opt-in)
 

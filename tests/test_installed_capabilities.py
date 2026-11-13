@@ -38,10 +38,17 @@ def test_installed_runtime_advertises_every_option_scrutare_gates(tmp_path, inst
     assert capability.structured_output == ("json_schema",)
     assert capability.structured_output_providers == ("anthropic", "openai")
     assert capability.proxy_num_retries
-    # The release lists its capacity options. No session is sent one.
+    # The release lists its capacity options. No session is sent one unless the review's
+    # configuration asks for a capacity mode.
     for switch in ("--capacity-queue", "--capacity-adaptive"):
         flag = capability.flag(switch)
         assert flag is not None and not flag.takes_value
+    for option in ("--capacity-wait-seconds", "--capacity-refusals", "--capacity-ceiling",
+                   "--capacity-floor", "--capacity-quiet-seconds", "--capacity-shared-dir"):
+        flag = capability.flag(option)
+        assert flag is not None and flag.takes_value and flag.choices is None
+    # Both modes are offered: the queue, and the queue with a shared in-flight limit.
+    assert capability.capacity == ("fixed", "adaptive")
 
 
 def test_installed_default_session_sends_no_capacity_option(capture, tmp_path, installed):
@@ -57,6 +64,8 @@ def test_installed_default_session_sends_no_capacity_option(capture, tmp_path, i
         0, 0.0, None, 0.0)
     saved = load(outcome.artifact_directory / "session.json")
     assert (saved["capacity_refusals"], saved["capacity_limit"]) == (0, None)
+    assert outcome.capacity is None
+    assert "capacity" not in load(outcome.artifact_directory / "result.json")
 
 
 def test_installed_session_accepts_the_explicit_recovery_and_compaction_values(

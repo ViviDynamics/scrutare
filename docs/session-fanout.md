@@ -128,6 +128,20 @@ A rail with [`cache_breakpoints`](config.md#prompt-cache-breakpoints-opt-in) or
 [`effort`](config.md#reasoning-effort-opt-in) adds `--cache-breakpoints` or
 `--effort LEVEL` to each of its sessions, and records them like
 `structured_output`.
+A review with a [`models.capacity`](config.md#capacity-queueing-opt-in) block
+adds nare's capacity flags (nare 2026.11.100) to every initial and resumed
+correction invocation on an openai rail, after the recovery and compaction
+values: `--capacity-queue` with its two limits in `fixed` mode, and in
+`adaptive` mode also `--capacity-adaptive`, its bounds and
+`--capacity-shared-dir` naming the run's own owner-only `capacity/` directory.
+nare then waits out a provider capacity refusal and resends the same request,
+and in adaptive mode keeps one in-flight limit for the run's sessions. A queued
+refusal adds no turn, no usage and no resend. The result line's
+`capacity_refusals`, `capacity_wait_seconds`, `capacity_limit` and
+`capacity_slot_wait_seconds` are checked against the saved session and against
+the stream's own queue and limit records, and kept apart from usage, turns and
+retries. Without the block no session is sent a capacity option, and capacity
+evidence on a session that did not ask for it is a protocol failure.
 A rail with [`max_output_tokens: N`](config.md#per-request-output-token-cap-opt-in)
 adds `--max-tokens N` to each of its sessions, and records the cap in
 `fanout.json` like `structured_output`. A session on a capped rail whose last
@@ -278,7 +292,12 @@ and overshoot. The ledger and per-session records expose accounting confidence.
 Malformed or inconsistent protocol evidence fails and closes admission rather
 than inventing an empty success.
 
-Timeouts and caller cancellation terminate and reap owned process groups.
+Timeouts and caller cancellation terminate and reap owned process groups. A
+session sent capacity flags has its deadline moved out by the queue waits nare
+announces and the slot waits nare reports once they end, bounded per session
+by the block's `wait_seconds`; every other session's deadline is its timeout.
+A slot wait still in progress at the deadline is not credited, so that session
+ends as `timeout`.
 Cancellation waits for cleanup before propagating and does not publish a
 completed wave manifest. Captures and prepared input bytes remain unchanged.
 Provider failures retain logs and session evidence with uncertain accounting.
