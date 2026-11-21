@@ -26,6 +26,7 @@ from scrutare.config import (
     STRUCTURED_OUTPUT_MODES,
     CapacitySettings,
     ConfigError,
+    FindingSettings,
     ModelRail,
     ModelSettings,
 )
@@ -54,6 +55,7 @@ from scrutare.engine.session_output import (
     ProtocolCorrectionOffered,
     SessionProtocolError,
     capacity_events,
+    citation_check_record,
     constrained_turns,
     decode_citation_correction,
     decode_live_event,
@@ -389,6 +391,33 @@ def _cache_breakpoints(contract: dict[str, object],
     return tuple(name for name in _PROVIDERS if name in entry["providers"])
 
 
+def _check_command(contract: dict[str, object], flags: tuple[NareFlag, ...] | None) -> bool:
+    """Whether a contract 3 runtime runs a caller's argv as an answer check, as Scrutare
+    drives it: the argv and timeout flags, the answer and reads on stdin, no credentials."""
+    entry = contract.get("check_command")
+    advertised = {flag.name: flag.takes_value for flag in flags or ()}
+    return (flags is not None and isinstance(entry, dict)
+            and entry.get("flag") == "--check-command"
+            and entry.get("timeout_flag") == "--check-timeout"
+            and entry.get("credentials") == "withheld"
+            and isinstance(entry.get("stdin"), dict) and set(entry["stdin"]) == {"answer", "reads"}
+            and advertised.get("--check-command") is True
+            and advertised.get("--check-timeout") is True)
+
+
+def _cited_read_map(contract: dict[str, object], flags: tuple[NareFlag, ...] | None) -> bool:
+    """Whether a contract 3 runtime holds an answer until cited files are read, through a map."""
+    entry = contract.get("cited_reads")
+    mapped = entry.get("map") if isinstance(entry, dict) else None
+    advertised = {flag.name: flag.takes_value for flag in flags or ()}
+    return (flags is not None and isinstance(entry, dict) and isinstance(mapped, dict)
+            and entry.get("flag") == "--require-cited-reads"
+            and mapped.get("flag") == "--cited-read-map"
+            and mapped.get("requires") == "--require-cited-reads"
+            and advertised.get("--require-cited-reads") is True
+            and advertised.get("--cited-read-map") is True)
+
+
 async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
     """Inspect external version and contract without constructing a provider or session."""
     executable = _executable(runtime)
@@ -411,6 +440,8 @@ async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
                 flags=flags, cache_breakpoints=_cache_breakpoints(contract, flags),
                 capacity=_capacity_modes(contract, flags),
                 structured_output_provider_modes=by_provider,
+                check_command=_check_command(contract, flags),
+                cited_read_map=_cited_read_map(contract, flags),
                 **({"structured_output_providers": providers} if modes else {}))
     except SessionRuntimeError:
         raise
@@ -475,6 +506,21 @@ def require_rail_options(models: ModelSettings, capability: NareCapability) -> N
             raise SessionRuntimeError(
                 f"capability: nare {capability.version} cannot send {refusal}; "
                 "use a nare release that advertises it")
+
+
+def require_findings_options(findings: FindingSettings, capability: NareCapability) -> None:
+    """Refuse a wave before any session when the in-session citation check cannot be sent."""
+    if findings.citation_check != "session":
+        return
+    refusal = f"capability: nare {capability.version} cannot run "
+    if not getattr(capability, "check_command", False):
+        raise SessionRuntimeError(
+            f"{refusal}the citation check in session; use a nare release that advertises "
+            "check_command (2026.11.102 or newer)")
+    if findings.cited_reads and not getattr(capability, "cited_read_map", False):
+        raise SessionRuntimeError(
+            f"{refusal}cited reads through a map; use a nare release that advertises "
+            "cited_reads.map (2026.11.103 or newer)")
 
 
 # The name this check had when structured output was the only gated option.
@@ -752,6 +798,41 @@ def _offers_citation_correction(descriptor: object) -> bool:
             and citation_correction_enabled(descriptor.inputs.root))
 
 
+def _carries_citation_check(descriptor: object, findings: FindingSettings) -> bool:
+    """Only an opted-in discovery session, the sessions the correction turn covers."""
+    return type(descriptor) is PersonaReviewInput and findings.citation_check == "session"
+
+
+def citation_check_argv(findings: FindingSettings, root: Path,
+                        artifact_directory: Path) -> tuple[list[str], dict[str, object]]:
+    """The flags a discovery session with the in-session check sends, and their record.
+
+    The checker runs on Scrutare's own interpreter, isolated, against the capture manifest
+    in the read root. Its digest pins the package it imports. The timeout is nare's
+    default, sent explicitly as every recovery control is.
+    """
+    from scrutare.findings.citation_check import (
+        CHECK_TIMEOUT_SECONDS,
+        CITED_PATHS,
+        CITED_READ_MAP,
+        check_argv,
+    )
+
+    checker = check_argv(root)
+    argv = ["--check-command", json.dumps(checker), "--check-timeout",
+            str(CHECK_TIMEOUT_SECONDS)]
+    record: dict[str, object] = {
+        "mode": "session", "argv": checker,
+        "checker_sha256": checker[checker.index("--digest") + 1],
+        "check_timeout_seconds": CHECK_TIMEOUT_SECONDS,
+        "max_corrections": findings.session_corrections}
+    if findings.cited_reads:
+        argv.extend(("--require-cited-reads", CITED_PATHS, "--cited-read-map",
+                     str(artifact_directory / CITED_READ_MAP)))
+        record["cited_reads"] = CITED_PATHS
+    return argv, record
+
+
 def _streams(capability: NareCapability) -> bool:
     if capability.contract == 3:
         return capability.advertises("--stream")
@@ -822,7 +903,7 @@ def _unasked_capacity(sent: list[str], *, queued: bool, limited: bool) -> bool:
 
 
 def _rail_argv(rail: ModelRail, capability: NareCapability,
-               capacity: list[str] | None = None) -> list[str]:
+               capacity: list[str] | None = None, corrections: int = 1) -> list[str]:
     argv = ["--provider", rail.provider, "--model=" + rail.model]
     if rail.provider == "openai" and _streams(capability):
         argv.append("--stream")
@@ -830,8 +911,10 @@ def _rail_argv(rail: ModelRail, capability: NareCapability,
         # Preserve Scrutare's recovery policy rather than inherit newer CLI defaults.
         # A rail may opt in to resends; unset keeps the pinned zero.
         retries = rail.request_retries or 0
+        # The correction budget is the pinned 1, except on a session that carries the
+        # in-session citation check (#130), which shares it with schema corrections.
         argv.extend(("--max-cutoffs", "0", "--request-retries", str(retries),
-                     "--max-corrections", "1"))
+                     "--max-corrections", str(corrections)))
         if retries:
             # Explicit, so nare's own default wait never decides how long a session stalls.
             seconds = rail.request_retry_seconds
@@ -1023,6 +1106,9 @@ async def _run_session(
     capacity: list[str] = []
     invoked = False
     correction_key = "citation_correction"
+    checked = False
+    # The in-session check's record; its outcome stays null until a stream is decoded.
+    check_state: dict[str, object] = {"outcome": None, "corrections": None, "refusal": None}
     deadline = asyncio.get_running_loop().time() + getattr(runtime, "timeout_seconds", 0)
     try:
         expected_descriptor = PersonaReanchorInput if purpose == "reanchor" else PersonaReviewInput
@@ -1068,6 +1154,9 @@ async def _run_session(
             correction = {"offered": False, "defects": 0, "outcome": None, "exit_code": None}
         elif purpose == "review" and _offers_citation_correction(descriptor):
             correction = {"offered": False, "defects": 0, "outcome": None, "exit_code": None}
+        checked = purpose == "review" and _carries_citation_check(descriptor, run_config.findings)
+        if checked:
+            require_findings_options(run_config.findings, capability)
         reason = "artifacts"
         if purpose == "reanchor" and artifact_directory.name != "attempt-0002":
             raise SessionArtifactError("artifact_directory: expected the correction attempt")
@@ -1087,7 +1176,8 @@ async def _run_session(
                       else input_args[:1]), *input_args[1:],
                     *(("--system-file", str(artifact_directory / SYSTEM_FILE)) if system_file
                       else ("--system=" + system,)),
-                    *_rail_argv(rail, capability, capacity)]
+                    *_rail_argv(rail, capability, capacity,
+                                run_config.findings.session_corrections if checked else 1)]
             if prompt_file:
                 _new_text(directory, PROMPT_FILE, input_args[0])
             if system_file:
@@ -1107,6 +1197,18 @@ async def _run_session(
                          str(artifact_directory / "session.json"),
                          "--max-turns", str(runtime.max_turns)))
             argv.extend(_rail_options(rail))
+            check_record: dict[str, object] = {}
+            if checked:
+                check_flags, check_record = citation_check_argv(
+                    run_config.findings, prepared_root, artifact_directory)
+                argv.extend(check_flags)
+                if run_config.findings.cited_reads:
+                    from scrutare.findings.citation_check import CITED_READ_MAP, cited_read_map
+                    mapped = cited_read_map(prepared_root)
+                    write_owned_json(artifact_directory / CITED_READ_MAP, mapped,
+                                     prepared_root=prepared_root)
+                    check_record["cited_read_map_sha256"] = sha256(
+                        (artifact_directory / CITED_READ_MAP).read_bytes()).hexdigest()
             write_owned_json(artifact_directory / schema_name, schema,
                              prepared_root=prepared_root)
             write_owned_json(artifact_directory / "invocation.json", {
@@ -1121,6 +1223,8 @@ async def _run_session(
                                            if name not in ("provider", "model")}},
                 "allocated_tokens": lease.allocated_tokens, "invocation_limit": lease.limit_tokens,
                 "max_turns": runtime.max_turns, "timeout_seconds": runtime.timeout_seconds,
+                # Recorded only on a session that carries the in-session citation check.
+                **({"citation_check": check_record} if checked else {}),
             }, prepared_root=prepared_root)
             invoked = True
             with ExitStack() as stack:
@@ -1165,6 +1269,12 @@ async def _run_session(
                     discard_cut_off=capped,
                 )
             else:
+                seen: dict[str, object] | None = None
+                if checked:
+                    try:
+                        seen = citation_check_record(evidence.stdout)
+                    except (ValueError, TypeError, KeyError, RecursionError):
+                        seen = None
                 try:
                     decoded = decode_session(
                         evidence.stdout, saved, persona=lease.persona, exit_code=exit_code,
@@ -1199,6 +1309,24 @@ async def _run_session(
                         deadline=deadline, record=correction, capacity=capacity,
                         settings=settings)
                     reason, answered = "protocol", True
+                if checked and decoded.status is not None:
+                    if seen is None:
+                        raise SessionProtocolError("session: invalid citation check evidence")
+                    check_state = seen
+                    if seen["outcome"] == "no_verdict":
+                        raise SessionProtocolError("citation check: no verdict")
+                    if seen["outcome"] == "reads_required":
+                        raise SessionProtocolError("citation check: cited files not read")
+                    if seen["outcome"] == "refused":
+                        # The budget ran out on the check: the session fails as the
+                        # post-session validator fails the same answer.
+                        from scrutare.findings.citation_check import refusal as refused
+                        codes = seen["refusal"]
+                        assert isinstance(codes, list)
+                        citation_reason = refused(codes)[1]
+                        if citation_reason is not None:
+                            raise CitationValidationError(citation_reason)
+                        raise SessionProtocolError("citation check: refused answer")
             if decoded.status is not None and (
                     decoded.nare_version != capability.version
                     or decoded.contract != capability.contract):
@@ -1299,6 +1427,8 @@ async def _run_session(
                 structured["effort"] = {"level": rail.effort}
             if correction is not None:
                 structured[correction_key] = correction
+            if checked:
+                structured["citation_check"] = check_state
             write_owned_json(artifact_directory / "result.json", {
                 "schema_version": 1, "scrutare_version": __version__,
                 "nare_version": capability.version, "contract": capability.contract,

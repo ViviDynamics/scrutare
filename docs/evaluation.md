@@ -204,6 +204,11 @@ configuration passes the [citation correction](config.md#citation-correction-tur
 through to every evidence-v2 arm (the arms without evidence have no citations).
 It adds a model turn to sessions it fires in, so compare it only against the
 same arms without it, and report how often it was offered and each outcome.
+`findings.citation_check: session`, with its `max_corrections` and
+`cited_reads`, passes through the same way. Compare it against the same arms
+with `post_session`, and report from each session's `result.json` the check
+outcome, the corrections it caused (charged and free), and the sessions that
+spent the budget.
 
 `findings: {evidence: v2, protocol_correction: true}` similarly passes the broader
 [protocol correction](config.md#protocol-correction-turn-opt-in) to every evidence-v2

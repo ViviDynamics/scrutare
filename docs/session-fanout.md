@@ -162,6 +162,11 @@ outcome and the shared ledger.
 The pinned nare release may make one further tool-free summary request at the
 turn limit. Its usage is counted, and its `error`/`max_turns` result leaves the
 original refusal standing even when the summary contains a valid answer.
+With [`findings.citation_check: session`](config.md#citation-check-in-the-session-opt-in),
+a discovery session instead carries Scrutare's citation validator as nare's
+`--check-command`, with `--check-timeout 30` and the configured
+`--max-corrections`, so a refused citation is corrected by a later turn of the
+same process, inside the same lease and budget; no session is resumed.
 The broader [`findings.protocol_correction`](config.md#protocol-correction-turn-opt-in)
 applies that same bound to deterministic full-answer refusals in discovery, assessment
 and focused discussion. It takes precedence if both correction settings are enabled.

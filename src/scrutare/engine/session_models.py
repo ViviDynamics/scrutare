@@ -193,11 +193,17 @@ class NareCapability:
     # None when the runtime lists no per-provider modes: then only json_schema is offered, on
     # every provider in structured_output_providers, as before that entry existed.
     structured_output_provider_modes: tuple[tuple[str, tuple[str, ...]], ...] | None = None
+    # A caller's argv as an in-session answer check (nare 2026.11.102), and a map from cited
+    # values to read-root paths for --require-cited-reads (2026.11.103); contract 3 only.
+    check_command: bool = False
+    cited_read_map: bool = False
 
     def __post_init__(self) -> None:
         _text(self.version, "version")
         _integer(self.contract, "contract", positive=True)
         _boolean(self.proxy_num_retries, "proxy_num_retries")
+        _boolean(self.check_command, "check_command")
+        _boolean(self.cited_read_map, "cited_read_map")
         if (not isinstance(self.structured_output, tuple)
                 or any(not isinstance(mode, str) or not mode for mode in self.structured_output)):
             raise ValueError("structured_output: expected a tuple of mode names")

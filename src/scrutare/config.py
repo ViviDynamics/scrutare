@@ -374,6 +374,12 @@ class DiscussionSettings:
         return result
 
 
+# nare's correction budget for a discovery session carrying the citation check: the schema
+# correction a session always had, plus one for citations; and the most a review may set.
+SESSION_CORRECTIONS = 2
+MAX_SESSION_CORRECTIONS = 3
+
+
 @dataclass(frozen=True)
 class FindingSettings:
     evidence: Literal["legacy", "v2"] = "legacy"
@@ -382,8 +388,41 @@ class FindingSettings:
     # Opt-in: one tool-free turn to correct machine-describable citation defects (#91).
     citation_correction: bool = False
     protocol_correction: bool = False
+    # Opt-in: run the citation validator inside the discovery session as nare's check
+    # command (#130), with nare's correction budget for those sessions and, optionally, a
+    # hold until every cited file was read.
+    citation_check: Literal["post_session", "session"] = "post_session"
+    max_corrections: int | None = None
+    cited_reads: bool = False
+
+    @property
+    def session_corrections(self) -> int:
+        """nare's correction budget for a discovery session: the pinned 1 without the check."""
+        if self.citation_check != "session":
+            return 1
+        return SESSION_CORRECTIONS if self.max_corrections is None else self.max_corrections
 
     def __post_init__(self) -> None:
+        if self.citation_check not in ("post_session", "session"):
+            raise ConfigError("findings.citation_check: expected post_session or session")
+        if self.max_corrections is not None and (
+                type(self.max_corrections) is not int
+                or not 1 <= self.max_corrections <= MAX_SESSION_CORRECTIONS):
+            raise ConfigError("findings.max_corrections: expected an integer from 1 to "
+                              f"{MAX_SESSION_CORRECTIONS}, or null")
+        if type(self.cited_reads) is not bool:
+            raise ConfigError("findings.cited_reads: expected boolean")
+        if self.citation_check != "session":
+            for name in ("max_corrections", "cited_reads"):
+                if getattr(self, name) not in (None, False):
+                    raise ConfigError(f"findings.{name}: requires citation_check session")
+        elif self.evidence != "v2":
+            raise ConfigError("findings.citation_check: requires evidence v2")
+        elif self.citation_correction is True or self.protocol_correction is True:
+            # The check covers what either turn corrects, inside the session; a session that
+            # spends its corrections has no answer left for a resumed turn to correct.
+            raise ConfigError("findings.citation_check: session excludes citation_correction "
+                              "and protocol_correction")
         if type(self.protocol_correction) is not bool:
             raise ConfigError("findings.protocol_correction: expected boolean")
         if self.protocol_correction and self.evidence != "v2":
@@ -521,6 +560,12 @@ class ReviewConfig:
                 result["findings"]["protocol_correction"] = True
             if self.findings.citation_correction:
                 result["findings"]["citation_correction"] = True
+            if self.findings.citation_check != "post_session":
+                result["findings"]["citation_check"] = self.findings.citation_check
+            if self.findings.max_corrections is not None:
+                result["findings"]["max_corrections"] = self.findings.max_corrections
+            if self.findings.cited_reads:
+                result["findings"]["cited_reads"] = True
         if self.analysis.enabled:
             result["analysis"] = asdict(self.analysis)
         if self.routing != RoutingSettings():
@@ -541,7 +586,8 @@ class ReviewConfig:
 
 def _finding_settings(value: object) -> FindingSettings:
     fields = _mapping(value, "findings", ("evidence", "assessment", "discussion",
-                                          "citation_correction", "protocol_correction"))
+                                          "citation_correction", "protocol_correction",
+                                          "citation_check", "max_corrections", "cited_reads"))
     assessment = _mapping(fields.get("assessment", {}), "findings.assessment",
                           ("enabled", "tokens", "overrun"))
     return FindingSettings(cast(Literal["legacy", "v2"], _choice(
@@ -549,7 +595,9 @@ def _finding_settings(value: object) -> FindingSettings:
         AssessmentSettings(**assessment), DiscussionSettings(**_mapping(
             fields.get("discussion", {}), "findings.discussion",
             ("enabled", "tokens", "overrun"))),
-        fields.get("citation_correction", False), fields.get("protocol_correction", False))
+        fields.get("citation_correction", False), fields.get("protocol_correction", False),
+        fields.get("citation_check", "post_session"), fields.get("max_corrections"),
+        fields.get("cited_reads", False))
 
 
 def _analysis_settings(value: object, context: ContextSettings) -> AnalysisSettings:

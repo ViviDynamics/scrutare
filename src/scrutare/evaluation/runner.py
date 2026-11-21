@@ -22,7 +22,11 @@ from scrutare.config import (
 from scrutare.engine import assessment_inputs, discussion_inputs
 from scrutare.engine.assessment_inputs import assessor_persona
 from scrutare.engine.budgets import ReviewBudgetLedger
-from scrutare.engine.nare_session import inspect_nare_runtime, require_structured_output
+from scrutare.engine.nare_session import (
+    inspect_nare_runtime,
+    require_findings_options,
+    require_structured_output,
+)
 from scrutare.engine.preflight import run_preflight
 from scrutare.engine.recovery import (
     RULE_A,
@@ -113,12 +117,15 @@ def _comparison_configs(config: ReviewConfig, *, comparison_set: str = 'baseline
         # The opt-in citation correction applies to every arm whose findings carry citations.
         protocol = config.findings.protocol_correction
         correction = config.findings.citation_correction
-        evidence = replace(procedures, findings=FindingSettings(
-            'v2', citation_correction=correction, protocol_correction=protocol))
-        assessed = replace(evidence, findings=FindingSettings('v2',
-            AssessmentSettings(True, total // 5 if assessment_tokens is None
-                               else assessment_tokens), citation_correction=correction,
-            protocol_correction=protocol))
+        # So does the in-session citation check, with its correction budget and read hold.
+        check = replace(FindingSettings('v2'), citation_correction=correction,
+                        protocol_correction=protocol,
+                        citation_check=config.findings.citation_check,
+                        max_corrections=config.findings.max_corrections,
+                        cited_reads=config.findings.cited_reads)
+        evidence = replace(procedures, findings=check)
+        assessed = replace(evidence, findings=replace(check, assessment=AssessmentSettings(
+            True, total // 5 if assessment_tokens is None else assessment_tokens)))
         if comparison_set == 'focused':
             discussion = replace(assessed, strategy='debate',
                 findings=replace(assessed.findings, discussion=DiscussionSettings(True)))
@@ -404,6 +411,7 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
     write_json(output / 'snapshot.json', snapshot)
     capability = await inspect_nare_runtime(runtime)
     require_structured_output(config.models, capability)
+    require_findings_options(config.findings, capability)
     snapshot.update(nare_version=capability.version, nare_contract=capability.contract)
     if config.models.structured_output:
         snapshot['nare_structured_output'] = list(capability.structured_output)
