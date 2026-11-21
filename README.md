@@ -174,6 +174,11 @@ delivery. Replay continues to use canonical findings, policy and verdict bytes.
 See [CLI usage](docs/cli.md), [configuration](docs/config.md),
 [path filters](docs/path-filters.md) and [persona authoring](docs/writing-personas.md).
 
+To review on a self-hosted OpenAI-compatible model (vLLM behind LiteLLM, for
+example), start from the versioned `self-hosted@1` profile in the
+[self-hosted guide](docs/self-hosted.md). No self-hosted model has passed the
+[#51](https://github.com/ViviDynamics/scrutare/issues/51) gate yet; the guide says what is and is not qualified.
+
 ## Audit a saved verdict offline
 
 ```sh

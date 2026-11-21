@@ -23,6 +23,7 @@ Errors identify a field path or YAML location without echoing field values.
 
 | Field | Accepted values | Default |
 | --- | --- | --- |
+| `profile` | `self-hosted@1` (requires `provider: openai` on every rail) | none |
 | `strategy` | `panel`, `iterative`, `debate` | `panel` |
 | `rounds.max` | Positive integer | `3` |
 | `personas` | Nonempty list of built-in names or inline definitions; unique names | `senior-dev`, `junior-dev`, `security`, `devops` |
@@ -84,6 +85,42 @@ name, but every name must occur only once in the configured panel.
 An undefined custom name cannot be used as a bare string. See the
 [persona authoring guide](writing-personas.md) for the built-in perspectives,
 complete custom and replacement examples, prompt guidance, and registry API.
+
+## Profiles
+
+A profile fills a fixed set of opt-in options with fixed values, so a
+repository does not assemble them by hand:
+
+```yaml
+profile: self-hosted@1
+models:
+  default:
+    provider: openai
+    base_url: https://litellm.example/v1
+    model: onprem/<model>
+```
+
+The one profile is `self-hosted@1`, for an OpenAI-compatible self-hosted
+backend. It sets `structured_output: json_schema`, `max_output_tokens: 20000`
+and `proxy_num_retries: 0` on the default rail, `models.preflight.route: true`,
+and, for reviews of the matching shape, `context.line_counts`,
+`findings.protocol_correction` and `findings.assessment.tokens: 50000`. The
+[self-hosted guide](self-hosted.md) gives each value, the evidence behind it,
+the options it leaves at their defaults and why, and what remains unqualified.
+
+- The value is `NAME@VERSION`. A bare name, an unknown name or an unknown
+  version fails at load, and a version's values never change.
+- A field the file sets, `null` and `false` included, overrides the profile.
+  Overrides inherit the filled default-rail fields like any other.
+- `self-hosted@1` requires `provider: openai` on every rail and is refused
+  otherwise.
+- An error on a value the profile filled names the profile.
+- `config.to_dict()` records `profile` and every field the profile covers
+  explicitly, so the record parses back to the same settings. A file without
+  `profile` records exactly what it did before.
+
+`scrutare config show` prints the resolved configuration and the source of
+each value the profile covers; see the [CLI guide](cli.md#inspect-a-configuration).
 
 ## Model inheritance
 
@@ -263,48 +300,6 @@ overrides like the other rail fields; an override can set it alone or clear an
 inherited value with `null`. Every supported nare release (2026.10.0 and newer)
 accepts `--max-tokens`, so no capability check is needed. With the cap off, a
 backend's own length stop remains a `provider` failure, as before.
-
-### Answer encodings on the openai rail
-
-Some self-hosted backends (vLLM behind LiteLLM, for example) are stronger at a
-forced tool call than at `response_format` json_schema, or support one and not
-the other. An openai rail can choose the encoding nare uses on the same
-constrained turns:
-
-```yaml
-models:
-  default:
-    provider: openai
-    base_url: https://litellm.example/v1
-    model: onprem/glm-5.3-flash
-    structured_output: tool_call
-```
-
-| Value | What nare sends on a constrained turn |
-| --- | --- |
-| `json_schema` | `response_format` `json_schema` with the session's schema, `strict: true` |
-| `json_object` | `response_format: {"type": "json_object"}`: JSON syntax only, the schema is checked locally |
-| `tool_call` | only the forced `nare_final_answer` function, whose parameters are the session's schema, with `parallel_tool_calls: false` |
-
-The session is launched with `--structured-output json_object` or
-`--structured-output tool_call` in place of `json_schema`, and nothing else in
-its argv changes. A `tool_call` answer function is never an action: nare
-decodes exactly one call with no accompanying text into the answer text, and a
-missing, extra or malformed call spends the same correction as a schema-invalid
-answer. In every encoding nare still validates the answer against the schema,
-its usage, truncation and repetition guards stay active, and Scrutare's own
-validation decides as before.
-
-Both values need nare 2026.11.107 or newer, whose `nare contract` lists each
-provider's modes under `structured_output.provider_modes`; the pinned release
-does. A review that asks for one on a runtime that does not list it for the
-openai rail is refused before any session launches, and a review that never
-asks is unaffected. nare offers neither on the anthropic rail, so
-configuration refuses them there at load:
-`models.default.structured_output: tool_call requires provider openai`. An
-anthropic override does not inherit one from an openai default: the load error
-says so, and the override clears it with `structured_output: null` or chooses
-`json_schema`.
 
 When no rail sets it, the canonical configuration, rail records,
 `invocation.json` and `result.json` are byte-identical to earlier releases.
