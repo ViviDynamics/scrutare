@@ -184,7 +184,7 @@ fields; an override can set it alone or clear an inherited value with `null`.
 It is refused before any session launches when the nare runtime does not
 advertise the capability for that rail's provider: the openai rail from nare
 2026.10.12, the anthropic rail on contract 3 runtimes that list it (the pinned
-2026.11.107 does). Use it only with a backend that enforces `response_format`
+2026.11.109 does). Use it only with a backend that enforces `response_format`
 json_schema, such as vLLM; an OpenAI-compatible server that ignores the field
 answers unconstrained, and validation still decides.
 
@@ -234,7 +234,7 @@ answer. In every encoding nare still validates the answer against the schema,
 its usage, truncation and repetition guards stay active, and Scrutare's own
 validation decides as before.
 
-Both values need nare 2026.11.107 or newer, whose `nare contract` lists each
+Both values need nare 2026.11.109 or newer, whose `nare contract` lists each
 provider's modes under `structured_output.provider_modes`; the pinned release
 does. A review that asks for one on a runtime that does not list it for the
 openai rail is refused before any session launches, and a review that never
@@ -744,7 +744,7 @@ findings:
 nare (2026.11.102 and newer) then runs Scrutare's validator as its check
 command on every final answer that passes the findings schema. A refused answer
 goes back to the model as an in-session correction, with the transcript still
-cached and the read tool still offered (nare 2026.11.107 restores the session's
+cached and the read tool still offered (nare 2026.11.109 restores the session's
 tools after such a correction), so the model can read the file again and fix the
 citation in the next turn of the same process. It works on any provider rail.
 It applies to discovery sessions only (the reviewers of the initial wave);
@@ -848,7 +848,7 @@ and tokens per provider and model. The CLI's result document carries it as
 `timing`, so the App's job record has it too.
 
 Time to first token and decode rate need the time each model request was sent
-and when its first byte arrived. nare 2026.11.107 reports neither: a `cost`
+and when its first byte arrived. nare 2026.11.109 reports neither: a `cost`
 event carries usage only, and a turn that only calls tools streams no text, so
 no caller can derive them reliably. They stay `null` until nare reports
 per-request timing

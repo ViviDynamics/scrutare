@@ -32,10 +32,10 @@ for outcome in result.outcomes:
 
 `NareRuntime` is an operational Python argument, with positive finite timeout
 and turn limits. It adds no YAML fields. Scrutare requires Python 3.10 or newer;
-install nare 2026.11.107 separately (supported minimum 2026.10.0) with the interpreter required by its
+install nare 2026.11.109 separately (supported minimum 2026.10.0) with the interpreter required by its
 release. For the pinned integration runtime, clone the public
-[ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.11.107),
-verify commit `4baaeb8527478401cbd7bf54b74f48c286d8a093` (the release and commit in
+[ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.11.109),
+verify commit `989636b56ce62375bd67401ab09c970f40c49b5f` (the release and commit in
 `nare.pin`), and run
 `uv sync --project /path/to/nare-checkout --python 3.14 --locked --no-dev`.
 Point `NareRuntime.executable`, or the CLI option `--nare-executable`, at that
@@ -50,7 +50,7 @@ The pinned runtime uses contract 3, first released in nare 2026.11.33. Its
 redaction rules preserve code expressions while redacting credential values;
 Scrutare continues to decode and replay historical contract 1/2 evidence.
 Unknown contracts and release/contract mismatches fail inspection before review.
-See nare's [machine contract](https://github.com/ViviDynamics/nare/blob/2026.11.107/docs/contract.md).
+See nare's [machine contract](https://github.com/ViviDynamics/nare/blob/2026.11.109/docs/contract.md).
 
 On contract 3, every initial and resumed correction invocation explicitly sets
 `--max-cutoffs 0`, `--request-retries 0`, and `--max-corrections 1`. This retains
@@ -127,7 +127,7 @@ entry names: the openai rail, and on contract 3 runtimes that list it the
 anthropic rail. The `json_object` and `tool_call` encodings (openai rails only)
 add `--structured-output json_object` or `--structured-output tool_call`
 instead, and are offered only when the entry's `provider_modes` (nare
-2026.11.107) lists the mode for openai and the advertised flag lists it among
+2026.11.109) lists the mode for openai and the advertised flag lists it among
 its choices. An entry without `provider_modes` offers `json_schema` alone, as
 before. Each constrained-turn record must name the rail's own encoding.
 A rail with [`cache_breakpoints`](config.md#prompt-cache-breakpoints-opt-in) or
@@ -334,7 +334,7 @@ and replay contracts.
 ## Offline installed CLI proof
 
 Set `SCRUTARE_TEST_NARE_EXECUTABLE` to the absolute installed console path for
-nare 2026.11.107, then run:
+nare 2026.11.109, then run:
 
 ```sh
 uv run --python 3.10 --locked --extra dev pytest tests/test_nare_cli_integration.py
