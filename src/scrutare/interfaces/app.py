@@ -23,6 +23,9 @@ REPLY_ACTIONS = frozenset({"created", "edited"})
 REPLY_DELIVERY = "webhook:reply:"
 _ORIGIN = re.compile(r"https://[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?(?::[1-9][0-9]{0,4})?")
 _SHA = re.compile(r"[0-9a-f]{40}")
+# The longest job deadline an operator may set. The worker refreshes the installation token
+# while a review runs, so a deadline is no longer bound by the token's one-hour lifetime.
+MAX_JOB_TIMEOUT = 21600
 
 
 class AppError(ValueError):
@@ -47,7 +50,8 @@ class AppSettings:
     data_dir: Path
     model_origins: tuple[str, ...] = ()
     max_pending: int = 100
-    # Installation tokens last one hour; stop a review before its credential expires.
+    # The default still fits inside one installation token's hour. A longer deadline (for
+    # a slower self-hosted rail) relies on the worker refreshing the token during the job.
     job_timeout: int = 3300
     whole_review_retry: bool = False
     # A job whose opt-in route preflight fails is queued again after a doubling delay
@@ -59,7 +63,7 @@ class AppSettings:
         if (type(self.app_id) is not int or self.app_id <= 0
                 or not self.webhook_secret or not self.api_token
                 or type(self.max_pending) is not int or self.max_pending <= 0
-                or type(self.job_timeout) is not int or not 0 < self.job_timeout <= 3300
+                or type(self.job_timeout) is not int or not 0 < self.job_timeout <= MAX_JOB_TIMEOUT
                 or type(self.whole_review_retry) is not bool
                 or type(self.preflight_attempts) is not int
                 or not 1 <= self.preflight_attempts <= 10

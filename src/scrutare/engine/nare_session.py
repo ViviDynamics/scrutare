@@ -63,7 +63,9 @@ from scrutare.engine.session_output import (
     decode_session,
     findings_schema,
     require_sent_effort,
+    retry_events,
 )
+from scrutare.engine.timing import TIMING_FILE, SessionTiming, TimingError
 from scrutare.findings.citation_correction import (
     citation_correction_enabled,
     citation_correction_prompt,
@@ -1105,6 +1107,8 @@ async def _run_session(
     # The capacity flags this session's invocations carry, and whether one was recorded.
     capacity: list[str] = []
     invoked = False
+    # Scrutare's own monotonic clock, from the session's launch to its last record.
+    launched: float | None = None
     correction_key = "citation_correction"
     checked = False
     # The in-session check's record; its outcome stays null until a stream is decoded.
@@ -1227,6 +1231,7 @@ async def _run_session(
                 **({"citation_check": check_record} if checked else {}),
             }, prepared_root=prepared_root)
             invoked = True
+            launched = asyncio.get_running_loop().time()
             with ExitStack() as stack:
                 stdout = stack.enter_context(_new_capture(directory, "stdout.jsonl"))
                 stderr = stack.enter_context(_new_capture(directory, "stderr.txt"))
@@ -1392,6 +1397,7 @@ async def _run_session(
                 reason = "artifacts"
     except (SessionProtocolError, ValueError, TypeError, OverflowError, RecursionError):
         reason, status, complete = "protocol", "failed", False
+    ended = asyncio.get_running_loop().time()
     queue: CapacityUsage | None = None
     if capacity and invoked:
         # Recorded for every session whose invocation asked to queue, and only those. nare's
@@ -1429,12 +1435,24 @@ async def _run_session(
                 structured[correction_key] = correction
             if checked:
                 structured["citation_check"] = check_state
+            if launched is not None and isinstance(rail, ModelRail):
+                # Before result.json, so a session whose record could not be written has
+                # neither, as an unwritable result always left it.
+                retries, retry_wait = retry_events(
+                    evidence.stdout + b"\n" + evidence.correction_stdout)
+                write_owned_json(artifact_directory / TIMING_FILE, SessionTiming(
+                    rail.provider, rail.model,
+                    1 + os.path.lexists(artifact_directory / "correction.stdout.jsonl"),
+                    max(0.0, ended - launched), outcome.usage.total, outcome.usage.output,
+                    retries, retry_wait, queue.wait_seconds if queue is not None else 0.0,
+                    queue.slot_wait_seconds if queue is not None else 0.0,
+                ).to_dict(), prepared_root=prepared_root)
             write_owned_json(artifact_directory / "result.json", {
                 "schema_version": 1, "scrutare_version": __version__,
                 "nare_version": capability.version, "contract": capability.contract,
                 "session_key": lease.session_key, **binding, **outcome.to_dict(), **structured,
             }, prepared_root=prepared_root)
-        except (SessionArtifactError, AttributeError):
+        except (SessionArtifactError, AttributeError, TimingError):
             outcome = _outcome(lease, artifact_directory, evidence, status="failed",
                                reason="artifacts", complete=complete, decoded=decoded,
                                exit_code=exit_code, purpose=purpose, capacity=queue)

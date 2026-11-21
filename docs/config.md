@@ -47,6 +47,7 @@ Errors identify a field path or YAML location without echoing field values.
 | `github.human_reviewers` | List of nonempty reviewer-name strings for escalation | `[]` |
 | `github.paths.include` | List of nonempty glob strings | `[]` |
 | `github.paths.exclude` | List of nonempty glob strings | `["docs/**", "*.md"]` |
+| `github.timing_footer` | Boolean; `false` leaves the [review time line](#review-timing) out of the posted summary | `true` |
 | `findings.protocol_correction` | Boolean; `true` requires v2 evidence and OpenAI rails; takes precedence over citation correction | `false` (off) |
 | `findings.citation_correction` | Boolean; `true` requires `findings.evidence: v2` and `provider: openai` on every rail | `false` (off) |
 | `findings.citation_check` | `post_session`, or `session` (requires `findings.evidence: v2` and a nare release that advertises `check_command`; excludes both correction turns) | `post_session` |
@@ -822,6 +823,53 @@ stream, manifest and configuration.
 It is unmeasured: the default stays `post_session` until a screen on the
 self-hosted rail compares citation refusals, corrections, tokens and time with
 and without it (see the [plan](plans/2026-11-20-session-citation-check.md)).
+
+## Review timing
+
+Every review records how long it took, hosted or self-hosted, with no setting.
+Each launched session writes `timing.json` beside its `result.json`, and each
+review run writes one `timing.json` at its root after its verdict and before
+anything is posted. They are measurements, so they never feed a verdict, and
+replay checks them for form and consistency rather than equality with a rerun
+(see [replay](replay.md)).
+
+A session's record:
+
+| Field | Meaning |
+| --- | --- |
+| `provider`, `model` | The rail its invocation recorded |
+| `invocations` | 1, or 2 with a resumed correction turn |
+| `wall_seconds` | Scrutare's monotonic clock from launch to the session's last record, both turns included |
+| `tokens`, `output_tokens` | The session's `usage.total` and `usage.output` |
+| `retries`, `retry_wait_seconds` | Resent requests and the waits nare announced before them (`detail.retry.wait`) |
+| `capacity_wait_seconds`, `capacity_slot_wait_seconds` | The session's recorded [capacity](#capacity-queueing-opt-in) waits, 0 without the block |
+| `first_token_seconds`, `decode_tokens_per_second` | Always `null` for now |
+
+The review's record has `wall_seconds` from the start of the review (capture
+included) to its verdict, the session totals (`sessions`,
+`session_wall_seconds`, `longest_session_seconds`, `tokens`, `output_tokens`,
+`retries` and the three wait sums) and `rails`, the sessions, session seconds
+and tokens per provider and model. The CLI's result document carries it as
+`timing`, so the App's job record has it too.
+
+Time to first token and decode rate need the time each model request was sent
+and when its first byte arrived. nare 2026.11.107 reports neither: a `cost`
+event carries usage only, and a turn that only calls tools streams no text, so
+no caller can derive them reliably. They stay `null` until nare reports
+per-request timing
+([ViviDynamics/nare#315](https://github.com/ViviDynamics/nare/issues/315)).
+
+The posted summary carries one compact line from the review's record, just
+above the run marker:
+
+```text
+Review time: 12 min 5 s, 5 sessions, 45210 tokens (1200 output)
+```
+
+`github.timing_footer: false` leaves it out, and the summary is then byte for
+byte what it was before this line existed. A run with no review record (an
+older run, or a direct poster call) has no line either. The setting is recorded
+in `config.json` only when it is `false`.
 
 ## Category partition
 

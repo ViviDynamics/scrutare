@@ -51,6 +51,31 @@ def _repository(value: str) -> tuple[str, str]:
     return match[1], match[2]
 
 
+# Names a private file holding the current GitHub token. The App worker sets it and keeps
+# the file fresh while a review runs, so a review longer than one installation token's
+# lifetime still posts with a valid credential. Unset, gh uses its own authentication.
+TOKEN_FILE_VARIABLE = "SCRUTARE_GH_TOKEN_FILE"
+
+
+def gh_environment() -> dict[str, str]:
+    """The environment for one gh call, with the freshest token the caller provided.
+
+    The token file is read on every call, so each request, posting included, uses the token
+    the worker last wrote. An unreadable or empty file leaves the inherited GH_TOKEN.
+    """
+    environment = {**os.environ, "GH_HOST": "github.com"}
+    path = os.environ.get(TOKEN_FILE_VARIABLE)
+    if path:
+        try:
+            with open(path, "rb") as stream:
+                token = stream.read(4096).decode("ascii").strip()
+        except (OSError, UnicodeError):
+            token = ""
+        if token and token.isprintable() and " " not in token:
+            environment["GH_TOKEN"] = token
+    return environment
+
+
 def _run(args: list[str], runner: Runner) -> str:
     try:
         result = runner(
@@ -59,7 +84,7 @@ def _run(args: list[str], runner: Runner) -> str:
             text=False,
             shell=False,
             timeout=_TIMEOUT_SECONDS,
-            env={**os.environ, "GH_HOST": "github.com"},
+            env=gh_environment(),
         )
     except FileNotFoundError:
         raise GitHubError("Install the GitHub CLI (gh) and run gh auth login.") from None

@@ -205,6 +205,22 @@ are not audited, so earlier bundles replay as before. Replay does not check
 the `fanout.json` capacity totals against the per-session records, as with the
 other fan-out totals.
 
+[Review timing](config.md#review-timing) is audited when the run or any
+session attempt has a `timing.json`. Wall clock is a measurement, so replay
+never compares it with a rerun. Each launched session that wrote its
+`result.json` must have a record (`timing_missing`, incomplete), and the record
+must be well formed and agree with the retained evidence: its provider and
+model are its invocation's recorded rail, `invocations` counts the correction
+stream, `tokens` and `output_tokens` are the result's usage, the retry count and
+wait sum are recomputed from the retained streams' retry records, and the
+capacity waits are the result's `capacity` counters, or 0 without them
+(`timing_disagrees`, invalid). The run's record must be exactly the totals and
+per-rail sums of its session records, and its `wall_seconds` must not be
+shorter than its longest session (`timing_disagrees`, invalid). A run with
+session records and no run record (an engine run outside a review, such as an
+evaluation) audits its sessions only. Runs without any record are not audited,
+so earlier bundles replay as before.
+
 A session whose recorded argv passes a prompt by file (`--prompt-file`,
 `--system-file`, on runtimes that advertise them) is bound to the retained file.
 Each flag must appear once, as its own argument, and name this attempt's own

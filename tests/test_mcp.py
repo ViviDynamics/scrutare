@@ -3,6 +3,7 @@
 import asyncio
 import importlib
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -151,7 +152,13 @@ def test_installed_mcp_matches_cli_real_sessions(tmp_path, installed, wheel_cli)
         assert (run / "sessions/senior-dev/attempt-0001/session.json").is_file()
         posting = json.loads((run / "posting.json").read_bytes())
         marker = posting["run_id"]
-        outputs.append(json.loads(json.dumps(data).replace(marker, "RUN_ID")))
+        # Wall clock is a measurement: the two runs agree on everything but the seconds.
+        for field in ("wall_seconds", "session_wall_seconds", "longest_session_seconds"):
+            assert data["timing"].pop(field) >= 0
+        for rail in data["timing"]["rails"]:
+            assert rail.pop("session_wall_seconds") >= 0
+        text = re.sub(r"Review time: [0-9a-z ]+,", "Review time: T,", json.dumps(data))
+        outputs.append(json.loads(text.replace(marker, "RUN_ID")))
         runs.append(run)
     assert outputs[0] == outputs[1]
     markers = [json.loads((run / "posting.json").read_bytes())["run_id"] for run in runs]

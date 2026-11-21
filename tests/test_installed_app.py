@@ -64,7 +64,11 @@ def test_app_posts_through_installed_engine_and_retains_real_evidence(
     posted = store.get(first["id"])
     assert posted["status"] == "posted", posted
     run = Path(posted["result"]["run_dir"])
-    assert posted["result"] == json.loads((run / "result.json").read_bytes())
+    # The job adds its own clock to the CLI's result document, which carries the timing.
+    recorded = dict(posted["result"])
+    assert recorded.pop("job_seconds") >= 0 and recorded.pop("token_refreshes") == 0
+    assert recorded == json.loads((run / "result.json").read_bytes())
+    assert recorded["timing"]["sessions"] >= 1
     assert posted["result"]["verdict"] == "approve"
     assert (run / "artifacts.json").is_file() and (run / "posting.json").is_file()
     assert (run / "sessions/security/attempt-0001/session.json").is_file()

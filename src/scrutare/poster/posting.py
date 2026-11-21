@@ -12,6 +12,12 @@ from uuid import uuid4
 
 from scrutare.config import ConfigError, ReviewConfig, parse_config
 from scrutare.engine.github import GitHubError, PullRequestRef, assert_pr_open, resolve_pr
+from scrutare.engine.timing import (
+    TIMING_FILE,
+    footer_line,
+    read_session_timings,
+    validate_review_timing,
+)
 from scrutare.findings import Anchor, FindingError, Verdict, VerdictArtifactError, write_verdict
 from scrutare.poster.client import PostedReview, ReviewClient, _receipt
 from scrutare.poster.errors import (
@@ -85,6 +91,23 @@ def _evidence(run_dir: Path, verdict: Verdict) -> None:
         raise PostingError(
             "Cannot preserve verdict and findings artifacts; inspect the run."
         ) from None
+
+
+def _timing_footer(run_dir: Path, config: ReviewConfig) -> str | None:
+    """The summary's review time line, read from the run's own timing record.
+
+    The record is installed before the first post and never changes, so a resumed post
+    renders the same bytes. A run without one (older runs, a direct poster call) and a
+    configuration that turns the line off render no footer.
+    """
+    path = run_dir / TIMING_FILE
+    if not config.github.timing_footer or not path.exists():
+        return None
+    try:
+        return footer_line(validate_review_timing(read_json(path),
+                                                  read_session_timings(run_dir)))
+    except (OSError, ValueError, KeyError, TypeError):
+        raise PostingError("Timing evidence is invalid; inspect the saved run.") from None
 
 
 def _existing_threads(run_dir: Path, config: ReviewConfig,
@@ -306,7 +329,8 @@ def _post_review_locked(
     payload = build_review_payload(verdict, diff, head_sha=head, strategy=config.strategy,
                                    post_mode=config.github.post_mode, run_id=run_id,
                                    human_reviewers=reviewers,
-                                   existing_threads=_existing_threads(run_dir, config, head))
+                                   existing_threads=_existing_threads(run_dir, config, head),
+                                   footer=_timing_footer(run_dir, config))
     intent = {"schema_version": 1, "repository": f"{ref.owner}/{ref.repo}",
               "pr_number": ref.number, "head_sha": head, "event": payload.event,
               "run_id": run_id, "payload_sha256": _hash(payload.to_bytes()),

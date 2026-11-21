@@ -551,6 +551,31 @@ def capacity_events(stdout: bytes) -> CapacityUsage:
     return CapacityUsage(refusals, round(wait, 3), limit, round(slot, 3), "events")
 
 
+def retry_events(stdout: bytes) -> tuple[int, float]:
+    """Resent model requests in retained streams, with the seconds nare announced waiting.
+
+    nare writes one `progress` record with `detail.retry` per resend, naming the wait it
+    takes before the next attempt. Read tolerantly, like `capacity_events`: unreadable lines
+    and malformed records are skipped, so this never raises. Seconds are rounded to
+    milliseconds.
+    """
+    count, wait = 0, 0.0
+    for line in stdout.split(b"\n"):
+        if not line.strip():
+            continue
+        try:
+            document = _json(line)
+            if _envelope(document) == "result" or not _retry(document):
+                continue
+            seconds = _number(document["detail"]["retry"]["wait"])
+        except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
+            continue
+        if math.isfinite(wait + seconds):
+            count += 1
+            wait += seconds
+    return count, round(wait, 3)
+
+
 def _budget(value: object, expected_limit: int, usage: TokenUsage | None = None,
             cost: float | None = None) -> None:
     document = _object(value)

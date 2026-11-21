@@ -35,7 +35,7 @@ no credentials are accepted through review request bodies.
 | `SCRUTARE_APP_MODEL_ORIGINS` | JSON array of permitted HTTPS model origins |
 | `SCRUTARE_APP_DATA_DIR` | Persistent private directory, default `/data` |
 | `SCRUTARE_APP_MAX_PENDING` | Running + queued admission cap, default 100 |
-| `SCRUTARE_APP_JOB_TIMEOUT` | Seconds one review may run, 1 to 3300, default 3300 |
+| `SCRUTARE_APP_JOB_TIMEOUT` | Seconds one review may run, 1 to 21600, default 3300 ([deadline](#job-deadline-and-token-refresh)) |
 | `SCRUTARE_APP_RECONCILE_SECONDS` | Interval for requesting redelivery of missed webhooks, default 600; 0 disables |
 | `SCRUTARE_APP_NARE_EXECUTABLE` | Installed nare executable, default `nare` |
 | `SCRUTARE_APP_PREFLIGHT_ATTEMPTS` | Most route preflights one job runs before it ends `not_started`, 1 to 10, default 4 |
@@ -81,8 +81,37 @@ read permissions, with the Pull request webhook subscription. Answering replies
 additionally needs the **Pull request review comment** subscription and no
 further permission. Each job obtains
 a fresh installation token narrowed to exactly its repository and these
-permissions. That token lasts one hour, so the worker interrupts a review at
-`SCRUTARE_APP_JOB_TIMEOUT` and records the job as `interrupted`.
+permissions. That token lasts one hour. The worker renews it while the review
+runs (see [Job deadline and token refresh](#job-deadline-and-token-refresh)) and
+interrupts a review at `SCRUTARE_APP_JOB_TIMEOUT`, recording the job as
+`interrupted`.
+
+### Job deadline and token refresh
+
+The worker writes the installation token to a private file in the job's working
+directory (`gh-token`, mode 0600) and names it to the CLI in
+`SCRUTARE_GH_TOKEN_FILE`. Every 30 minutes while the CLI runs it requests a new
+narrowed token and replaces the file atomically. A refused request keeps the
+current token, which is still valid for at least half an hour, and is tried
+again after a minute. The CLI reads the file before each GitHub call, capture
+and posting included, so a review that outlasts one token posts with a fresh
+one instead of failing. The file is removed when the job ends. The initial
+`GH_TOKEN` stays in the CLI's environment as a fallback when the file cannot be
+read.
+
+So the deadline no longer has to fit inside the token's hour. The default stays
+3300 seconds, which fits a hosted review. A self-hosted rail is slower, so set
+`SCRUTARE_APP_JOB_TIMEOUT` from the review times its jobs record, for example
+`7200`, up to `21600` (six hours). One job still runs at a time, so a longer
+deadline also delays the jobs queued behind it. Deployed manifests do not set
+the variable and so keep the default.
+
+Each job record that ran the CLI carries `job_seconds` (the worker's own clock
+around the CLI) and `token_refreshes`. A `posted` or `unchanged` result is the
+CLI's result document, which includes the run's [`timing`](config.md#review-timing)
+with its per-rail breakdown. A `failed` or `interrupted` job carries the
+`timing` of the latest run it left, when that run recorded one; a job stopped
+at its deadline was killed before its run could record it.
 
 Installation tokens cannot read the token owner's login. Ordinary posting does
 not need it. Recovery after an uncertain review POST does, so under the App an

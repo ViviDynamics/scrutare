@@ -350,11 +350,14 @@ def test_job_deadline_stops_the_cli_before_its_installation_token_expires(tmp_pa
     assert (tmp_path / "work" / job["id"] / "stderr.log").read_bytes() == b"late\n"
 
 
-@pytest.mark.parametrize("seconds", [0, -1, 3301, True, 1.5])
-def test_job_deadline_must_fit_inside_the_token_lifetime(tmp_path, seconds):
+@pytest.mark.parametrize("seconds", [0, -1, 21601, True, 1.5])
+def test_job_deadline_is_bounded_and_defaults_inside_one_token(tmp_path, seconds):
+    # Deliberate: with the token refreshed during the job, the deadline may exceed the
+    # token's hour (for a slower self-hosted rail), up to six hours. The default is unchanged.
     with pytest.raises(AppError):
         replace(settings(tmp_path), job_timeout=seconds)
     assert settings(tmp_path).job_timeout == 3300
+    assert replace(settings(tmp_path), job_timeout=21600).job_timeout == 21600
 
 
 CURRENT_CONFIG = b"""\
