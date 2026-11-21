@@ -126,7 +126,7 @@ that branch with the report as its body. A contract version change is called out
 at the top of the body and labeled `nare-contract-change`. A run with nothing new
 leaves the branch and its pull request alone, and a branch that carries a
 maintainer's commit is never overwritten. The workflow never merges: a green,
-additive bump is merged with `merge-verified` after review.
+additive bump is merged after review.
 
 The workflow uses only the default `GITHUB_TOKEN`, with `contents: write` (the
 branch), `pull-requests: write` (the pull request and its label) and
@@ -135,6 +135,13 @@ workflow, so the third permission lets it dispatch CI and the disclosure guard o
 the bump branch itself, the same way Auto-tag dispatches Release. Their runs report
 on the bump commit and show on the pull request. No maintainer token or secret is
 needed. A maintainer push to the branch starts the usual push CI.
+
+ViviDynamics forbids GitHub Actions to open pull requests at the organization
+level, so the workflow also has `issues: write`. When `gh pr create` is refused for
+that reason, it keeps the pushed branch, dispatches CI on it, and opens or
+refreshes one issue labeled `nare-bump` with the compare link and the report. The
+pull request a maintainer opens from that link starts the usual CI and disclosure
+guard. Any other failure to open the pull request fails the run.
 
 Policy: a nare defect found by a bump is filed on
 [ViviDynamics/nare](https://github.com/ViviDynamics/nare/issues) with a minimal

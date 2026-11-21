@@ -279,13 +279,17 @@ def test_the_bump_workflow_opens_one_pull_request_and_never_merges():
     assert workflow["permissions"] == {}
     job = workflow["jobs"]["bump"]
     assert job["permissions"] == {"contents": "write", "pull-requests": "write",
-                                  "actions": "write"}
+                                  "issues": "write", "actions": "write"}
     assert workflow["env"]["BRANCH"] == "automation/nare-bump"
     assert "secrets." not in text and "gh pr merge" not in text and "--auto" not in text
     runs = "\n".join(step.get("run", "") for step in job["steps"])
     assert "scripts/bump-nare.py" in runs and '--head "$BRANCH"' in runs
     assert "gh workflow run ci.yml --ref \"$BRANCH\"" in runs
     assert "gh workflow run disclosure-guard.yml" in runs
+    # An organization that forbids Actions to open pull requests gets one issue with the
+    # compare link instead of a failed run.
+    assert "not permitted to create or approve pull requests" in runs
+    assert "compare/main...$BRANCH" in runs and "gh issue create" in runs
     for name in ("ci.yml", "disclosure-guard.yml"):
         dispatched = yaml.safe_load((ROOT / ".github/workflows" / name).read_text())
         assert "workflow_dispatch" in dispatched[True], name

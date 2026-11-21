@@ -22,6 +22,7 @@ concurrency:
 env:
   BRANCH: automation/nare-bump
   LABEL: nare-contract-change
+  FALLBACK_LABEL: nare-bump
 
 jobs:
   bump:
@@ -30,6 +31,9 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      # Only for the fallback issue, when the organization forbids Actions to open pull
+      # requests.
+      issues: write
       # Only to dispatch CI and the disclosure guard on the bump branch.
       actions: write
     steps:
@@ -137,9 +141,37 @@ jobs:
           git push --force origin "HEAD:refs/heads/$BRANCH"
           if [ -n "$number" ]; then
             gh pr edit "$number" --title "$title" --body-file "$body"
-          else
-            gh pr create --head "$BRANCH" --base main --title "$title" --body-file "$body"
+          elif gh pr create --head "$BRANCH" --base main --title "$title" --body-file "$body" \
+              2> "$RUNNER_TEMP/pr-create.err"; then
             number=$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number')
+          elif grep -q 'not permitted to create or approve pull requests' "$RUNNER_TEMP/pr-create.err"; then
+            # The organization forbids GITHUB_TOKEN to open pull requests. Keep the pushed
+            # branch and hand a maintainer one issue with the compare link; the pull request
+            # they open from it starts the usual CI and disclosure guard.
+            compare="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/main...$BRANCH?expand=1"
+            issue_body="$RUNNER_TEMP/nare-bump-issue.md"
+            {
+              echo "The Nare bump workflow pushed \`$BRANCH\` but may not open pull requests in this organization."
+              echo
+              echo "Open the pull request: $compare"
+              echo
+              cat "$body"
+            } > "$issue_body"
+            gh label create "$FALLBACK_LABEL" --color 1d76db \
+              --description "Nare bump waiting for a maintainer to open its pull request" 2>/dev/null || true
+            issue=$(gh issue list --label "$FALLBACK_LABEL" --state open --json number --jq '.[0].number // empty')
+            if [ -n "$issue" ]; then
+              gh issue edit "$issue" --title "$title" --body-file "$issue_body"
+            else
+              gh issue create --title "$title" --label "$FALLBACK_LABEL" --body-file "$issue_body"
+            fi
+            echo "number=" >> "$GITHUB_ENV"
+            echo "refreshed=true" >> "$GITHUB_ENV"
+            echo "Pull requests from Actions are forbidden; opened or refreshed an issue with the compare link." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          else
+            cat "$RUNNER_TEMP/pr-create.err" >&2
+            exit 1
           fi
           if [ "$CONTRACT_CHANGED" = true ]; then
             gh label create "$LABEL" --color b60205 \
@@ -160,4 +192,7 @@ jobs:
         run: |
           set -euo pipefail
           gh workflow run ci.yml --ref "$BRANCH"
-          gh workflow run disclosure-guard.yml --ref "$BRANCH" -f "pr=$number"
+          # Without a pull request (the fallback issue) the guard runs when one is opened.
+          if [ -n "$number" ]; then
+            gh workflow run disclosure-guard.yml --ref "$BRANCH" -f "pr=$number"
+          fi

@@ -66,10 +66,18 @@ def test_action_image_installs_the_same_release():
     assert "assert version == sys.argv[2]" in smoke and RELEASE not in smoke
 
 
+# Tests that run the installed console and check the version it reports. Fixtures that
+# record what one release printed (a scripted contract, a captured session) may name it,
+# since they stay true after the pin moves.
+INSTALLED_TESTS = ("test_installed_*.py", "test_nare_cli_integration.py",
+                   "test_action_container.py", "test_rule_a_installed.py")
+
+
 def test_installed_tests_read_the_expected_release_from_the_pin():
-    for path in sorted((ROOT / "tests").glob("*.py")):
-        if path.name in {"test_nare_runtime_pin.py", "nare_pin.py"}:
-            continue
+    paths = sorted({path for pattern in INSTALLED_TESTS
+                    for path in (ROOT / "tests").glob(pattern)})
+    assert len(paths) > len(INSTALLED_TESTS)
+    for path in paths:
         assert RELEASE not in path.read_text(), path.name
 
 
