@@ -30,9 +30,17 @@ REQUEST_RETRY_SECONDS = 60
 # Most resends of one request a rail may ask for. nare itself takes any nonnegative count;
 # past a handful the waits between resends already exceed any sensible bound.
 REQUEST_RETRIES_MAX = 10
+# Most cut-off replies (output cap or repetition) one nare invocation may correct when a rail
+# opts in. Each correction is another full reply at the output cap, so the cap stays small.
+MAX_CUTOFFS_MAX = 3
+# Seconds one nare session may run when the configuration names no bound, and the most it
+# may name: the App's longest job deadline, so no session can outlive every deadline.
+SESSION_TIMEOUT_SECONDS = 600.0
+SESSION_TIMEOUT_MAX_SECONDS = 21600
 # Opt-in rail fields in recorded order. Each stays out of every record until a rail sets it.
 RAIL_OPTIONS = ("structured_output", "max_output_tokens", "proxy_num_retries",
-                "request_retries", "request_retry_seconds", "cache_breakpoints", "effort")
+                "request_retries", "request_retry_seconds", "cache_breakpoints", "effort",
+                "max_cutoffs")
 PostMode = Literal["review", "comment"]
 Category = Literal["correctness", "security", "regression", "style", "consistency", "docs"]
 CATEGORIES: tuple[Category, ...] = (
@@ -80,6 +88,9 @@ class ModelRail:
     cache_breakpoints: bool | None = None
     # Opt-in reasoning effort (nare --effort).
     effort: Effort | None = None
+    # Opt-in corrections of replies cut off at the output cap or by repetition, per nare
+    # invocation (nare --max-cutoffs). Unset keeps the pinned 0: the first cut ends the session.
+    max_cutoffs: int | None = None
 
     def __post_init__(self) -> None:
         _structured_output(self.structured_output, self.provider, "structured_output")
@@ -90,6 +101,7 @@ class ModelRail:
                                "request_retry_seconds")
         _cache_breakpoints(self.cache_breakpoints, self.provider, "cache_breakpoints")
         _effort(self.effort, "effort")
+        _max_cutoffs(self.max_cutoffs, "max_cutoffs")
 
     def record(self, **explicit: bool) -> dict[str, Any]:
         """The rail as recorded; each opt-in field appears only when it is set or requested."""
@@ -222,6 +234,26 @@ class ModelSettings:
     overrides: tuple[tuple[str, ModelRail], ...] = ()
     capacity: CapacitySettings = CapacitySettings()
     preflight: PreflightSettings = PreflightSettings()
+    # Opt-in bound on each nare session of the review, in seconds; unset keeps 600.
+    session_timeout_seconds: int | float | None = None
+
+    def __post_init__(self) -> None:
+        seconds = self.session_timeout_seconds
+        if seconds is None:
+            return
+        if (type(seconds) not in (int, float) or not math.isfinite(seconds)
+                or seconds <= 0):
+            raise ConfigError("models.session_timeout_seconds: expected a positive finite "
+                              "number or null")
+        if seconds > SESSION_TIMEOUT_MAX_SECONDS:
+            raise ConfigError("models.session_timeout_seconds: expected at most "
+                              f"{SESSION_TIMEOUT_MAX_SECONDS} seconds")
+
+    @property
+    def session_seconds(self) -> float:
+        """The bound each session of the review runs under."""
+        return float(SESSION_TIMEOUT_SECONDS if self.session_timeout_seconds is None
+                     else self.session_timeout_seconds)
 
     def for_persona(self, name: str) -> ModelRail:
         return next((rail for persona, rail in self.overrides if persona == name), self.default)
@@ -259,7 +291,10 @@ class ModelSettings:
                 **({"capacity": self.capacity.record()}
                    if self.capacity.mode != "off" else {}),
                 **({"preflight": self.preflight.record()}
-                   if self.preflight.enabled or preflight else {})}
+                   if self.preflight.enabled or preflight else {}),
+                # Unset is never recorded, so configurations without it keep their bytes.
+                **({"session_timeout_seconds": self.session_timeout_seconds}
+                   if self.session_timeout_seconds is not None else {})}
 
 
 @dataclass(frozen=True)
@@ -796,6 +831,13 @@ def _effort(value: object, path: str) -> None:
         raise ConfigError(f"{path}: expected one of {', '.join(EFFORT_LEVELS)} or null")
 
 
+def _max_cutoffs(value: object, path: str) -> None:
+    if value is None:
+        return
+    if type(value) is not int or not 0 <= value <= MAX_CUTOFFS_MAX:
+        raise ConfigError(f"{path}: expected an integer from 0 to {MAX_CUTOFFS_MAX} or null")
+
+
 def _rail(value: object, path: str, default: ModelRail | None = None) -> ModelRail:
     fields = _mapping(value, path, ("provider", "base_url", "model", *RAIL_OPTIONS))
     provider = cast(
@@ -851,11 +893,14 @@ def _rail(value: object, path: str, default: ModelRail | None = None) -> ModelRa
     checked("cache_breakpoints", breakpoints, _cache_breakpoints)
     effort = inherited("effort")
     _effort(effort, f"{path}.effort")
+    cutoffs = inherited("max_cutoffs")
+    _max_cutoffs(cutoffs, f"{path}.max_cutoffs")
     return ModelRail(provider, base_url, model, cast("StructuredOutput | None", structured),
                      cast("int | None", cap), cast("int | None", retries),
                      cast("int | None", request_retries),
                      cast("int | float | None", retry_seconds),
-                     cast("bool | None", breakpoints), cast("Effort | None", effort))
+                     cast("bool | None", breakpoints), cast("Effort | None", effort),
+                     cast("int | None", cutoffs))
 
 
 def _capacity(value: object) -> CapacitySettings:
@@ -874,7 +919,8 @@ def _preflight(value: object) -> PreflightSettings:
 
 
 def _models(value: object, personas: tuple[str | PersonaDefinition, ...]) -> ModelSettings:
-    fields = _mapping(value, "models", ("default", "overrides", "capacity", "preflight"))
+    fields = _mapping(value, "models", ("default", "overrides", "capacity", "preflight",
+                                        "session_timeout_seconds"))
     default = _rail(fields.get("default", {}), "models.default")
     overrides = _mapping(fields.get("overrides", {}), "models.overrides", None)
     names = {p.name if isinstance(p, PersonaDefinition) else p for p in personas}
@@ -894,7 +940,8 @@ def _models(value: object, personas: tuple[str | PersonaDefinition, ...]) -> Mod
             rail.provider != "openai" for rail in (default, *(rail for _, rail in result))):
         # Only an openai rail's route is listed; the anthropic rail is skipped.
         raise ConfigError("models.preflight.route: requires provider openai on at least one rail")
-    return ModelSettings(default, tuple(result), capacity, preflight)
+    return ModelSettings(default, tuple(result), capacity, preflight,
+                         fields.get("session_timeout_seconds"))
 
 
 def _categories(value: object, path: str) -> tuple[Category, ...]:

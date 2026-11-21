@@ -31,7 +31,9 @@ for outcome in result.outcomes:
 ```
 
 `NareRuntime` is an operational Python argument, with positive finite timeout
-and turn limits. It adds no YAML fields. Scrutare requires Python 3.10 or newer;
+and turn limits. It adds no YAML fields; the review CLI and the MCP server
+build it with the configured
+[`models.session_timeout_seconds`](config.md#session-timeout), or 600 seconds. Scrutare requires Python 3.10 or newer;
 install nare 2026.11.109 separately (supported minimum 2026.10.0) with the interpreter required by its
 release. For the pinned integration runtime, clone the public
 [ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.11.109),
@@ -57,7 +59,9 @@ On contract 3, every initial and resumed correction invocation explicitly sets
 Scrutare's existing recovery bounds instead of inheriting Nare's newer cutoff
 and provider-request retry defaults. A rail that sets
 [`request_retries`](config.md#request-retries-opt-in) sends its own count
-instead of 0, with an explicit `--request-retry-seconds`. The proxy's own
+instead of 0, with an explicit `--request-retry-seconds`, and a rail that sets
+[`max_cutoffs`](config.md#cut-off-recovery-opt-in) sends its own cut-off budget
+instead of 0. The proxy's own
 `proxy_num_retries` setting is separate and unchanged. Recorded argv retains these controls; replay checks
 the policy and correction consistency. Read requirements and navigation tools
 are not enabled.

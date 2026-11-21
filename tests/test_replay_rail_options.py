@@ -10,7 +10,7 @@ from scrutare.config import ModelRail, parse_config
 from scrutare.replay.audit import _native_recovery_issues, _rail_option_issues
 
 OPTIONS = {"request_retries": 2, "request_retry_seconds": 45, "cache_breakpoints": True,
-           "effort": "high"}
+           "effort": "high", "max_cutoffs": 2}
 
 
 def config(**options):
@@ -67,6 +67,9 @@ def test_an_opted_in_run_without_any_session_is_incomplete(tmp_path):
     lambda argv: argv.__delitem__(slice(argv.index("--effort"), argv.index("--effort") + 2)),
     lambda argv: argv.__delitem__(slice(argv.index("--request-retry-seconds"),
                                         argv.index("--request-retry-seconds") + 2)),
+    lambda argv: argv.__setitem__(argv.index("--max-cutoffs") + 1, "0"),
+    lambda argv: argv.__setitem__(argv.index("--max-cutoffs") + 1, "3"),
+    lambda argv: argv.extend(("--max-cutoffs", "2")),
 ])
 def test_a_changed_lost_or_repeated_flag_is_unrecorded(capture, tmp_path, change):
     attempt, document = session(capture, tmp_path)
@@ -80,6 +83,8 @@ def test_a_changed_lost_or_repeated_flag_is_unrecorded(capture, tmp_path, change
     lambda rail: rail.update(request_retries=3),
     lambda rail: rail.update(request_retry_seconds=45.0),
     lambda rail: rail.update(cache_breakpoints=1),
+    lambda rail: rail.update(max_cutoffs=3),
+    lambda rail: rail.pop("max_cutoffs"),
     lambda rail: rail.update(model="other"),
 ])
 def test_a_recorded_rail_that_differs_from_the_configured_rail_is_unrecorded(
@@ -166,3 +171,30 @@ def test_the_recovery_policy_follows_the_recorded_resend_limit(tmp_path, recorde
 def test_the_capability_fixture_lists_every_option_flag():
     assert all(capability().flag(flag) is not None
                for flag in ("--request-retry-seconds", "--cache-breakpoints", "--effort"))
+
+
+@pytest.mark.parametrize(("recorded", "argv", "valid"), [
+    (2, "2", True), (2, "0", False), (None, "0", True), (None, "1", False), (0, "0", True),
+    (True, "1", False), (-1, "-1", False),
+])
+def test_the_recovery_policy_follows_the_recorded_cut_off_budget(
+        tmp_path, recorded, argv, valid):
+    attempt = tmp_path / "sessions/security/attempt-0001"
+    attempt.mkdir(parents=True)
+    rail = {} if recorded is None else {"max_cutoffs": recorded}
+    (attempt / "invocation.json").write_text(json.dumps({
+        "contract": 3, "nare_version": "2026.11.94", "rail": rail,
+        "argv": ["nare", "run", "review", "--contract", "3", "--max-cutoffs", argv,
+                 "--request-retries", "0", "--max-corrections", "1"]}))
+    assert (_native_recovery_issues(tmp_path) == ()) is valid
+
+
+def test_a_cut_off_budget_alone_audits_clean_and_binds_to_the_configuration(
+        capture, tmp_path):
+    attempt, document = session(capture, tmp_path, events="", retries=None, max_cutoffs=1)
+    assert codes(capture, document) == [] and _native_recovery_issues(capture) == ()
+    # The same session under a configuration that never asked for it is unrecorded.
+    assert codes(capture, config()) == [
+        ("rail_options_unrecorded", "invocation.json", "invalid")]
+    assert codes(capture, config(max_cutoffs=2)) == [
+        ("rail_options_unrecorded", "invocation.json", "invalid")]

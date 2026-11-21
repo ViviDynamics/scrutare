@@ -106,6 +106,18 @@ So the deadline no longer has to fit inside the token's hour. The default stays
 deadline also delays the jobs queued behind it. Deployed manifests do not set
 the variable and so keep the default.
 
+A repository may set [`models.session_timeout_seconds`](config.md#session-timeout)
+to give each nare session longer than 600 seconds. The worker refuses a job
+whose configured session timeout, plus `models.capacity.wait_seconds` when
+capacity queueing is on, is not below `SCRUTARE_APP_JOB_TIMEOUT`: such a session
+could still be running when the job is killed. The refusal happens before the
+preflight and the CLI, so the job is `failed` with `delivery: not_sent`, spends
+nothing, and its error names both values. Refusing is deliberate: a warning
+would let the job spend model tokens and then end `interrupted` at the
+deadline. A repository that sets no session timeout is never refused by this
+check. The check bounds one session; a strategy that runs sessions in sequence
+(iterative rounds, debate) needs a deadline sized from its recorded timing.
+
 Each job record that ran the CLI carries `job_seconds` (the worker's own clock
 around the CLI) and `token_refreshes`. A `posted` or `unchanged` result is the
 CLI's result document, which includes the run's [`timing`](config.md#review-timing)

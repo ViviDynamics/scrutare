@@ -220,6 +220,27 @@ def _config_origins(config: ReviewConfig, settings: AppSettings) -> None:
             raise AppError("repository model origin is not authorized by the App operator")
 
 
+def _session_fits(config: ReviewConfig, settings: AppSettings) -> None:
+    """Refuse a configured session timeout that one session could spend past the deadline.
+
+    The longest one session may run is its timeout plus the capacity waits it may be
+    credited. A job that could be killed at the deadline mid-session is refused before it
+    spends or posts anything. A configuration that sets no timeout keeps its 600 seconds and
+    is never refused here, as before.
+    """
+    seconds = config.models.session_timeout_seconds
+    if seconds is None:
+        return
+    capacity = config.models.capacity
+    credit = capacity.wait_seconds if capacity.mode != "off" and capacity.wait_seconds else 0
+    if seconds + credit >= settings.job_timeout:
+        raise AppError(
+            f"repository models.session_timeout_seconds ({seconds:g}"
+            + (f" plus {credit:g} capacity wait seconds" if credit else "")
+            + f") does not fit inside the App job deadline ({settings.job_timeout} seconds); "
+            "lower it or raise SCRUTARE_APP_JOB_TIMEOUT")
+
+
 def app_preflight(config: ReviewConfig, settings: AppSettings,
                   nare: Path) -> PreflightReport | None:
     """The shared route preflight, sending credentials only to the operator's origins."""
@@ -468,6 +489,7 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
                          {"reason": "replies are not enabled for this repository"})
             return
         _config_origins(config, settings)
+        _session_fits(config, settings)
         nare = os.environ.get("SCRUTARE_APP_NARE_EXECUTABLE", "nare")
         checked = False
         if config.models.preflight.enabled:

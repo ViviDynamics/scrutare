@@ -106,7 +106,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 1
 
     try:
-        runtime = NareRuntime(args.nare_executable)
+        # Every session runs under the configured bound, or the 600 seconds it always had.
+        runtime = NareRuntime(args.nare_executable,
+                              timeout_seconds=review_config.models.session_seconds)
         preflight_replies_only(review_config, args.replies_only)
         preflight_review(review_config, runtime)
         if not args.skip_preflight:
