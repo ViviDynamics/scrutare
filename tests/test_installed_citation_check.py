@@ -1,8 +1,9 @@
-"""Installed wheel and native nare 2026.11.107: the citation check inside the session (#130)."""
+"""Installed wheel and the pinned native nare: the citation check inside the session (#130)."""
 
 import json
 
 import pytest
+from nare_pin import RELEASE as NARE_RELEASE
 from test_installed_citation_correction import first_answer, load, review
 from test_installed_review import wheel_cli as wheel_cli
 from test_nare_cli_integration import installed as installed
@@ -21,7 +22,7 @@ def answered(**changes):
 def observed(attempt):
     found = load(attempt / "offline-observations.json")
     assert found["guard_violations"] == [] and found["credential_names"] == []
-    assert found["version"] == "2026.11.107"
+    assert found["version"] == NARE_RELEASE
     return found
 
 
@@ -54,7 +55,7 @@ def test_installed_a_past_end_citation_is_corrected_in_the_same_session(
     calls = found["calls"]
     assert len(calls) == 4
     # The correction is the next turn of the same session, with the read tool offered
-    # (nare 2026.11.107 restores approved tools after a domain correction).
+    # (the pinned nare restores approved tools after a domain correction).
     assert [tool["name"] for tool in calls[-1]["tools"]] == ["read"]
     told = corrections_told(calls[-1])
     assert ("findings[0].evidence.citations[0].end_line: line_range_outside_capture: the "
@@ -178,7 +179,7 @@ def test_installed_runtime_advertises_the_check_command_and_the_map(tmp_path, in
     from scrutare.engine.nare_session import inspect_nare_runtime, require_findings_options
 
     capability = asyncio.run(inspect_nare_runtime(offline_runtime(tmp_path, installed)))
-    assert capability.version == "2026.11.107"
+    assert capability.version == NARE_RELEASE
     assert capability.check_command is True and capability.cited_read_map is True
     require_findings_options(
         FindingSettings("v2", citation_check="session", cited_reads=True), capability)
