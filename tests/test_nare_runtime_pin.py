@@ -1,13 +1,21 @@
-"""Keep every installed runtime on the selected public release and exact commit."""
+"""Keep every installed runtime on the release and exact commit in `nare.pin`."""
 
+import re
 from pathlib import Path
 
 import yaml
+from nare_pin import COMMIT, PIN_FILE, RELEASE, read_pin
 
 ROOT = Path(__file__).parents[1]
-RELEASE = "2026.11.107"
-COMMIT = "4baaeb8527478401cbd7bf54b74f48c286d8a093"
+# The pin before the current one. scripts/bump-nare.py moves it on every bump.
 PREVIOUS = ("2026.11.100", "1086d5d155a139ce1deab2668bcbecf806b6df04")
+INSTALL = (
+    '. ./nare.pin\n'
+    'nare_checkout="$RUNNER_TEMP/scrutare-nare-$NARE_RELEASE"\n'
+    'git clone --depth 1 --branch "$NARE_RELEASE" https://github.com/ViviDynamics/nare.git'
+    ' "$nare_checkout"\n'
+    'test "$(git -C "$nare_checkout" rev-parse HEAD)" = "$NARE_COMMIT"\n'
+)
 
 
 def install_steps(workflow, job):
@@ -15,27 +23,54 @@ def install_steps(workflow, job):
     return [step["run"] for step in steps["steps"] if "nare_checkout=" in step.get("run", "")]
 
 
-def test_ci_installs_selected_nare_release_and_verifies_its_commit():
+def test_the_pin_file_is_the_single_well_formed_source():
+    assert PIN_FILE == ROOT / "nare.pin"
+    assert set(read_pin()) == {"NARE_RELEASE", "NARE_COMMIT"}
+    assert re.fullmatch(r"[0-9]{4}\.(?:[1-9]|1[0-2])\.(?:0|[1-9][0-9]*)", RELEASE)
+    assert re.fullmatch(r"[0-9a-f]{40}", COMMIT)
+    assert (RELEASE, COMMIT) != PREVIOUS
+
+
+def test_ci_installs_the_pinned_release_and_verifies_its_commit():
     [install] = install_steps("ci.yml", "checks")
-    assert f"git clone --depth 1 --branch {RELEASE} " in install
-    assert COMMIT in install
+    assert INSTALL in install
     assert "--python 3.14 --locked --no-dev" in install
     assert "SCRUTARE_TEST_NARE_EXECUTABLE=" in install
 
 
 def test_release_workflow_installs_the_same_release():
+    for job in ("checks", "publish"):
+        [install] = install_steps("release.yml", job)
+        assert INSTALL in install
     text = (ROOT / ".github/workflows/release.yml").read_text()
-    assert text.count(f"git clone --depth 1 --branch {RELEASE} ") == 2
-    assert text.count(COMMIT) == 2
-    assert not any(value in text for value in PREVIOUS)
+    assert not any(value in text for value in (RELEASE, COMMIT, *PREVIOUS))
+
+
+def test_workflows_name_no_release_literally():
+    for workflow in (ROOT / ".github/workflows").glob("*.yml"):
+        text = workflow.read_text()
+        assert RELEASE not in text and COMMIT not in text, workflow.name
 
 
 def test_action_image_installs_the_same_release():
     text = (ROOT / "Dockerfile").read_text()
-    assert f"git clone --depth 1 --branch {RELEASE} " in text
-    assert COMMIT in text
-    assert f'test "$(/opt/nare/bin/nare --version)" = "{RELEASE}"' in text
-    assert f'assert version == "{RELEASE}"' in (ROOT / "scripts/smoke-container.sh").read_text()
+    assert "COPY nare.pin /tmp/nare.pin\nRUN . /tmp/nare.pin \\\n" in text
+    assert 'git clone --depth 1 --branch "$NARE_RELEASE" ' in text
+    assert 'test "$(git -C /tmp/nare rev-parse HEAD)" = "$NARE_COMMIT"' in text
+    assert 'test "$(/opt/nare/bin/nare --version)" = "$NARE_RELEASE"' in text
+    assert RELEASE not in text and COMMIT not in text
+    assert "!nare.pin" in (ROOT / ".dockerignore").read_text().splitlines()
+    smoke = (ROOT / "scripts/smoke-container.sh").read_text()
+    assert '. "$(dirname "$0")/../nare.pin"' in smoke
+    assert '"$image" - "$expected" "$NARE_RELEASE" <<' in smoke
+    assert "assert version == sys.argv[2]" in smoke and RELEASE not in smoke
+
+
+def test_installed_tests_read_the_expected_release_from_the_pin():
+    for path in sorted((ROOT / "tests").glob("*.py")):
+        if path.name in {"test_nare_runtime_pin.py", "nare_pin.py"}:
+            continue
+        assert RELEASE not in path.read_text(), path.name
 
 
 def test_documented_installation_verifies_selected_release_commit():

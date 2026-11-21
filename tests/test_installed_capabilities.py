@@ -7,6 +7,7 @@ import shutil
 import subprocess
 from dataclasses import replace
 
+from nare_pin import RELEASE as NARE_RELEASE
 from test_fanout import configure
 from test_installed_structured_output import http_scenario
 from test_nare_cli_integration import installed as installed
@@ -24,7 +25,7 @@ SYSTEM = "--lead with a dash.\r\nKeep CRLF, a tab\t and \u2713 \u00e9.\n\n"
 
 def test_installed_runtime_advertises_every_option_scrutare_gates(tmp_path, installed):
     capability = asyncio.run(inspect_nare_runtime(offline_runtime(tmp_path, installed)))
-    assert (capability.version, capability.contract) == ("2026.11.107", 3)
+    assert (capability.version, capability.contract) == (NARE_RELEASE, 3)
     for switch in ("--stream", "--jsonl", "--yes", "--cache-breakpoints"):
         flag = capability.flag(switch)
         assert flag is not None and not flag.takes_value

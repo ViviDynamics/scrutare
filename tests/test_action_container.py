@@ -15,6 +15,7 @@ import zipfile
 from pathlib import Path
 
 import pytest
+from nare_pin import RELEASE as NARE_RELEASE
 from test_action_packaging import IMAGE, metadata
 from test_nare_cli_integration import BAD_ANCHOR, CORRECTED, FINDING, text, tool
 from test_review_inputs import DOCS, SOURCE
@@ -42,7 +43,7 @@ def candidate_image(tmp_path_factory):
     assert shutil.which("docker"), "native Docker is mandatory for Action proof"
     root = tmp_path_factory.mktemp("action-candidate")
     commands = []
-    for name in ("Dockerfile", ".dockerignore"):
+    for name in ("Dockerfile", ".dockerignore", "nare.pin"):
         shutil.copyfile(ROOT / name, root / name)
     build = ["uv", "build", "--python", sys.executable, "--wheel", "--out-dir", str(root / "dist")]
     result = run(build, cwd=ROOT)
@@ -113,7 +114,7 @@ def candidate_image(tmp_path_factory):
             "--version",
         ]
     )
-    assert nare.stdout == b"2026.11.107\n"
+    assert nare.stdout == f"{NARE_RELEASE}\n".encode()
     assert (
         run(["docker", "run", "--rm", "--network", "none", tag, "--version"]).stdout
         == f"scrutare {VERSION}\n".encode()
@@ -338,7 +339,7 @@ def test_actual_action_container(tmp_path, candidate_image, case, initial, exit_
             session = load(attempt / "session.json")
             terminal = json.loads((attempt / "stdout.jsonl").read_text().splitlines()[-1])
             outcome = load(attempt / "result.json")
-            assert observed["version"] == "2026.11.107" and observed["python"].startswith("3.14.")
+            assert observed["version"] == NARE_RELEASE and observed["python"].startswith("3.14.")
             assert observed["credential_names"] == observed["guard_violations"] == []
             assert observed["nare_controls"] == {}
             assert len(observed["factory_calls"]) == 1

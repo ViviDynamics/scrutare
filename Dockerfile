@@ -18,12 +18,16 @@ RUN arch=$(dpkg --print-architecture) \
     && echo "$checksum  /tmp/gh.tar.gz" | sha256sum --check \
     && tar -xzf /tmp/gh.tar.gz --strip-components=2 -C /usr/local/bin \
        "gh_2.100.0_linux_${arch}/bin/gh"
-# Public tagged source, verified before installation; no build credentials.
-RUN git clone --depth 1 --branch 2026.11.107 https://github.com/ViviDynamics/nare.git /tmp/nare \
-    && test "$(git -C /tmp/nare rev-parse HEAD)" = "4baaeb8527478401cbd7bf54b74f48c286d8a093" \
+# Public tagged source at the release and commit in nare.pin, verified before
+# installation; no build credentials.
+COPY nare.pin /tmp/nare.pin
+RUN . /tmp/nare.pin \
+    && test -n "$NARE_RELEASE" && test -n "$NARE_COMMIT" \
+    && git clone --depth 1 --branch "$NARE_RELEASE" https://github.com/ViviDynamics/nare.git /tmp/nare \
+    && test "$(git -C /tmp/nare rev-parse HEAD)" = "$NARE_COMMIT" \
     && UV_PROJECT_ENVIRONMENT=/opt/nare UV_PYTHON_DOWNLOADS=never \
        uv sync --project /tmp/nare --python /usr/local/bin/python --locked --no-dev --no-editable \
-    && test "$(/opt/nare/bin/nare --version)" = "2026.11.107"
+    && test "$(/opt/nare/bin/nare --version)" = "$NARE_RELEASE"
 ARG SCRUTARE_WHEEL
 COPY ${SCRUTARE_WHEEL} /tmp/wheels/
 RUN test -n "$SCRUTARE_WHEEL" \

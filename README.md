@@ -199,12 +199,12 @@ CI checks Python 3.10 and 3.14. Use the same commands locally:
 uv sync --locked --extra dev
 uv run --locked --extra dev pytest
 uv run --locked --extra dev ruff check .
-uv run --locked --extra dev mypy src scripts/check-release.py scripts/auto-release.py
+uv run --locked --extra dev mypy src scripts/check-release.py scripts/auto-release.py scripts/bump-nare.py
 uv build --wheel
 ```
 
 CI also installs nare 2026.11.107 in a separate Python 3.14 environment pinned
-to its public release commit and locked dependencies. Each matrix job runs
+to its public release commit (both recorded in `nare.pin`) and locked dependencies. Each matrix job runs
 offline tests through that installed CLI. To include the same proof locally,
 set `SCRUTARE_TEST_NARE_EXECUTABLE` to the absolute path of the separately
 installed release's `nare` executable before running pytest. An absent setting

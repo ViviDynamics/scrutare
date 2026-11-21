@@ -163,7 +163,7 @@ def test_container_context_is_allowlisted_to_recipe_and_wheels():
     patterns = [line for line in path.read_text().splitlines() if line and not line.startswith("#")]
     assert patterns[0] == "**", "deny unknown local files by default"
     assert set(patterns[1:]) <= {
-        "!Dockerfile", "!.dockerignore", "!dist/", "dist/**",
+        "!Dockerfile", "!.dockerignore", "!nare.pin", "!dist/", "dist/**",
         "!dist/scrutare-*-py3-none-any.whl",
     }
     assert "dist/**" in patterns, "opening dist/ must not admit non-wheel files"

@@ -5,6 +5,7 @@ import json
 import subprocess
 
 import pytest
+from nare_pin import RELEASE as NARE_RELEASE
 from test_fanout import configure
 from test_installed_request_retries import FINAL, READ, http_review
 from test_installed_structured_output import MALFORMED
@@ -102,7 +103,7 @@ def anthropic_review(capture, tmp_path, installed, *, structured, effort=None):
     observed = load(outcome.artifact_directory / "offline-observations.json")
     assert observed["guard_violations"] == [] and observed["nare_controls"] == {}
     assert observed["credential_names"] == ["ANTHROPIC_API_KEY"]
-    assert observed["version"] == "2026.11.107"
+    assert observed["version"] == NARE_RELEASE
     return result, outcome, [call["payload"] for call in observed["calls"]]
 
 

@@ -8,6 +8,7 @@ from hashlib import sha256
 from pathlib import Path
 
 import pytest
+from nare_pin import RELEASE as NARE_RELEASE
 from test_installed_review import GH_WORKER
 from test_installed_review import wheel_cli as wheel_cli
 from test_nare_cli_integration import FINDING, offline_runtime, text, tool
@@ -91,7 +92,7 @@ def review(tmp_path, installed, wheel_cli, *, yaml, scenarios, category="correct
     for path in observations:
         observed = json.loads(path.read_bytes())
         assert observed["guard_violations"] == observed["credential_names"] == []
-        assert observed["version"] == "2026.11.107"
+        assert observed["version"] == NARE_RELEASE
     payload = json.loads((run / "review-payload.json").read_bytes())
     return envelope, run, payload
 

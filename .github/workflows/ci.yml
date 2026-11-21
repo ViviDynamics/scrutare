@@ -3,6 +3,8 @@ name: CI
 on:
   push:
   pull_request:
+  # The nare bump workflow starts CI on its branch: GITHUB_TOKEN pushes start no run.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -25,9 +27,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          nare_checkout="$RUNNER_TEMP/scrutare-nare-2026.11.107"
-          git clone --depth 1 --branch 2026.11.107 https://github.com/ViviDynamics/nare.git "$nare_checkout"
-          test "$(git -C "$nare_checkout" rev-parse HEAD)" = "4baaeb8527478401cbd7bf54b74f48c286d8a093"
+          . ./nare.pin
+          nare_checkout="$RUNNER_TEMP/scrutare-nare-$NARE_RELEASE"
+          git clone --depth 1 --branch "$NARE_RELEASE" https://github.com/ViviDynamics/nare.git "$nare_checkout"
+          test "$(git -C "$nare_checkout" rev-parse HEAD)" = "$NARE_COMMIT"
           uv python install 3.14
           uv sync --project "$nare_checkout" --python 3.14 --locked --no-dev
           test -x "$nare_checkout/.venv/bin/nare"
@@ -42,7 +45,7 @@ jobs:
       - name: Lint
         run: uv run --locked --extra dev ruff check .
       - name: Strict typecheck
-        run: uv run --locked --extra dev mypy src scripts/check-release.py scripts/auto-release.py
+        run: uv run --locked --extra dev mypy src scripts/check-release.py scripts/auto-release.py scripts/bump-nare.py
       - name: Build wheel
         run: uv build --wheel
       - name: Installed CLI smoke check
