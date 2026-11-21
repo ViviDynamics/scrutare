@@ -98,21 +98,28 @@ these in the file when you have your own reason:
 | [`findings.citation_check: session`](config.md#citation-check-in-the-session-opt-in) | Unmeasured; the default stays `post_session` until the screen in its [plan](plans/2026-11-20-session-citation-check.md). |
 | [Phase overrun fallback and discussion allowance](config.md#phase-allowances-and-overrun-fallback-opt-in-unmeasured) | Never measured. |
 
-Two campaign settings are not configuration, so no profile can carry them:
+Two settings that decide whether a slow model can finish are now configuration
+(#147), but `self-hosted@1` does not set either: a profile version never
+changes, and neither value has been measured on reviews. Both are available to
+set by hand, and both belong in a future `self-hosted@2` once a screen measures
+them:
 
-- **Session timeout.** The campaigns ran 600 seconds per session (g2, s1) and
-  then 1800 (s2 onward). The review CLI runs 600 and has no option for it. At
-  the 15 to 19 output tokens per second measured before g2
-  ([plan](plans/2026-10-14-glm-qualification.md)), one request at the 20,000
-  cap takes longer than 600 seconds, so a slow model can time out before the cap
-  ends its request. Every review now records its
-  [timing](config.md#review-timing), which is the evidence a session timeout
-  and the App's job deadline should be sized from
-  ([#135](https://github.com/ViviDynamics/scrutare/issues/135)).
-- **nare `--max-cutoffs`.** Scrutare pins 0, so a reply cut off at the cap or
-  by repetition ends its session. c1 lost one stream to a repetition abort and
-  g4 two requests to the cap, but nare's cutoff correction has not been
-  measured on reviews and has no rail option yet.
+- **[`models.session_timeout_seconds`](config.md#session-timeout).** The
+  campaigns ran 600 seconds per session (g2, s1) and then 1800 (s2 onward); a
+  review runs 600 unless this is set. At the 15 to 19 output tokens per second
+  measured before g2 ([plan](plans/2026-10-14-glm-qualification.md)), one
+  request at the 20,000 cap takes longer than 600 seconds, so a slow model can
+  time out before the cap ends its request. Every review now records its
+  [timing](config.md#review-timing), which is the evidence the timeout and the
+  App's job deadline should be sized from
+  ([#135](https://github.com/ViviDynamics/scrutare/issues/135)). Under the App,
+  a configured timeout must fit inside the job deadline (see below).
+- **[`max_cutoffs`](config.md#cut-off-recovery-opt-in)** (a rail option). Unset,
+  Scrutare sends nare `--max-cutoffs 0`, so a reply cut off at the cap or by
+  repetition ends its session. c1 lost one stream to a repetition abort and g4
+  two requests to the cap. With `max_cutoffs: 1` nare instead asks the model
+  once for a complete, shorter answer; each correction can cost another full
+  reply at the cap, and no schedule has measured whether it recovers reviews.
 
 ### Records and replay
 
@@ -150,7 +157,10 @@ A self-hosted review takes longer than a hosted one. The App's job deadline,
 `SCRUTARE_APP_JOB_TIMEOUT` (default 3300 seconds, at most 21600), is an
 operator setting, not configuration, so the profile does not change it. Size it
 from the review times the job records carry. See
-[the App guide](app.md#job-deadline-and-token-refresh).
+[the App guide](app.md#job-deadline-and-token-refresh). A repository that sets
+`models.session_timeout_seconds` must leave room inside that deadline: the App
+refuses a job whose session timeout, plus the capacity wait credit when
+queueing is on, is not below `SCRUTARE_APP_JOB_TIMEOUT`.
 
 ## What remains unqualified
 
@@ -160,5 +170,5 @@ from the review times the job records carry. See
   schedules, and neither has fired often enough to measure.
 - The answer encoding: `json_object` and `tool_call` have not been screened
   against `json_schema`.
-- The options left at their defaults above, the session timeout and the cutoff
-  correction.
+- The options left at their defaults above, `models.session_timeout_seconds`
+  and `max_cutoffs`.

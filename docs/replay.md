@@ -160,15 +160,17 @@ answers of a session: it binds the argv and digest that ran, and the accepted
 answer passes the same post-session validation as always.
 
 [Request retries](config.md#request-retries-opt-in),
-[cache breakpoints](config.md#prompt-cache-breakpoints-opt-in) and
-[reasoning effort](config.md#reasoning-effort-opt-in) are audited together when
+[cache breakpoints](config.md#prompt-cache-breakpoints-opt-in),
+[reasoning effort](config.md#reasoning-effort-opt-in) and
+[cut-off recovery](config.md#cut-off-recovery-opt-in) are audited together when
 `config.json` sets one of them on any rail or any session's `invocation.json`
 records one. Each launched session's recorded rail, including these fields,
 must equal its configured rail (a reserved executor uses the rail its identity
 is given), and argv must carry exactly what the rail implies: `--request-retries
 N` once, `--request-retry-seconds S` once exactly when `N` is above 0 (60 when
 the rail sets no bound), `--cache-breakpoints` once exactly when the rail
-enables it, and `--effort LEVEL` once exactly when the rail sets it
+enables it, `--effort LEVEL` once exactly when the rail sets it, and
+`--max-cutoffs N` once with the rail's budget when it sets one
 (`rail_options_unrecorded`, invalid). `result.json` must carry
 `request_retries`, `cache_breakpoints` and `effort` exactly when the rail sets
 them, with the configured limit, flag and level; the recorded resend count
@@ -179,8 +181,16 @@ session without `result.json`, a counted session without `stdout.jsonl`, or an
 opted-in run without any session attempt is `rail_options_evidence_missing`
 (incomplete), and a captured configuration that cannot be read for this is
 `rail_options_config_invalid` (invalid). The contract 3 recovery check accepts
-`--request-retries N` only when it equals the limit the session's own rail
-recorded, and `0` otherwise. Runs that never set these fields are not audited.
+`--request-retries N` and `--max-cutoffs N` only when each equals the value the
+session's own rail recorded, and `0` otherwise. Runs that never set these
+fields are not audited.
+
+A configured [session timeout](config.md#session-timeout)
+(`models.session_timeout_seconds` in `config.json`) is audited against every
+launched session: each `invocation.json` must record that value as
+`timeout_seconds` (`session_timeout_unrecorded`, invalid). A run whose
+configuration sets none is not audited, so earlier bundles and evaluator runs
+that used `--timeout-seconds` replay as before.
 
 [Capacity queueing](config.md#capacity-queueing-opt-in) is audited when
 `config.json` sets `models.capacity`, any session's argv carries a capacity
