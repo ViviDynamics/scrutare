@@ -105,8 +105,10 @@ Two campaign settings are not configuration, so no profile can carry them:
   the 15 to 19 output tokens per second measured before g2
   ([plan](plans/2026-10-14-glm-qualification.md)), one request at the 20,000
   cap takes longer than 600 seconds, so a slow model can time out before the cap
-  ends its request. [#135](https://github.com/ViviDynamics/scrutare/issues/135)
-  covers review latency and the deadline.
+  ends its request. Every review now records its
+  [timing](config.md#review-timing), which is the evidence a session timeout
+  and the App's job deadline should be sized from
+  ([#135](https://github.com/ViviDynamics/scrutare/issues/135)).
 - **nare `--max-cutoffs`.** Scrutare pins 0, so a reply cut off at the cap or
   by repetition ends its session. c1 lost one stream to a repetition abort and
   g4 two requests to the cap, but nare's cutoff correction has not been
@@ -142,8 +144,13 @@ gateway's origin exactly, for example `https://litellm.example` (with its port
 if it has one); an HTTP origin is always refused, and a route outside the
 allowlist is never asked, by the preflight or by a review. The service
 environment provides `OPENAI_API_KEY`. The App runs the preflight itself,
-records each result on the job, and retries a failed one with a backoff. See
-[the App guide](app.md).
+records each result on the job, and retries a failed one with a backoff.
+
+A self-hosted review takes longer than a hosted one. The App's job deadline,
+`SCRUTARE_APP_JOB_TIMEOUT` (default 3300 seconds, at most 21600), is an
+operator setting, not configuration, so the profile does not change it. Size it
+from the review times the job records carry. See
+[the App guide](app.md#job-deadline-and-token-refresh).
 
 ## What remains unqualified
 

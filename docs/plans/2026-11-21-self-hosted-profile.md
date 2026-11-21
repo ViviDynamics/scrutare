@@ -103,7 +103,8 @@ Two campaign settings are not configuration, so no profile can carry them:
 - The session timeout. The campaigns ran 600 seconds (g2, s1) and then 1800
   (s2 onward); the review CLI runs 600 and has no option for it. At the 15 to
   19 output tokens per second g2 measured, one request at the 20,000 cap takes
-  longer than 600 seconds. #135 covers the deadline.
+  longer than 600 seconds. #143 records review timing for #135, and the App's
+  job deadline is an operator setting.
 - nare `--max-cutoffs`. Scrutare pins 0. c1 lost one stream to a repetition
   abort and g4 two requests to the cap, but nare's cutoff correction has not
   been measured on reviews and has no rail option yet.
