@@ -21,7 +21,9 @@ from urllib.parse import urlsplit
 from scrutare import __version__
 from scrutare.config import (
     EFFORT_LEVELS,
+    OPENAI_STRUCTURED_OUTPUT_MODES,
     REQUEST_RETRY_SECONDS,
+    STRUCTURED_OUTPUT_MODES,
     CapacitySettings,
     ConfigError,
     ModelRail,
@@ -265,29 +267,52 @@ def _flags(contract: dict[str, object]) -> tuple[NareFlag, ...]:
 
 def _structured_output(contract: dict[str, object],
                        flags: tuple[NareFlag, ...] | None = None,
-                       ) -> tuple[tuple[str, ...], tuple[str, ...]]:
-    """The json_schema modes nare advertises and the rails it sends them on, or none.
+                       ) -> tuple[tuple[str, ...], tuple[str, ...],
+                                  tuple[tuple[str, tuple[str, ...]], ...] | None]:
+    """The modes nare advertises, the rails it sends them on, and the modes on each rail.
 
     An unfamiliar entry advertises nothing rather than failing inspection: waves that never
     ask for the constraint must not depend on it, and require_rail_options refuses one that
-    does. Contracts 1 and 2 only ever advertised the OpenAI rail. A contract 3 runtime also
-    has to list the flag itself with the mode among its choices.
+    does. Contracts 1 and 2 only ever advertised json_schema on the OpenAI rail. A contract 3
+    runtime also has to list the flag itself with the mode among its choices. Only a runtime
+    whose entry names each provider's modes (provider_modes, nare 2026.11.107) offers the
+    openai-only encodings; without it json_schema is offered on every listed provider.
     """
     entry = contract.get("structured_output")
     if (not isinstance(entry, dict) or not isinstance(entry.get("modes"), list)
             or not isinstance(entry.get("providers"), list)
             or entry.get("flag") != "--structured-output"):
-        return (), ()
-    modes = tuple(mode for mode in entry["modes"] if mode == "json_schema")
+        return (), (), None
+    listed = entry["providers"]
     if flags is None:
-        providers: tuple[str, ...] = ("openai",) if "openai" in entry["providers"] else ()
-    else:
-        flag = next((flag for flag in flags if flag.name == "--structured-output"), None)
-        if flag is None or not flag.takes_value:
-            return (), ()
-        modes = tuple(mode for mode in modes if flag.choices is None or mode in flag.choices)
-        providers = tuple(name for name in _PROVIDERS if name in entry["providers"])
-    return (modes, providers) if modes and providers else ((), ())
+        modes: tuple[str, ...] = ("json_schema",) if "json_schema" in entry["modes"] else ()
+        providers: tuple[str, ...] = ("openai",) if "openai" in listed else ()
+        return (modes, providers, None) if modes and providers else ((), (), None)
+    flag = next((flag for flag in flags if flag.name == "--structured-output"), None)
+    if flag is None or not flag.takes_value:
+        return (), (), None
+
+    def offered(mode: str) -> bool:
+        return mode in entry["modes"] and (flag.choices is None or mode in flag.choices)
+
+    named = entry.get("provider_modes")
+    if named is None:
+        modes = ("json_schema",) if offered("json_schema") else ()
+        providers = tuple(name for name in _PROVIDERS if name in listed)
+        return (modes, providers, None) if modes and providers else ((), (), None)
+    if (not isinstance(named, dict)
+            or any(not isinstance(value, list) for value in named.values())):
+        return (), (), None
+    by_provider = tuple(
+        (name, tuple(mode for mode in STRUCTURED_OUTPUT_MODES
+                     if offered(mode) and mode in named.get(name, ())))
+        for name in _PROVIDERS if name in listed)
+    by_provider = tuple(item for item in by_provider if item[1])
+    modes = tuple(mode for mode in STRUCTURED_OUTPUT_MODES
+                  if any(mode in offers for _, offers in by_provider))
+    if not modes:
+        return (), (), None
+    return modes, tuple(name for name, _ in by_provider), by_provider
 
 
 def _proxy_num_retries(contract: dict[str, object],
@@ -380,11 +405,12 @@ async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
                     "contract: expected supported contract 1, 2 or 3 and matching release")
             # Contracts 1 and 2 keep their release-number rules, whatever they advertise.
             flags = _flags(contract) if contract["contract"] == 3 else None
-            modes, providers = _structured_output(contract, flags)
+            modes, providers, by_provider = _structured_output(contract, flags)
             return NareCapability(
                 version, contract["contract"], modes, _proxy_num_retries(contract, flags),
                 flags=flags, cache_breakpoints=_cache_breakpoints(contract, flags),
                 capacity=_capacity_modes(contract, flags),
+                structured_output_provider_modes=by_provider,
                 **({"structured_output_providers": providers} if modes else {}))
     except SessionRuntimeError:
         raise
@@ -405,8 +431,7 @@ def _rail_refusal(rail: ModelRail, capability: NareCapability) -> str | None:
         return "proxy_num_retries"
     mode = rail.structured_output
     if mode is not None and not (
-            mode in capability.structured_output
-            and rail.provider in capability.structured_output_providers
+            mode in capability.structured_output_for(rail.provider)
             and (not modern or capability.advertises("--structured-output", mode))):
         return f"structured output {mode}"
     # The options below exist only as contract 3 flags; older contracts never send them.
@@ -461,8 +486,13 @@ def _rail(rail: ModelRail) -> None:
             or not isinstance(rail.model, str) or not rail.model.strip()
             or "\x00" in rail.model):
         raise SessionRuntimeError("rail: expected an explicit provider and nonempty model")
-    if rail.structured_output is not None and rail.structured_output != "json_schema":
-        raise SessionRuntimeError("rail.structured_output: expected json_schema")
+    if rail.structured_output is not None and (
+            rail.structured_output not in STRUCTURED_OUTPUT_MODES
+            or (rail.structured_output in OPENAI_STRUCTURED_OUTPUT_MODES
+                and rail.provider != "openai")):
+        raise SessionRuntimeError(
+            "rail.structured_output: expected json_schema, or json_object or tool_call on "
+            "provider openai")
     if rail.max_output_tokens is not None and (
             type(rail.max_output_tokens) is not int or rail.max_output_tokens <= 0):
         raise SessionRuntimeError("rail.max_output_tokens: expected a positive integer or null")

@@ -177,7 +177,7 @@ class NareCapability:
     version: str
     contract: int
     # Constrained-answer modes the runtime advertises (nare 2026.10.12+), for the providers
-    # named by structured_output_providers.
+    # named by structured_output_providers; structured_output_for says which on each.
     structured_output: tuple[str, ...] = ()
     proxy_num_retries: bool = False
     # Every `nare run` option a contract 3 runtime advertises. Contracts 1 and 2 carry None:
@@ -189,6 +189,10 @@ class NareCapability:
     # Capacity modes the runtime offers on its openai rail (contract 3): fixed is the queue,
     # adaptive the queue with a shared in-flight limit.
     capacity: tuple[str, ...] = ()
+    # The modes each provider offers, from the contract's provider_modes (nare 2026.11.107).
+    # None when the runtime lists no per-provider modes: then only json_schema is offered, on
+    # every provider in structured_output_providers, as before that entry existed.
+    structured_output_provider_modes: tuple[tuple[str, tuple[str, ...]], ...] | None = None
 
     def __post_init__(self) -> None:
         _text(self.version, "version")
@@ -204,11 +208,29 @@ class NareCapability:
         if (not isinstance(self.capacity, tuple)
                 or any(mode not in ("fixed", "adaptive") for mode in self.capacity)):
             raise ValueError("capacity: expected a tuple of capacity modes")
+        provider_modes = self.structured_output_provider_modes
+        if provider_modes is not None and (
+                not isinstance(provider_modes, tuple)
+                or any(not isinstance(item, tuple) or len(item) != 2
+                       or not isinstance(item[0], str) or not item[0]
+                       or not isinstance(item[1], tuple)
+                       or any(mode not in self.structured_output for mode in item[1])
+                       for item in provider_modes)
+                or len({item[0] for item in provider_modes}) != len(provider_modes)):
+            raise ValueError("structured_output_provider_modes: expected distinct providers "
+                             "with advertised modes or null")
         if self.flags is not None and (
                 not isinstance(self.flags, tuple)
                 or any(not isinstance(flag, NareFlag) for flag in self.flags)
                 or len({flag.name for flag in self.flags}) != len(self.flags)):
             raise ValueError("flags: expected distinct advertised options or null")
+
+    def structured_output_for(self, provider: str) -> tuple[str, ...]:
+        """The answer encodings this runtime sends on the provider's rail."""
+        if self.structured_output_provider_modes is None:
+            return (tuple(mode for mode in self.structured_output if mode == "json_schema")
+                    if provider in self.structured_output_providers else ())
+        return dict(self.structured_output_provider_modes).get(provider, ())
 
     def flag(self, name: str) -> NareFlag | None:
         """The advertised option of this name, or None (always None on contracts 1 and 2)."""

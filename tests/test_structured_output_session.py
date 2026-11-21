@@ -107,3 +107,42 @@ def test_additive_fields_in_a_constrained_turn_record_are_ignored(capture, tmp_p
     outcome, attempt = launch(capture, structured(tmp_path, markers=0, extra=extra), ON)
     assert outcome.status == "complete"
     assert recorded(attempt, "result.json")["structured_output"]["constrained_turns"] == 1
+
+
+ENCODING_CAPABLE = NareCapability(
+    "2026.10.12", 2, ("json_schema", "json_object", "tool_call"),
+    structured_output_provider_modes=(("openai", ("json_schema", "json_object", "tool_call")),))
+
+
+def encoded(tmp_path, mode, *, markers=1, marked=None):
+    return structured(tmp_path, markers=0, extra=marker(mode=marked or mode) * markers)
+
+
+@pytest.mark.parametrize("mode", ["json_object", "tool_call"])
+def test_an_openai_encoding_is_sent_and_recorded_like_json_schema(capture, tmp_path, mode):
+    rail = ModelRail("openai", None, "m", mode)
+    outcome, attempt = launch(capture, encoded(tmp_path, mode), rail, ENCODING_CAPABLE)
+    assert outcome.status == "complete"
+    assert recorded(attempt / "cwd", "observed.json")["argv"][-2:] == [
+        "--structured-output", mode]
+    invocation = recorded(attempt, "invocation.json")
+    assert invocation["argv"][-2:] == ["--structured-output", mode]
+    assert invocation["rail"]["structured_output"] == mode
+    assert recorded(attempt, "result.json")["structured_output"] == {
+        "mode": mode, "constrained_turns": 1}
+
+
+@pytest.mark.parametrize("mode", ["json_object", "tool_call"])
+def test_a_constrained_turn_in_another_encoding_is_a_protocol_failure(capture, tmp_path, mode):
+    rail = ModelRail("openai", None, "m", mode)
+    outcome, _ = launch(capture, encoded(tmp_path, mode, marked="json_schema"), rail,
+                        ENCODING_CAPABLE)
+    assert outcome.status == "failed" and outcome.reason == "protocol"
+
+
+@pytest.mark.parametrize("mode", ["json_object", "tool_call"])
+def test_a_json_schema_only_runtime_never_launches_an_encoding(capture, tmp_path, mode):
+    outcome, attempt = launch(capture, encoded(tmp_path, mode),
+                              ModelRail("openai", None, "m", mode))
+    assert outcome.status == "failed" and outcome.reason == "invocation"
+    assert not (attempt / "cwd" / "observed.json").exists()

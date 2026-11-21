@@ -20,7 +20,7 @@ def configure(path, models):
 
 
 def session(path, rail, *, persona="senior-dev", attempt="attempt-0001", flag=None,
-            result=True, constrained=1):
+            result=True, constrained=1, marked=None):
     directory = path / "sessions" / persona / attempt
     directory.mkdir(parents=True)
     mode = rail.get("structured_output") if flag is None else flag
@@ -36,13 +36,14 @@ def session(path, rail, *, persona="senior-dev", attempt="attempt-0001", flag=No
                                            "constrained_turns": constrained}
         (directory / "result.json").write_text(json.dumps(record))
     markers = constrained if type(constrained) is int else 0
-    (directory / "stdout.jsonl").write_text("".join(marker_line() + "\n" for _ in range(markers)))
+    (directory / "stdout.jsonl").write_text("".join(
+        marker_line(marked or mode or "json_schema") + "\n" for _ in range(markers)))
     return directory
 
 
-def marker_line():
+def marker_line(mode="json_schema"):
     return json.dumps({"type": "progress", "text": "constrained", "timestamp": "now", "detail": {
-        "structured_output": {"mode": "json_schema", "tools_withheld": True}}})
+        "structured_output": {"mode": mode, "tools_withheld": True}}})
 
 
 def codes(result):
@@ -226,3 +227,72 @@ def test_a_never_started_session_cannot_have_constrained_turns_in_its_stream(tmp
     (directory / "stdout.jsonl").write_text(marker_line() + "\n")
     assert codes(replay_run(tmp_path)) == [
         ("structured_output_result_disagrees", "sessions/senior-dev/attempt-0001/result.json")]
+
+
+ENCODINGS = ("json_object", "tool_call")
+
+
+@pytest.mark.parametrize("mode", ENCODINGS)
+def test_a_run_in_each_openai_encoding_replays_clean(tmp_path, mode):
+    bundle(tmp_path)
+    rail = {**ON, "structured_output": mode}
+    configure(tmp_path, {"default": rail})
+    session(tmp_path, rail)
+    session(tmp_path, rail, persona="assessment", attempt="attempt-0001", constrained=0)
+    result = replay_run(tmp_path)
+    assert codes(result) == []
+    assert result.exit_code == 0
+
+
+@pytest.mark.parametrize("mode", ENCODINGS)
+def test_a_session_sent_another_encoding_than_configured_is_invalid(tmp_path, mode):
+    bundle(tmp_path)
+    configure(tmp_path, {"default": {**ON, "structured_output": mode}})
+    # The rail and argv agree with each other, but not with the configured encoding.
+    session(tmp_path, ON)
+    assert codes(replay_run(tmp_path)) == [
+        ("structured_output_unrecorded", "sessions/senior-dev/attempt-0001/invocation.json")]
+
+
+@pytest.mark.parametrize("mode", ENCODINGS)
+def test_an_argv_that_names_another_encoding_than_the_rail_is_invalid(tmp_path, mode):
+    bundle(tmp_path)
+    rail = {**ON, "structured_output": mode}
+    configure(tmp_path, {"default": rail})
+    session(tmp_path, rail, flag="json_schema")
+    assert codes(replay_run(tmp_path)) == [
+        ("structured_output_unrecorded", "sessions/senior-dev/attempt-0001/invocation.json")]
+
+
+@pytest.mark.parametrize("mode", ENCODINGS)
+def test_markers_in_another_encoding_disagree_with_the_result(tmp_path, mode):
+    bundle(tmp_path)
+    rail = {**ON, "structured_output": mode}
+    configure(tmp_path, {"default": rail})
+    session(tmp_path, rail, marked="json_schema")
+    assert codes(replay_run(tmp_path)) == [
+        ("structured_output_result_disagrees", "sessions/senior-dev/attempt-0001/result.json")]
+
+
+@pytest.mark.parametrize("mode", ENCODINGS)
+def test_a_result_that_records_another_encoding_disagrees(tmp_path, mode):
+    bundle(tmp_path)
+    rail = {**ON, "structured_output": mode}
+    configure(tmp_path, {"default": rail})
+    directory = session(tmp_path, rail)
+    record = json.loads((directory / "result.json").read_text())
+    record["structured_output"]["mode"] = "json_schema"
+    (directory / "result.json").write_text(json.dumps(record))
+    assert codes(replay_run(tmp_path)) == [
+        ("structured_output_result_disagrees", "sessions/senior-dev/attempt-0001/result.json")]
+
+
+def test_an_anthropic_rail_recording_an_openai_only_encoding_is_invalid(tmp_path):
+    bundle(tmp_path)
+    configure(tmp_path, {"default": ON})
+    (tmp_path / "config.json").write_text(json.dumps({**json.loads(
+        (tmp_path / "config.json").read_text()), "models": {"default": {
+            **ON, "provider": "anthropic", "structured_output": "tool_call"}}}))
+    session(tmp_path, {**ON, "provider": "anthropic", "structured_output": "tool_call"})
+    assert codes(replay_run(tmp_path)) == [
+        ("structured_output_config_invalid", "config.json.models")]
