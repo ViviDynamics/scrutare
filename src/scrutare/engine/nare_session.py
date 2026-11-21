@@ -420,6 +420,19 @@ def _cited_read_map(contract: dict[str, object], flags: tuple[NareFlag, ...] | N
             and advertised.get("--cited-read-map") is True)
 
 
+# The fields Scrutare reads from nare's failure record of a failed model request.
+_PROVIDER_FAILURE_FIELDS = ("reason", "status", "transient", "constrained", "attempts")
+
+
+def _provider_failure(contract: dict[str, object], flags: tuple[NareFlag, ...] | None) -> bool:
+    """Whether a contract 3 runtime reports a failed request's kind and status on its result."""
+    entry = contract.get("provider_failure")
+    fields = entry.get("fields") if isinstance(entry, dict) else None
+    return (flags is not None and isinstance(entry, dict) and isinstance(fields, list)
+            and all(name in fields for name in _PROVIDER_FAILURE_FIELDS)
+            and entry.get("result_field") == "failure")
+
+
 async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
     """Inspect external version and contract without constructing a provider or session."""
     executable = _executable(runtime)
@@ -444,6 +457,7 @@ async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
                 structured_output_provider_modes=by_provider,
                 check_command=_check_command(contract, flags),
                 cited_read_map=_cited_read_map(contract, flags),
+                provider_failure=_provider_failure(contract, flags),
                 **({"structured_output_providers": providers} if modes else {}))
     except SessionRuntimeError:
         raise

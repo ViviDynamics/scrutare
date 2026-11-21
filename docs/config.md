@@ -619,11 +619,17 @@ and nothing is charged or posted:
 | `request_failed` | request | nare's model request failed (`stop_reason` null) |
 | `request_timeout` | request | No answer within the bound |
 | `answer_invalid` | request | The model answered, but not with the schema's answer |
+| `encoding_refused` | request | The backend refused the constrained request (HTTP 400 or 422 on the answer turn) |
 
-`request_failed` covers both a backend that refuses the answer encoding and a
-gateway failure: nare reports which only in its error text, which a caller must
-not parse. A separate `encoding_refused` reason waits on nare reporting the
-failure's status ([nare#314](https://github.com/ViviDynamics/nare/issues/314)).
+On a nare release that advertises `provider_failure` (2026.11.108 and newer),
+a failed request is classified from nare's failure record, which the check
+keeps as `failure` (reason, HTTP status, transient, constrained, attempts; never
+a response body): a 400 or 422 on the constrained answer turn is
+`encoding_refused`, 401 or 403 `credential_refused`, a 5xx or an overloaded
+provider `gateway_error`, a connection that never opened `route_unreachable`, a
+timeout `request_timeout`, and anything else `request_failed`. On an older
+release nare reports how the request failed only in its error text, which a
+caller must not parse, so every failed request is `request_failed`.
 
 The CLI prints the not-started document to stdout and exits 4; the evaluation
 `run` command does the same. The App records every preflight result on the job

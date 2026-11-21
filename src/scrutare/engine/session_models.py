@@ -197,6 +197,9 @@ class NareCapability:
     # values to read-root paths for --require-cited-reads (2026.11.103); contract 3 only.
     check_command: bool = False
     cited_read_map: bool = False
+    # A structured record of a failed model request on the result line (nare 2026.11.108,
+    # the `provider_failure` contract entry); contract 3 only.
+    provider_failure: bool = False
 
     def __post_init__(self) -> None:
         _text(self.version, "version")

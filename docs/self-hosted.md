@@ -92,7 +92,7 @@ these in the file when you have your own reason:
 | --- | --- |
 | [`request_retries`, `request_retry_seconds`](config.md#request-retries-opt-in) | No schedule ran with them (they arrived after the campaigns), and g5 ran with transient retries off under rule A. With retries on, usage is a lower bound. No count has been measured. |
 | [`models.capacity`](config.md#capacity-queueing-opt-in) | The documented values are nare's defaults and have not been measured for reviews. |
-| [`models.preflight.request`](config.md#route-preflight-opt-in) | A billed model call, and `request_failed` cannot yet tell an encoding refusal from a gateway failure (nare#314). `timeout_seconds` stays 30. |
+| [`models.preflight.request`](config.md#route-preflight-opt-in) | A billed model call. Since nare 2026.11.108 it reports a refused encoding as `encoding_refused` and gateway, credential and route failures by their own reasons, so it is a useful check on a new backend, but `self-hosted@1` leaves it to the operator. `timeout_seconds` stays 30. |
 | [`cache_breakpoints`](config.md#prompt-cache-breakpoints-opt-in) | vLLM caches prefixes without a marker, and a server that does not know the field may refuse it. |
 | [`effort`](config.md#reasoning-effort-opt-in) | Never measured on a self-hosted model. |
 | [`findings.citation_check: session`](config.md#citation-check-in-the-session-opt-in) | Unmeasured; the default stays `post_session` until the screen in its [plan](plans/2026-11-20-session-citation-check.md). |
