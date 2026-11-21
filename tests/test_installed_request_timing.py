@@ -1,6 +1,6 @@
 """Installed nare proof: per-request timing reaches each session's and the review's record.
 
-nare 2026.11.109 times every model request and sums each invocation's requests on its
+The pinned nare times every model request and sums each invocation's requests on its
 result line as `request_timing`. Through the real console and the offline HTTP harness, a
 streamed session's record keeps that sum, derives time to first token and decode rate from
 it, and replays from the retained streams alone.
