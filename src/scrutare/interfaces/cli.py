@@ -1,4 +1,4 @@
-"""Review a pull request or audit stored verdict artifacts offline."""
+"""Review a pull request, audit stored verdict artifacts, or inspect a configuration."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from scrutare import __version__
-from scrutare.config import ConfigError, parse_config
+from scrutare.config import ConfigError, explain_config, parse_config
 from scrutare.engine.github import GitHubError, resolve_pr
 from scrutare.engine.preflight import PreflightError, not_started, run_preflight
 from scrutare.engine.review import (
@@ -61,6 +61,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         description="Recompute a stored verdict and compare saved and recorded posted identity.",
     )
     replay.add_argument("dir", type=Path, help="directory containing captured review artifacts")
+    settings = commands.add_parser(
+        "config", help="inspect a configuration offline; no model, GitHub or network",
+        description="Read-only configuration commands. Nothing is written or sent.",
+    )
+    actions = settings.add_subparsers(dest="action", required=True)
+    show = actions.add_parser(
+        "show", help="print the resolved configuration and each profile option's source",
+        description="Print the canonical configuration as a review would record it, and "
+                    "for each option a profile covers, its value and whether it came from "
+                    "the profile or the file.",
+    )
+    show.add_argument("--config", type=Path, default=Path("scrutare.yaml"),
+                      help="YAML settings to resolve (default: scrutare.yaml)")
     try:
         args = parser.parse_args(argv)
     except SystemExit as exc:
@@ -75,17 +88,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(json.dumps(replay_result.to_dict()))
         return replay_result.exit_code
 
-    config: Path = args.config
-    try:
-        if not config.is_file():
-            raise OSError("not a regular file")
-        config_bytes = config.read_bytes()
-    except OSError:
-        print(
-            "scrutare: cannot read config file; provide an accessible regular file.",
-            file=sys.stderr,
-        )
+    config_bytes = _read_config(args.config)
+    if config_bytes is None:
         return 1
+    if args.command == "config":
+        try:
+            explained = explain_config(config_bytes)
+        except ConfigError as exc:
+            print(f"scrutare: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(explained, indent=2, allow_nan=False))
+        return 0
     try:
         review_config = parse_config(config_bytes)
     except ConfigError as exc:
@@ -130,3 +143,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     # This exact document was installed before the manifest and before any success output.
     sys.stdout.buffer.write(result.to_bytes())
     return 0
+
+
+def _read_config(config: Path) -> bytes | None:
+    """The configuration file's exact bytes, or None after a concise diagnostic."""
+    try:
+        if not config.is_file():
+            raise OSError("not a regular file")
+        return config.read_bytes()
+    except OSError:
+        print(
+            "scrutare: cannot read config file; provide an accessible regular file.",
+            file=sys.stderr,
+        )
+        return None

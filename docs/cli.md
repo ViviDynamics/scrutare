@@ -109,3 +109,25 @@ locally recorded posted identity are separate comparisons. Replay does not
 validate the artifact manifest, and legacy runs need no manifest. Replay exits
 0 for identity, 1 for differences, 2 for incomplete or invalid evidence. See
 [replay](replay.md) for its trust boundary.
+
+## Inspect a configuration
+
+```sh
+scrutare config show --config scrutare.yaml
+```
+
+`config show` resolves a configuration file exactly as `review` would and
+prints one JSON document: `profile` (the `NAME@VERSION` the file names, or
+`null`), `options` and `config`, the canonical configuration a review records
+in `config.json`. Each entry of `options` is one field a
+[profile](config.md#profiles) covers, on the default rail and on each override,
+with its resolved `value` and `source`: `profile` when the profile filled it,
+`file` when the file sets it, and `inactive` when the value does not apply to
+the review's shape and the field keeps its default. Without a profile, `options`
+is empty.
+
+The command is read-only and offline: it starts no nare process, makes no
+GitHub or model request and writes nothing. `--config` defaults to
+`scrutare.yaml`. An unreadable or invalid file exits 1 with the configuration
+error on stderr and nothing on stdout. See [self-hosted](self-hosted.md) for the
+`self-hosted@1` profile.

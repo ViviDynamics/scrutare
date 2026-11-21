@@ -1,5 +1,6 @@
 """Immutable configuration settings and YAML loading."""
 
+import copy
 import math
 import re
 from collections.abc import Callable
@@ -13,6 +14,7 @@ from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
 
 from scrutare.personas.definition import PersonaDefinition as PersonaDefinition
 from scrutare.personas.names import DEFAULT_PERSONA_NAMES, SELECTABLE_PERSONA_NAMES
+from scrutare.profiles import PROFILES, RAIL_PREFIX, profile_values
 
 Strategy = Literal["panel", "iterative", "debate"]
 Provider = Literal["anthropic", "openai"]
@@ -238,19 +240,26 @@ class ModelSettings:
         """Whether any rail caps its output; then every rail records the field explicitly."""
         return any(rail.max_output_tokens is not None for rail in self.rails)
 
-    def rail_record(self, rail: ModelRail) -> dict[str, Any]:
-        """One rail recorded with every opt-in field any rail of these settings uses."""
-        return rail.record(**{name: any(getattr(other, name) is not None
-                                        for other in self.rails) for name in RAIL_OPTIONS})
+    def rail_record(self, rail: ModelRail, explicit: tuple[str, ...] = ()) -> dict[str, Any]:
+        """One rail recorded with every opt-in field any rail of these settings uses.
 
-    def record(self) -> dict[str, Any]:
-        return {"default": self.rail_record(self.default),
-                "overrides": {name: self.rail_record(rail) for name, rail in self.overrides},
+        ``explicit`` names fields recorded on every rail even where none sets them: a
+        profile's fields, so that a cleared value is not filled again when parsed back.
+        """
+        return rail.record(**{name: name in explicit or any(getattr(other, name) is not None
+                                                            for other in self.rails)
+                              for name in RAIL_OPTIONS})
+
+    def record(self, explicit: tuple[str, ...] = (), *,
+               preflight: bool = False) -> dict[str, Any]:
+        return {"default": self.rail_record(self.default, explicit),
+                "overrides": {name: self.rail_record(rail, explicit)
+                              for name, rail in self.overrides},
                 # Off is never recorded, so configurations without it keep their bytes.
                 **({"capacity": self.capacity.record()}
                    if self.capacity.mode != "off" else {}),
                 **({"preflight": self.preflight.record()}
-                   if self.preflight.enabled else {})}
+                   if self.preflight.enabled or preflight else {})}
 
 
 @dataclass(frozen=True)
@@ -490,8 +499,13 @@ class ReviewConfig:
     analysis: AnalysisSettings = AnalysisSettings()
     routing: RoutingSettings = RoutingSettings()
     replies: ReplySettings = ReplySettings()
+    # The ``NAME@VERSION`` profile whose values filled the fields the file left unset, or
+    # None. Recorded with every field it covers, so the record parses back to these settings.
+    profile: str | None = None
 
     def __post_init__(self) -> None:
+        if self.profile is not None:
+            _profile_reference(self.profile)
         if self.replies.enabled and self.strategy != "iterative":
             # Only iterative keeps the finding pool and round bound a contest needs.
             raise ConfigError("replies.enabled: requires strategy iterative")
@@ -525,14 +539,20 @@ class ReviewConfig:
                               "model rail")
 
     def to_dict(self) -> dict[str, Any]:
+        covered = ({value.path for value in profile_values(self.profile)}
+                   if self.profile is not None else set())
+        rail_fields = tuple(name for name in RAIL_OPTIONS if RAIL_PREFIX + name in covered)
         result: dict[str, Any] = {
+            # Absent without a profile, so every earlier configuration keeps its bytes.
+            **({"profile": self.profile} if self.profile is not None else {}),
             "strategy": self.strategy,
             "rounds": asdict(self.rounds),
             "personas": [
                 asdict(p) if isinstance(p, PersonaDefinition) else p for p in self.personas
             ],
             "budgets": asdict(self.budgets),
-            "models": self.models.record(),
+            "models": self.models.record(rail_fields,
+                                         preflight="models.preflight.route" in covered),
             "verdict": {
                 "blocking_categories": list(self.verdict.blocking_categories),
                 "advisory_categories": list(self.verdict.advisory_categories),
@@ -552,6 +572,8 @@ class ReviewConfig:
             result["context"] = self.context.record()
             for field in ("include", "exclude", "related_paths"):
                 result["context"][field] = list(result["context"][field])
+            if "context.line_counts" in covered:
+                result["context"]["line_counts"] = self.context.line_counts
         if self.inspection.procedures != "baseline":
             result["inspection"] = asdict(self.inspection)
         if self.findings != FindingSettings():
@@ -560,8 +582,9 @@ class ReviewConfig:
                 result["findings"]["assessment"] = self.findings.assessment.record()
             if self.findings.discussion != DiscussionSettings():
                 result["findings"]["discussion"] = self.findings.discussion.record()
-            if self.findings.protocol_correction:
-                result["findings"]["protocol_correction"] = True
+            if (self.findings.protocol_correction
+                    or "findings.protocol_correction" in covered):
+                result["findings"]["protocol_correction"] = self.findings.protocol_correction
             if self.findings.citation_correction:
                 result["findings"]["citation_correction"] = True
             if self.findings.citation_check != "post_session":
@@ -976,14 +999,113 @@ def _load_yaml(data: bytes | str) -> object:
             loader.dispose()
 
 
+_SECTIONS = ("profile", "strategy", "rounds", "personas", "budgets", "models", "verdict",
+             "github", "inspection", "context", "findings", "analysis", "routing", "replies")
+_PROFILE_REFERENCE = re.compile(r"([a-z][a-z0-9]*(?:-[a-z0-9]+)*)@([1-9][0-9]*)")
+# Whether a profile value applies, judged on the file's own settings (scrutare.profiles).
+_PROFILE_CONDITIONS: dict[str, Callable[["ReviewConfig"], bool]] = {
+    "always": lambda config: True,
+    "evidence_v2": lambda config: config.findings.evidence == "v2",
+    "post_session_v2": lambda config: (config.findings.evidence == "v2"
+                                       and config.findings.citation_check == "post_session"),
+    "assessment": lambda config: config.findings.assessment.enabled,
+}
+
+
 def parse_config(data: bytes | str) -> ReviewConfig:
     """Validate safe YAML and resolve defaults without any external requests."""
-    raw = _mapping(
-        _load_yaml(data),
-        "",
-        ("strategy", "rounds", "personas", "budgets", "models", "verdict", "github",
-         "inspection", "context", "findings", "analysis", "routing", "replies"),
-    )
+    raw = _mapping(_load_yaml(data), "", _SECTIONS)
+    if "profile" not in raw:
+        return _parse(raw)
+    return _resolve_profile(raw)[0]
+
+
+def explain_config(data: bytes | str) -> dict[str, Any]:
+    """The resolved configuration, and each profile option with its value and source.
+
+    A source is ``profile`` (filled), ``file`` (the file sets it, so the profile does not)
+    or ``inactive`` (the value's condition does not hold, so the field keeps its default).
+    An override rail's field the override does not set has the default rail's source.
+    """
+    raw = _mapping(_load_yaml(data), "", _SECTIONS)
+    if "profile" not in raw:
+        return {"profile": None, "options": [], "config": _parse(raw).to_dict()}
+    config, sources = _resolve_profile(raw)
+    assert config.profile is not None
+    overrides = raw["models"].get("overrides", {})
+    options = []
+    for item in profile_values(config.profile):
+        value: Any = config
+        for name in item.path.split("."):
+            value = getattr(value, name)
+        options.append({"path": item.path, "value": value, "source": sources[item.path]})
+        if item.path.startswith(RAIL_PREFIX):
+            field = item.path[len(RAIL_PREFIX):]
+            for persona, rail in config.models.overrides:
+                options.append({"path": f"models.overrides.{persona}.{field}",
+                                "value": getattr(rail, field),
+                                "source": ("file" if field in overrides[persona]
+                                           else sources[item.path])})
+    return {"profile": config.profile, "options": options, "config": config.to_dict()}
+
+
+def _profile_reference(value: object) -> str:
+    """A known ``NAME@VERSION``; refusals name the known profiles, never the given value."""
+    known = ", ".join(f"{name}@{version}" for name, versions in PROFILES.items()
+                      for version in versions)
+    match = _PROFILE_REFERENCE.fullmatch(value) if isinstance(value, str) else None
+    if match is None:
+        raise ConfigError(f"profile: expected NAME@VERSION, one of {known}")
+    name, version = match.group(1), int(match.group(2))
+    if name not in PROFILES:
+        raise ConfigError(f"profile: unknown profile name; expected one of {known}")
+    if version not in PROFILES[name]:
+        raise ConfigError(f"profile: unknown version of {name}; expected one of {known}")
+    return cast(str, value)
+
+
+def _resolve_profile(raw: dict[str, Any]) -> tuple["ReviewConfig", dict[str, str]]:
+    """Fill each profile value the file leaves unset, and say where each value came from.
+
+    The file is validated on its own first, so its own errors read as before. A key the
+    file sets, null and false included, is kept. Overrides then inherit a filled default
+    rail field like any other.
+    """
+    reference = _profile_reference(raw["profile"])
+    plain = {key: value for key, value in raw.items() if key != "profile"}
+    own = _parse(plain)
+    for path, rail in (("models.default", own.models.default),
+                       *((f"models.overrides.{name}", rail)
+                         for name, rail in own.models.overrides)):
+        if rail.provider != "openai":
+            # Its rail values include options nare offers on the openai rail only.
+            raise ConfigError(f"profile: {reference} requires provider openai on every rail; "
+                              f"{path} is {rail.provider}")
+    filled = copy.deepcopy(plain)
+    sources: dict[str, str] = {}
+    for item in profile_values(reference):
+        if not _PROFILE_CONDITIONS[item.when](own):
+            sources[item.path] = "inactive"
+            continue
+        *parents, leaf = item.path.split(".")
+        section = filled
+        for key in parents:
+            section = section.setdefault(key, {})
+        if leaf in section:
+            sources[item.path] = "file"
+        else:
+            section[leaf] = item.value
+            sources[item.path] = "profile"
+    try:
+        return _parse(filled, reference), sources
+    except ConfigError as error:
+        if sources.get(str(error).partition(":")[0]) == "profile":
+            raise ConfigError(f"{error} (value from profile {reference}; set the field in "
+                              "the file to override it)") from None
+        raise
+
+
+def _parse(raw: dict[str, Any], profile: str | None = None) -> ReviewConfig:
     strategy = cast(
         Strategy,
         _choice(raw.get("strategy", "panel"), "strategy", ("panel", "iterative", "debate")),
@@ -1015,6 +1137,7 @@ def parse_config(data: bytes | str) -> ReviewConfig:
         _analysis_settings(raw.get("analysis", {}), context),
         _routing(raw.get("routing", {})),
         _replies(raw.get("replies", {})),
+        profile,
     )
 
 
