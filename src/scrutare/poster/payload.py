@@ -144,12 +144,16 @@ def build_review_payload(
     verdict: Verdict, diff: bytes | str, *, head_sha: str, strategy: Strategy,
     post_mode: PostMode, run_id: str, human_reviewers: tuple[str, ...] = (),
     existing_threads: frozenset[tuple[Anchor, str]] = frozenset(),
+    footer: str | None = None,
 ) -> ReviewPayload:
     """Render the supplied code verdict and every source without external work.
 
     `existing_threads` names inline comments Scrutare already posted at this head, by
     anchor and body SHA-256. A finding whose comment would be byte-identical is counted
     in the summary but not posted as a second thread.
+
+    `footer` is one code-rendered line (the review time and tokens) placed just above the
+    run marker. Without it the body is byte for byte what it always was.
     """
     if not isinstance(verdict, Verdict):
         raise PostingError("verdict: expected a code-derived Verdict")
@@ -233,4 +237,10 @@ def build_review_payload(
                 "review is incomplete and needs a person.\n\n"
                 + ("\n\n".join(unresolved) or "No findings survived the last complete stage.")
                 + f"\n\n<!-- scrutare-run:{run_id} -->")
+    if footer is not None:
+        if (not isinstance(footer, str) or not footer.strip() or "\n" in footer
+                or re.fullmatch(r"[A-Za-z0-9 ,.():]+", footer) is None):
+            raise PostingError("footer: expected one plain summary line")
+        marker = f"<!-- scrutare-run:{run_id} -->"
+        body = body[:-len(marker)] + f"{footer}\n\n{marker}"
     return ReviewPayload(head_sha, body, event, tuple(comments))

@@ -148,6 +148,10 @@ refusal adds no turn, no usage and no resend. The result line's
 the stream's own queue and limit records, and kept apart from usage, turns and
 retries. Without the block no session is sent a capacity option, and capacity
 evidence on a session that did not ask for it is a protocol failure.
+Every launched session also writes `timing.json` beside its `result.json`:
+its wall clock, tokens, retry and capacity waits and rail, as
+[review timing](config.md#review-timing) describes. It is a measurement and
+changes no argv, request byte or outcome.
 A rail with [`max_output_tokens: N`](config.md#per-request-output-token-cap-opt-in)
 adds `--max-tokens N` to each of its sessions, and records the cap in
 `fanout.json` like `structured_output`. A session on a capped rail whose last

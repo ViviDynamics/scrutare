@@ -152,7 +152,7 @@ def test_off_a_past_end_citation_fails_as_today_and_nothing_is_recorded(capture,
     assert not (attempt / "cwd" / "observed-resume.json").exists()
     assert sorted(path.name for path in attempt.iterdir()) == [
         "citation-validation.json", "cwd", "findings.schema.json", "home", "invocation.json",
-        "result.json", "session.json", "stderr.txt", "stdout.jsonl", "tmp"]
+        "result.json", "session.json", "stderr.txt", "stdout.jsonl", "timing.json", "tmp"]
     assert "citation_correction" not in load(attempt / "result.json")
     assert outcome.usage == TokenUsage(40, 10) == ledger.usage
 

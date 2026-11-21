@@ -2,7 +2,6 @@
 
 import json
 import math
-import os
 import re
 import subprocess
 import time
@@ -11,7 +10,14 @@ from dataclasses import dataclass
 from email.utils import parsedate_to_datetime
 from typing import Any, TypeVar
 
-from scrutare.engine.github import GitHubClient, GitHubError, PullRequestRef, Runner, resolve_pr
+from scrutare.engine.github import (
+    GitHubClient,
+    GitHubError,
+    PullRequestRef,
+    Runner,
+    gh_environment,
+    resolve_pr,
+)
 from scrutare.poster.errors import (
     PostingError,
     PostingRateLimited,
@@ -310,7 +316,7 @@ class ReviewClient:
                     "--header", "Content-Type: application/json",
                 ],
                 input=content, capture_output=True, text=False, shell=False,
-                timeout=60, env={**os.environ, "GH_HOST": "github.com"},
+                timeout=60, env=gh_environment(),
             )
         except FileNotFoundError:
             raise PostingRejected(
@@ -378,7 +384,7 @@ class ReviewClient:
                     "--header", "X-GitHub-Api-Version: 2022-11-28",
                 ],
                 capture_output=True, text=False, shell=False, timeout=60,
-                env={**os.environ, "GH_HOST": "github.com"},
+                env=gh_environment(),
             )
         except (OSError, subprocess.SubprocessError):
             raise PostingError(
@@ -414,7 +420,7 @@ class ReviewClient:
                     "--header", "X-GitHub-Api-Version: 2022-11-28",
                 ],
                 capture_output=True, text=False, shell=False, timeout=60,
-                env={**os.environ, "GH_HOST": "github.com"},
+                env=gh_environment(),
             )
         except (OSError, subprocess.SubprocessError):
             raise PostingError(

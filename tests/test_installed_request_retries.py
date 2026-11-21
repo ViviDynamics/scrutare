@@ -98,6 +98,13 @@ def test_resent_requests_are_counted_once_through_the_real_transport(
     assert load(capture / "fanout.json")["personas"][0]["rail"]["request_retries"] == 2
     replayed = replay_run(capture)
     assert replayed.saved_identical and replayed.issues == () and replayed.exit_code == 0
+    # The session's timing counts the same resends and the waits nare announced for them.
+    timing = load(attempt / "timing.json")
+    assert (timing["retries"], timing["retry_wait_seconds"]) == (
+        2, round(sum(r["wait"] for r in retried), 3))
+    assert (timing["tokens"], timing["output_tokens"], timing["invocations"]) == (44, 12, 1)
+    assert timing["wall_seconds"] >= timing["retry_wait_seconds"]
+    assert (timing["first_token_seconds"], timing["decode_tokens_per_second"]) == (None, None)
 
 
 def test_a_request_that_outlives_its_resends_fails_as_a_provider_failure(

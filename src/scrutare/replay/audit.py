@@ -928,6 +928,82 @@ def _citation_check_issues(run_dir: Path, config_data: object) -> tuple[AuditIss
     return tuple(issues)
 
 
+def _timing_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
+    """Check the latency records for form and consistency, never for equality with a rerun.
+
+    Wall clock is a measurement. What replay can check is that each launched session's
+    record names the rail its invocation recorded, counts the tokens its result reports and
+    the invocations it made, and that its retry and capacity waits are the ones the retained
+    streams and the result announce. The run's record must be the sum of its sessions' and
+    last at least as long as the longest of them. A run without any record is not audited, so
+    earlier bundles replay as before. A run whose sessions recorded timing but which has no
+    run-level record (an engine run outside a review, such as an evaluation) audits only
+    the sessions.
+    """
+    from scrutare.engine.session_output import retry_events
+    from scrutare.engine.timing import (
+        TIMING_FILE,
+        SessionTiming,
+        TimingError,
+        read_session_timings,
+        validate_review_timing,
+    )
+
+    attempts = _session_records(run_dir)
+    review = os.path.lexists(run_dir / TIMING_FILE)
+    if not review and not any(os.path.lexists(a / TIMING_FILE) for a in attempts):
+        return ()
+    issues = []
+    sound = True
+    launched = {attempt: document for attempt, document in _invocations(attempts)}
+    for attempt in attempts:
+        where = attempt.relative_to(run_dir).as_posix()
+        path, document = attempt / TIMING_FILE, launched.get(attempt)
+        if not os.path.lexists(path):
+            if isinstance(document, dict) and os.path.lexists(attempt / "result.json"):
+                # A launched session that wrote its result writes its timing first.
+                issues.append(AuditIssue("timing_missing", f"{where}/{TIMING_FILE}",
+                                         "incomplete"))
+                sound = False
+            continue
+        try:
+            if not isinstance(document, dict) or not isinstance(document.get("rail"), dict):
+                raise ValueError  # Timing for a session that never recorded its launch.
+            timing = SessionTiming.from_dict(decode_artifact(read_artifact(path),
+                                                             artifact=TIMING_FILE))
+            outcome = decode_artifact(read_artifact(attempt / "result.json"),
+                                      artifact="result.json")
+            if not isinstance(outcome, dict) or not isinstance(outcome.get("usage"), dict):
+                raise ValueError
+            corrected = os.path.lexists(attempt / "correction.stdout.jsonl")
+            streams = read_artifact(attempt / "stdout.jsonl") + b"\n" + (
+                read_artifact(attempt / "correction.stdout.jsonl") if corrected else b"")
+            capacity = outcome.get("capacity") or {}
+            if not isinstance(capacity, dict):
+                raise ValueError
+            if ((timing.provider, timing.model)
+                    != (document["rail"].get("provider"), document["rail"].get("model"))
+                    or timing.invocations != 1 + corrected
+                    or timing.tokens != outcome["usage"].get("total")
+                    or timing.output_tokens != outcome["usage"].get("output")
+                    or (timing.retries, timing.retry_wait_seconds) != retry_events(streams)
+                    or timing.capacity_wait_seconds != capacity.get("wait_seconds", 0.0)
+                    or timing.capacity_slot_wait_seconds
+                    != capacity.get("slot_wait_seconds", 0.0)):
+                raise ValueError
+        except (ReplayError, TimingError, ValueError, TypeError, KeyError):
+            issues.append(AuditIssue("timing_disagrees", f"{where}/{TIMING_FILE}", "invalid"))
+            sound = False
+    if review and sound:
+        try:
+            validate_review_timing(decode_artifact(read_artifact(run_dir / TIMING_FILE),
+                                                   artifact=TIMING_FILE),
+                                   read_session_timings(run_dir))
+        except (ReplayError, TimingError, ValueError, TypeError, KeyError):
+            issues.append(AuditIssue("timing_disagrees", TIMING_FILE, "invalid"))
+    return tuple(issues)
+
+
 def _native_recovery_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
     """Bind contract 3 recovery controls to all retained runtime identities."""
     issues = []
@@ -1510,6 +1586,7 @@ def replay_run(run_dir: Path) -> ReplayResult:
               + _proxy_num_retries_issues(run_dir, config_data)
               + _rail_option_issues(run_dir, config_data)
               + _capacity_issues(run_dir, config_data)
+              + _timing_issues(run_dir)
               + _native_recovery_issues(run_dir)
               + _citation_check_issues(run_dir, config_data)
               + _prompt_input_issues(run_dir)

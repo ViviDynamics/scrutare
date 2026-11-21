@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import shutil
+import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -26,6 +27,7 @@ from scrutare.engine.review_inputs import ReviewInputError
 from scrutare.engine.session_artifacts import SessionArtifactError, write_owned_bytes
 from scrutare.engine.session_models import NareRuntime, SessionCost, TokenUsage
 from scrutare.engine.strategy import StrategyNotImplementedError, run_review
+from scrutare.engine.timing import TimingError, write_review_timing
 from scrutare.findings import Verdict
 from scrutare.poster import (
     PostedReply,
@@ -82,6 +84,8 @@ class ReviewRunResult:
     recovery: dict[str, Any] | None = None
     # Dollars the backends reported for this review's sessions, or unknown (never zero).
     cost: SessionCost = SessionCost()
+    # The run's timing.json: review wall clock, session totals and waits, per rail.
+    timing: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         data: dict[str, Any] = {
@@ -94,6 +98,8 @@ class ReviewRunResult:
         }
         if self.recovery is not None:
             data["recovery"] = self.recovery
+        if self.timing is not None:
+            data["timing"] = self.timing
         if self.review is not None:
             data["review"] = asdict(self.review)
         if self.replies is not None:
@@ -164,10 +170,18 @@ async def review_pr(
     """
     preflight_replies_only(config, replies_only)
     preflight_review(config, runtime)
+    started = time.monotonic()
     run_dir: Path | None = None
     confirmed = False
     manifest_attempted = False
     recovery = None
+    timing: dict[str, Any] | None = None
+
+    def timed(directory: Path) -> dict[str, Any]:
+        # Measured from the start of the review to its verdict, before anything is posted,
+        # so the posted summary can carry it and a repost renders the same bytes.
+        return write_review_timing(directory, time.monotonic() - started)
+
     try:
         run_dir = ingest_pr(capture_client if capture_client is not None else GitHubClient(),
                             ref, runs_root, config_bytes=config_bytes,
@@ -182,6 +196,7 @@ async def review_pr(
             with whole_review_history():
                 for number in (1, 2):
                     panel = await run_review(run_dir, config, runtime=runtime)
+                    timing = timed(run_dir)
                     verify_capture(run_dir, frozen)
                     usable = (panel.status == "complete" and panel.accounting_complete
                               and isinstance(panel.verdict, Verdict))
@@ -210,12 +225,13 @@ async def review_pr(
                     write_artifact_manifest(run_dir)
                     retry_dir = run_dir.with_name(run_dir.name + "-retry")
                     restore_capture(retry_dir, frozen)
-                    run_dir = retry_dir
+                    run_dir, timing = retry_dir, None
             api = capture_client if capture_client is not None else GitHubClient()
             if api.get_pr(ref)['head']['sha'] != captured:
                 raise ReviewSupersededError("PR head moved; job superseded.", run_dir=run_dir)
         else:
             panel = await run_review(run_dir, config, runtime=runtime)
+            timing = timed(run_dir)
         if (panel.status not in ("complete", "partial") or not panel.accounting_complete
                 or not isinstance(panel.verdict, Verdict)):
             raise ReviewRunError("Panel failed to produce a usable verdict; inspect the saved run.")
@@ -241,7 +257,7 @@ async def review_pr(
                                  receipt, request, replies,
                                  verdict.degradation.to_dict()
                                  if verdict.degradation is not None else None, recovery,
-                                 panel.cost)
+                                 panel.cost, timing)
         write_owned_bytes(run_dir / "result.json", result.to_bytes(),
                           prepared_root=run_dir / "review-inputs")
         await asyncio.sleep(0)
@@ -273,6 +289,11 @@ async def review_pr(
             # Awaited engine failure/cancellation guarantees child cleanup has quiesced.
             # Posting is synchronous and has released its lock before reaching here.
             try:
+                if timing is None and (run_dir / "sessions").is_dir():
+                    try:
+                        timed(run_dir)  # A failed review's latency is evidence too.
+                    except (OSError, SessionArtifactError, TimingError):
+                        pass  # Secondary: must not hide the primary diagnostic.
                 try:
                     write_artifact_manifest(run_dir)
                 except (OSError, ProvenanceError):

@@ -45,7 +45,12 @@ strategy, mode, policy or payload fail safely.
 | either | escalated | COMMENT | COMMENTED |
 
 The summary names the strategy, verdict, deciding rule, finding count, complete
-captured SHA and an opaque run marker. Each comment uses its exact captured
+captured SHA and an opaque run marker. A run with a
+[review timing](config.md#review-timing) record adds one line above the marker
+with the review time, session count and tokens, unless `github.timing_footer`
+is `false`. The line is rendered from the run's `timing.json`, which is
+installed before the first post and checked against its session records, so a
+resumed post renders the same payload bytes. Each comment uses its exact captured
 LEFT or RIGHT anchor. Immediately before every permitted write, the poster
 rechecks that the PR is open and unmerged. A push or force push is allowed, but
 `commit_id` always stays at the captured SHA. An unreachable old commit or an

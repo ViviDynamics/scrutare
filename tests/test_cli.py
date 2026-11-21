@@ -139,6 +139,7 @@ def test_review_snapshots_config_and_reports_persisted_delivery(
         "review-inputs",
         "sessions", "fanout.json", "panel.json", "findings.json", "verdict.json",
         "posting.json", "review-payload.json", ".posting.lock", "result.json", "artifacts.json",
+        "timing.json",
     }
 
     assert json.loads((run / "effective-files.json").read_text())["files"] == ["a.py"]

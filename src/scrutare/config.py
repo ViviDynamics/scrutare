@@ -283,6 +283,8 @@ class GitHubSettings:
     post_mode: PostMode = "review"
     human_reviewers: tuple[str, ...] = ()
     paths: PathSettings = PathSettings()
+    # The posted summary's review time and token line. Recorded only when turned off.
+    timing_footer: bool = True
 
 
 @dataclass(frozen=True)
@@ -544,6 +546,8 @@ class ReviewConfig:
                 },
             },
         }
+        if not self.github.timing_footer:
+            result["github"]["timing_footer"] = False
         if self.context != ContextSettings():
             result["context"] = self.context.record()
             for field in ("include", "exclude", "related_paths"):
@@ -902,8 +906,12 @@ def _verdict(value: object) -> VerdictSettings:
 
 
 def _github(value: object) -> GitHubSettings:
-    fields = _mapping(value, "github", ("post_mode", "human_reviewers", "paths"))
+    fields = _mapping(value, "github", ("post_mode", "human_reviewers", "paths",
+                                        "timing_footer"))
     paths = _mapping(fields.get("paths", {}), "github.paths", ("include", "exclude"))
+    footer = fields.get("timing_footer", True)
+    if type(footer) is not bool:
+        raise ConfigError("github.timing_footer: expected a boolean")
     return GitHubSettings(
         cast(
             PostMode,
@@ -914,6 +922,7 @@ def _github(value: object) -> GitHubSettings:
             _strings(paths.get("include", []), "github.paths.include"),
             _strings(paths.get("exclude", ["docs/**", "*.md"]), "github.paths.exclude"),
         ),
+        footer,
     )
 
 

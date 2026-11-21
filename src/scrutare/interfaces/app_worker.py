@@ -10,6 +10,7 @@ import os
 import re
 import subprocess
 import sys
+import threading
 import time
 from collections.abc import Callable
 from datetime import datetime
@@ -22,6 +23,7 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 import jwt
 
 from scrutare.config import ConfigError, ReviewConfig, parse_config
+from scrutare.engine.github import TOKEN_FILE_VARIABLE
 from scrutare.engine.preflight import PreflightError, PreflightReport, run_preflight
 from scrutare.engine.session_models import NareRuntime
 from scrutare.interfaces.app import (
@@ -229,6 +231,86 @@ def preflight_delay(settings: AppSettings, failures: int) -> int:
     return int(min(settings.preflight_backoff * 2 ** (failures - 1), PREFLIGHT_MAX_DELAY))
 
 
+# Installation tokens last one hour. Refreshing at half that leaves the CLI a valid token
+# however long the job's deadline is, and an hour's margin for one failed refresh.
+TOKEN_REFRESH_SECONDS = 1800.0
+# After a refused refresh, try again sooner; the current token is still valid.
+TOKEN_RETRY_SECONDS = 60.0
+TOKEN_FILE = "gh-token"
+
+
+def _write_token(path: Path, token: str) -> None:
+    """Replace the job's private token file atomically, never through a link."""
+    staging = path.with_name(f".{path.name}-{os.getpid()}-{threading.get_ident()}.tmp")
+    descriptor = os.open(staging, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    try:
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(token.encode("ascii"))
+        os.replace(staging, path)
+    except BaseException:
+        staging.unlink(missing_ok=True)
+        raise
+
+
+class TokenRefresher:
+    """Keep a review's GitHub token fresh while the CLI runs, from a background thread.
+
+    The CLI reads the file before every GitHub call (`SCRUTARE_GH_TOKEN_FILE`), so a review
+    that outlasts one installation token posts with a new one instead of failing. A refused
+    refresh keeps the current token and tries again after `retry` seconds. The file is
+    removed when the job ends.
+    """
+
+    def __init__(self, path: Path, fetch: Callable[[], str], *, initial: str,
+                 interval: float = TOKEN_REFRESH_SECONDS, retry: float = TOKEN_RETRY_SECONDS):
+        self.path, self.fetch, self.initial = path, fetch, initial
+        self.interval, self.retry = interval, min(retry, interval)
+        self.refreshes, self.failures = 0, 0
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._run, name="token-refresh", daemon=True)
+
+    def _run(self) -> None:
+        wait = self.interval
+        while not self._stop.wait(wait):
+            try:
+                token = self.fetch()
+                if not token.isascii() or not token.isprintable():
+                    raise AppError("GitHub App returned an invalid installation token")
+                _write_token(self.path, token)
+            except (AppError, OSError):
+                self.failures += 1
+                wait = self.retry
+                continue
+            self.refreshes += 1
+            wait = self.interval
+
+    def __enter__(self) -> TokenRefresher:
+        try:
+            _write_token(self.path, self.initial)
+        except OSError:
+            self.path.unlink(missing_ok=True)
+            raise
+        self._thread.start()
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self._stop.set()
+        self._thread.join()
+        self.path.unlink(missing_ok=True)
+
+
+def _run_timing(runs: set[Path]) -> dict[str, Any] | None:
+    """The latest new run's timing record, for jobs that stopped before a CLI result."""
+    for run in sorted(runs, reverse=True):
+        try:
+            document = json.loads((run / "timing.json").read_bytes())
+        except (OSError, ValueError):
+            continue
+        if isinstance(document, dict):
+            return document
+    return None
+
+
 def worker_environment(token: str) -> dict[str, str]:
     environment = {key: os.environ[key] for key in (
         "PATH", "LANG", "LC_ALL", "TZ", "SSL_CERT_FILE", "SSL_CERT_DIR",
@@ -325,13 +407,16 @@ def work_once(settings: AppSettings, store: JobStore, *, client: Any = None,
 
 def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
             client: Any = None, runner: Any = subprocess.run,
-            preflight: PreflightFn = app_preflight) -> None:
+            preflight: PreflightFn = app_preflight,
+            refresh_seconds: float = TOKEN_REFRESH_SECONDS) -> None:
     """Run the same installed engine; retain every job directory on success or failure."""
     root = (settings.data_dir / "work" / job["id"]).absolute()
     repository_root = _repository_root(settings, job)
     runs = repository_root / ".scrutare" / "runs"
     before: set[Path] | None = None
     code: int | None = None
+    # Measured only once the CLI ran: how long it took and how often its token was renewed.
+    measured: dict[str, Any] = {}
 
     def stop(error: str, *, interrupted: bool = False) -> None:
         # Callers decide whether to resubmit from `delivery`, never from the status alone.
@@ -340,7 +425,11 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
         if code == 0 and delivery != "confirmed":
             delivery = "uncertain"
         result: dict[str, Any] = {"error": error, "delivery": delivery,
-                                  "work_dir": str(root)}
+                                  "work_dir": str(root), **measured}
+        if before is not None and "timing" not in result:
+            timing = _run_timing(_runs(runs) - before)
+            if timing is not None:
+                result["timing"] = timing
         if code is not None:
             result["exit_code"] = code
         status = "interrupted" if interrupted or delivery == "uncertain" else "failed"
@@ -406,6 +495,8 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
         config_path.write_bytes(raw)
         environment = worker_environment(token)
         environment["HOME"] = str(root)
+        token_file = root / TOKEN_FILE
+        environment[TOKEN_FILE_VARIABLE] = str(token_file)
         argv = [sys.executable, "-m", "scrutare", "review", "--pr",
                 f"https://github.com/{job['repository']}/pull/{job['number']}",
                 "--config", str(config_path), "--nare-executable",
@@ -419,19 +510,29 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
             argv.extend(("--whole-review-retry", "--expected-head",
                          api.head(job["repository"], job["number"], token)))
         known = _runs(runs)
+        started = time.monotonic()
+        refresher = TokenRefresher(
+            token_file, lambda: api.installation_token(job["repository"], job["installation"]),
+            initial=token, interval=refresh_seconds)
         try:
-            completed = runner(argv, cwd=repository_root, env=environment,
-                               capture_output=True, shell=False, timeout=settings.job_timeout)
+            with refresher:
+                completed = runner(argv, cwd=repository_root, env=environment,
+                                   capture_output=True, shell=False,
+                                   timeout=settings.job_timeout)
         except WorkerStopping:
             store.release(job["id"])
             return
         except subprocess.TimeoutExpired as expired:
+            measured.update(job_seconds=round(time.monotonic() - started, 3),
+                            token_refreshes=refresher.refreshes)
             before = known
             (root / "stdout.json").write_bytes(expired.stdout or b"")
             (root / "stderr.log").write_bytes(expired.stderr or b"")
             stop("review exceeded the job deadline; inspect job artifacts", interrupted=True)
             return
         before, code = known, completed.returncode
+        measured.update(job_seconds=round(time.monotonic() - started, 3),
+                        token_refreshes=refresher.refreshes)
         # CLI diagnostics exclude credentials. Save both streams for failed-run inspection.
         (root / "stdout.json").write_bytes(completed.stdout)
         (root / "stderr.log").write_bytes(completed.stderr)
@@ -466,6 +567,8 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
         except (OSError, ValueError, KeyError, TypeError):
             raise AppError("review CLI succeeded without its installed result; "
                            "inspect job artifacts") from None
+        # The CLI document carries the run's timing; the job adds its own clock.
+        result.update(measured)
         if result["status"] == "unchanged":
             store.finish(job["id"], "unchanged", result)
         else:

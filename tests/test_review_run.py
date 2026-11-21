@@ -22,6 +22,18 @@ from scrutare.replay import replay_run
 RAW = b"# retain me\r\nmodels: {default: {model: default-model}}\r\npersonas: [security]\r\n"
 
 
+def timing_without_sessions(document):
+    """The run-level timing record of a review whose sessions were all stubbed out."""
+    assert document.pop("wall_seconds") >= 0
+    assert document == {
+        "schema_version": 1, "sessions": 0, "session_wall_seconds": 0.0,
+        "longest_session_seconds": 0.0, "tokens": 0, "output_tokens": 0, "retries": 0,
+        "retry_wait_seconds": 0.0, "capacity_wait_seconds": 0.0,
+        "capacity_slot_wait_seconds": 0.0, "first_token_seconds": None,
+        "decode_tokens_per_second": None, "rails": []}
+    return True
+
+
 def service():
     assert importlib.util.find_spec("scrutare.engine.review"), "full review service is missing"
     return importlib.import_module("scrutare.engine.review")
@@ -51,6 +63,8 @@ def test_full_delivery_persists_exact_result_manifest_and_replays(
     poster = FakePoster()
     result = invoke(tmp_path, raw=raw, client=poster)
     data = result.to_dict()
+    # Deliberate: every review now reports its timing, measured before anything is posted.
+    assert timing_without_sessions(dict(data.pop("timing")))
     assert data == {
         "schema_version": 1, "scrutare_version": __version__, "status": "posted",
         "run_dir": str(result.run_dir), "head_sha": SHA, "verdict": want,
@@ -443,6 +457,7 @@ def test_replies_only_run_with_nothing_to_reassess_posts_nothing(tmp_path, monke
     result = discuss(tmp_path, poster, capture, replies_only=True)
     assert len(poster.creates) == 1 and poster.replies == []
     data = result.to_dict()
+    assert timing_without_sessions(dict(data.pop("timing")))
     assert data == {
         "schema_version": 1, "scrutare_version": __version__, "status": "unchanged",
         "run_dir": str(result.run_dir), "head_sha": SHA, "verdict": "changes_requested",

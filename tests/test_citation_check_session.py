@@ -107,7 +107,7 @@ def test_the_default_sends_the_pinned_invocation_and_records_nothing(capture, tm
     assert "citation_check" not in invocation and "citation_check" not in result
     assert sorted(path.name for path in attempt.iterdir()) == [
         "cwd", "findings.schema.json", "home", "invocation.json", "result.json",
-        "session.json", "stderr.txt", "stdout.jsonl", "tmp"]
+        "session.json", "stderr.txt", "stdout.jsonl", "timing.json", "tmp"]
     # The session check differs from it only by the budget and the check flags, appended.
     _, checked = run(second, second.parent, SESSION, output=VALID)
     with_check = load(checked / "invocation.json")["argv"]
