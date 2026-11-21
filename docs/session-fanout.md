@@ -123,7 +123,12 @@ counts nare's constrained-turn `progress` records into `result.json`; such a
 record on a session that did not ask for the constraint is a protocol failure.
 The constraint is sent on either provider that the runtime's `structured_output`
 entry names: the openai rail, and on contract 3 runtimes that list it the
-anthropic rail.
+anthropic rail. The `json_object` and `tool_call` encodings (openai rails only)
+add `--structured-output json_object` or `--structured-output tool_call`
+instead, and are offered only when the entry's `provider_modes` (nare
+2026.11.107) lists the mode for openai and the advertised flag lists it among
+its choices. An entry without `provider_modes` offers `json_schema` alone, as
+before. Each constrained-turn record must name the rail's own encoding.
 A rail with [`cache_breakpoints`](config.md#prompt-cache-breakpoints-opt-in) or
 [`effort`](config.md#reasoning-effort-opt-in) adds `--cache-breakpoints` or
 `--effort LEVEL` to each of its sessions, and records them like

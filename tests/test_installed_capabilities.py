@@ -37,8 +37,14 @@ def test_installed_runtime_advertises_every_option_scrutare_gates(tmp_path, inst
     assert capability.advertises("--structured-output", "json_schema")
     assert capability.advertises("--effort", "high")
     assert not capability.advertises("--effort", "extreme")
-    assert capability.structured_output == ("json_schema",)
+    assert capability.structured_output == ("json_schema", "json_object", "tool_call")
     assert capability.structured_output_providers == ("anthropic", "openai")
+    # nare 2026.11.107 offers the json_object and tool_call encodings on openai only.
+    for mode in ("json_object", "tool_call"):
+        assert capability.advertises("--structured-output", mode)
+    assert capability.structured_output_for("openai") == (
+        "json_schema", "json_object", "tool_call")
+    assert capability.structured_output_for("anthropic") == ("json_schema",)
     assert capability.proxy_num_retries
     # The release lists its capacity options. No session is sent one unless the review's
     # configuration asks for a capacity mode.

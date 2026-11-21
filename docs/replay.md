@@ -72,12 +72,13 @@ an `invocation.json` or a `stdout.jsonl`); an attempt that was never launched
 (for example, refused admission) sent nothing and is skipped. A configured
 persona's recorded rail, including `structured_output`, must equal that
 persona's configured rail; a reserved executor (assessor, chair) must use one
-of the configured rails. Argv must carry `--structured-output json_schema`
-exactly when that rail does, and a launched session without `invocation.json`
-cannot show either (`structured_output_unrecorded`, invalid). Its `result.json`
-must carry `{"mode", "constrained_turns"}` exactly when the rail does, with an
-integer count for a complete or partial session that equals the constrained-turn
-records in the retained `stdout.jsonl`; a null count (a session that never
+of the configured rails. Argv must carry `--structured-output MODE` exactly
+when that rail does, with the rail's own encoding (`json_schema`, `json_object`
+or `tool_call`), and a launched session without `invocation.json` cannot show
+either (`structured_output_unrecorded`, invalid). Its `result.json` must carry
+`{"mode", "constrained_turns"}` exactly when the rail does, naming the same
+encoding, with an integer count for a complete or partial session that equals
+the constrained-turn records of that encoding in the retained `stdout.jsonl`; a null count (a session that never
 started) allows none (`structured_output_result_disagrees`, invalid). A
 launched session without `result.json`, a counted session without
 `stdout.jsonl`, or an opted-in run without any session attempt is

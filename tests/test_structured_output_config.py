@@ -7,6 +7,7 @@ import yaml
 
 from scrutare.config import ConfigError, ModelRail, parse_config
 
+EXPECTED = "expected one of json_schema, json_object, tool_call or null"
 OPENAI = "models:\n  default: {provider: openai, base_url: http://localhost:8000/v1, model: m"
 
 
@@ -60,9 +61,9 @@ def test_an_override_can_opt_in_alone():
 
 @pytest.mark.parametrize(("text", "path"), [
     (OPENAI + ", structured_output: grammar}\n",
-     "models.default.structured_output: expected one of json_schema"),
+     "models.default.structured_output: " + EXPECTED),
     (OPENAI + ", structured_output: true}\n",
-     "models.default.structured_output: expected one of json_schema"),
+     "models.default.structured_output: " + EXPECTED),
 ])
 def test_unsupported_modes_fail_at_configuration(text, path):
     with pytest.raises(ConfigError, match=path):
@@ -70,7 +71,7 @@ def test_unsupported_modes_fail_at_configuration(text, path):
 
 
 def test_programmatic_rails_refuse_an_unsupported_mode():
-    with pytest.raises(ConfigError, match="structured_output: expected one of json_schema"):
+    with pytest.raises(ConfigError, match="structured_output: " + EXPECTED):
         ModelRail("openai", None, "m", cast(Any, "grammar"))
 
 
@@ -86,3 +87,51 @@ def test_the_anthropic_rail_accepts_the_constraint_and_overrides_inherit_it():
     override = mixed.models.for_persona("senior-dev")
     assert (override.provider, override.structured_output) == ("anthropic", "json_schema")
     assert parse_config(yaml.safe_dump(mixed.to_dict())) == mixed
+
+
+@pytest.mark.parametrize("mode", ["json_object", "tool_call"])
+def test_an_openai_rail_accepts_each_answer_encoding_and_overrides_inherit_or_clear_it(mode):
+    # nare 2026.11.107 offers these two encodings on its openai rail only.
+    config = parse_config(
+        OPENAI + f", structured_output: {mode}}}\n"
+        "  overrides:\n    security: {model: other}\n    devops: {structured_output: null}\n"
+        "    junior-dev: {structured_output: json_schema}\n")
+    assert config.models.default.structured_output == mode
+    assert config.models.for_persona("security").structured_output == mode
+    assert config.models.for_persona("devops").structured_output is None
+    assert config.models.for_persona("junior-dev").structured_output == "json_schema"
+    canonical = config.to_dict()["models"]
+    assert canonical["default"]["structured_output"] == mode
+    assert canonical["overrides"]["security"]["structured_output"] == mode
+    assert canonical["overrides"]["devops"]["structured_output"] is None
+    assert parse_config(yaml.safe_dump(config.to_dict())) == config
+    assert ModelRail("openai", None, "m", mode).structured_output == mode
+
+
+@pytest.mark.parametrize("mode", ["json_object", "tool_call"])
+def test_the_anthropic_rail_refuses_the_openai_only_encodings_at_load(mode):
+    with pytest.raises(ConfigError, match=(
+            f"^models.default.structured_output: {mode} requires provider openai$")):
+        parse_config(f"models: {{default: {{model: m, structured_output: {mode}}}}}\n")
+    with pytest.raises(ConfigError, match=(
+            f"^models.overrides.security.structured_output: {mode} requires provider openai$")):
+        parse_config(OPENAI + "}\n  overrides:\n"
+                     f"    security: {{provider: anthropic, structured_output: {mode}}}\n")
+    with pytest.raises(ConfigError, match=f"structured_output: {mode} requires provider openai"):
+        ModelRail("anthropic", None, "m", cast(Any, mode))
+
+
+@pytest.mark.parametrize("mode", ["json_object", "tool_call"])
+def test_an_anthropic_override_cannot_inherit_an_openai_only_encoding(mode):
+    text = (OPENAI + f", structured_output: {mode}}}\n"
+            "  overrides:\n    senior-dev: {provider: anthropic")
+    with pytest.raises(ConfigError, match=(
+            f"^models.overrides.senior-dev.structured_output: {mode} requires provider openai "
+            r"\(inherited from models.default; set it to null to clear it\)$")):
+        parse_config(text + "}\n")
+    cleared = parse_config(text + ", structured_output: null}\n")
+    assert cleared.models.for_persona("senior-dev").structured_output is None
+    assert cleared.models.default.structured_output == mode
+    # An anthropic override may still choose the encoding both rails offer.
+    chosen = parse_config(text + ", structured_output: json_schema}\n")
+    assert chosen.models.for_persona("senior-dev").structured_output == "json_schema"

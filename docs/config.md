@@ -31,7 +31,7 @@ Errors identify a field path or YAML location without echoing field values.
 | `models.default.provider` | `anthropic`, `openai` | `anthropic` |
 | `models.default.base_url` | HTTP or HTTPS URL with a host, or `null` | `null` |
 | `models.default.model` | Explicit nonempty string | Required |
-| `models.default.structured_output` | `json_schema`, or `null` | `null` (off) |
+| `models.default.structured_output` | `json_schema`; `json_object` or `tool_call` (requires `provider: openai`); or `null` | `null` (off) |
 | `models.default.max_output_tokens` | Positive integer, or `null` | `null` (off) |
 | `models.default.proxy_num_retries` | Nonnegative integer (requires `provider: openai`), or `null` | `null` (off) |
 | `models.default.request_retries` | Integer from 0 to 10, or `null` | `null` (never resend) |
@@ -161,13 +161,55 @@ that defines no tools. Treat the anthropic constraint as unproven until a live
 run confirms the correction turn is accepted. A refusal fails the session as a
 provider failure; it cannot produce a wrong answer.
 
+### Answer encodings on the openai rail
+
+Some self-hosted backends (vLLM behind LiteLLM, for example) are stronger at a
+forced tool call than at `response_format` json_schema, or support one and not
+the other. An openai rail can choose the encoding nare uses on the same
+constrained turns:
+
+```yaml
+models:
+  default:
+    provider: openai
+    base_url: https://litellm.example/v1
+    model: onprem/glm-5.3-flash
+    structured_output: tool_call
+```
+
+| Value | What nare sends on a constrained turn |
+| --- | --- |
+| `json_schema` | `response_format` `json_schema` with the session's schema, `strict: true` |
+| `json_object` | `response_format: {"type": "json_object"}`: JSON syntax only, the schema is checked locally |
+| `tool_call` | only the forced `nare_final_answer` function, whose parameters are the session's schema, with `parallel_tool_calls: false` |
+
+The session is launched with `--structured-output json_object` or
+`--structured-output tool_call` in place of `json_schema`, and nothing else in
+its argv changes. A `tool_call` answer function is never an action: nare
+decodes exactly one call with no accompanying text into the answer text, and a
+missing, extra or malformed call spends the same correction as a schema-invalid
+answer. In every encoding nare still validates the answer against the schema,
+its usage, truncation and repetition guards stay active, and Scrutare's own
+validation decides as before.
+
+Both values need nare 2026.11.107 or newer, whose `nare contract` lists each
+provider's modes under `structured_output.provider_modes`; the pinned release
+does. A review that asks for one on a runtime that does not list it for the
+openai rail is refused before any session launches, and a review that never
+asks is unaffected. nare offers neither on the anthropic rail, so
+configuration refuses them there at load:
+`models.default.structured_output: tool_call requires provider openai`. An
+anthropic override does not inherit one from an openai default: the load error
+says so, and the override clears it with `structured_output: null` or chooses
+`json_schema`.
+
 When no rail sets it, the canonical configuration, rail records,
 `invocation.json` and `result.json` are byte-identical to earlier releases.
 When any rail sets it, every rail in `config.to_dict()` records
 `structured_output` (with `null` where it is off), each session's
 `invocation.json` records it in `rail` and its argv, and `result.json` records
-`{"mode": "json_schema", "constrained_turns": N}` (`null` when the session never
-reported). [Replay](replay.md) reports `structured_output_unrecorded` or
+`{"mode": MODE, "constrained_turns": N}`, where `MODE` is the rail's encoding
+(`constrained_turns` is `null` when the session never reported). [Replay](replay.md) reports `structured_output_unrecorded` or
 `structured_output_result_disagrees` as invalid when a session's record does not
 match a configured rail, and `structured_output_evidence_missing` as incomplete
 when a launched session's record is missing or an opted-in run has no session
@@ -216,6 +258,48 @@ overrides like the other rail fields; an override can set it alone or clear an
 inherited value with `null`. Every supported nare release (2026.10.0 and newer)
 accepts `--max-tokens`, so no capability check is needed. With the cap off, a
 backend's own length stop remains a `provider` failure, as before.
+
+### Answer encodings on the openai rail
+
+Some self-hosted backends (vLLM behind LiteLLM, for example) are stronger at a
+forced tool call than at `response_format` json_schema, or support one and not
+the other. An openai rail can choose the encoding nare uses on the same
+constrained turns:
+
+```yaml
+models:
+  default:
+    provider: openai
+    base_url: https://litellm.example/v1
+    model: onprem/glm-5.3-flash
+    structured_output: tool_call
+```
+
+| Value | What nare sends on a constrained turn |
+| --- | --- |
+| `json_schema` | `response_format` `json_schema` with the session's schema, `strict: true` |
+| `json_object` | `response_format: {"type": "json_object"}`: JSON syntax only, the schema is checked locally |
+| `tool_call` | only the forced `nare_final_answer` function, whose parameters are the session's schema, with `parallel_tool_calls: false` |
+
+The session is launched with `--structured-output json_object` or
+`--structured-output tool_call` in place of `json_schema`, and nothing else in
+its argv changes. A `tool_call` answer function is never an action: nare
+decodes exactly one call with no accompanying text into the answer text, and a
+missing, extra or malformed call spends the same correction as a schema-invalid
+answer. In every encoding nare still validates the answer against the schema,
+its usage, truncation and repetition guards stay active, and Scrutare's own
+validation decides as before.
+
+Both values need nare 2026.11.107 or newer, whose `nare contract` lists each
+provider's modes under `structured_output.provider_modes`; the pinned release
+does. A review that asks for one on a runtime that does not list it for the
+openai rail is refused before any session launches, and a review that never
+asks is unaffected. nare offers neither on the anthropic rail, so
+configuration refuses them there at load:
+`models.default.structured_output: tool_call requires provider openai`. An
+anthropic override does not inherit one from an openai default: the load error
+says so, and the override clears it with `structured_output: null` or chooses
+`json_schema`.
 
 When no rail sets it, the canonical configuration, rail records,
 `invocation.json` and `result.json` are byte-identical to earlier releases.

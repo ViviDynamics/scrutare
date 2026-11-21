@@ -16,8 +16,10 @@ from scrutare.personas.names import DEFAULT_PERSONA_NAMES, SELECTABLE_PERSONA_NA
 
 Strategy = Literal["panel", "iterative", "debate"]
 Provider = Literal["anthropic", "openai"]
-StructuredOutput = Literal["json_schema"]
-STRUCTURED_OUTPUT_MODES: tuple[StructuredOutput, ...] = ("json_schema",)
+StructuredOutput = Literal["json_schema", "json_object", "tool_call"]
+STRUCTURED_OUTPUT_MODES: tuple[StructuredOutput, ...] = ("json_schema", "json_object", "tool_call")
+# Answer encodings nare offers on its openai rail only (nare 2026.11.107).
+OPENAI_STRUCTURED_OUTPUT_MODES: tuple[StructuredOutput, ...] = ("json_object", "tool_call")
 Effort = Literal["low", "medium", "high", "xhigh", "max"]
 EFFORT_LEVELS: tuple[Effort, ...] = ("low", "medium", "high", "xhigh", "max")
 # Longest wait between one request's resends when a rail opts in to request retries and
@@ -61,7 +63,8 @@ class ModelRail:
     provider: Provider
     base_url: str | None
     model: str
-    # Opt-in decode-time schema constraint, sent where the inspected nare advertises the rail.
+    # Opt-in answer encoding (json_schema, or json_object and tool_call on openai), sent where
+    # the inspected nare advertises that mode for the rail's provider.
     structured_output: StructuredOutput | None = None
     # Opt-in per-request output token cap, passed to nare as --max-tokens on every request.
     max_output_tokens: int | None = None
@@ -605,9 +608,12 @@ def _personas(value: object) -> tuple[str | PersonaDefinition, ...]:
 def _structured_output(value: object, provider: str, path: str) -> None:
     if value is None:
         return
-    # Either rail may ask; whether the installed nare can send it is decided at inspection.
+    # Either rail may ask for json_schema; whether the installed nare can send a mode is
+    # decided at inspection. The other encodings exist on nare's openai rail only.
     if not isinstance(value, str) or value not in STRUCTURED_OUTPUT_MODES:
         raise ConfigError(f"{path}: expected one of {', '.join(STRUCTURED_OUTPUT_MODES)} or null")
+    if value in OPENAI_STRUCTURED_OUTPUT_MODES and provider != "openai":
+        raise ConfigError(f"{path}: {value} requires provider openai")
 
 
 def _max_output_tokens(value: object, path: str) -> None:

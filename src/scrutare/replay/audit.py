@@ -7,7 +7,14 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
-from scrutare.config import CATEGORIES, ConfigError, ReviewConfig, _load_yaml, parse_config
+from scrutare.config import (
+    CATEGORIES,
+    STRUCTURED_OUTPUT_MODES,
+    ConfigError,
+    ReviewConfig,
+    _load_yaml,
+    parse_config,
+)
 from scrutare.findings.dedupe import MergedFinding
 from scrutare.findings.models import Finding
 from scrutare.findings.verdict import Degradation, derive_verdict
@@ -1194,9 +1201,10 @@ def _structured_output_issues(run_dir: Path, config_data: object) -> tuple[Audit
             mode = rail.get("structured_output")
             recorded_rail = (rail.get("provider"), rail.get("model"), rail.get("base_url"), mode)
             persona = document.get("persona")
-            if ("structured_output" in rail and mode != "json_schema") or recorded_rail not in (
-                    {key(config.models.for_persona(persona))} if persona in personas
-                    else configured):
+            if (("structured_output" in rail and mode not in STRUCTURED_OUTPUT_MODES)
+                    or recorded_rail not in (
+                        {key(config.models.for_persona(persona))} if persona in personas
+                        else configured)):
                 raise ValueError
             flags = [index for index, value in enumerate(argv) if value == "--structured-output"]
             if (len(flags) != (mode is not None)
