@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import hashlib
 import json
@@ -21,6 +22,8 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 import jwt
 
 from scrutare.config import ConfigError, ReviewConfig, parse_config
+from scrutare.engine.preflight import PreflightError, PreflightReport, run_preflight
+from scrutare.engine.session_models import NareRuntime
 from scrutare.interfaces.app import (
     MAX_BODY,
     REPLY_ACTIONS,
@@ -34,6 +37,9 @@ from scrutare.interfaces.app import (
 )
 
 RequestFn = Callable[[str, str, str, dict[str, Any] | None], dict[str, Any]]
+PreflightFn = Callable[[ReviewConfig, "AppSettings", Path], "PreflightReport | None"]
+# The longest a job waits for its next preflight, however many it has failed.
+PREFLIGHT_MAX_DELAY = 3600
 
 
 class NoRedirect(HTTPRedirectHandler):
@@ -212,6 +218,17 @@ def _config_origins(config: ReviewConfig, settings: AppSettings) -> None:
             raise AppError("repository model origin is not authorized by the App operator")
 
 
+def app_preflight(config: ReviewConfig, settings: AppSettings,
+                  nare: Path) -> PreflightReport | None:
+    """The shared route preflight, sending credentials only to the operator's origins."""
+    return asyncio.run(run_preflight(config, NareRuntime(nare), origins=settings.model_origins))
+
+
+def preflight_delay(settings: AppSettings, failures: int) -> int:
+    """Seconds before a job's next preflight after this many failed ones: doubling, capped."""
+    return int(min(settings.preflight_backoff * 2 ** (failures - 1), PREFLIGHT_MAX_DELAY))
+
+
 def worker_environment(token: str) -> dict[str, str]:
     environment = {key: os.environ[key] for key in (
         "PATH", "LANG", "LC_ALL", "TZ", "SSL_CERT_FILE", "SSL_CERT_DIR",
@@ -296,18 +313,19 @@ def recover_jobs(settings: AppSettings, store: JobStore) -> int:
 
 
 def work_once(settings: AppSettings, store: JobStore, *, client: Any = None,
-              runner: Any = subprocess.run) -> bool:
-    """Recover orphaned leases, then run at most one queued job."""
+              runner: Any = subprocess.run, preflight: PreflightFn = app_preflight) -> bool:
+    """Recover orphaned leases, then run at most one queued job that is due."""
     recover_jobs(settings, store)
     job = store.claim()
     if job is None:
         return False
-    run_job(settings, store, job, client=client, runner=runner)
+    run_job(settings, store, job, client=client, runner=runner, preflight=preflight)
     return True
 
 
 def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
-            client: Any = None, runner: Any = subprocess.run) -> None:
+            client: Any = None, runner: Any = subprocess.run,
+            preflight: PreflightFn = app_preflight) -> None:
     """Run the same installed engine; retain every job directory on success or failure."""
     root = (settings.data_dir / "work" / job["id"]).absolute()
     repository_root = _repository_root(settings, job)
@@ -361,6 +379,29 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
                          {"reason": "replies are not enabled for this repository"})
             return
         _config_origins(config, settings)
+        nare = os.environ.get("SCRUTARE_APP_NARE_EXECUTABLE", "nare")
+        checked = False
+        if config.models.preflight.enabled:
+            # Opt-in, before the review CLI: a route that cannot answer starts no review,
+            # charges nothing and posts nothing. The job is queued again with a backoff.
+            failure: PreflightError | None = None
+            try:
+                report = preflight(config, settings, Path(nare))
+            except PreflightError as error:
+                report, failure = error.report, error
+            if report is not None:
+                history = store.record_preflight(job["id"], {
+                    "at": round(time.time(), 3), **report.to_dict()})
+                failures = sum(record["status"] == "failed" for record in history)
+                if failure is not None:
+                    if failures < settings.preflight_attempts:
+                        store.defer(job["id"], time.time() + preflight_delay(settings, failures))
+                        return
+                    store.finish(job["id"], "not_started", {
+                        "reason": failure.reason, "delivery": "not_sent",
+                        "preflight": history, "work_dir": str(root)})
+                    return
+                checked = True
         config_path = root / "scrutare.yaml"
         config_path.write_bytes(raw)
         environment = worker_environment(token)
@@ -368,10 +409,12 @@ def run_job(settings: AppSettings, store: JobStore, job: dict[str, Any], *,
         argv = [sys.executable, "-m", "scrutare", "review", "--pr",
                 f"https://github.com/{job['repository']}/pull/{job['number']}",
                 "--config", str(config_path), "--nare-executable",
-                os.environ.get("SCRUTARE_APP_NARE_EXECUTABLE", "nare")]
+                nare]
         if reply:
             # The head was reviewed already. Post again only for a trusted contest.
             argv.append("--replies-only")
+        if checked:
+            argv.append("--skip-preflight")
         if settings.whole_review_retry:
             argv.extend(("--whole-review-retry", "--expected-head",
                          api.head(job["repository"], job["number"], token)))

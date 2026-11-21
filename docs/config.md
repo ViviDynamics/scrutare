@@ -40,6 +40,7 @@ Errors identify a field path or YAML location without echoing field values.
 | `models.default.effort` | `low`, `medium`, `high`, `xhigh`, `max`, or `null` | `null` (not sent) |
 | `models.overrides` | Mapping from a configured persona name to partial model settings | `{}` |
 | `models.capacity` | Capacity queueing on openai rails: `mode` `off`, `fixed` or `adaptive`, plus that mode's values | `mode: off` |
+| `models.preflight` | Route checks before anything is claimed: `route` and `request` booleans, `timeout_seconds` up to 300 | both `false` (off) |
 | `verdict.blocking_categories` | List drawn from the fixed vocabulary | `correctness`, `security`, `regression` |
 | `verdict.advisory_categories` | List drawn from the fixed vocabulary | `style`, `consistency`, `docs` |
 | `github.post_mode` | `review` (blocking review), `comment` (never blocks) | `review` |
@@ -562,6 +563,74 @@ either: the App's job timeout and a CI job's own limit still apply.
 With `mode: off` or no block, argv, the canonical configuration, every record
 and the session's wait are what they were. [Replay](replay.md) audits the flags
 and the counters of a run that used the block.
+
+## Route preflight (opt-in)
+
+A self-hosted route can fail before the model is ever asked: a gateway that
+answers 502, a DNS timeout inside a cluster, a model the proxy no longer
+serves. By default that failure is found by a review's first session, after the
+review has captured its run, admitted its budget and, under the App, consumed
+its job. A preflight checks the route first:
+
+```yaml
+models:
+  default:
+    provider: openai
+    base_url: https://litellm.example/v1
+    model: your-model
+  preflight:
+    route: true           # GET {base_url}/models must list the model
+    request: false        # one tiny model request through nare
+    timeout_seconds: 30   # bound for each check, at most 300 (default 30)
+```
+
+- `route` sends `GET {base_url}/models` on each distinct openai route, with the
+  rail's credential in the `Authorization` header, and requires the configured
+  model among the listed ids. It is not a model request: no prompt, no tokens.
+  The anthropic rail is skipped with a recorded reason, because its route is
+  the vendor's own API. At least one rail must be openai.
+- `request` sends one tiny request through nare on each distinct rail, with the
+  rail's own options (`structured_output`, `max_output_tokens`, retries,
+  `effort` and the rest), tools off and a one-field schema. Because the run
+  offers no tools, nare constrains every turn, so the rail's answer encoding is
+  exercised. This is a model call and is billed like one. Its usage is recorded
+  in the preflight report, not charged to the review budget.
+
+The checks run before anything is claimed: before the CLI reads GitHub or
+creates a run directory, before the App starts the review CLI, and before an
+evaluation run creates its output directory. Redirects are refused, ambient
+proxy variables are not used (nare's sessions run without them too), and the
+credential never appears on argv or in a file. Under the App, a route outside
+`SCRUTARE_APP_MODEL_ORIGINS` is never asked.
+
+A failure ends the command with `status: not_started` and a typed `reason`,
+and nothing is charged or posted:
+
+| Reason | Check | Meaning |
+| --- | --- | --- |
+| `origin_refused` | both | The rail's origin is outside the App's allowlist |
+| `credential_missing` | route | `OPENAI_API_KEY` is not set |
+| `route_unreachable` | route | No answer within the bound: connection, DNS, TLS or timeout |
+| `gateway_error` | route | HTTP 5xx |
+| `credential_refused` | route | HTTP 401 or 403 |
+| `route_refused` | route | Any other non-2xx answer, or a redirect |
+| `route_invalid` | route | The answer is not an OpenAI-style model list |
+| `model_missing` | route | The list does not name the configured model |
+| `runtime_refused` | request | nare is absent, older than contract 3, or cannot send the rail's options |
+| `request_failed` | request | nare's model request failed (`stop_reason` null) |
+| `request_timeout` | request | No answer within the bound |
+| `answer_invalid` | request | The model answered, but not with the schema's answer |
+
+`request_failed` covers both a backend that refuses the answer encoding and a
+gateway failure: nare reports which only in its error text, which a caller must
+not parse. A separate `encoding_refused` reason waits on nare reporting the
+failure's status ([nare#314](https://github.com/ViviDynamics/nare/issues/314)).
+
+The CLI prints the not-started document to stdout and exits 4; the evaluation
+`run` command does the same. The App records every preflight result on the job
+and retries a failed one with a backoff; see [the App guide](app.md#jobs).
+Without the block, or with both checks off, no check runs, and argv, requests,
+the canonical configuration and every record are what they were.
 
 ## Citation correction turn (opt-in)
 

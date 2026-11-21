@@ -39,6 +39,7 @@ GitHub access. See
 | 0 | Review delivery confirmed, result and manifest persisted. Applies to approval and changes requested. |
 | 1 | Configuration, runtime, capture, execution, posting or required persistence failed. |
 | 2 | Command-line usage error. |
+| 4 | The opt-in route preflight failed; nothing was started. Stdout is a `status: not_started` document with the `reason`. See [the configuration reference](config.md#route-preflight-opt-in). |
 | 130 | Interrupted; owned session processes are cleaned up. |
 
 Success writes exactly the UTF-8 bytes in `result.json` to stdout. The JSON

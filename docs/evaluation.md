@@ -34,6 +34,13 @@ session outcomes even when cancellation prevents a panel aggregate from being wr
 Aggregate and session counters are compared as cumulative evidence, never added
 together; incomplete accounting remains an explicit lower bound. Engine evidence and artifact manifests remain replayable.
 
+A configuration with `models.preflight`
+([configuration](config.md#route-preflight-opt-in)) checks the route before the
+output directory is created, since that directory is the job's one-run claim. A
+failed check prints a `status: not_started` document with its `reason`, exits 4
+and leaves no output directory, so the job can be started again unchanged. A
+passed check is recorded under `preflight` in `snapshot.json`.
+
 Only diff, files, and captured metadata are copied to run artifacts. Production input
 preparation restricts nare's read tool to the filtered `review-inputs` directory.
 Gold labels and base/head fixture trees are evaluator-only files outside that root.

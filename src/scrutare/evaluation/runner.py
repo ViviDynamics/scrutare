@@ -23,6 +23,7 @@ from scrutare.engine import assessment_inputs, discussion_inputs
 from scrutare.engine.assessment_inputs import assessor_persona
 from scrutare.engine.budgets import ReviewBudgetLedger
 from scrutare.engine.nare_session import inspect_nare_runtime, require_structured_output
+from scrutare.engine.preflight import run_preflight
 from scrutare.engine.recovery import (
     RULE_A,
     attempt_record,
@@ -261,6 +262,9 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
     label_hashes = {case.id: hashlib.sha256(case.labels.read_bytes()).hexdigest()
                     for case in cases}
     output = output.absolute()
+    # Opt-in, and before the output directory, which is this job's one-run claim: a route
+    # that cannot answer raises PreflightError having claimed and spent nothing.
+    preflight = await run_preflight(config, runtime)
     output.mkdir(parents=True, exist_ok=False)
     snapshot: dict[str, Any] = {
         'schema_version': 1, 'scrutare_version': __version__, 'evidence_kind': evidence_kind,
@@ -306,6 +310,8 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                       else {})}
                   for case in cases],
     }
+    if preflight is not None:
+        snapshot['preflight'] = preflight.to_dict()
     if qualification_rule_a:
         snapshot['qualification'] = RULE_A
     def prepare(directory: Path, case: Case, conf: ReviewConfig) -> PreparedReviewInputs:
