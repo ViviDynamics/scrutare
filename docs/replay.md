@@ -213,9 +213,13 @@ must be well formed and agree with the retained evidence: its provider and
 model are its invocation's recorded rail, `invocations` counts the correction
 stream, `tokens` and `output_tokens` are the result's usage, the retry count and
 wait sum are recomputed from the retained streams' retry records, and the
-capacity waits are the result's `capacity` counters, or 0 without them
-(`timing_disagrees`, invalid). The run's record must be exactly the totals and
-per-rail sums of its session records, and its `wall_seconds` must not be
+capacity waits are the result's `capacity` counters, or 0 without them, and a
+version 2 record's `requests` block is recomputed from the `request_timing` of
+the retained `stdout.jsonl` and `correction.stdout.jsonl` result lines, with
+both derived values following from it (`timing_disagrees`, invalid). A version
+1 record has no block and is checked as before, even beside a stream that
+carries request timing. The run's record must be exactly the totals,
+request timing sums and per-rail sums of its session records, and its `wall_seconds` must not be
 shorter than its longest session (`timing_disagrees`, invalid). A run with
 session records and no run record (an engine run outside a review, such as an
 evaluation) audits its sessions only. Runs without any record are not audited,

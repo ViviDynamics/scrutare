@@ -1,6 +1,7 @@
 """Review latency records: what each session and review writes, and how replay checks it."""
 
 import json
+import re
 
 import pytest
 from test_capacity_config import FIXED
@@ -9,8 +10,9 @@ from test_rail_options_session import RETRY, run
 from test_review_inputs import capture as capture
 
 from scrutare.config import ModelRail
-from scrutare.engine.session_output import retry_events
+from scrutare.engine.session_output import request_timing_events, retry_events
 from scrutare.engine.timing import (
+    RequestTiming,
     SessionTiming,
     TimingError,
     footer_line,
@@ -51,12 +53,13 @@ def test_a_launched_session_records_its_timing_beside_its_result(capture, tmp_pa
     assert outcome.status == "complete"
     timing = load(attempt / "timing.json")
     assert timing.pop("wall_seconds") > 0
+    # This scripted nare predates request timing, so its result carries none.
     assert timing == {
-        "schema_version": 1, "provider": "openai", "model": "m", "invocations": 1,
+        "schema_version": 2, "provider": "openai", "model": "m", "invocations": 1,
         "tokens": outcome.usage.total, "output_tokens": outcome.usage.output, "retries": 0,
         "retry_wait_seconds": 0.0, "capacity_wait_seconds": 0.0,
         "capacity_slot_wait_seconds": 0.0, "first_token_seconds": None,
-        "decode_tokens_per_second": None}
+        "decode_tokens_per_second": None, "requests": None}
     # A measurement, never part of the outcome nor of result.json.
     assert "timing" not in load(attempt / "result.json")
     assert codes(capture) == []
@@ -94,6 +97,100 @@ def test_retry_events_skip_what_they_cannot_read():
     assert retry_events(b"") == (0, 0.0)
 
 
+# Request timing
+
+# What nare 2026.11.109's result line reports: two streamed requests, one cut off for
+# repetition (a first token, but no generation window).
+REPORTED = {"requests": 2, "timed": 2, "headers_seconds": 0.4, "total_seconds": 7.5,
+            "first_tokens": 2, "first_token_seconds": 4.2, "generation_seconds": 3.0,
+            "generation_output_tokens": 52}
+UNSTREAMED = {"requests": 1, "timed": 1, "headers_seconds": 0.2, "total_seconds": 3.0,
+              "first_tokens": 0, "first_token_seconds": None, "generation_seconds": None,
+              "generation_output_tokens": 0}
+UNTIMED = {"requests": 0, "timed": 0, "headers_seconds": None, "total_seconds": None,
+           "first_tokens": 0, "first_token_seconds": None, "generation_seconds": None,
+           "generation_output_tokens": 0}
+
+
+def result_line(request_timing=None, **fields):
+    document = {"type": "result", "status": "done", **fields}
+    if request_timing is not None:
+        document["request_timing"] = request_timing
+    return json.dumps(document).encode()
+
+
+def test_a_session_with_request_timing_records_and_replays_it(capture, tmp_path):
+    outcome, _, attempt = launch(capture, native(tmp_path, request_timing=REPORTED))
+    assert outcome.status == "complete"
+    timing = load(attempt / "timing.json")
+    assert timing["schema_version"] == 2 and timing["requests"] == REPORTED
+    assert (timing["first_token_seconds"], timing["decode_tokens_per_second"]) == (
+        2.1, 17.333)
+    assert codes(capture) == []
+    written = write_review_timing(capture, 30.0)
+    assert written["requests"] == REPORTED
+    assert (written["first_token_seconds"], written["decode_tokens_per_second"]) == (
+        2.1, 17.333)
+    assert codes(capture) == []
+
+
+def test_derived_values_are_null_when_nothing_measured_them():
+    unstreamed = RequestTiming.from_dict(UNSTREAMED)
+    assert (unstreamed.mean_first_token_seconds, unstreamed.decode_tokens_per_second) == (
+        None, None)
+    untimed = RequestTiming.from_dict(UNTIMED)
+    assert (untimed.mean_first_token_seconds, untimed.decode_tokens_per_second) == (None, None)
+    # nare's fake transport, streamed: zeros, so a first token but a zero generation window.
+    zeros = RequestTiming(1, 1, 0.0, 0.0, 1, 0.0, 0.0, 9)
+    assert (zeros.mean_first_token_seconds, zeros.decode_tokens_per_second) == (0.0, None)
+    assert session(requests=unstreamed).to_dict()["first_token_seconds"] is None
+
+
+def test_request_timing_sums_add_and_keep_nulls():
+    total = RequestTiming.from_dict(UNSTREAMED) + RequestTiming.from_dict(REPORTED)
+    assert total.to_dict() == {
+        "requests": 3, "timed": 3, "headers_seconds": 0.6, "total_seconds": 10.5,
+        "first_tokens": 2, "first_token_seconds": 4.2, "generation_seconds": 3.0,
+        "generation_output_tokens": 52}
+    assert (RequestTiming.from_dict(UNTIMED) + RequestTiming.from_dict(UNTIMED)).to_dict() == (
+        UNTIMED)
+
+
+def test_request_timing_events_sum_every_result_line_of_a_corrected_session():
+    # A session resumed for a correction turn has one result line per invocation.
+    first, second = result_line(REPORTED), result_line(UNSTREAMED)
+    event = json.dumps({"type": "cost", "text": "", "timestamp": "t", "detail": {
+        "timing": {"headers_seconds": 9.0}}}).encode()
+    found = request_timing_events(b"\n".join([event, first, b"", event, second]))
+    assert found == RequestTiming.from_dict(REPORTED) + RequestTiming.from_dict(UNSTREAMED)
+    assert found.requests == 3 and found.mean_first_token_seconds == 2.1
+
+
+@pytest.mark.parametrize("stdout", [
+    b"", b"not json", result_line(), result_line(UNTIMED | {"timed": 1}),
+    result_line(REPORTED | {"extra": 1}), result_line(REPORTED | {"first_token_seconds": None}),
+    result_line(REPORTED | {"total_seconds": -1.0}), result_line(REPORTED | {"requests": True}),
+    json.dumps({"type": "progress", "text": "", "timestamp": "t",
+                "detail": {"request_timing": REPORTED}}).encode(),
+])
+def test_request_timing_events_skip_what_they_cannot_read(stdout):
+    assert request_timing_events(stdout) is None
+    assert request_timing_events(stdout + b"\n" + result_line(REPORTED)) == (
+        RequestTiming.from_dict(REPORTED))
+
+
+@pytest.mark.parametrize("changes", [
+    {"timed": 3}, {"first_tokens": 3}, {"first_token_seconds": None},
+    {"first_tokens": 0}, {"generation_seconds": None}, {"headers_seconds": 0.0001},
+    {"generation_output_tokens": -1}, {"total_seconds": float("nan")},
+])
+def test_a_request_timing_block_must_be_consistent(changes):
+    with pytest.raises(TimingError):
+        RequestTiming.from_dict(REPORTED | changes)
+    with pytest.raises(TimingError):
+        RequestTiming.from_dict(UNTIMED | {"headers_seconds": 0.1})
+
+
 @pytest.mark.parametrize("changes", [
     {"provider": ""}, {"invocations": 0}, {"tokens": -1}, {"output_tokens": 101},
     {"wall_seconds": -0.5}, {"wall_seconds": float("inf")}, {"retries": True},
@@ -105,19 +202,85 @@ def test_a_session_record_must_be_well_formed(changes):
 
 @pytest.mark.parametrize("change", [
     lambda d: d.update(first_token_seconds=0.4),
+    lambda d: d.update(decode_tokens_per_second=20.0),
     lambda d: d.update(extra=1),
     lambda d: d.pop("retries"),
-    lambda d: d.update(schema_version=2),
+    lambda d: d.pop("requests"),
+    lambda d: d.update(schema_version=1),
+    lambda d: d.update(schema_version=3),
     lambda d: d.update(wall_seconds=1.23456),
+    lambda d: d["requests"].update(timed=3),
+    lambda d: d.update(requests=[]),
 ])
 def test_a_session_document_must_be_exactly_the_record(change):
-    document = session().to_dict()
+    document = session(requests=RequestTiming.from_dict(REPORTED)).to_dict()
+    assert SessionTiming.from_dict(json.loads(json.dumps(document))).to_dict() == document
     change(document)
     with pytest.raises(TimingError):
         SessionTiming.from_dict(document)
 
 
+# What PR #143 wrote: no requests block and both derived values null.
+V1_SESSION = {"schema_version": 1, "provider": "openai", "model": "m", "invocations": 1,
+              "wall_seconds": 12.5, "tokens": 100, "output_tokens": 40, "retries": 0,
+              "retry_wait_seconds": 0.0, "capacity_wait_seconds": 0.0,
+              "capacity_slot_wait_seconds": 0.0, "first_token_seconds": None,
+              "decode_tokens_per_second": None}
+
+
+@pytest.mark.parametrize("change", [
+    lambda d: d.update(first_token_seconds=0.4),
+    lambda d: d.update(requests=None),
+    lambda d: d.update(requests=REPORTED),
+])
+def test_version_1_session_records_still_validate_exactly(change):
+    timing = SessionTiming.from_dict(dict(V1_SESSION))
+    assert (timing.schema_version, timing.requests, timing.to_dict()) == (1, None, V1_SESSION)
+    document = dict(V1_SESSION)
+    change(document)
+    with pytest.raises(TimingError):
+        SessionTiming.from_dict(document)
+    with pytest.raises(TimingError):
+        session(schema_version=1, requests=RequestTiming.from_dict(REPORTED))
+
+
 # Replay
+
+
+@pytest.mark.parametrize("change", [
+    # Edited consistently, so the record is well formed but not what the stream reported.
+    lambda d: d.update(requests=UNSTREAMED, first_token_seconds=None,
+                       decode_tokens_per_second=None),
+    lambda d: d.update(requests=None, first_token_seconds=None, decode_tokens_per_second=None),
+    lambda d: d["requests"].update(first_token_seconds=6.0) or d.update(
+        first_token_seconds=3.0),
+    lambda d: d.update(first_token_seconds=2.0),
+])
+def test_request_timing_must_be_what_the_retained_result_reported(capture, tmp_path, change):
+    launch(capture, native(tmp_path, request_timing=REPORTED))
+    attempt = next(capture.glob("**/attempt-0001"))
+    edit(attempt / "timing.json", change)
+    assert codes(capture) == [("timing_disagrees", "timing.json", "invalid")]
+
+
+def test_a_tampered_stream_disagrees_with_the_recorded_request_timing(capture, tmp_path):
+    _, _, attempt = launch(capture, native(tmp_path, request_timing=REPORTED))
+    stream = attempt / "stdout.jsonl"
+    stream.write_bytes(stream.read_bytes().replace(b'"first_token_seconds": 4.2',
+                                                   b'"first_token_seconds": 4.4'))
+    assert codes(capture) == [("timing_disagrees", "timing.json", "invalid")]
+
+
+def test_a_version_1_session_record_replays_unchanged_beside_request_timing(capture, tmp_path):
+    # A run made after nare 2026.11.109 was pinned but before this record version: its stream
+    # carries request timing and its record none. It replays as it did.
+    _, _, attempt = launch(capture, native(tmp_path, request_timing=REPORTED))
+    edit(attempt / "timing.json", lambda d: [d.pop("requests"), d.update(
+        schema_version=1, first_token_seconds=None, decode_tokens_per_second=None)])
+    written = write_review_timing(capture, 30.0)
+    document = review_timing(30.0, read_session_timings(capture), schema_version=1)
+    (capture / "timing.json").write_text(json.dumps(document))
+    assert written["requests"] is None and codes(capture) == []
 
 
 def test_runs_without_timing_are_not_audited(capture, tmp_path):
@@ -137,6 +300,8 @@ def test_runs_without_timing_are_not_audited(capture, tmp_path):
     lambda d: d.update(capacity_wait_seconds=1.0),
     lambda d: d.update(decode_tokens_per_second=10.0),
     lambda d: d.update(wall_seconds="fast"),
+    lambda d: d.update(requests=REPORTED, first_token_seconds=2.1,
+                       decode_tokens_per_second=17.333),
 ])
 def test_a_session_record_must_agree_with_its_retained_evidence(capture, tmp_path, change):
     outcome, _, attempt = launch(capture, native(tmp_path))
@@ -183,7 +348,7 @@ def test_review_totals_and_rails():
                                    retry_wait_seconds=2.0, capacity_slot_wait_seconds=0.5)]
     document = review_timing(20.0, sessions)
     assert document == {
-        "schema_version": 1, "wall_seconds": 20.0, "sessions": 2,
+        "schema_version": 2, "requests": None, "wall_seconds": 20.0, "sessions": 2,
         "session_wall_seconds": 14.75, "longest_session_seconds": 12.5, "tokens": 200,
         "output_tokens": 80, "retries": 1, "retry_wait_seconds": 2.0,
         "capacity_wait_seconds": 0.0, "capacity_slot_wait_seconds": 0.5,
@@ -197,6 +362,31 @@ def test_review_totals_and_rails():
         validate_review_timing(review_timing(10.0, sessions), sessions)
     with pytest.raises(TimingError):
         validate_review_timing(document | {"rails": []}, sessions)
+    # Version 1, as earlier runs wrote it, still validates exactly.
+    old = review_timing(20.0, sessions, schema_version=1)
+    assert set(document) - set(old) == {"requests"} and old["schema_version"] == 1
+    assert validate_review_timing(json.loads(json.dumps(old)), sessions) == old
+    for bad in (old | {"requests": None}, old | {"first_token_seconds": 1.0},
+                {k: v for k, v in document.items() if k != "requests"}):
+        with pytest.raises(TimingError):
+            validate_review_timing(bad, sessions)
+
+
+def test_the_review_record_sums_its_sessions_request_timing():
+    streamed, unstreamed = RequestTiming.from_dict(REPORTED), RequestTiming.from_dict(UNSTREAMED)
+    sessions = [session(requests=streamed), session(requests=unstreamed), session()]
+    document = review_timing(20.0, sessions)
+    assert document["requests"] == (streamed + unstreamed).to_dict()
+    assert (document["first_token_seconds"], document["decode_tokens_per_second"]) == (
+        2.1, 17.333)
+    assert validate_review_timing(json.loads(json.dumps(document)), sessions) == document
+    for bad in ({"requests": REPORTED}, {"first_token_seconds": 1.4},
+                {"decode_tokens_per_second": None}):
+        with pytest.raises(TimingError):
+            validate_review_timing(document | bad, sessions)
+    only_unstreamed = review_timing(20.0, [session(requests=unstreamed)])
+    assert (only_unstreamed["first_token_seconds"],
+            only_unstreamed["decode_tokens_per_second"]) == (None, None)
 
 
 def test_a_malformed_session_record_fails_the_review_record(capture, tmp_path):
@@ -213,3 +403,20 @@ def test_footer_line(seconds, text):
     assert footer_line(document) == f"Review time: {text}, 1 session, 100 tokens (40 output)"
     two = review_timing(seconds, [session(wall_seconds=1.0)] * 2)
     assert footer_line(two).endswith(", 2 sessions, 200 tokens (80 output)")
+
+
+@pytest.mark.parametrize("block,suffix", [
+    (REPORTED, ", first token 2.1 s, 17.3 output tokens per second"),
+    # Only one of the two was measured, so the line reports neither.
+    (UNSTREAMED, ""), (UNTIMED, ""),
+    ({**UNTIMED, "requests": 1, "timed": 1, "headers_seconds": 0.0, "total_seconds": 0.0,
+      "first_tokens": 1, "first_token_seconds": 0.0, "generation_seconds": 0.0,
+      "generation_output_tokens": 0}, ""),
+])
+def test_the_footer_adds_both_measured_values_or_neither(block, suffix):
+    document = review_timing(725, [session(requests=RequestTiming.from_dict(block))])
+    line = footer_line(document)
+    assert line == f"Review time: 12 min 5 s, 1 session, 100 tokens (40 output){suffix}"
+    assert re.fullmatch(r"[A-Za-z0-9 ,.():]+", line)
+    assert footer_line(review_timing(725, [session()], schema_version=1)) == (
+        "Review time: 12 min 5 s, 1 session, 100 tokens (40 output)")

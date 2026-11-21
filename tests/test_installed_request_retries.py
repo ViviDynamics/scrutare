@@ -104,7 +104,9 @@ def test_resent_requests_are_counted_once_through_the_real_transport(
         2, round(sum(r["wait"] for r in retried), 3))
     assert (timing["tokens"], timing["output_tokens"], timing["invocations"]) == (44, 12, 1)
     assert timing["wall_seconds"] >= timing["retry_wait_seconds"]
-    assert (timing["first_token_seconds"], timing["decode_tokens_per_second"]) == (None, None)
+    # Request timing covers the two requests that answered, never the failed attempts.
+    assert timing["requests"] == terminal["request_timing"]
+    assert timing["requests"]["requests"] == 2
 
 
 def test_a_request_that_outlives_its_resends_fails_as_a_provider_failure(

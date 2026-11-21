@@ -157,8 +157,10 @@ docs/app.md.
   development corpus, from real reviews. It needs live runs.
 - [ ] Set the App's deadline and decide concurrency or a smaller self-hosted
   panel (#109) from that report.
-- [ ] Record time to first token and decode rate once nare reports
-  per-request timing (ViviDynamics/nare#315), gated on `nare contract`.
+- [x] Record time to first token and decode rate once nare reports
+  per-request timing (ViviDynamics/nare#315). Done in
+  [request timing adoption](2026-11-21-request-timing-adoption.md): gated on
+  what the stream carries rather than on `nare contract`.
 - [ ] Dollar cost per review stays with #116.
 
 ## What stays unchanged

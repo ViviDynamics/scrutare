@@ -108,7 +108,11 @@ Two campaign settings are not configuration, so no profile can carry them:
   ends its request. Every review now records its
   [timing](config.md#review-timing), which is the evidence a session timeout
   and the App's job deadline should be sized from
-  ([#135](https://github.com/ViviDynamics/scrutare/issues/135)).
+  ([#135](https://github.com/ViviDynamics/scrutare/issues/135)). Since nare
+  2026.11.109 reports per-request timing, a streamed session's record also
+  carries its time to first token and decode rate, so the 15 to 19 tokens per
+  second above can be measured on reviews rather than assumed. No live report
+  exists yet: it needs real reviews on the self-hosted rail.
 - **nare `--max-cutoffs`.** Scrutare pins 0, so a reply cut off at the cap or
   by repetition ends its session. c1 lost one stream to a repetition abort and
   g4 two requests to the cap, but nare's cutoff correction has not been

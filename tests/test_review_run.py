@@ -26,7 +26,7 @@ def timing_without_sessions(document):
     """The run-level timing record of a review whose sessions were all stubbed out."""
     assert document.pop("wall_seconds") >= 0
     assert document == {
-        "schema_version": 1, "sessions": 0, "session_wall_seconds": 0.0,
+        "schema_version": 2, "requests": None, "sessions": 0, "session_wall_seconds": 0.0,
         "longest_session_seconds": 0.0, "tokens": 0, "output_tokens": 0, "retries": 0,
         "retry_wait_seconds": 0.0, "capacity_wait_seconds": 0.0,
         "capacity_slot_wait_seconds": 0.0, "first_token_seconds": None,

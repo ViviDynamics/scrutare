@@ -94,17 +94,21 @@ def slot(limit, waited):
 
 
 def native(tmp_path, *, events="", refusals=0, wait=0.0, limit=None, slot_wait=0.0,
-           counters=True, saved=None, status="done", exit_code=0):
+           counters=True, saved=None, status="done", exit_code=0, request_timing=None):
     """A contract 3, 2026.11.100-shaped scripted nare that accepts the capacity flags.
 
     ``events`` is what it prints before its result; the counters are what its result line
     and saved session report. ``saved`` overrides the saved session's own counters.
+    ``request_timing``, when given, is the per-request timing its result line reports, as
+    nare 2026.11.109 and later do.
     """
     stored = {"capacity_refusals": refusals, "capacity_wait": wait, "capacity_limit": limit,
               "capacity_slot_wait": slot_wait, **(saved or {})}
     reported = (f'"capacity_refusals": {refusals}, "capacity_wait_seconds": {wait}, '
                 f'"capacity_limit": {limit}, "capacity_slot_wait_seconds": {slot_wait}, '
                 if counters else "")
+    if request_timing is not None:
+        reported += f'"request_timing": {request_timing!r}, '
     kept = "".join(f'"{name}": {value}, ' for name, value in stored.items()) if counters else ""
     done = status == "done"
     body = (RUN_BODY.replace("INPUT", "4").replace("STATUS", repr(status))
