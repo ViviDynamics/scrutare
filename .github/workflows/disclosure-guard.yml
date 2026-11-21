@@ -2,6 +2,13 @@ name: Disclosure guard
 
 on:
   pull_request:
+  # The nare bump workflow starts the guard for its pull request: a pull request opened
+  # with GITHUB_TOKEN starts no pull_request run.
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: pull request number to check
+        required: true
 
 permissions:
   contents: read
@@ -20,6 +27,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VIVI_DISCLOSURE_TERMS: ${{ secrets.VIVI_DISCLOSURE_TERMS }}
+          PR: ${{ github.event.pull_request.number || inputs.pr }}
         run: |
+          [[ "$PR" =~ ^[1-9][0-9]*$ ]]
           cp repo.env.example repo.env
-          .github/disclosure/disclosure-guard --pr ${{ github.event.pull_request.number }}
+          .github/disclosure/disclosure-guard --pr "$PR"

@@ -3,6 +3,9 @@
 set -euo pipefail
 image=${1:?usage: smoke-container.sh IMAGE VERSION}
 expected=${2:?usage: smoke-container.sh IMAGE VERSION}
+# The image must carry the nare release this checkout pins.
+. "$(dirname "$0")/../nare.pin"
+test -n "$NARE_RELEASE"
 
 docker image inspect --format 'Image identity: {{.Id}}' "$image"
 test "$(docker run --rm --network none "$image" --version)" = "scrutare $expected"
@@ -21,7 +24,7 @@ app_output=$(docker run --rm --network none --read-only \
 test "$app_status" -eq 1
 test "$app_output" = "scrutare-app: startup failed; check App settings, ports and exclusive data lock"
 echo "App console: refuses to start without operator settings"
-docker run --rm --network none -i --entrypoint python "$image" - "$expected" <<'PY'
+docker run --rm --network none -i --entrypoint python "$image" - "$expected" "$NARE_RELEASE" <<'PY'
 import importlib.metadata
 import json
 import os
@@ -57,7 +60,7 @@ print("Local git checkout: root and origin discovered from nested directory")
 # Capture requires gh pagination to return an array of pages.
 assert "--slurp" in subprocess.check_output(["gh", "api", "--help"], text=True)
 version = subprocess.check_output(["nare", "--version"], text=True).strip()
-assert version == "2026.11.107"
+assert version == sys.argv[2]
 contract = json.loads(subprocess.check_output(["nare", "contract"], text=True))
 assert contract["contract"] == 3 and contract["nare"] == version
 print(f"UID {os.getuid()}: writable /work, four personas, nare {version}, contract 3")

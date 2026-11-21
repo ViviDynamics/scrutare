@@ -3,6 +3,7 @@
 **
 !Dockerfile
 !.dockerignore
+!nare.pin
 !dist/
 dist/**
 !dist/scrutare-*-py3-none-any.whl

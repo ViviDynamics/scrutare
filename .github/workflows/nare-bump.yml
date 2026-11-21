@@ -1,0 +1,198 @@
+name: Nare bump
+
+# Compare nare.pin with nare's latest release daily. When they differ, open or refresh
+# one pull request from a fixed branch; never merge it. GITHUB_TOKEN pushes and pull
+# requests start no other workflow, so this dispatches CI and the disclosure guard.
+on:
+  schedule:
+    - cron: '23 7 * * *'
+  workflow_dispatch:
+    inputs:
+      release:
+        description: nare release tag to pin (default the latest release)
+        required: false
+        default: latest
+
+permissions: {}
+
+concurrency:
+  group: nare-bump
+  cancel-in-progress: false
+
+env:
+  BRANCH: automation/nare-bump
+  LABEL: nare-contract-change
+  FALLBACK_LABEL: nare-bump
+
+jobs:
+  bump:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      # Only for the fallback issue, when the organization forbids Actions to open pull
+      # requests.
+      issues: write
+      # Only to dispatch CI and the disclosure guard on the bump branch.
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Compare the pin with nare's latest release
+        id: status
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED: ${{ inputs.release || 'latest' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          status=$(python3 scripts/bump-nare.py status)
+          echo "$status"
+          . ./nare.pin
+          if [ "$REQUESTED" = latest ]; then
+            target=$(sed -n 's/^latest=//p' <<< "$status")
+          else
+            target=$REQUESTED
+          fi
+          echo "target=$target" >> "$GITHUB_OUTPUT"
+          if [ "$target" = "$NARE_RELEASE" ]; then
+            echo "nare pin $NARE_RELEASE is current." >> "$GITHUB_STEP_SUMMARY"
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: astral-sh/setup-uv@v6
+        if: steps.status.outputs.needed == 'true'
+      - name: Record both releases' nare contract
+        if: steps.status.outputs.needed == 'true'
+        env:
+          TARGET: ${{ steps.status.outputs.target }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          . ./nare.pin
+          uv python install 3.14
+          contracts="$RUNNER_TEMP/nare-contracts"
+          mkdir -p "$contracts"
+          for release in "$NARE_RELEASE" "$TARGET"; do
+            checkout="$RUNNER_TEMP/nare-$release"
+            git clone --quiet --depth 1 --branch "$release" https://github.com/ViviDynamics/nare.git "$checkout"
+            uv sync --quiet --project "$checkout" --python 3.14 --locked --no-dev
+            (cd "$RUNNER_TEMP" && "$checkout/.venv/bin/nare" contract) > "$contracts/$release.json"
+          done
+      - name: Move the pin
+        id: bump
+        if: steps.status.outputs.needed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET: ${{ steps.status.outputs.target }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          . ./nare.pin
+          contracts="$RUNNER_TEMP/nare-contracts"
+          python3 scripts/bump-nare.py --outputs "$GITHUB_OUTPUT" bump "$TARGET" \
+            --old-contract "$contracts/$NARE_RELEASE.json" \
+            --new-contract "$contracts/$TARGET.json" \
+            --report "$RUNNER_TEMP/nare-bump-body.md"
+      - name: Push the bump branch and open or refresh its pull request
+        if: steps.bump.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PREVIOUS: ${{ steps.bump.outputs.previous }}
+          RELEASE: ${{ steps.bump.outputs.release }}
+          CONTRACT_CHANGED: ${{ steps.bump.outputs.contract_changed }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title="Pin nare $RELEASE"
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git switch --create "$BRANCH"
+          git commit --all --quiet --message "$title" \
+            --message "Move the nare pin from $PREVIOUS to $RELEASE with scripts/bump-nare.py."
+          body="$RUNNER_TEMP/nare-bump-body.md"
+          number=$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number // empty')
+          # The branch belongs to this workflow and is rebuilt from main, except that a
+          # maintainer's commit on it (adapting Scrutare to the release) is never overwritten.
+          if git fetch --quiet origin "+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH" 2>/dev/null; then
+            remote="refs/remotes/origin/$BRANCH"
+            ours=$(git rev-list --count "origin/main..$remote")
+            author=$(git log -1 --format=%an "$remote")
+            if [ "$ours" != 1 ] || [ "$author" != 'github-actions[bot]' ]; then
+              echo "::warning::$BRANCH carries maintainer commits; not refreshed to $RELEASE."
+              echo "$BRANCH carries maintainer commits; rebase it onto $RELEASE by hand." >> "$GITHUB_STEP_SUMMARY"
+              echo "refreshed=false" >> "$GITHUB_ENV"
+              exit 0
+            fi
+            # Nothing new since the last run: leave the branch, its pull request and its CI.
+            if [ -n "$number" ] \
+              && [ "$(git rev-parse "$remote^{tree}")" = "$(git rev-parse 'HEAD^{tree}')" ] \
+              && [ "$(git rev-parse "$remote~1")" = "$(git rev-parse HEAD~1)" ]; then
+              echo "#$number already holds this bump on current main." >> "$GITHUB_STEP_SUMMARY"
+              echo "refreshed=false" >> "$GITHUB_ENV"
+              exit 0
+            fi
+          fi
+          git push --force origin "HEAD:refs/heads/$BRANCH"
+          if [ -n "$number" ]; then
+            gh pr edit "$number" --title "$title" --body-file "$body"
+          elif gh pr create --head "$BRANCH" --base main --title "$title" --body-file "$body" \
+              2> "$RUNNER_TEMP/pr-create.err"; then
+            number=$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number')
+          elif grep -q 'not permitted to create or approve pull requests' "$RUNNER_TEMP/pr-create.err"; then
+            # The organization forbids GITHUB_TOKEN to open pull requests. Keep the pushed
+            # branch and hand a maintainer one issue with the compare link; the pull request
+            # they open from it starts the usual CI and disclosure guard.
+            compare="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/main...$BRANCH?expand=1"
+            issue_body="$RUNNER_TEMP/nare-bump-issue.md"
+            {
+              echo "The Nare bump workflow pushed \`$BRANCH\` but may not open pull requests in this organization."
+              echo
+              echo "Open the pull request: $compare"
+              echo
+              cat "$body"
+            } > "$issue_body"
+            gh label create "$FALLBACK_LABEL" --color 1d76db \
+              --description "Nare bump waiting for a maintainer to open its pull request" 2>/dev/null || true
+            issue=$(gh issue list --label "$FALLBACK_LABEL" --state open --json number --jq '.[0].number // empty')
+            if [ -n "$issue" ]; then
+              gh issue edit "$issue" --title "$title" --body-file "$issue_body"
+            else
+              gh issue create --title "$title" --label "$FALLBACK_LABEL" --body-file "$issue_body"
+            fi
+            echo "number=" >> "$GITHUB_ENV"
+            echo "refreshed=true" >> "$GITHUB_ENV"
+            echo "Pull requests from Actions are forbidden; opened or refreshed an issue with the compare link." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          else
+            cat "$RUNNER_TEMP/pr-create.err" >&2
+            exit 1
+          fi
+          if [ "$CONTRACT_CHANGED" = true ]; then
+            gh label create "$LABEL" --color b60205 \
+              --description "A nare bump that changes the machine contract version" 2>/dev/null || true
+            gh pr edit "$number" --add-label "$LABEL"
+          else
+            gh pr edit "$number" --remove-label "$LABEL" 2>/dev/null || true
+          fi
+          echo "number=$number" >> "$GITHUB_ENV"
+          echo "refreshed=true" >> "$GITHUB_ENV"
+          echo "Bump pull request #$number: $PREVIOUS to $RELEASE." >> "$GITHUB_STEP_SUMMARY"
+      - name: Start CI and the disclosure guard on the bump branch
+        if: steps.bump.outputs.changed == 'true' && env.refreshed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh workflow run ci.yml --ref "$BRANCH"
+          # Without a pull request (the fallback issue) the guard runs when one is opened.
+          if [ -n "$number" ]; then
+            gh workflow run disclosure-guard.yml --ref "$BRANCH" -f "pr=$number"
+          fi

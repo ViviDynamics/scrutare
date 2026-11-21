@@ -88,6 +88,66 @@ It verifies the installed package, personas, gh features, nare contract, git
 repository discovery and writable non-root working directory. It does not
 perform a live PR review.
 
+## Nare pin
+
+`nare.pin` at the repository root is the one record of the nare release every
+installation uses: its release tag and commit as `NARE_RELEASE` and `NARE_COMMIT`.
+The Dockerfile copies it into the builder stage, the CI and release workflows and
+`scripts/smoke-container.sh` source it, and the installed tests read the expected
+version from it. Every install clones the tag and refuses a checkout whose commit
+differs. The documents above keep literal versions so they can be copied; the bump
+script rewrites them.
+
+`scripts/bump-nare.py` moves the pin:
+
+```sh
+python3 scripts/bump-nare.py status                # pin, latest release, changed
+python3 scripts/bump-nare.py bump latest --dry-run # report and diff, no file written
+python3 scripts/bump-nare.py bump 2026.11.200 \
+  --old-contract old-contract.json --new-contract new-contract.json
+```
+
+It reads nare's published releases through `gh api` (drafts and prereleases are
+skipped), verifies the target tag's commit with `git ls-remote`, rewrites
+`nare.pin`, the literal versions in the user documents and the previous pin in
+`tests/test_nare_runtime_pin.py`, and prints the release notes in the range. Given
+both releases' `nare contract` output it also lists the contract version, added,
+removed and changed flags and entries, and every changed default. A pin that is
+already current is a no-op; an older target, an unpublished release, a missing
+tag or a tag that no longer names the pinned commit is refused before anything is
+written. A document that stops naming the pin also stops the bump, so the list of
+rewritten documents cannot go stale silently.
+
+The Nare bump workflow runs this daily and on dispatch (optionally for a named
+release). When the pin differs from nare's latest release it records both
+releases' `nare contract`, rebuilds the fixed branch `automation/nare-bump` from
+main with one bump commit, and opens or refreshes the single pull request from
+that branch with the report as its body. A contract version change is called out
+at the top of the body and labeled `nare-contract-change`. A run with nothing new
+leaves the branch and its pull request alone, and a branch that carries a
+maintainer's commit is never overwritten. The workflow never merges: a green,
+additive bump is merged after review.
+
+The workflow uses only the default `GITHUB_TOKEN`, with `contents: write` (the
+branch), `pull-requests: write` (the pull request and its label) and
+`actions: write`. A push or pull request made with `GITHUB_TOKEN` starts no other
+workflow, so the third permission lets it dispatch CI and the disclosure guard on
+the bump branch itself, the same way Auto-tag dispatches Release. Their runs report
+on the bump commit and show on the pull request. No maintainer token or secret is
+needed. A maintainer push to the branch starts the usual push CI.
+
+ViviDynamics forbids GitHub Actions to open pull requests at the organization
+level, so the workflow also has `issues: write`. When `gh pr create` is refused for
+that reason, it keeps the pushed branch, dispatches CI on it, and opens or
+refreshes one issue labeled `nare-bump` with the compare link and the report. The
+pull request a maintainer opens from that link starts the usual CI and disclosure
+guard. Any other failure to open the pull request fails the run.
+
+Policy: a nare defect found by a bump is filed on
+[ViviDynamics/nare](https://github.com/ViviDynamics/nare/issues) with a minimal
+reproduction, linked from the bump pull request, and fixed in nare. Scrutare does
+not carry workarounds for nare defects; the bump waits for the fixed release.
+
 ## Release contract
 
 The development version is `src/scrutare/__init__.py`. Hatch reads it into wheel
@@ -139,7 +199,7 @@ smokes and image build; missing assets are uploaded. Dispatch is checked
 for an actual run, and a missing run fails visibly rather than silently stranding
 the tag.
 
-The Docker build context allows only its recipe, ignore policy and wheel.
+The Docker build context allows only its recipe, ignore policy, `nare.pin` and wheel.
 Source checkouts, virtual environments, run artifacts, repository state and
 credentials stay outside the context. Local verification covers native amd64;
 it does not establish an arm64 build or remote publication.

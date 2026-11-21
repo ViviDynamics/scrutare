@@ -5,6 +5,7 @@ import subprocess
 import sys
 
 import pytest
+from nare_pin import RELEASE as NARE_RELEASE
 from test_installed_review import GH_WORKER, load
 from test_installed_review import wheel_cli as wheel_cli
 from test_nare_cli_integration import (
@@ -118,7 +119,7 @@ def test_installed_debate_pipeline(
         observations = load(attempt / "offline-observations.json")
         session = load(attempt / "session.json")
         assert observations["guard_violations"] == observations["credential_names"] == []
-        assert observations["version"] == "2026.11.107"
+        assert observations["version"] == NARE_RELEASE
         assert session["policy"] == {"tools": ["read"], "root": str(run / "review-inputs")}
         assert session["budget"]["tokens"] == invocation["invocation_limit"]
         if attempt.parent.name == "debate-chair":

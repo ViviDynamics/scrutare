@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from nare_pin import RELEASE as NARE_RELEASE
 from test_nare_cli_integration import (
     BAD_ANCHOR,
     CORRECTED,
@@ -267,7 +268,7 @@ def test_installed_review_pipeline(
             assert recorded["persona"] == attempt.parent.name
             assert recorded["usage"] == outcome["usage"]
             assert observed["guard_violations"] == observed["credential_names"] == []
-            assert observed["nare_controls"] == {} and observed["version"] == "2026.11.107"
+            assert observed["nare_controls"] == {} and observed["version"] == NARE_RELEASE
             assert observed["arguments"] == invocation["argv"][1:]
             assert observed["selection"]["purpose"] == (
                 "reanchor" if attempt.name == "attempt-0002" else "review")

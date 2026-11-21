@@ -11,6 +11,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 import pytest
+from nare_pin import RELEASE as NARE_RELEASE
 from test_fanout import configure
 from test_review_inputs import capture as capture
 
@@ -80,7 +81,7 @@ def installed():
         env={"PATH": "/usr/bin:/bin"},
         timeout=10,
     )
-    assert result.returncode == 0 and result.stdout.strip() == "2026.11.107", result.stderr
+    assert result.returncode == 0 and result.stdout.strip() == NARE_RELEASE, result.stderr
     return console, interpreter
 
 
@@ -108,7 +109,7 @@ def observations(outcome, *, http_sse=False):
     assert result["guard_violations"] == []
     assert result["credential_names"] == (["OPENAI_API_KEY"] if http_sse else [])
     assert result["nare_controls"] == {}
-    assert result["version"] == "2026.11.107"
+    assert result["version"] == NARE_RELEASE
     assert result["python"].startswith("3.14.")
     # A session writes inside its attempt. Only one that was sent a shared capacity
     # directory (adaptive capacity) may also write there, and only there.

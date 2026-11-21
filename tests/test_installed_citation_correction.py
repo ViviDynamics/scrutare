@@ -1,4 +1,4 @@
-"""Installed wheel and native nare 2026.11.107: one citation correction, on and off, replayed."""
+"""Installed wheel and the pinned native nare: one citation correction, on and off, replayed."""
 
 import base64
 import json
@@ -8,6 +8,7 @@ from hashlib import sha256
 from pathlib import Path
 
 import pytest
+from nare_pin import RELEASE as NARE_RELEASE
 from test_installed_review import GH_WORKER
 from test_installed_review import wheel_cli as wheel_cli
 from test_nare_cli_integration import FINDING, offline_runtime, text, tool
@@ -128,7 +129,7 @@ def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=T
     for path in run.rglob("offline-observations*.json"):
         observed = load(path)
         assert observed["guard_violations"] == observed["credential_names"] == []
-        assert observed["version"] == "2026.11.107"
+        assert observed["version"] == NARE_RELEASE
     replay = subprocess.run([str(console), "replay", str(run)], cwd=working, env=env,
                             capture_output=True, timeout=30)
     return result, run, attempt, replay, provider

@@ -35,7 +35,8 @@ and turn limits. It adds no YAML fields. Scrutare requires Python 3.10 or newer;
 install nare 2026.11.107 separately (supported minimum 2026.10.0) with the interpreter required by its
 release. For the pinned integration runtime, clone the public
 [ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.11.107),
-verify commit `4baaeb8527478401cbd7bf54b74f48c286d8a093`, and run
+verify commit `4baaeb8527478401cbd7bf54b74f48c286d8a093` (the release and commit in
+`nare.pin`), and run
 `uv sync --project /path/to/nare-checkout --python 3.14 --locked --no-dev`.
 Point `NareRuntime.executable`, or the CLI option `--nare-executable`, at that
 checkout's `.venv/bin/nare`. The CLI defaults to `nare` on PATH. Nare is
