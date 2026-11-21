@@ -494,6 +494,11 @@ def _rail_refusal(rail: ModelRail, capability: NareCapability) -> str | None:
         return "cache_breakpoints"
     if rail.effort is not None and not capability.advertises("--effort", rail.effort):
         return f"effort {rail.effort}"
+    # Every contract 3 runtime lists --max-cutoffs, which inspection requires; before it the
+    # pinned policy could not be sent, so no correction budget can be either.
+    if rail.max_cutoffs is not None and not (modern and _takes_value(capability,
+                                                                      "--max-cutoffs")):
+        return "max_cutoffs"
     return None
 
 
@@ -926,11 +931,12 @@ def _rail_argv(rail: ModelRail, capability: NareCapability,
         argv.append("--stream")
     if capability.contract == 3:
         # Preserve Scrutare's recovery policy rather than inherit newer CLI defaults.
-        # A rail may opt in to resends; unset keeps the pinned zero.
+        # A rail may opt in to resends and to cut-off corrections; unset keeps each zero.
         retries = rail.request_retries or 0
         # The correction budget is the pinned 1, except on a session that carries the
         # in-session citation check (#130), which shares it with schema corrections.
-        argv.extend(("--max-cutoffs", "0", "--request-retries", str(retries),
+        argv.extend(("--max-cutoffs", str(rail.max_cutoffs or 0),
+                     "--request-retries", str(retries),
                      "--max-corrections", str(corrections)))
         if retries:
             # Explicit, so nare's own default wait never decides how long a session stalls.

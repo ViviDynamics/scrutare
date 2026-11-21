@@ -499,8 +499,19 @@ def _recorded_retries(invocation: dict[str, Any]) -> str:
     return str(retries) if type(retries) is int and retries >= 0 else "0"
 
 
+def _recorded_cutoffs(invocation: dict[str, Any]) -> str:
+    """The cut-off budget a session's own rail recorded; without one, the pinned zero.
+
+    The rail options audit binds that recorded rail to the captured configuration.
+    """
+    rail = invocation.get("rail")
+    cutoffs = rail.get("max_cutoffs") if isinstance(rail, dict) else None
+    return str(cutoffs) if type(cutoffs) is int and cutoffs >= 0 else "0"
+
+
 # Opt-in rail fields that exist only as contract 3 flags, and the records they leave.
-_OPTION_FIELDS = ("request_retries", "request_retry_seconds", "cache_breakpoints", "effort")
+_OPTION_FIELDS = ("request_retries", "request_retry_seconds", "cache_breakpoints", "effort",
+                  "max_cutoffs")
 _OPTION_FLAGS = ("--request-retry-seconds", "--cache-breakpoints", "--effort")
 _OPTION_RECORDS = ("request_retries", "cache_breakpoints", "effort")
 
@@ -531,7 +542,7 @@ def _retry_events(attempt: Path) -> int | None:
 
 
 def _rail_option_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
-    """Bind opt-in request retries, cache breakpoints and effort to rail, argv and result.
+    """Bind opt-in retries, cache breakpoints, effort and cut-offs to rail, argv and result.
 
     Each launched session's recorded rail must equal its configured rail, argv must carry
     exactly the flags those fields imply, and result.json exactly their records, with a
@@ -584,9 +595,12 @@ def _rail_option_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue,
                             else want.request_retry_seconds)] if retries else [])
             wanted = (("--request-retries", None if retries is None else [str(retries)]),
                       ("--request-retry-seconds", seconds),
-                      ("--effort", [] if want.effort is None else [want.effort]))
+                      ("--effort", [] if want.effort is None else [want.effort]),
+                      ("--max-cutoffs",
+                       None if want.max_cutoffs is None else [str(want.max_cutoffs)]))
             for flag, values in wanted:
-                # An unset resend limit is the pinned zero, checked with the recovery policy.
+                # An unset resend limit or cut-off budget is the pinned zero, checked with
+                # the recovery policy.
                 if values is not None and (names.count(flag) != len(values) or (
                         values and _flag(argv, flag) != values[0])):
                     raise ValueError
@@ -1008,6 +1022,28 @@ def _timing_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
     return tuple(issues)
 
 
+def _session_timeout_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
+    """Bind a configured session timeout to the bound each session recorded it ran under.
+
+    Runs whose configuration sets no timeout are not audited: their sessions ran under the
+    runtime's own bound (600 seconds, or an evaluator's --timeout-seconds), as before.
+    """
+    models = config_data.get("models") if isinstance(config_data, dict) else None
+    configured = models.get("session_timeout_seconds") if isinstance(models, dict) else None
+    if configured is None:
+        return ()
+    if type(configured) not in (int, float):
+        return (AuditIssue("session_timeout_unrecorded", "config.json", "invalid"),)
+    issues = []
+    for attempt, document in _invocations(_session_records(run_dir)):
+        recorded = document.get("timeout_seconds") if isinstance(document, dict) else None
+        if type(recorded) not in (int, float) or recorded != configured:
+            issues.append(AuditIssue(
+                "session_timeout_unrecorded",
+                attempt.relative_to(run_dir).as_posix() + "/invocation.json", "invalid"))
+    return tuple(issues)
+
+
 def _native_recovery_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
     """Bind contract 3 recovery controls to all retained runtime identities."""
     issues = []
@@ -1041,7 +1077,8 @@ def _native_recovery_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
                        for identity in identities)
                 or not isinstance(argv, list) or any(
                     _flag(argv, flag) != value or _names(argv).count(flag) != 1
-                    for flag, value in (("--contract", "3"), ("--max-cutoffs", "0"),
+                    for flag, value in (("--contract", "3"),
+                                        ("--max-cutoffs", _recorded_cutoffs(record)),
                                         ("--request-retries", _recorded_retries(record)),
                                         ("--max-corrections", _recorded_corrections(record))))):
             issues.append(AuditIssue("native_recovery_policy_invalid",
@@ -1589,6 +1626,7 @@ def replay_run(run_dir: Path) -> ReplayResult:
               + _max_output_tokens_issues(run_dir, config_data)
               + _proxy_num_retries_issues(run_dir, config_data)
               + _rail_option_issues(run_dir, config_data)
+              + _session_timeout_issues(run_dir, config_data)
               + _capacity_issues(run_dir, config_data)
               + _timing_issues(run_dir)
               + _native_recovery_issues(run_dir)

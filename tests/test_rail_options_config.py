@@ -7,6 +7,7 @@ import yaml
 
 from scrutare.config import (
     EFFORT_LEVELS,
+    MAX_CUTOFFS_MAX,
     REQUEST_RETRIES_MAX,
     REQUEST_RETRY_SECONDS,
     ConfigError,
@@ -17,7 +18,8 @@ from scrutare.config import (
 OPENAI = "models:\n  default: {provider: openai, model: m"
 ANTHROPIC = "models:\n  default: {provider: anthropic, model: m"
 BARE = {"provider": "openai", "base_url": None, "model": "m"}
-FIELDS = ("request_retries", "request_retry_seconds", "cache_breakpoints", "effort")
+FIELDS = ("request_retries", "request_retry_seconds", "cache_breakpoints", "effort",
+          "max_cutoffs")
 
 
 def test_every_option_is_off_by_default_and_absent_from_the_canonical_record():
@@ -44,6 +46,8 @@ def test_explicit_null_is_the_same_as_absent(field):
     ("cache_breakpoints: true", "cache_breakpoints", True),
     ("cache_breakpoints: false", "cache_breakpoints", False),
     ("effort: xhigh", "effort", "xhigh"),
+    ("max_cutoffs: 0", "max_cutoffs", 0),
+    ("max_cutoffs: 3", "max_cutoffs", 3),
 ])
 def test_a_set_option_inherits_and_an_override_clears_it(setting, field, value):
     cleared = ("request_retries: null, request_retry_seconds: null"
@@ -94,6 +98,11 @@ def test_an_override_can_opt_in_alone():
     ('cache_breakpoints: "yes"', "cache_breakpoints: expected a boolean or null"),
     ("effort: extreme", "effort: expected one of low, medium, high, xhigh, max or null"),
     ("effort: 3", "effort: expected one of low, medium, high, xhigh, max or null"),
+    ("max_cutoffs: -1", "max_cutoffs: expected an integer from 0 to 3 or null"),
+    ("max_cutoffs: 4", "max_cutoffs: expected an integer from 0 to 3 or null"),
+    ("max_cutoffs: true", "max_cutoffs: expected an integer from 0 to 3 or null"),
+    ("max_cutoffs: 1.0", "max_cutoffs: expected an integer from 0 to 3 or null"),
+    ('max_cutoffs: "2"', "max_cutoffs: expected an integer from 0 to 3 or null"),
     ("retries: 2", "models.default"),
 ])
 def test_invalid_values_fail_at_configuration(setting, message):
@@ -113,16 +122,18 @@ def test_cache_breakpoints_are_an_openai_rail_option():
 
 
 @pytest.mark.parametrize("provider", ["anthropic", "openai"])
-def test_retries_effort_and_structured_output_work_on_both_rails(provider):
+def test_retries_effort_structured_output_and_cutoffs_work_on_both_rails(provider):
     config = parse_config(
         f"models:\n  default: {{provider: {provider}, model: m, request_retries: 2, "
-        "effort: high, structured_output: json_schema}\n")
+        "effort: high, structured_output: json_schema, max_cutoffs: 2}\n")
     rail = config.models.default
-    assert (rail.request_retries, rail.effort, rail.structured_output) == (
-        2, "high", "json_schema")
-    assert config.to_dict()["models"]["default"] == {
+    assert (rail.request_retries, rail.effort, rail.structured_output, rail.max_cutoffs) == (
+        2, "high", "json_schema", 2)
+    # Recorded last, after every field that existed before it.
+    assert list(config.to_dict()["models"]["default"].items()) == list({
         "provider": provider, "base_url": None, "model": "m",
-        "structured_output": "json_schema", "request_retries": 2, "effort": "high"}
+        "structured_output": "json_schema", "request_retries": 2, "effort": "high",
+        "max_cutoffs": 2}.items())
 
 
 def test_programmatic_rails_validate_like_configuration():
@@ -132,7 +143,8 @@ def test_programmatic_rails_validate_like_configuration():
             ({"request_retry_seconds": 5}, "requires request_retries above 0"),
             ({"request_retries": 1, "request_retry_seconds": math.nan}, "positive finite"),
             ({"effort": "extreme"}, "effort"),
-            ({"cache_breakpoints": "true"}, "cache_breakpoints")):
+            ({"cache_breakpoints": "true"}, "cache_breakpoints"),
+            ({"max_cutoffs": 4}, "max_cutoffs"), ({"max_cutoffs": False}, "max_cutoffs")):
         with pytest.raises(ConfigError, match=message):
             ModelRail("openai", None, "m", **fields)
 
@@ -140,6 +152,7 @@ def test_programmatic_rails_validate_like_configuration():
 def test_the_documented_defaults():
     assert EFFORT_LEVELS == ("low", "medium", "high", "xhigh", "max")
     assert REQUEST_RETRY_SECONDS == 60
+    assert MAX_CUTOFFS_MAX == 3
 
 
 @pytest.mark.parametrize(("off", "value"), [("0", 0), ("null", None)])

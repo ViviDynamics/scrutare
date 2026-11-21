@@ -39,9 +39,11 @@ Errors identify a field path or YAML location without echoing field values.
 | `models.default.request_retry_seconds` | Positive number (requires `request_retries` above 0), or `null` | `null` (60 when retries are on) |
 | `models.default.cache_breakpoints` | Boolean (requires `provider: openai`), or `null` | `null` (off) |
 | `models.default.effort` | `low`, `medium`, `high`, `xhigh`, `max`, or `null` | `null` (not sent) |
+| `models.default.max_cutoffs` | Integer from 0 to 3, or `null` | `null` (the first cut-off reply ends the session) |
 | `models.overrides` | Mapping from a configured persona name to partial model settings | `{}` |
 | `models.capacity` | Capacity queueing on openai rails: `mode` `off`, `fixed` or `adaptive`, plus that mode's values | `mode: off` |
 | `models.preflight` | Route checks before anything is claimed: `route` and `request` booleans, `timeout_seconds` up to 300 | both `false` (off) |
+| `models.session_timeout_seconds` | Positive number up to 21600, or `null` ([session timeout](#session-timeout)) | `null` (600 seconds) |
 | `verdict.blocking_categories` | List drawn from the fixed vocabulary | `correctness`, `security`, `regression` |
 | `verdict.advisory_categories` | List drawn from the fixed vocabulary | `style`, `consistency`, `docs` |
 | `github.post_mode` | `review` (blocking review), `comment` (never blocks) | `review` |
@@ -430,6 +432,104 @@ records it in `rail` and its argv, and `result.json` records
 `{"level": "high"}`. nare's session file records the effort each invocation
 sent; a file that records another level fails the session as a protocol
 failure.
+
+## Cut-off recovery (opt-in)
+
+Scrutare starts every contract 3 session with `--max-cutoffs 0`, so a reply
+the provider cut off at the output cap, or one that repeated itself until nare
+stopped it, ends the session at once. A rail can let nare correct such replies
+instead:
+
+```yaml
+models:
+  default:
+    provider: openai
+    base_url: https://litellm.example/v1
+    model: your-model
+    max_output_tokens: 20000
+    max_cutoffs: 1
+```
+
+Every nare session on that rail, correction turns included, is launched with
+`--max-cutoffs 1` in place of `--max-cutoffs 0`, and no other option changes.
+What nare then does (nare `docs/contract.md`, "Cut-off replies"):
+
+- A reply that stopped at the output cap (`stop_reason` `max_tokens`) or that
+  repeated one span until it was cut off (`repetition`: the last 2048
+  characters repeat one span of at most 256 characters at least eight times,
+  or the same with digits folded, which catches a counting loop) is corrected
+  while the budget lasts. The correction is one user message telling the model
+  to reason briefly, write each record once and return the complete answer,
+  and that the tool calls in the cut-off reply did not run.
+- The cut-off reply still counts as a turn against the session's turn limit,
+  and its tokens are charged to the session and the review budget like any
+  other reply. A correction is another full reply, so each one can cost up to
+  `max_output_tokens` more output.
+- Each cut-off is a `progress` event with a `cutoff` detail (`kind`,
+  `output_tokens`, `attempt`, `limit`, `corrected`), and nare's result and
+  session record `cutoffs`, the count over the session's life.
+- With the budget spent, the session ends `error` with `stop_reason`
+  `max_tokens` or `repetition`, exactly as the first cut does under 0, and the
+  review treats it as before.
+- The budget is per invocation, so a resumed correction turn gets its own.
+
+`max_cutoffs` accepts an integer from 0 to 3 on either provider, inherits
+through overrides, and is cleared with `null`. The cap is Scrutare's: nare
+takes any count, and nare's own command-line default is 2, which Scrutare never
+inherits. The runtime must be a contract 3 nare that lists `--max-cutoffs`
+taking a value (every contract 3 release does); against an older runtime the
+wave is refused before any session starts.
+
+When no rail sets it, argv, the canonical configuration and every record keep
+their previous bytes. When any rail sets it, every rail in `config.to_dict()`
+and `fanout.json` records `max_cutoffs` (`null` where it is off), and each
+session's `invocation.json` records it in `rail` and as the `--max-cutoffs`
+value. It leaves no `result.json` record of its own: the retained stream and
+session file carry nare's count. [Replay](replay.md) binds the recorded rail to
+the configuration and the argv value to the recorded rail.
+
+The setting is unmeasured: no qualification schedule has run with it, and
+[`self-hosted@1`](self-hosted.md) does not set it.
+
+## Session timeout
+
+Each nare session of a review runs under one wall-clock bound, 600 seconds
+unless the configuration sets another:
+
+```yaml
+models:
+  session_timeout_seconds: 1800
+```
+
+The field sits under `models`, not on a rail: it bounds every session of the
+review alike, whichever rail it runs on. It accepts a positive number up to
+21600 (the App's longest job deadline), or `null`. A session that reaches the
+bound is stopped and fails as a timeout. A resumed correction turn continues
+its session's deadline rather than starting a new one, and
+[capacity queueing](#capacity-queueing-opt-in) still credits announced waits,
+up to `models.capacity.wait_seconds`, against the same deadline.
+
+Where it applies:
+
+- `scrutare review` and the MCP `review` tool run every session under it.
+- The GitHub App runs the same CLI, so its jobs follow the repository's
+  setting. The App refuses a job whose configured timeout, plus the capacity
+  wait credit when queueing is on, is not below `SCRUTARE_APP_JOB_TIMEOUT`,
+  before any preflight or review starts ([App guide](app.md#job-deadline-and-token-refresh)).
+- `python -m scrutare.evaluation run` uses the configured value when there is
+  one. `--timeout-seconds` applies only to a configuration that sets none, and
+  a flag that disagrees with a configured value is refused before anything
+  runs. With neither, sessions run under 600 seconds as before.
+
+Unset, the canonical configuration and every record keep their previous bytes,
+and each session's `invocation.json` still records `timeout_seconds: 600.0`.
+Set, `config.json` records `models.session_timeout_seconds`, and
+[replay](replay.md) requires every session's recorded `timeout_seconds` to
+equal it.
+
+The setting is unmeasured as a default: the GLM campaigns ran 600 seconds in g2
+and s1 and 1800 from s2 on, but [`self-hosted@1`](self-hosted.md) does not set
+it.
 
 ## Capacity queueing (opt-in)
 

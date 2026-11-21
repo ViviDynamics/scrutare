@@ -57,7 +57,7 @@ async def _review(arguments: dict[str, Any]) -> str:
         raise ProtocolError(-32602, "unknown review argument")
     pr = _string(arguments, "pr")
     path = Path(_string(arguments, "config", "scrutare.yaml"))
-    runtime = NareRuntime(Path(_string(arguments, "nare_executable", "nare")))
+    executable = Path(_string(arguments, "nare_executable", "nare"))
     try:
         if not path.is_file():
             raise OSError("not a regular file")
@@ -66,6 +66,7 @@ async def _review(arguments: dict[str, Any]) -> str:
         raise ReviewRunError(
             "cannot read config file; provide an accessible regular file.") from None
     config = parse_config(raw)
+    runtime = NareRuntime(executable, timeout_seconds=config.models.session_seconds)
     preflight_review(config, runtime)
     ref = resolve_pr(pr)
     result = await review_pr(ref, config, config_bytes=raw,

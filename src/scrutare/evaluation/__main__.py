@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 from scrutare import __version__
-from scrutare.config import parse_config
+from scrutare.config import ReviewConfig, parse_config
 from scrutare.engine.preflight import PreflightError, not_started
 from scrutare.engine.session_models import NareRuntime
 from scrutare.evaluation.corpus import load_corpus, read_json
@@ -16,6 +16,20 @@ from scrutare.evaluation.promotion import evaluate_promotion
 from scrutare.evaluation.qualification import inspect_rule_a
 from scrutare.evaluation.runner import run_experiment, write_json
 from scrutare.evaluation.scoring import adjudication_packet, score_experiment
+
+
+def session_timeout(config: ReviewConfig, flag: float | None) -> float:
+    """The bound each session runs under: the configuration, else the flag, else 600.
+
+    A flag that disagrees with a configured value is refused, so a campaign never records
+    one bound in its configuration and runs its sessions under another.
+    """
+    configured = config.models.session_timeout_seconds
+    if configured is not None and flag is not None and float(flag) != float(configured):
+        raise ValueError(f"--timeout-seconds {flag:g} disagrees with "
+                         f"models.session_timeout_seconds {configured:g}; "
+                         "set one or make them equal")
+    return config.models.session_seconds if flag is None else float(flag)
 
 
 def main() -> None:
@@ -27,7 +41,10 @@ def main() -> None:
     run.add_argument('--config', type=Path, required=True)
     run.add_argument('--output', type=Path, required=True)
     run.add_argument('--nare-executable', type=Path, required=True)
-    run.add_argument('--timeout-seconds', type=float, default=600)
+    run.add_argument('--timeout-seconds', type=float,
+                     help='seconds each session may run when the configuration sets no '
+                          'models.session_timeout_seconds (default 600); a value that '
+                          'disagrees with a configured one is refused')
     run.add_argument('--concurrency', type=int, default=1)
     run.add_argument('--comparison-set',
                      choices=('baseline', 'procedures', 'architectures', 'focused'),
@@ -63,11 +80,15 @@ def main() -> None:
     gate.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     if args.command == 'run':
+        config = parse_config(args.config.read_bytes())
+        try:
+            seconds = session_timeout(config, args.timeout_seconds)
+        except ValueError as error:
+            parser.error(str(error))
         try:
             asyncio.run(run_experiment(
-                load_corpus(args.corpus, args.split),
-                parse_config(args.config.read_bytes()), args.output,
-                runtime=NareRuntime(args.nare_executable, args.max_turns, args.timeout_seconds),
+                load_corpus(args.corpus, args.split), config, args.output,
+                runtime=NareRuntime(args.nare_executable, args.max_turns, seconds),
                 evidence_kind=args.evidence_kind, concurrency=args.concurrency,
                 comparison_set=args.comparison_set,
                 variant_names=(tuple(args.variants.split(','))

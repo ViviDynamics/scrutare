@@ -220,3 +220,36 @@ def test_inspection_reads_the_cache_breakpoint_rails(tmp_path):
                     {"flags": flag_map()}):
         assert inspect(advertised(tmp_path, **entries)).cache_breakpoints == ()
     assert replace(found, cache_breakpoints=()).cache_breakpoints == ()
+
+
+@pytest.mark.parametrize(("cutoffs", "sent"), [(None, "0"), (0, "0"), (1, "1"), (3, "3")])
+def test_a_cut_off_budget_replaces_the_pinned_zero_and_nothing_else(
+        capture, tmp_path, cutoffs, sent):
+    rail = ModelRail("openai", None, "m", max_cutoffs=cutoffs)
+    outcome, attempt, _ = run(capture, tmp_path, rail)
+    assert outcome.status == "complete"
+    invocation = load(attempt / "invocation.json")
+    argv = invocation["argv"]
+    assert flag_values(argv, "--max-cutoffs") == [sent]
+    assert load(attempt / "cwd/observed.json")["argv"] == argv[1:]
+    assert invocation["rail"] == rail.record() == {
+        "provider": "openai", "model": "m", "base_url": None,
+        **({} if cutoffs is None else {"max_cutoffs": cutoffs})}
+    # It leaves no result record of its own: nare's stream and session carry the count.
+    assert "max_cutoffs" not in load(attempt / "result.json")
+
+
+@pytest.mark.parametrize(("cutoffs", "found"), [
+    (1, NareCapability("2026.10.12", 2)),
+    (0, NareCapability("2026.10.12", 2)),
+    (2, capability(without=("--max-cutoffs",))),
+])
+def test_a_cut_off_budget_nare_cannot_take_is_refused_for_the_wave_and_the_session(
+        capture, tmp_path, cutoffs, found):
+    rail = ModelRail("openai", None, "m", max_cutoffs=cutoffs)
+    with pytest.raises(module().SessionRuntimeError,
+                       match="^capability: nare .* cannot send max_cutoffs;"):
+        module().require_rail_options(ModelSettings(rail), found)
+    outcome, attempt, _ = run(capture, tmp_path, rail, found)
+    assert (outcome.status, outcome.reason) == ("failed", "invocation")
+    assert not (attempt / "stdout.jsonl").exists()
