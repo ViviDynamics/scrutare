@@ -948,13 +948,14 @@ def _timing_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
     Wall clock is a measurement. What replay can check is that each launched session's
     record names the rail its invocation recorded, counts the tokens its result reports and
     the invocations it made, and that its retry and capacity waits are the ones the retained
-    streams and the result announce. The run's record must be the sum of its sessions' and
-    last at least as long as the longest of them. A run without any record is not audited, so
-    earlier bundles replay as before. A run whose sessions recorded timing but which has no
-    run-level record (an engine run outside a review, such as an evaluation) audits only
-    the sessions.
+    streams and the result announce. A version 2 record's request timing must be the sum the
+    retained result lines carry, which no rerun is needed to recompute. The run's record
+    must be the sum of its sessions' and last at least as long as the longest of them. A
+    run without any record is not audited, so earlier bundles replay as before. A run whose
+    sessions recorded timing but which has no run-level record (an engine run outside a
+    review, such as an evaluation) audits only the sessions.
     """
-    from scrutare.engine.session_output import retry_events
+    from scrutare.engine.session_output import request_timing_events, retry_events
     from scrutare.engine.timing import (
         TIMING_FILE,
         SessionTiming,
@@ -1003,7 +1004,10 @@ def _timing_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
                     or (timing.retries, timing.retry_wait_seconds) != retry_events(streams)
                     or timing.capacity_wait_seconds != capacity.get("wait_seconds", 0.0)
                     or timing.capacity_slot_wait_seconds
-                    != capacity.get("slot_wait_seconds", 0.0)):
+                    != capacity.get("slot_wait_seconds", 0.0)
+                    # A version 1 record predates request timing and carries none to check.
+                    or (timing.schema_version != 1
+                        and timing.requests != request_timing_events(streams))):
                 raise ValueError
         except (ReplayError, TimingError, ValueError, TypeError, KeyError):
             issues.append(AuditIssue("timing_disagrees", f"{where}/{TIMING_FILE}", "invalid"))

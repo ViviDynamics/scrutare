@@ -62,6 +62,7 @@ from scrutare.engine.session_output import (
     decode_reanchor_session,
     decode_session,
     findings_schema,
+    request_timing_events,
     require_sent_effort,
     retry_events,
 )
@@ -1458,14 +1459,16 @@ async def _run_session(
             if launched is not None and isinstance(rail, ModelRail):
                 # Before result.json, so a session whose record could not be written has
                 # neither, as an unwritable result always left it.
-                retries, retry_wait = retry_events(
-                    evidence.stdout + b"\n" + evidence.correction_stdout)
+                streams = evidence.stdout + b"\n" + evidence.correction_stdout
+                retries, retry_wait = retry_events(streams)
                 write_owned_json(artifact_directory / TIMING_FILE, SessionTiming(
                     rail.provider, rail.model,
                     1 + os.path.lexists(artifact_directory / "correction.stdout.jsonl"),
                     max(0.0, ended - launched), outcome.usage.total, outcome.usage.output,
                     retries, retry_wait, queue.wait_seconds if queue is not None else 0.0,
                     queue.slot_wait_seconds if queue is not None else 0.0,
+                    # nare's per-request timing from each result line the streams kept.
+                    request_timing_events(streams),
                 ).to_dict(), prepared_root=prepared_root)
             write_owned_json(artifact_directory / "result.json", {
                 "schema_version": 1, "scrutare_version": __version__,

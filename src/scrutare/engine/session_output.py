@@ -16,6 +16,7 @@ from scrutare.engine.debate_inputs import DebateInput
 from scrutare.engine.persona_inputs import PersonaReanchorInput
 from scrutare.engine.reanchor import parse_reanchor_output
 from scrutare.engine.session_models import CapacityUsage, SessionCost, TokenUsage
+from scrutare.engine.timing import RequestTiming, total_requests
 from scrutare.findings.citation_correction import (
     CitationDefect,
     apply_citation_correction,
@@ -574,6 +575,29 @@ def retry_events(stdout: bytes) -> tuple[int, float]:
             count += 1
             wait += seconds
     return count, round(wait, 3)
+
+
+def request_timing_events(stdout: bytes) -> RequestTiming | None:
+    """nare's per-request timing over retained streams: the sum of each result's sums.
+
+    Each invocation's `result` line carries `request_timing`, its requests' timing summed;
+    a session with a resumed correction turn has two. Read tolerantly, like `retry_events`:
+    unreadable lines, other records and a malformed or absent field are skipped, so this
+    never raises. Null when no result line carried the field (an older nare, or a session
+    that ended without its result line).
+    """
+    blocks: list[RequestTiming | None] = []
+    for line in stdout.split(b"\n"):
+        if not line.strip():
+            continue
+        try:
+            document = _json(line)
+            if _envelope(document) != "result":
+                continue
+            blocks.append(RequestTiming.from_dict(document["request_timing"]))
+        except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
+            continue
+    return total_requests(blocks)
 
 
 def _budget(value: object, expected_limit: int, usage: TokenUsage | None = None,

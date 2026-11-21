@@ -944,21 +944,36 @@ A session's record:
 | `tokens`, `output_tokens` | The session's `usage.total` and `usage.output` |
 | `retries`, `retry_wait_seconds` | Resent requests and the waits nare announced before them (`detail.retry.wait`) |
 | `capacity_wait_seconds`, `capacity_slot_wait_seconds` | The session's recorded [capacity](#capacity-queueing-opt-in) waits, 0 without the block |
-| `first_token_seconds`, `decode_tokens_per_second` | Always `null` for now |
+| `requests` | nare's [request timing](https://github.com/ViviDynamics/nare/blob/2026.11.109/docs/contract.md#request-timing) summed over the session's invocations, or `null` when no result line carried it |
+| `first_token_seconds` | Mean time to first token: `requests.first_token_seconds` over `requests.first_tokens`, `null` with none |
+| `decode_tokens_per_second` | `requests.generation_output_tokens` over `requests.generation_seconds`, `null` when that is zero or `null` |
+
+`requests` has nare's fields: `requests` (model requests that answered),
+`timed`, `headers_seconds`, `total_seconds`, `first_tokens`,
+`first_token_seconds`, `generation_seconds` and `generation_output_tokens`.
+nare reports them per invocation on each `result` line, so a session with a
+resumed correction turn adds its two lines. A seconds sum is `null` when no
+request measured it. nare's clock covers the HTTP request alone, so retry
+backoff, capacity waits and failed attempts are not in it; they are the
+session's other fields.
 
 The review's record has `wall_seconds` from the start of the review (capture
 included) to its verdict, the session totals (`sessions`,
 `session_wall_seconds`, `longest_session_seconds`, `tokens`, `output_tokens`,
-`retries` and the three wait sums) and `rails`, the sessions, session seconds
-and tokens per provider and model. The CLI's result document carries it as
-`timing`, so the App's job record has it too.
+`retries` and the three wait sums), `requests` (the sum of the sessions'
+blocks, `null` when none had one), the same two derived values from that sum,
+and `rails`, the sessions, session seconds and tokens per provider and model.
+The CLI's result document carries it as `timing`, so the App's job record has
+it too.
 
-Time to first token and decode rate need the time each model request was sent
-and when its first byte arrived. nare 2026.11.109 reports neither: a `cost`
-event carries usage only, and a turn that only calls tools streams no text, so
-no caller can derive them reliably. They stay `null` until nare reports
-per-request timing
-([ViviDynamics/nare#315](https://github.com/ViviDynamics/nare/issues/315)).
+What nare can measure depends on the rail. A streamed request (every openai
+rail session on a runtime that advertises `--stream`) has a first token and a
+generation window. An unstreamed one has neither, so its session's two derived
+values are `null`; nare's scripted `--replay` transport reports zeros, which
+give a first token of 0 and no decode rate. Records are `schema_version: 2`.
+Runs written before this (version 1) have no `requests` block and both values
+`null`, and still validate and replay as they did. Scrutare reads the field
+from the stream rather than gating on a release, and sends nothing new for it.
 
 The posted summary carries one compact line from the review's record, just
 above the run marker:
@@ -966,6 +981,15 @@ above the run marker:
 ```text
 Review time: 12 min 5 s, 5 sessions, 45210 tokens (1200 output)
 ```
+
+When the review's record measured both time to first token and decode rate,
+the line ends with both, to one decimal:
+
+```text
+Review time: 12 min 5 s, 5 sessions, 45210 tokens (1200 output), first token 2.1 s, 17.3 output tokens per second
+```
+
+With either one `null`, it has neither.
 
 `github.timing_footer: false` leaves it out, and the summary is then byte for
 byte what it was before this line existed. A run with no review record (an
