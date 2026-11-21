@@ -2,7 +2,9 @@
 
 import asyncio
 import json
+import os
 import shutil
+import subprocess
 from dataclasses import replace
 
 from test_fanout import configure
@@ -22,7 +24,7 @@ SYSTEM = "--lead with a dash.\r\nKeep CRLF, a tab\t and \u2713 \u00e9.\n\n"
 
 def test_installed_runtime_advertises_every_option_scrutare_gates(tmp_path, installed):
     capability = asyncio.run(inspect_nare_runtime(offline_runtime(tmp_path, installed)))
-    assert (capability.version, capability.contract) == ("2026.11.100", 3)
+    assert (capability.version, capability.contract) == ("2026.11.107", 3)
     for switch in ("--stream", "--jsonl", "--yes", "--cache-breakpoints"):
         flag = capability.flag(switch)
         assert flag is not None and not flag.takes_value
@@ -49,6 +51,19 @@ def test_installed_runtime_advertises_every_option_scrutare_gates(tmp_path, inst
         assert flag is not None and flag.takes_value and flag.choices is None
     # Both modes are offered: the queue, and the queue with a shared in-flight limit.
     assert capability.capacity == ("fixed", "adaptive")
+
+
+def test_installed_compaction_defaults_match_the_values_scrutare_pins(tmp_path, installed):
+    # nare 2026.11.101 advertises its built-in compaction defaults. Scrutare sends its own
+    # values on every contract 3 session, so a release that moves a default changes no
+    # review; this names the drift so a pin bump has to decide whether to follow it.
+    console, _ = installed
+    result = subprocess.run([str(console), "contract"], capture_output=True, text=True,
+                            check=True, cwd=tmp_path, env={"PATH": os.environ["PATH"]})
+    entry = json.loads(result.stdout)["compaction"]
+    assert entry["default"] == {"mode": "elide", "trigger": 0.8, "target": 0.6}
+    assert entry["flags"] == {"mode": "--compaction", "trigger": "--compaction-trigger",
+                              "target": "--compaction-target"}
 
 
 def test_installed_default_session_sends_no_capacity_option(capture, tmp_path, installed):
