@@ -38,6 +38,8 @@ no credentials are accepted through review request bodies.
 | `SCRUTARE_APP_JOB_TIMEOUT` | Seconds one review may run, 1 to 3300, default 3300 |
 | `SCRUTARE_APP_RECONCILE_SECONDS` | Interval for requesting redelivery of missed webhooks, default 600; 0 disables |
 | `SCRUTARE_APP_NARE_EXECUTABLE` | Installed nare executable, default `nare` |
+| `SCRUTARE_APP_PREFLIGHT_ATTEMPTS` | Most route preflights one job runs before it ends `not_started`, 1 to 10, default 4 |
+| `SCRUTARE_APP_PREFLIGHT_BACKOFF_SECONDS` | Delay after a job's first failed preflight, doubling after each, at most 3600; 1 to 3600, default 60 |
 | `SCRUTARE_APP_HOST`, `SCRUTARE_APP_PORT` | Default `127.0.0.1`, 8080 |
 | `SCRUTARE_APP_HEALTH_PORT` | Separate liveness listener on the same host, default 8081 |
 
@@ -98,6 +100,7 @@ describes.
 | `failed` | Configuration, model origin, token, capture, execution or posting was refused or failed, and the posting journal shows the review was either never sent or was confirmed. |
 | `interrupted` | The CLI was interrupted (exit 130 or a signal), reached the job deadline, was running when the service restarted, or ended with a review POST whose outcome is unknown. |
 | `superseded` | A webhook job that needed no review of its own. Its `result` names the job that covers it. |
+| `not_started` | The repository's opt-in route preflight failed on every attempt. No review was started and nothing was posted: `delivery` is `not_sent`, `reason` is the last failure's and `preflight` lists every attempt. |
 
 Every `failed` and `interrupted` result carries `delivery`, read from the run's
 posting journal rather than inferred from the exit code:
@@ -123,6 +126,16 @@ that includes `failed` jobs with `delivery: confirmed` and `interrupted` jobs
 with `delivery: uncertain`. A head that was superseded before any review is
 admitted again if it becomes the head once more. Performer API jobs are never
 merged or skipped.
+
+When the repository configures `models.preflight`
+([configuration](config.md#route-preflight-opt-in)), the worker runs it after
+the model origin check and before the review CLI, sending credentials only to
+the allowlisted origins. Every result is appended to the job's `preflight`
+list. A failed preflight starts nothing: the job returns to the queue, not to
+be claimed for `SCRUTARE_APP_PREFLIGHT_BACKOFF_SECONDS`, then twice that, and
+so on, until `SCRUTARE_APP_PREFLIGHT_ATTEMPTS` preflights have failed and it
+ends `not_started`. A new push still supersedes a waiting job. A passed
+preflight is not repeated by the CLI (`--skip-preflight`).
 
 Failed and interrupted jobs are never retried automatically. Each job has a
 permanent private working directory holding the fetched configuration and the

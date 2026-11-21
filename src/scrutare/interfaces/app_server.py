@@ -50,6 +50,8 @@ def load_settings() -> AppSettings:
             int(os.environ.get("SCRUTARE_APP_MAX_PENDING", "100")),
             int(os.environ.get("SCRUTARE_APP_JOB_TIMEOUT", "3300")),
             retry == "true",
+            int(os.environ.get("SCRUTARE_APP_PREFLIGHT_ATTEMPTS", "4")),
+            int(os.environ.get("SCRUTARE_APP_PREFLIGHT_BACKOFF_SECONDS", "60")),
         )
         if not settings.private_key.is_file():
             raise AppError("App private key file is unavailable")

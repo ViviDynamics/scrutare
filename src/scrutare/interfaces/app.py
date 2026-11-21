@@ -50,6 +50,10 @@ class AppSettings:
     # Installation tokens last one hour; stop a review before its credential expires.
     job_timeout: int = 3300
     whole_review_retry: bool = False
+    # A job whose opt-in route preflight fails is queued again after a doubling delay
+    # from this many seconds, until it has run the preflight this many times.
+    preflight_attempts: int = 4
+    preflight_backoff: int = 60
 
     def __post_init__(self) -> None:
         if (type(self.app_id) is not int or self.app_id <= 0
@@ -57,6 +61,10 @@ class AppSettings:
                 or type(self.max_pending) is not int or self.max_pending <= 0
                 or type(self.job_timeout) is not int or not 0 < self.job_timeout <= 3300
                 or type(self.whole_review_retry) is not bool
+                or type(self.preflight_attempts) is not int
+                or not 1 <= self.preflight_attempts <= 10
+                or type(self.preflight_backoff) is not int
+                or not 1 <= self.preflight_backoff <= 3600
                 or not self.installations
                 or not isinstance(self.model_origins, tuple) or not self.model_origins
                 or any(not isinstance(origin, str) or _ORIGIN.fullmatch(origin) is None
@@ -81,7 +89,8 @@ class AppSettings:
 class JobStore:
     """SQLite admissions and leases; running work is never replayed after restart.
 
-    Statuses: queued, running, then posted, unchanged, failed, interrupted or superseded.
+    Statuses: queued, running, then posted, unchanged, failed, interrupted, superseded or
+    not_started. A queued job may wait until ``not_before`` after a failed preflight.
     """
 
     def __init__(self, path: Path, max_pending: int = 100):
@@ -99,6 +108,11 @@ class JobStore:
                 claimed REAL)""")
             db.execute("CREATE INDEX IF NOT EXISTS jobs_status ON jobs (status, created)")
             db.execute("CREATE INDEX IF NOT EXISTS jobs_target ON jobs (repository, number)")
+            # Added with the route preflight; older stores gain the columns empty.
+            columns = {row["name"] for row in db.execute("PRAGMA table_info(jobs)")}
+            for column in ("not_before REAL", "preflight TEXT"):
+                if column.split()[0] not in columns:
+                    db.execute(f"ALTER TABLE jobs ADD COLUMN {column}")
             db.execute("""CREATE TABLE IF NOT EXISTS redeliveries (
                 guid TEXT PRIMARY KEY, attempts INTEGER NOT NULL, requested REAL NOT NULL)""")
 
@@ -111,6 +125,7 @@ class JobStore:
     def _job(row: sqlite3.Row) -> dict[str, Any]:
         job = dict(row)
         job["result"] = json.loads(job["result"]) if job["result"] else None
+        job["preflight"] = json.loads(job["preflight"]) if job["preflight"] else []
         return job
 
     def enqueue(self, delivery: str, repository: str, number: int,
@@ -157,11 +172,14 @@ class JobStore:
                 # Leaving the transaction by exception also undoes the superseding above.
                 raise AppError("review queue is full; retry later", 503)
             if prior is not None:
-                db.execute("UPDATE jobs SET status = 'queued', result = NULL, created = ? "
-                           "WHERE id = ?", (time.time(), identity))
+                db.execute("UPDATE jobs SET status = 'queued', result = NULL, created = ?, "
+                           "not_before = NULL, preflight = NULL WHERE id = ?",
+                           (time.time(), identity))
             else:
                 db.execute(
-                    "INSERT INTO jobs VALUES (?, ?, ?, ?, ?, 'queued', ?, NULL, ?, NULL, NULL)",
+                    "INSERT INTO jobs (id, delivery, repository, number, installation, status, "
+                    "created, result, head, reviewed, claimed) "
+                    "VALUES (?, ?, ?, ?, ?, 'queued', ?, NULL, ?, NULL, NULL)",
                     (identity, delivery, repository, number, installation, time.time(), head))
             row = db.execute("SELECT * FROM jobs WHERE id = ?", (identity,)).fetchone()
             return self._job(row)
@@ -173,11 +191,13 @@ class JobStore:
             raise AppError("job not found", 404)
         return self._job(row)
 
-    def claim(self) -> dict[str, Any] | None:
+    def claim(self, now: float | None = None) -> dict[str, Any] | None:
+        current = time.time() if now is None else now
         with closing(self._connect()) as db, db:
             db.execute("BEGIN IMMEDIATE")
             row = db.execute(
-                "SELECT * FROM jobs WHERE status = 'queued' ORDER BY created, rowid LIMIT 1"
+                "SELECT * FROM jobs WHERE status = 'queued' AND (not_before IS NULL "
+                "OR not_before <= ?) ORDER BY created, rowid LIMIT 1", (current,)
             ).fetchone()
             if row is None:
                 return None
@@ -195,12 +215,35 @@ class JobStore:
     def finish(self, identity: str, status: str, result: dict[str, Any],
                reviewed: str | None = None) -> None:
         """Record a terminal state and the head whose review was or may have been sent."""
-        if status not in {"posted", "unchanged", "failed", "interrupted", "superseded"}:
+        if status not in {"posted", "unchanged", "failed", "interrupted", "superseded",
+                          "not_started"}:
             raise AppError("invalid terminal job status")
         with closing(self._connect()) as db, db:
             cursor = db.execute("UPDATE jobs SET status = ?, result = ?, reviewed = ? "
                                 "WHERE id = ? AND status = 'running'",
                                 (status, json.dumps(result, allow_nan=False), reviewed, identity))
+            if cursor.rowcount != 1:
+                raise AppError("job does not own a running lease", 409)
+
+    def record_preflight(self, identity: str, record: dict[str, Any]) -> list[dict[str, Any]]:
+        """Append one preflight result to a running job's history and return the history."""
+        with closing(self._connect()) as db, db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("SELECT preflight FROM jobs WHERE id = ? AND status = 'running'",
+                             (identity,)).fetchone()
+            if row is None:
+                raise AppError("job does not own a running lease", 409)
+            history = [*(json.loads(row["preflight"]) if row["preflight"] else []), record]
+            db.execute("UPDATE jobs SET preflight = ? WHERE id = ?",
+                       (json.dumps(history, allow_nan=False), identity))
+            return history
+
+    def defer(self, identity: str, not_before: float) -> None:
+        """Queue a running job again, not to be claimed before ``not_before``."""
+        with closing(self._connect()) as db, db:
+            cursor = db.execute("UPDATE jobs SET status = 'queued', claimed = NULL, "
+                                "not_before = ? WHERE id = ? AND status = 'running'",
+                                (not_before, identity))
             if cursor.rowcount != 1:
                 raise AppError("job does not own a running lease", 409)
 

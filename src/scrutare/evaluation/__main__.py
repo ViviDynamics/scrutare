@@ -4,9 +4,12 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import sys
 from pathlib import Path
 
+from scrutare import __version__
 from scrutare.config import parse_config
+from scrutare.engine.preflight import PreflightError, not_started
 from scrutare.engine.session_models import NareRuntime
 from scrutare.evaluation.corpus import load_corpus, read_json
 from scrutare.evaluation.promotion import evaluate_promotion
@@ -60,17 +63,24 @@ def main() -> None:
     gate.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     if args.command == 'run':
-        asyncio.run(run_experiment(load_corpus(args.corpus, args.split),
-            parse_config(args.config.read_bytes()), args.output,
-            runtime=NareRuntime(args.nare_executable, args.max_turns, args.timeout_seconds),
-            evidence_kind=args.evidence_kind, concurrency=args.concurrency,
-            comparison_set=args.comparison_set,
-            variant_names=tuple(args.variants.split(',')) if args.variants is not None else None,
-            transient_retries=args.transient_retries,
-            transient_retry_delay_seconds=args.transient_retry_delay_seconds,
-            transient_retry_budget=args.transient_retry_budget,
-            assessment_tokens=args.assessment_tokens,
-            qualification_rule_a=args.qualification_rule_a))
+        try:
+            asyncio.run(run_experiment(
+                load_corpus(args.corpus, args.split),
+                parse_config(args.config.read_bytes()), args.output,
+                runtime=NareRuntime(args.nare_executable, args.max_turns, args.timeout_seconds),
+                evidence_kind=args.evidence_kind, concurrency=args.concurrency,
+                comparison_set=args.comparison_set,
+                variant_names=(tuple(args.variants.split(','))
+                               if args.variants is not None else None),
+                transient_retries=args.transient_retries,
+                transient_retry_delay_seconds=args.transient_retry_delay_seconds,
+                transient_retry_budget=args.transient_retry_budget,
+                assessment_tokens=args.assessment_tokens,
+                qualification_rule_a=args.qualification_rule_a))
+        except PreflightError as error:
+            # No output directory exists: the campaign claimed and spent nothing.
+            print(json.dumps(not_started(error.report, __version__), sort_keys=True))
+            sys.exit(4)
     elif args.command == 'adjudicate':
         write_json(args.output, adjudication_packet(read_json(args.experiment)['runs']))
     elif args.command == 'qualify-rule-a':

@@ -160,11 +160,66 @@ class CapacitySettings:
                                       for name in _CAPACITY_FIELDS[self.mode]}}
 
 
+# Seconds one preflight check may take when the block names none, and the most it may name.
+PREFLIGHT_TIMEOUT_SECONDS = 30
+PREFLIGHT_MAX_TIMEOUT_SECONDS = 300
+
+
+@dataclass(frozen=True)
+class PreflightSettings:
+    """Opt-in checks that each rail's route answers before a review claims anything.
+
+    ``route`` asks an openai rail's ``base_url`` for ``GET /models`` and requires the
+    configured model in the answer; it is not a model request. ``request`` sends one tiny
+    schema-bound request through nare with the rail's own options, which is a model call.
+    Both off (the default) changes nothing and is never recorded.
+    """
+
+    route: bool = False
+    request: bool = False
+    timeout_seconds: int | float | None = None
+
+    def __post_init__(self) -> None:
+        for name in ("route", "request"):
+            if type(getattr(self, name)) is not bool:
+                raise ConfigError(f"models.preflight.{name}: expected a boolean")
+        seconds = self.timeout_seconds
+        if seconds is None:
+            if self.enabled:
+                # Explicit once enabled, so equal settings record and compare equal.
+                object.__setattr__(self, "timeout_seconds", PREFLIGHT_TIMEOUT_SECONDS)
+            return
+        if not self.enabled:
+            raise ConfigError("models.preflight.timeout_seconds: requires route or request")
+        if (type(seconds) not in (int, float) or not math.isfinite(seconds)
+                or seconds <= 0):
+            raise ConfigError("models.preflight.timeout_seconds: expected a positive finite "
+                              "number")
+        if seconds > PREFLIGHT_MAX_TIMEOUT_SECONDS:
+            raise ConfigError("models.preflight.timeout_seconds: expected at most "
+                              f"{PREFLIGHT_MAX_TIMEOUT_SECONDS} seconds")
+
+    @property
+    def enabled(self) -> bool:
+        return self.route or self.request
+
+    @property
+    def seconds(self) -> float:
+        """The bound each check runs under."""
+        return float(PREFLIGHT_TIMEOUT_SECONDS if self.timeout_seconds is None
+                     else self.timeout_seconds)
+
+    def record(self) -> dict[str, Any]:
+        return {"route": self.route, "request": self.request,
+                "timeout_seconds": self.timeout_seconds}
+
+
 @dataclass(frozen=True)
 class ModelSettings:
     default: ModelRail
     overrides: tuple[tuple[str, ModelRail], ...] = ()
     capacity: CapacitySettings = CapacitySettings()
+    preflight: PreflightSettings = PreflightSettings()
 
     def for_persona(self, name: str) -> ModelRail:
         return next((rail for persona, rail in self.overrides if persona == name), self.default)
@@ -193,7 +248,9 @@ class ModelSettings:
                 "overrides": {name: self.rail_record(rail) for name, rail in self.overrides},
                 # Off is never recorded, so configurations without it keep their bytes.
                 **({"capacity": self.capacity.record()}
-                   if self.capacity.mode != "off" else {})}
+                   if self.capacity.mode != "off" else {}),
+                **({"preflight": self.preflight.record()}
+                   if self.preflight.enabled else {})}
 
 
 @dataclass(frozen=True)
@@ -735,8 +792,14 @@ def _capacity(value: object) -> CapacitySettings:
                             *(fields.get(name) for name in _CAPACITY_VALUES))
 
 
+def _preflight(value: object) -> PreflightSettings:
+    fields = _mapping(value, "models.preflight", ("route", "request", "timeout_seconds"))
+    return PreflightSettings(fields.get("route", False), fields.get("request", False),
+                             fields.get("timeout_seconds"))
+
+
 def _models(value: object, personas: tuple[str | PersonaDefinition, ...]) -> ModelSettings:
-    fields = _mapping(value, "models", ("default", "overrides", "capacity"))
+    fields = _mapping(value, "models", ("default", "overrides", "capacity", "preflight"))
     default = _rail(fields.get("default", {}), "models.default")
     overrides = _mapping(fields.get("overrides", {}), "models.overrides", None)
     names = {p.name if isinstance(p, PersonaDefinition) else p for p in personas}
@@ -751,7 +814,12 @@ def _models(value: object, personas: tuple[str | PersonaDefinition, ...]) -> Mod
             rail.provider != "openai" for rail in (default, *(rail for _, rail in result))):
         # Only nare's openai rail declares a capacity marker; elsewhere the block does nothing.
         raise ConfigError("models.capacity.mode: requires provider openai on at least one rail")
-    return ModelSettings(default, tuple(result), capacity)
+    preflight = _preflight(fields.get("preflight", {}))
+    if preflight.route and all(
+            rail.provider != "openai" for rail in (default, *(rail for _, rail in result))):
+        # Only an openai rail's route is listed; the anthropic rail is skipped.
+        raise ConfigError("models.preflight.route: requires provider openai on at least one rail")
+    return ModelSettings(default, tuple(result), capacity, preflight)
 
 
 def _categories(value: object, path: str) -> tuple[Category, ...]:
