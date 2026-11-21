@@ -329,11 +329,11 @@ def report(bump: Bump) -> str:
     lines += [
         "## Before merging",
         "",
-        "- This bump is never merged automatically. A green, additive bump is merged with "
-        "`merge-verified` after review.",
-        "- A pull request pushed by the workflow's `GITHUB_TOKEN` starts no other workflow, "
-        "so the bump workflow dispatches CI and the disclosure guard on this branch "
-        "itself; their runs appear on the head commit.",
+        "- This bump is never merged automatically. A green, additive bump is merged after "
+        "review.",
+        "- The bump workflow dispatches CI on this branch itself, since a push made with "
+        "its `GITHUB_TOKEN` starts no other workflow. A pull request a maintainer opens "
+        "from the branch runs the usual CI and disclosure guard.",
         "- A nare defect this bump exposes is filed on ViviDynamics/nare, linked here and "
         "fixed in nare. Scrutare does not carry workarounds for nare defects.",
         "",

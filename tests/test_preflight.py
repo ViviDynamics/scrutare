@@ -289,7 +289,8 @@ def test_one_route_is_asked_once_and_the_first_failure_stops(route):
 def test_every_reason_is_typed():
     assert set(REASONS) >= {"route_unreachable", "model_missing", "gateway_error",
                             "credential_refused", "origin_refused", "request_failed",
-                            "request_timeout", "answer_invalid", "runtime_refused"}
+                            "request_timeout", "answer_invalid", "runtime_refused",
+                            "encoding_refused"}
 
 
 # The request check (argv shape runs everywhere; execution needs installed nare)
@@ -374,7 +375,7 @@ def test_installed_request_passes_with_the_rail_encoding(route):
     assert "tools" not in payload or not payload["tools"]
 
 
-def test_installed_request_failure_is_request_failed(route):
+def test_installed_refused_encoding_is_encoding_refused(route):
     runtime = installed()
 
     def refuse(handler, payload):
@@ -383,9 +384,48 @@ def test_installed_request_failure_is_request_failed(route):
     with pytest.raises(PreflightError) as caught:
         run_request(request_config(route.url, structured_output="json_schema"), runtime)
     check = caught.value.report.checks[0]
-    assert caught.value.reason == "request_failed" and check["stop_reason"] is None
+    assert caught.value.reason == "encoding_refused" and check["stop_reason"] is None
+    assert check["failure"] == {"reason": "status", "status": 400, "transient": False,
+                                "constrained": True, "attempts": 1}
     # The remote body is not recorded.
     assert "not supported" not in json.dumps(caught.value.report.to_dict())
+
+
+@pytest.mark.parametrize(("status", "reason"), [
+    (401, "credential_refused"), (403, "credential_refused"), (418, "request_failed")])
+def test_installed_failed_request_is_classified_from_nare_failure_record(route, status, reason):
+    runtime = installed()
+
+    def refuse(handler, payload):
+        handler._send(status, {"error": {"message": "no"}})
+    route.chat = refuse
+    with pytest.raises(PreflightError) as caught:
+        run_request(request_config(route.url), runtime)
+    assert caught.value.reason == reason
+    assert caught.value.report.checks[0]["failure"]["status"] == status
+
+
+@pytest.mark.parametrize(("failure", "reason"), [
+    ({"reason": "status", "status": 422, "constrained": True}, "encoding_refused"),
+    ({"reason": "status", "status": 400, "constrained": False}, "request_failed"),
+    ({"reason": "status", "status": 503, "transient": True}, "gateway_error"),
+    ({"reason": "overloaded", "status": None}, "gateway_error"),
+    ({"reason": "connection", "status": None}, "route_unreachable"),
+    ({"reason": "timeout", "status": None}, "request_timeout"),
+    ({"reason": "stream", "status": None}, "request_failed"),
+    ({"reason": None, "status": None}, "request_failed"),
+])
+def test_failure_reasons_follow_nare_failure_record(failure, reason):
+    from scrutare.engine.preflight import _failure, _failure_reason
+    record = _failure({"failure": failure})
+    assert record is not None and _failure_reason(record) == reason
+
+
+@pytest.mark.parametrize("failure", [
+    None, [], {"status": "400"}, {"status": 200}, {"status": 400, "reason": 3}])
+def test_a_malformed_failure_record_is_ignored(failure):
+    from scrutare.engine.preflight import _failure
+    assert _failure({"failure": failure}) is None
 
 
 def test_installed_invalid_answer_is_answer_invalid(route):

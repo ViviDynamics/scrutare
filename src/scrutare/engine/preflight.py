@@ -48,6 +48,7 @@ PreflightReason = Literal[
     "origin_refused", "credential_missing", "route_unreachable", "gateway_error",
     "credential_refused", "route_refused", "route_invalid", "model_missing",
     "runtime_refused", "request_failed", "request_timeout", "answer_invalid",
+    "encoding_refused",
 ]
 REASONS: tuple[str, ...] = get_args(PreflightReason)
 
@@ -263,10 +264,45 @@ async def _request(rail: ModelRail, runtime: NareRuntime, capability: NareCapabi
     stop = result.get("stop_reason")
     if stop == "timeout":
         return done("request_timeout", **detail)
-    # A failed provider call reaches nare's result only as error text, which a caller must
-    # not parse, so a refused encoding and a gateway failure are one reason here until
-    # nare reports the failure's status (ViviDynamics/nare#314).
-    return done("request_failed" if stop is None else "answer_invalid", **detail)
+    if stop is not None:
+        return done("answer_invalid", **detail)
+    failure = _failure(result) if capability.provider_failure else None
+    if failure is None:
+        # A runtime without nare's failure record says how the request failed only in its
+        # error text, which a caller must not parse.
+        return done("request_failed", **detail)
+    return done(_failure_reason(failure), failure=failure, **detail)
+
+
+def _failure(result: dict[str, Any]) -> dict[str, Any] | None:
+    """nare's failure record of the failed request, keeping only its typed fields."""
+    record = result.get("failure")
+    if not isinstance(record, dict):
+        return None
+    status, reason = record.get("status"), record.get("reason")
+    if (status is not None and (type(status) is not int or not 400 <= status <= 599)) or (
+            reason is not None and not isinstance(reason, str)):
+        return None
+    return {"reason": reason, "status": status,
+            "transient": record.get("transient") is True,
+            "constrained": record.get("constrained") is True,
+            "attempts": record.get("attempts") if type(record.get("attempts")) is int else None}
+
+
+def _failure_reason(failure: dict[str, Any]) -> PreflightReason:
+    """The typed reason for a failed request, from nare's record (ViviDynamics/nare#314)."""
+    status, reason = failure["status"], failure["reason"]
+    if status in (400, 422) and failure["constrained"]:
+        return "encoding_refused"
+    if status in (401, 403):
+        return "credential_refused"
+    if (status is not None and status >= 500) or reason == "overloaded":
+        return "gateway_error"
+    if reason == "connection" and status is None:
+        return "route_unreachable"
+    if reason in ("timeout", "stream"):
+        return "request_timeout" if reason == "timeout" else "request_failed"
+    return "request_failed"
 
 
 def _distinct(rails: tuple[ModelRail, ...]) -> tuple[ModelRail, ...]:

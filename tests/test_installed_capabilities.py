@@ -47,6 +47,8 @@ def test_installed_runtime_advertises_every_option_scrutare_gates(tmp_path, inst
         "json_schema", "json_object", "tool_call")
     assert capability.structured_output_for("anthropic") == ("json_schema",)
     assert capability.proxy_num_retries
+    # A failed request's kind and status reach the result line (nare #314).
+    assert capability.provider_failure
     # The release lists its capacity options. No session is sent one unless the review's
     # configuration asks for a capacity mode.
     for switch in ("--capacity-queue", "--capacity-adaptive"):
