@@ -69,10 +69,19 @@ observations = {
     "credential_names": [n for n in os.environ if "KEY" in n or "TOKEN" in n],
     "nare_controls": {n: v for n, v in os.environ.items() if n.startswith("NARE_")},
     "arguments": arguments,
+    "check_commands": 0,
 }
+# The one secondary process a run may start: the --check-command argv it was given, exactly.
+check_command = option("--check-command")
+check_command = json.loads(check_command) if check_command else None
 
 
 def audit(event, args):
+    if (event == "subprocess.Popen" and check_command is not None
+            and os.fsdecode(args[0]) == check_command[0]
+            and isinstance(args[1], (list, tuple)) and list(args[1]) == check_command):
+        observations["check_commands"] += 1
+        return
     if event in {
         "socket.connect",
         "socket.connect_ex",

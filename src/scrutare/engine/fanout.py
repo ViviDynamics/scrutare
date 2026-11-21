@@ -13,6 +13,7 @@ from scrutare.config import ReviewConfig
 from scrutare.engine.budgets import BudgetLease, ReviewBudgetLedger
 from scrutare.engine.nare_session import (
     inspect_nare_runtime,
+    require_findings_options,
     require_rail_options,
     run_persona_session,
 )
@@ -133,6 +134,7 @@ async def _prepare_execution(
         write_owned_json(run / "routing.json", routing_record, prepared_root=inputs.root)
     capability = await inspect_nare_runtime(runtime)
     require_rail_options(config.models, capability)
+    require_findings_options(config.findings, capability)
     return _ExecutionContext(inputs, descriptors, ledger, capability, runtime, config, run,
                              attempts, leases, assessment_persona=assessor,
                              routing=routing_record)

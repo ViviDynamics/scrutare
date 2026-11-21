@@ -44,7 +44,7 @@ def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=T
            structured=False, succeeds=True, policy="citation_correction", assessment=False,
            provider_error=False, correction_summary=None, limit=400, rail_options="",
            first_failures=(), correction_failures=(), capacity="", first_refusals=(),
-           correction_refusals=()):
+           correction_refusals=(), findings="", later=(), read_caller=True):
     """Run `scrutare review` once against offline GitHub and native offline nare."""
     from scrutare.engine.repository_context import _artifact
 
@@ -69,8 +69,11 @@ def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=T
     replies = [*({"capacity": seconds} for seconds in first_refusals),
                *({"transient": status} for status in first_failures),
                tool(args={"path": "repository-context.json"}),
-               tool(args={"path": _artifact("head", "src/caller.py")}, call_id="caller"),
-               text(answer(provider))]
+               *([tool(args={"path": _artifact("head", "src/caller.py")}, call_id="caller")]
+                 if read_caller else []),
+               text(answer(provider)),
+               # Further replies of the same process: an in-session correction's turns.
+               *(reply(provider) for reply in later)]
     correction_replies = [] if correction is None else [
         *({"capacity": seconds} for seconds in correction_refusals),
         *({"transient": status} for status in correction_failures),
@@ -103,7 +106,8 @@ def review(tmp_path, installed, wheel_cli, *, answer, correction=None, enabled=T
         f"budgets: {{per_persona_tokens: {limit}, review_max_tokens: {limit * 2}}}\n"
         "context: {enabled: true, related_paths: [src/caller.py, tests/test_caller.py]}\n"
         "findings: {evidence: v2" + (f", {policy}: true" if enabled else "")
-        + (", assessment: {enabled: true, tokens: 400}" if assessment else "") + "}\n")
+        + (", assessment: {enabled: true, tokens: 400}" if assessment else "") + findings
+        + "}\n")
     binary = tmp_path / "bin"
     binary.mkdir()
     gh = binary / "gh"

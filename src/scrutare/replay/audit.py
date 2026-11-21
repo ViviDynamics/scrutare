@@ -771,6 +771,163 @@ def _capacity_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ..
     return tuple(issues)
 
 
+def _recorded_corrections(invocation: dict[str, Any]) -> str:
+    """The correction budget a session recorded: the check's, or the pinned 1.
+
+    The citation check audit binds a recorded budget to the captured configuration.
+    """
+    record = invocation.get("citation_check")
+    limit = record.get("max_corrections") if isinstance(record, dict) else None
+    return str(limit) if type(limit) is int and limit >= 1 else "1"
+
+
+# The flags only a session carrying the in-session citation check sends.
+_CHECK_FLAGS = ("--check-command", "--check-timeout", "--require-cited-reads",
+                "--cited-read-map")
+
+
+def _citation_check_issues(run_dir: Path, config_data: object) -> tuple[AuditIssue, ...]:
+    """Bind each discovery session's in-session citation check to config, argv and streams.
+
+    A session carries the check exactly when the captured configuration chose it and the
+    session is a discovery session. Its record must name the checker argv nare was given,
+    pinned to a package digest, the explicit timeout and the configured correction budget;
+    with cited reads, the pointer and the attempt's own map, which must equal the map the
+    retained manifest gives. Its result record is recomputed from the retained stream. Runs
+    that never opted in and carry no record or flag are not audited, so earlier bundles
+    replay as before.
+    """
+    from scrutare.engine.session_output import citation_check_record, findings_schema
+    from scrutare.findings.citation_check import (
+        CHECK_TIMEOUT_SECONDS,
+        CITED_PATHS,
+        CITED_READ_MAP,
+        MODULE,
+        cited_read_map,
+        refusal,
+    )
+
+    invocations = _invocations(_session_records(run_dir))
+
+    def document(path: Path) -> object:
+        try:
+            return decode_artifact(read_artifact(path), artifact=path.name)
+        except ReplayError:
+            return None
+
+    def carries(attempt: Path, invocation: object) -> bool:
+        argv = invocation.get("argv") if isinstance(invocation, dict) else None
+        result = document(attempt / "result.json") if os.path.lexists(
+            attempt / "result.json") else None
+        return ((isinstance(invocation, dict) and "citation_check" in invocation)
+                or (isinstance(argv, list) and any(flag in _names(argv) for flag in _CHECK_FLAGS))
+                or (isinstance(result, dict) and "citation_check" in result)
+                or os.path.lexists(attempt / CITED_READ_MAP))
+
+    try:
+        findings = parse_config(json.dumps(config_data)).findings
+    except (ConfigError, TypeError, ValueError):
+        if any(carries(attempt, invocation) for attempt, invocation in invocations):
+            return (AuditIssue("citation_check_config_invalid", "config.json.findings",
+                               "invalid"),)
+        return ()
+    opted_in = findings.citation_check == "session"
+    if not opted_in:
+        return tuple(AuditIssue("citation_check_unconfigured",
+                                f"{attempt.relative_to(run_dir).as_posix()}/invocation.json",
+                                "invalid")
+                     for attempt, invocation in invocations if carries(attempt, invocation))
+    discovery_schema = findings_schema(evidence_version=2)
+    root = run_dir / "review-inputs"
+    issues = []
+    for attempt, invocation in invocations:
+        where = attempt.relative_to(run_dir).as_posix()
+        if not isinstance(invocation, dict):
+            continue
+        discovery = ("purpose" not in invocation
+                     and document(attempt / "findings.schema.json") == discovery_schema)
+        if not discovery:
+            if carries(attempt, invocation):
+                issues.append(AuditIssue("citation_check_unrecorded",
+                                         f"{where}/invocation.json", "invalid"))
+            continue
+        try:
+            record, argv = invocation["citation_check"], invocation["argv"]
+            names = _names(argv)
+            recorded_root, session = _flag(argv, "--root"), _flag(argv, "--session")
+            checker = record["argv"]
+            keys = {"mode", "argv", "checker_sha256", "check_timeout_seconds", "max_corrections"}
+            if findings.cited_reads:
+                keys |= {"cited_reads", "cited_read_map_sha256"}
+            if (set(record) != keys or record["mode"] != "session"
+                    or type(record["max_corrections"]) is not int
+                    or record["max_corrections"] != findings.session_corrections
+                    or record["check_timeout_seconds"] != CHECK_TIMEOUT_SECONDS
+                    or not isinstance(recorded_root, str) or not isinstance(session, str)
+                    or not isinstance(checker, list) or len(checker) != 8
+                    or not all(isinstance(part, str) for part in checker)
+                    or not Path(checker[0]).is_absolute()
+                    or checker[1:7] != ["-I", "-B", "-m", MODULE, "--digest",
+                                        record["checker_sha256"]]
+                    or re.fullmatch(r"[0-9a-f]{64}", checker[6]) is None
+                    or checker[7] != recorded_root):
+                raise ValueError
+            wanted = {"--check-command": json.dumps(checker),
+                      "--check-timeout": str(CHECK_TIMEOUT_SECONDS),
+                      "--max-corrections": str(findings.session_corrections)}
+            if findings.cited_reads:
+                wanted.update({"--require-cited-reads": CITED_PATHS,
+                               "--cited-read-map": str(Path(session).parent / CITED_READ_MAP)})
+                if record["cited_reads"] != CITED_PATHS:
+                    raise ValueError
+            if (any(names.count(flag) != 1 or _flag(argv, flag) != value
+                    for flag, value in wanted.items())
+                    or any(flag in names for flag in _CHECK_FLAGS if flag not in wanted)):
+                raise ValueError
+        except (KeyError, TypeError, ValueError, AttributeError):
+            issues.append(AuditIssue("citation_check_unrecorded", f"{where}/invocation.json",
+                                     "invalid"))
+            continue
+        if findings.cited_reads:
+            try:
+                raw = read_artifact(attempt / CITED_READ_MAP)
+                valid = (sha256(raw).hexdigest() == record["cited_read_map_sha256"]
+                         and decode_artifact(raw, artifact=CITED_READ_MAP)
+                         == cited_read_map(root))
+            except (ReplayError, OSError, ValueError, TypeError, KeyError):
+                valid = False
+            if not valid:
+                issues.append(AuditIssue("citation_check_disagrees",
+                                         f"{where}/{CITED_READ_MAP}", "invalid"))
+                continue
+        outcome = document(attempt / "result.json")
+        if not isinstance(outcome, dict):
+            issues.append(AuditIssue("citation_check_evidence_missing", f"{where}/result.json",
+                                     "incomplete"))
+            continue
+        expected: object = {"outcome": None, "corrections": None, "refusal": None}
+        if outcome.get("nare_status") is not None:
+            try:
+                expected = citation_check_record(read_artifact(attempt / "stdout.jsonl"))
+            except (ReplayError, ValueError, TypeError, KeyError, RecursionError):
+                pass
+        seen = outcome.get("citation_check")
+        valid = seen == expected
+        if valid and isinstance(seen, dict) and seen["outcome"] == "refused":
+            kind, reason = refusal(seen["refusal"])
+            valid = (outcome.get("status"), outcome.get("reason")) == ("failed", kind)
+            if valid and reason is not None:
+                saved = document(attempt / "citation-validation.json")
+                valid = isinstance(saved, dict) and saved.get("reason") == reason
+        elif valid and isinstance(seen, dict) and seen["outcome"] in ("no_verdict",
+                                                                        "reads_required"):
+            valid = (outcome.get("status"), outcome.get("reason")) == ("failed", "protocol")
+        if not valid:
+            issues.append(AuditIssue("citation_check_result_disagrees", f"{where}/result.json",
+                                     "invalid"))
+    return tuple(issues)
+
+
 def _native_recovery_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
     """Bind contract 3 recovery controls to all retained runtime identities."""
     issues = []
@@ -806,7 +963,7 @@ def _native_recovery_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
                     _flag(argv, flag) != value or _names(argv).count(flag) != 1
                     for flag, value in (("--contract", "3"), ("--max-cutoffs", "0"),
                                         ("--request-retries", _recorded_retries(record)),
-                                        ("--max-corrections", "1")))):
+                                        ("--max-corrections", _recorded_corrections(record))))):
             issues.append(AuditIssue("native_recovery_policy_invalid",
                                      str(attempt.relative_to(run_dir) / "invocation.json"),
                                      "invalid"))
@@ -1354,6 +1511,7 @@ def replay_run(run_dir: Path) -> ReplayResult:
               + _rail_option_issues(run_dir, config_data)
               + _capacity_issues(run_dir, config_data)
               + _native_recovery_issues(run_dir)
+              + _citation_check_issues(run_dir, config_data)
               + _prompt_input_issues(run_dir)
               + _citation_correction_issues(run_dir, config_data)
               + _protocol_correction_issues(run_dir, config_data))

@@ -449,6 +449,80 @@ def _capacity(result: dict[str, Any], saved: dict[str, Any],
     return CapacityUsage(refusals, wait, limit, slot)
 
 
+# What nare says when a check command gave no verdict (nare 2026.11.102 contract text).
+CHECK_FAILED = "check raised CheckCommandFailed: "
+
+
+def citation_check_record(stdout: bytes) -> dict[str, Any]:
+    """What the in-session citation check did in one finished stream (#130).
+
+    ``corrections`` lists each correction nare made, in order: its kind (``domain`` for the
+    check, ``schema`` or ``reads``), whether it was charged, and for a check correction the
+    checker's error codes (Scrutare's own vocabulary; no schema message is kept, since one
+    can name model text). ``outcome`` is ``passed`` or ``corrected`` for an accepted answer,
+    ``refused`` when the budget ran out on a check refusal (``refusal`` holds its codes),
+    ``reads_required`` when it ran out on an unread citation (cited reads), ``no_verdict``
+    when the check command failed, and null when no answer reached the check or the budget
+    ran out on a schema refusal. The stream must agree with nare's
+    result, or the evidence is refused.
+    """
+    from scrutare.findings.citation_check import CODES
+
+    records = [_json(line.encode("utf-8")) for line in stdout.decode("utf-8").split("\n")
+               if line.strip()]
+    if not records or records[-1].get("type") != "result":
+        _fail()
+    result = records[-1]
+    corrections: list[dict[str, Any]] = []
+    refusal: list[str] | None = None
+    for record in records[:-1]:
+        kind = _envelope(record)
+        detail = record["detail"]
+        found = detail.get("errors")
+        named = [key for key in ("schema_correction", "read_correction") if key in detail]
+        if kind == "progress" and named:
+            granted = _object(detail[named[0]])
+            entry: dict[str, Any] = {"kind": _text(granted["kind"]),
+                                     "charged": granted["charged"]}
+            # nare reports a read hold as a read correction, every other as a schema one.
+            if (len(named) != 1 or type(entry["charged"]) is not bool
+                    or (entry["kind"] == "reads") != (named[0] == "read_correction")
+                    or entry["kind"] not in ("domain", "schema", "reads")):
+                _fail()
+            if entry["kind"] == "domain":
+                if not isinstance(found, list) or not found:
+                    _fail()
+                entry["codes"] = list(dict.fromkeys(_text(_object(e)["code"]) for e in found))
+                if any(code not in CODES for code in entry["codes"]):
+                    _fail()
+            corrections.append(entry)
+        elif kind == "error" and isinstance(found, list) and found:
+            codes = list(dict.fromkeys(_text(_object(e)["code"]) for e in found))
+            ours = [code in CODES for code in codes]
+            if any(ours) and not all(ours):
+                _fail()
+            refusal = codes if all(ours) else None
+    listed = result.get("corrections", [])
+    if not isinstance(listed, list) or [
+            (_object(item)["kind"], item["charged"]) for item in listed] != [
+            (entry["kind"], entry["charged"]) for entry in corrections]:
+        _fail()
+    status, stop, error = result["status"], result["stop_reason"], result["error"]
+    outcome: str | None = None
+    if status == "done" and result["output"] is not None:
+        outcome = "corrected" if any(e["kind"] == "domain" for e in corrections) else "passed"
+    elif status == "error" and stop == "schema_violation" and refusal is not None:
+        outcome = "refused"
+    elif status == "error" and stop is None and isinstance(error, str) and error.startswith(
+            CHECK_FAILED):
+        outcome = "no_verdict"
+    elif status == "error" and stop == "reads_required":
+        outcome = "reads_required"
+    if outcome != "refused":
+        refusal = None
+    return {"outcome": outcome, "corrections": corrections, "refusal": refusal}
+
+
 def capacity_events(stdout: bytes) -> CapacityUsage:
     """Capacity counters from streams that ended without nare's result, read tolerantly.
 

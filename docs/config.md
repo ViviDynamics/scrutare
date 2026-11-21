@@ -49,6 +49,9 @@ Errors identify a field path or YAML location without echoing field values.
 | `github.paths.exclude` | List of nonempty glob strings | `["docs/**", "*.md"]` |
 | `findings.protocol_correction` | Boolean; `true` requires v2 evidence and OpenAI rails; takes precedence over citation correction | `false` (off) |
 | `findings.citation_correction` | Boolean; `true` requires `findings.evidence: v2` and `provider: openai` on every rail | `false` (off) |
+| `findings.citation_check` | `post_session`, or `session` (requires `findings.evidence: v2` and a nare release that advertises `check_command`; excludes both correction turns) | `post_session` |
+| `findings.max_corrections` | Integer from 1 to 3 (requires `citation_check: session`), or `null` | `null` (2 with `session`) |
+| `findings.cited_reads` | Boolean (requires `citation_check: session` and a release that advertises `cited_reads.map`) | `false` (off) |
 | `replies.enabled` | Boolean; `true` requires `strategy: iterative` | `false` |
 | `replies.trust` | `write` (verified write access), `anyone` (any non-bot account) | `write` |
 
@@ -723,6 +726,102 @@ and the turn's `correction.stdout.jsonl`, `correction.stderr.txt` and
 left as they were. [Replay](replay.md) recomputes these records from the
 retained streams and inputs. The evaluator
 passes the setting to every evidence-v2 arm.
+
+## Citation check in the session (opt-in)
+
+By default Scrutare validates a reviewer's citations after the session ends,
+and a refused citation fails the session (or, with the
+[citation correction](#citation-correction-turn-opt-in), costs a second nare
+process that resumes the session for one tool-free turn). A review can instead
+run the same validator inside the session:
+
+```yaml
+context:
+  enabled: true
+findings:
+  evidence: v2
+  citation_check: session
+  max_corrections: 2   # optional, 1 to 3; 2 by default with session
+  cited_reads: false   # optional
+```
+
+nare (2026.11.102 and newer) then runs Scrutare's validator as its check
+command on every final answer that passes the findings schema. A refused answer
+goes back to the model as an in-session correction, with the transcript still
+cached and the read tool still offered (nare 2026.11.107 restores the session's
+tools after such a correction), so the model can read the file again and fix the
+citation in the next turn of the same process. It works on any provider rail.
+It applies to discovery sessions only (the reviewers of the initial wave);
+evidence assessors and focused discussion keep post-session validation.
+
+**What it checks.** Exactly what post-session validation checks: the findings
+parser and each citation's side, revision, logical path, `sha256` and
+`end_line` against the capture manifest. It accepts an answer exactly when the
+post-session validator would, and post-session validation still runs on every
+accepted answer. When it refuses, it names every refused finding and citation,
+each with a location and fixed guidance, for example
+`findings[0].evidence.citations[0].end_line: line_range_outside_capture: the
+cited file's last line is 1, got end_line 2`, followed by the artifact to read.
+Its messages never repeat model text. The checker runs as
+`<scrutare python> -I -B -m scrutare.findings.citation_check --digest D ROOT`:
+Scrutare's own interpreter, isolated from `PYTHON*` variables and the current
+directory, writing no bytecode, with no provider credentials (nare withholds
+them) and reading only the read root. `D` is the SHA-256 of the `scrutare`
+package's Python sources; the checker refuses to give a verdict if the package
+it imported differs. nare is given `--check-timeout 30` explicitly.
+
+**The correction budget.** `max_corrections` is nare's `--max-corrections` for
+these sessions, and nare shares it between schema, read and check corrections.
+Every other session keeps the pinned 1. The default of 2 keeps the schema
+correction a session always had and adds one for citations; 1 lets a citation
+correction spend the schema one. nare makes a correction free when the answer
+has fewer distinct errors than every earlier failing answer, so with 2 or more a
+model that keeps improving may be corrected more often than the budget says.
+Every correction is one more model turn inside the session's `--budget-tokens`
+and `--max-turns`, so a higher budget costs tokens and time. 3 is the cap until
+a screen shows more helps.
+
+**When the budget runs out.** nare ends the session with `schema_violation`.
+When the last refusal was the checker's, the session fails exactly as the
+post-session validator fails the same answer: `citation_validation` with the
+first refused citation's reason (and `citation-validation.json`), or `protocol`
+for a refusal that is not a citation's. A check command that cannot give a
+verdict (an unreadable capture, a changed package) fails the session as
+`protocol`.
+
+**Cited reads.** `cited_reads: true` also holds an answer until each cited
+file has been read with `read`: Scrutare passes
+`--require-cited-reads /findings/*/evidence/citations/*/path` and
+`--cited-read-map` with the attempt's own `cited-read-map.json`, which maps each
+captured logical path to the artifacts that capture it. nare's correction names
+the artifacts to read. The map does not know sides, so reading either side's
+capture satisfies a citation; the check binds the side. This is a rule
+post-session validation does not have (a citation copied from
+`repository-context.json` without opening the file is accepted today), so it is
+separate. A session that spends its budget on it fails as `protocol`.
+
+**Together with the correction turns.** `citation_check: session` is refused
+together with `citation_correction` or `protocol_correction`: the check covers
+what either turn corrects, inside the session, and a session that spends its
+budget ends without an answer for a resumed turn to correct.
+
+**Records.** With the setting unset, the configuration record, argv, requests
+and artifacts are unchanged. With it, `config.to_dict()` records the chosen
+fields, and each discovery session's `invocation.json` records
+`citation_check`: the checker `argv`, `checker_sha256`,
+`check_timeout_seconds`, `max_corrections`, and with cited reads the pointer and
+`cited_read_map_sha256`. Its `result.json` records
+`citation_check: {"outcome", "corrections", "refusal"}`: `outcome` is
+`passed`, `corrected`, `refused`, `reads_required`, `no_verdict`, or `null`
+when no answer reached the check; `corrections` lists each correction nare made
+(`kind` `domain` for the check, `schema` or `reads`, `charged`, and for a check
+correction the checker's error codes); `refusal` holds the codes of a spent
+budget's last refusal. [Replay](replay.md) recomputes these from the retained
+stream, manifest and configuration.
+
+It is unmeasured: the default stays `post_session` until a screen on the
+self-hosted rail compares citation refusals, corrections, tokens and time with
+and without it (see the [plan](plans/2026-11-20-session-citation-check.md)).
 
 ## Category partition
 

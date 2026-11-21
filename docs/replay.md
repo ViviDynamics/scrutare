@@ -138,6 +138,27 @@ exit code may have stopped before its stream existed. A run that did not opt in 
 `citation_correction_unconfigured` (invalid). Runs that never opted in are not
 audited.
 
+The [in-session citation check](config.md#citation-check-in-the-session-opt-in)
+is audited when `config.json` sets `findings.citation_check: session`, or any
+session records or sends it. Each discovery session must record the checker
+argv as Scrutare builds it (an absolute interpreter, `-I -B -m
+scrutare.findings.citation_check --digest D` with `D` its recorded
+`checker_sha256`, and the session's own read root), pass it once as
+`--check-command` with `--check-timeout 30` and the configured
+`--max-corrections`, and, with cited reads, the pointer and this attempt's own
+`cited-read-map.json`, whose bytes match the recorded digest and whose content
+equals the map the retained manifest gives. Any other check, or one on a
+session that is not a discovery session, is `citation_check_unrecorded`
+(invalid); a map that differs is `citation_check_disagrees` (invalid). The
+result record is recomputed from the retained `stdout.jsonl` and must agree,
+including a spent budget's classification (`citation_check_result_disagrees`,
+invalid). The recovery policy audit accepts the recorded budget in place of the
+pinned `--max-corrections 1` on these sessions only. A run that did not opt in
+but holds such records is `citation_check_unconfigured` (invalid). Runs that
+never opted in are not audited. Replay does not run the checker on the refused
+answers of a session: it binds the argv and digest that ran, and the accepted
+answer passes the same post-session validation as always.
+
 [Request retries](config.md#request-retries-opt-in),
 [cache breakpoints](config.md#prompt-cache-breakpoints-opt-in) and
 [reasoning effort](config.md#reasoning-effort-opt-in) are audited together when
