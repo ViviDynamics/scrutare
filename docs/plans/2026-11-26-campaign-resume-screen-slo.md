@@ -50,11 +50,22 @@ work. Every proof runs offline.
   scoring reads neither.
 - Rule A's order holds. Originals finish before replays begin, a finished replay
   is retained, and a halted replay replays again without touching its original.
-  A replay that finished but was never persisted before a kill counts as halted.
-  That costs one replay, never a rescore.
-- A job's status is `complete` only when every cell has a final record. Before
-  this change, a job cancelled after each cell had a record of any kind also
-  read `complete`.
+  A replay that finished but was never persisted before a kill is set aside and
+  runs again. That costs one replay, never a rescore.
+- A halt before the first cell starts (while the launch is still preparing
+  cells) leaves no segment record and cannot be resumed. Nothing was spent, so
+  relaunch into a fresh output directory.
+- A job's status is `complete` only when every cell has a final record and no
+  rule A replay is still owed. Before this change, a job cancelled after each
+  cell had any record read `complete`, and so did a job killed in its replay
+  phase.
+- The resume checks every cell before it changes anything, so a refused resume
+  leaves the campaign as the halt left it. It claims its segment before it moves
+  any directory. It adopts any `_halted/` directory that no record mentions, so
+  a resume killed while moving cells loses no attempt. A cell that was set aside
+  and prepared again, but never ran, is not counted as halted a second time.
+  Every set-aside attempt stays on its cell's record until the cell runs again,
+  so a second halt cannot drop the first one's spend.
 - `segments.json` records each segment's halt kind, start time, preflight, nare
   version, retained cells and halted cells.
 

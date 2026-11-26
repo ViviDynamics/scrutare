@@ -205,3 +205,69 @@ def test_resume_runs_its_preflight_before_touching_the_campaign(campaign, monkey
     with pytest.raises(PreflightError):
         campaign.launch({}, resume='preflight')
     assert sorted(p.relative_to(campaign.out) for p in campaign.out.rglob('*')) == before
+
+
+def test_a_kill_in_the_replay_phase_leaves_the_campaign_resumable(campaign):
+    plan = {(1, False): 'output_cap', (2, False): 'output_cap', (3, False): 'output_cap',
+            (2, True): 'kill'}
+    with pytest.raises(Killed):
+        campaign.launch(plan)
+    # Replays are still owed, so the campaign is not complete.
+    assert json.loads((campaign.out / 'experiment.json').read_text())['status'] == 'incomplete'
+    first = len(campaign.calls)
+    plan.pop((2, True))
+    result = campaign.launch(plan, resume='transport')
+    assert campaign.calls[first:] == [(2, True), (3, True)]
+    rows = {row['run_id']: row for row in result['runs']}
+    assert result['status'] == 'complete'
+    assert rows['a/senior/2']['halted_attempts'][0]['status'] == 'unrecorded'
+    assert '_retries' in rows['a/senior/2']['halted_attempts'][0]['run_dir']
+
+
+def test_a_second_halt_keeps_the_first_halts_spend(campaign):
+    with pytest.raises(asyncio.CancelledError):
+        campaign.launch({(1, False): 'hang'})
+    with pytest.raises(asyncio.CancelledError):
+        campaign.launch({(1, False): 'hang'}, resume='transport')
+    assert len(records(campaign.out)['a/senior/1']['halted_attempts']) == 1
+    result = campaign.launch({}, resume='gateway')
+    rows = {row['run_id']: row for row in result['runs']}
+    assert [h['set_aside_in'] for h in rows['a/senior/1']['halted_attempts']] == [1, 2]
+    assert result['halted_usage']['input'] == 14
+    # Cells set aside never; a re-prepared cell that never ran is not a halted attempt.
+    assert 'halted_attempts' not in rows['a/senior/2']
+    assert 'halted_attempts' not in rows['a/senior/3']
+    assert len(json.loads((campaign.out / 'segments.json').read_text())) == 3
+
+
+def test_a_resume_killed_while_setting_cells_aside_loses_nothing(campaign, monkeypatch):
+    with pytest.raises(asyncio.CancelledError):
+        campaign.launch({(1, False): 'hang', (2, False): 'hang'}, concurrency=2)
+    assert campaign.calls == [(1, False), (2, False)]
+    import scrutare.evaluation.runner as runner
+    observed, seen = runner._observed_usage, []
+    def dying(directory):
+        seen.append(directory)
+        if len(seen) == 2:
+            raise Killed
+        return observed(directory)
+    monkeypatch.setattr(runner, '_observed_usage', dying)
+    with pytest.raises(Killed):
+        campaign.launch({}, resume='transport', concurrency=2)
+    monkeypatch.setattr(runner, '_observed_usage', observed)
+    result = campaign.launch({}, resume='transport', concurrency=2)
+    rows = {row['run_id']: row for row in result['runs']}
+    assert result['status'] == 'complete'
+    assert [len(rows[f'a/senior/{n}']['halted_attempts']) for n in (1, 2)] == [1, 1]
+    assert 'halted_attempts' not in rows['a/senior/3']
+    assert result['halted_usage']['input'] == 14
+
+
+def test_a_refused_resume_leaves_the_campaign_untouched(campaign):
+    with pytest.raises(asyncio.CancelledError):
+        campaign.launch({(1, False): 'hang'})
+    (campaign.out / 'a/senior/3/diff.patch').write_text('tampered')
+    before = sorted(p.relative_to(campaign.out) for p in campaign.out.rglob('*'))
+    with pytest.raises(ValueError, match='frozen inputs of a/senior/3'):
+        campaign.launch({}, resume='transport')
+    assert sorted(p.relative_to(campaign.out) for p in campaign.out.rglob('*')) == before

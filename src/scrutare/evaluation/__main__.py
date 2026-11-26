@@ -130,7 +130,8 @@ def main() -> None:
                 qualification_rule_a=args.qualification_rule_a,
                 resume=args.resume, screen=screen))
         except PreflightError as error:
-            # No output directory exists: the campaign claimed and spent nothing.
+            # Nothing was claimed or spent: no new output directory, and a resumed
+            # campaign is left exactly as its halt left it.
             print(json.dumps(not_started(error.report, __version__), sort_keys=True))
             sys.exit(4)
     elif args.command == 'screen-gate':

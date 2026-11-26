@@ -97,6 +97,12 @@ def _final(record: dict[str, Any] | None) -> bool:
                                          for attempt in record.get('attempts', []))
 
 
+def _pending_replay(record: dict[str, Any]) -> bool:
+    """A rule A original whose one replay is still owed."""
+    attempts = record.get('attempts', [])
+    return len(attempts) == 1 and bool(attempts[0].get('retryable_session_failures'))
+
+
 def write_json(path: Path, data: Any) -> None:
     with path.open('x', encoding='utf-8') as stream:
         json.dump(data, stream, indent=2, sort_keys=True, allow_nan=False)
@@ -508,29 +514,52 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
     segment_number = len(segments)
     if resume is not None:
         assert previous is not None
-        started = set()
+        if config.models.structured_output and list(capability.structured_output) != frozen.get(
+                'nare_structured_output'):
+            raise ValueError('the runtime answer encodings differ from the freeze')
+        # The latest segment that started each attempt directory, before any spend.
+        started: dict[str, int] = {}
         for line in (started_journal.read_text(encoding='utf-8').splitlines()
                      if started_journal.exists() else ()):
             try:
-                started.add(json.loads(line)['run_dir'])
+                entry = json.loads(line)
+                started[entry['run_dir']] = max(started.get(entry['run_dir'], -1),
+                                                int(entry['segment']))
             except (ValueError, KeyError, TypeError):
                 continue
         persisted = {row['run_id']: row for row in previous['runs']}
+        for run_id, row in persisted.items():
+            if row.get('halted_attempts'):
+                halted[run_id] = list(row['halted_attempts'])
         by_id = {case.id: case for case in cases}
         halted_root = output / '_halted' / f'segment-{segment_number:04d}'
+        # Adopt what an earlier resume moved but was stopped before it could record.
+        referenced = {h['run_dir'] for entries in halted.values() for h in entries}
+        for folder in sorted((output / '_halted').glob('segment-*')):
+            for expected in snapshot['expected_runs']:
+                run_id = expected['run_id']
+                for relative in (Path(run_id), Path('_retries') / run_id / 'attempt-0002'):
+                    moved = folder / relative
+                    if moved.is_dir() and str(moved) not in referenced:
+                        record = _read_record(moved / 'evaluation.json')
+                        halted.setdefault(run_id, []).append({
+                            'segment': started.get(str(output / relative), 0),
+                            'set_aside_in': int(folder.name.removeprefix('segment-')),
+                            'source_dir': str(output / relative), 'run_dir': str(moved),
+                            'status': (record or {}).get('status', 'unrecorded'),
+                            'error': (record or {}).get('error'),
+                            'usage': _observed_usage(moved).to_dict()})
 
-        def set_aside(run_id: str, directory: Path, record: dict[str, Any] | None) -> None:
-            """Keep what the halt stopped, with its spend as a lower bound, and free its path."""
-            target = halted_root / directory.relative_to(output)
-            target.parent.mkdir(parents=True, exist_ok=True)
-            directory.replace(target)
-            halted.setdefault(run_id, list(persisted.get(run_id, {}).get(
-                'halted_attempts', []))).append({
-                    'segment': segment_number - 1, 'run_dir': str(target),
-                    'status': (record or {}).get('status', 'unrecorded'),
-                    'error': (record or {}).get('error'),
-                    'usage': _observed_usage(target).to_dict()})
+        def ran_since_set_aside(run_id: str, directory: Path) -> bool:
+            """Started after its last set-aside: a fresh, never-run directory is not halted."""
+            last = max((h['set_aside_in'] for h in halted.get(run_id, ())
+                        if h.get('source_dir') == str(directory)), default=0)
+            return started.get(str(directory), -1) >= last
 
+        # First pass decides and verifies everything without touching the campaign, so a
+        # refusal leaves it exactly as the halt left it.
+        # (cell, directory to set aside, its record, case, arm, prepare the cell again)
+        moves: list[tuple[str, Path, dict[str, Any] | None, Case, str, bool]] = []
         for expected in snapshot['expected_runs']:
             run_id = expected['run_id']
             case, variant = by_id[expected['case_id']], expected['variant']
@@ -539,18 +568,23 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
             row = persisted.get(run_id)
             original = _read_record(directory / 'evaluation.json')
             retry = output / '_retries' / run_id / 'attempt-0002'
-            if row is not None and _final(row):
-                completed[run_id] = row
+            kept = row if row is not None and _final(row) else (
+                original if _final(original) else None)
+            if kept is not None:
+                completed[run_id] = kept
+                # A replay the halt stopped, or finished but never persisted, runs again.
+                if _pending_replay(kept) and retry.exists():
+                    moves.append((run_id, retry, _read_record(retry / 'evaluation.json'),
+                                  case, variant, False))
                 continue
-            if _final(original):
-                assert original is not None
-                completed[run_id] = original
-                if retry.exists():
-                    set_aside(run_id, retry, _read_record(retry / 'evaluation.json'))
+            if directory.exists() and (ran_since_set_aside(run_id, directory)
+                                       or original is not None):
+                moves.append((run_id, directory, original, case, variant, True))
                 continue
-            if str(directory) in started or original is not None:
-                set_aside(run_id, directory, original)
-                prepare(directory, case, conf)
+            if not directory.exists():
+                # Set aside by an earlier resume that stopped before preparing it again.
+                moves.append((run_id, directory, None, case, variant, True))
+                continue
             try:
                 unchanged = all((directory / name).read_bytes() == data
                                 for name, data in captures[case.id].items()) and (
@@ -560,19 +594,54 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                 unchanged = False
             if not unchanged:
                 raise ValueError(f'the frozen inputs of {run_id} changed; refusing to resume')
-    segments.append({'segment': segment_number, 'reason': resume,
-                     'started_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
-                     'preflight': preflight.to_dict() if preflight is not None else None,
-                     'nare_version': capability.version,
-                     'retained_cells': sorted(completed), 'halted_cells': sorted(halted)})
-    _replace_json(output / 'segments.json', segments)
+        # The segment is claimed before anything moves, so a resume stopped midway leaves
+        # the next one a fresh segment and never a half-used one.
+        segments.append({'segment': segment_number, 'reason': resume,
+                         'started_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+                         'preflight': preflight.to_dict() if preflight is not None else None,
+                         'nare_version': capability.version,
+                         'retained_cells': sorted(r for r in completed
+                                                  if not any(m[0] == r for m in moves)),
+                         'halted_cells': sorted({m[0] for m in moves if m[1].exists()})})
+        _replace_json(output / 'segments.json', segments)
+        for run_id, directory, record, case, variant, again in moves:
+            if directory.exists():
+                target = halted_root / directory.relative_to(output)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                directory.replace(target)
+                halted.setdefault(run_id, []).append({
+                    'segment': max(started.get(str(directory), segment_number - 1), 0),
+                    'set_aside_in': segment_number, 'source_dir': str(directory),
+                    'run_dir': str(target),
+                    'status': (record or {}).get('status', 'unrecorded'),
+                    'error': (record or {}).get('error'),
+                    'usage': _observed_usage(target).to_dict()})
+            if again:
+                inputs = prepare(directory, case, variants[variant])
+                if prepared_content_hashes(inputs) != case_variants[case.id][variant][
+                        'inputs_sha256']:
+                    raise ValueError(f'the frozen inputs of {run_id} changed; '
+                                     'refusing to resume')
+    elif qualification_rule_a:
+        segments.append({'segment': 0, 'reason': None,
+                         'started_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+                         'preflight': preflight.to_dict() if preflight is not None else None,
+                         'nare_version': capability.version,
+                         'retained_cells': [], 'halted_cells': []})
+        _replace_json(output / 'segments.json', segments)
     def persist() -> dict[str, Any]:
         records = [completed.get(cell['run_id'], {**cell, 'status': 'missing',
                    'accounting_complete': False, 'usage': TokenUsage().to_dict(),
                    'findings': [], 'latency_seconds': 0}) for cell in snapshot['expected_runs']]
+        # A set-aside attempt stays on its cell's record until the cell runs again, so a
+        # second halt cannot drop the first one's spend.
+        records = [dict(r, halted_attempts=halted[r['run_id']])
+                   if r['run_id'] in halted and 'halted_attempts' not in r else r
+                   for r in records]
         result = {'schema_version': 1, 'evidence_kind': evidence_kind,
                   'status': 'complete' if len(completed) == len(records) and all(
-                      _final(r) for r in records) else 'incomplete',
+                      _final(r) and not (qualification_rule_a and _pending_replay(r))
+                      for r in records) else 'incomplete',
                   'runs': records}
         if qualification_rule_a:
             result['cumulative_usage'] = sum_usage([a for r in records
