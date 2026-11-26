@@ -147,6 +147,17 @@ not list it fails with `model_missing`; set `models.preflight.route: false` for
 such a route. See [route preflight](config.md#route-preflight-opt-in) for every
 reason.
 
+## Before a qualification
+
+A self-hosted candidate goes through three steps before its 36-cell #51
+qualification can be frozen:
+- `rail-check` must pass over a 30-minute watch.
+- The six-cell `screen-v1` screen must pass.
+- During the campaign, an infrastructure halt can be resumed with
+  `run --resume` instead of starting over. Scored cells are kept.
+
+See [self-hosted campaign tooling](evaluation.md#self-hosted-campaign-tooling-resume-screen-and-rail-watch).
+
 ## Under the GitHub App
 
 The App reads `scrutare.yaml` from the default branch, so a profile takes effect

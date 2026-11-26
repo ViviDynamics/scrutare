@@ -14,8 +14,10 @@ from scrutare.engine.session_models import NareRuntime
 from scrutare.evaluation.corpus import load_corpus, read_json
 from scrutare.evaluation.promotion import evaluate_promotion
 from scrutare.evaluation.qualification import inspect_rule_a
-from scrutare.evaluation.runner import run_experiment, write_json
+from scrutare.evaluation.rail_check import watch_rail
+from scrutare.evaluation.runner import RESUME_REASONS, run_experiment, write_json
 from scrutare.evaluation.scoring import adjudication_packet, score_experiment
+from scrutare.evaluation.screen import load_screen, screen_cases, screen_gate
 
 
 def session_timeout(config: ReviewConfig, flag: float | None) -> float:
@@ -62,6 +64,24 @@ def main() -> None:
                           'the total ceiling, which itself never changes')
     run.add_argument('--max-turns', type=int, default=50)
     run.add_argument('--evidence-kind', choices=('model', 'offline'), default='model')
+    run.add_argument('--resume', choices=RESUME_REASONS, metavar='HALT',
+                     help='continue the rule A campaign in --output after an infrastructure '
+                          'halt of this kind (' + ', '.join(RESUME_REASONS) + '), with the '
+                          'same arguments as its launch; scored cells never rerun')
+    run.add_argument('--screen', type=Path,
+                     help='run the cases of this screen manifest (one arm, rule A) instead '
+                          'of the whole split')
+    gate_screen = sub.add_parser('screen-gate', help='pass/fail a screen run; never promotes')
+    gate_screen.add_argument('--experiment', type=Path, required=True)
+    gate_screen.add_argument('--output', type=Path, required=True)
+    watch = sub.add_parser('rail-check',
+                           help='watch a rail before a campaign; exits 5 when it fails')
+    watch.add_argument('--config', type=Path, required=True)
+    watch.add_argument('--nare-executable', type=Path, required=True)
+    watch.add_argument('--output', type=Path, required=True)
+    watch.add_argument('--window-seconds', type=float, default=1800)
+    watch.add_argument('--interval-seconds', type=float, default=60)
+    watch.add_argument('--min-probes', type=int, default=30)
     packet = sub.add_parser('adjudicate', help='export blinded finding packet for human matching')
     packet.add_argument('experiment', type=Path)
     packet.add_argument('--output', type=Path, required=True)
@@ -85,9 +105,19 @@ def main() -> None:
             seconds = session_timeout(config, args.timeout_seconds)
         except ValueError as error:
             parser.error(str(error))
+        cases = load_corpus(args.corpus, args.split)
+        screen = None
+        if args.screen is not None:
+            if not args.qualification_rule_a or args.variants is None or ',' in args.variants:
+                parser.error('--screen needs --qualification-rule-a and exactly one --variants')
+            try:
+                screen = load_screen(args.screen, args.corpus)
+                cases = screen_cases(cases, screen)
+            except ValueError as error:
+                parser.error(str(error))
         try:
             asyncio.run(run_experiment(
-                load_corpus(args.corpus, args.split), config, args.output,
+                cases, config, args.output,
                 runtime=NareRuntime(args.nare_executable, args.max_turns, seconds),
                 evidence_kind=args.evidence_kind, concurrency=args.concurrency,
                 comparison_set=args.comparison_set,
@@ -97,11 +127,27 @@ def main() -> None:
                 transient_retry_delay_seconds=args.transient_retry_delay_seconds,
                 transient_retry_budget=args.transient_retry_budget,
                 assessment_tokens=args.assessment_tokens,
-                qualification_rule_a=args.qualification_rule_a))
+                qualification_rule_a=args.qualification_rule_a,
+                resume=args.resume, screen=screen))
         except PreflightError as error:
-            # No output directory exists: the campaign claimed and spent nothing.
+            # Nothing was claimed or spent: no new output directory, and a resumed
+            # campaign is left exactly as its halt left it.
             print(json.dumps(not_started(error.report, __version__), sort_keys=True))
             sys.exit(4)
+    elif args.command == 'screen-gate':
+        report = screen_gate(args.experiment)
+        write_json(args.output, report)
+        print(json.dumps({'output': str(args.output), 'decision': report['decision']}))
+        sys.exit(0 if report['decision'] == 'pass' else 5)
+    elif args.command == 'rail-check':
+        config = parse_config(args.config.read_bytes())
+        report = asyncio.run(watch_rail(
+            config, NareRuntime(args.nare_executable, 50, config.models.session_seconds),
+            window_seconds=args.window_seconds, interval_seconds=args.interval_seconds,
+            min_probes=args.min_probes))
+        write_json(args.output, report)
+        print(json.dumps({'output': str(args.output), 'decision': report['decision']}))
+        sys.exit(0 if report['decision'] == 'pass' else 5)
     elif args.command == 'adjudicate':
         write_json(args.output, adjudication_packet(read_json(args.experiment)['runs']))
     elif args.command == 'qualify-rule-a':

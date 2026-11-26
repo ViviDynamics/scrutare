@@ -523,3 +523,78 @@ supplement with the session-result hash. Retain raw provider exports and read
 receipts: an offline checker cannot independently authenticate them. This gate
 qualifies operational execution only; human adjudication and the untouched
 holdout remain separate prerequisites for quality promotion.
+
+## Self-hosted campaign tooling: resume, screen and rail watch
+
+These three commands let a long self-hosted qualification survive a failing
+rail without loosening its gate. None changes a default, reads a holdout or
+promotes anything. The #51 amendment that adopts them is in
+[the plan](plans/2026-11-26-campaign-resume-screen-slo.md).
+
+### Resuming after an infrastructure halt
+
+`run --qualification-rule-a --resume HALT`, with the launch's other arguments
+unchanged and `--output` naming the halted campaign, continues it under the
+same freeze. `HALT` is the halt's kind: `transport`, `gateway`, `preflight` or
+`launch`. A model or protocol fault is not among them; it still ends the
+campaign. The launcher that halted the campaign decides the kind, and the
+resume records it.
+
+Before any model call, the resume refuses when:
+- the campaign is complete;
+- any part of the snapshot changed, such as the cases, capture hashes,
+  configurations, arms, runtime or screen;
+- the nare version or contract differs from the freeze;
+- an unstarted cell's captured or prepared input bytes changed.
+
+Its preflight runs first, as at launch, so a resume on a rail that is still
+down leaves the campaign untouched.
+
+Each cell is in one of three states:
+- **Retained.** Its outcome was recorded before the halt. It keeps that record
+  byte for byte and never reruns or rescores. A rule A replay that already
+  finished is retained too.
+- **Halted.** The halt stopped it after it started: an `Interrupted` record,
+  or an entry in `started.jsonl` with no record because the process died. Its
+  directory moves to `_halted/segment-NNNN/` and it runs again from its frozen
+  inputs. The stopped attempt stays on the cell's record under
+  `halted_attempts`, with its usage as a lower bound. The job's
+  `halted_usage` sums those attempts separately from `usage` and
+  `cumulative_usage`, and scoring reads neither.
+- **Unstarted.** It runs as frozen.
+
+Rule A's order holds across segments. Every original finishes before the
+replay phase starts, and a replay stopped by the halt replays again, never its
+original.
+
+`segments.json` lists each launch and resume with its halt kind, start time,
+preflight report, nare version and the cells it retained and set aside.
+
+### The screening tier
+
+`run --qualification-rule-a --variants ARM --screen evaluations/screens/screen-v1.json`
+runs only the screen's cases (six cells) and records the screen's id and
+hash in the snapshot. `screen-v1` is the first labeled-defect case and the
+first clean case of `development-v2`, in manifest order, and is bound to that
+corpus manifest's hash. `screen-gate --experiment DIR --output PATH` passes
+(exit 0) only when every cell completed with complete accounting under rule A,
+and fails (exit 5) otherwise.
+
+A screen does not measure quality. It only makes a candidate eligible to be
+frozen for a full qualification.
+
+### The rail watch
+
+`rail-check --config PATH --nare-executable PATH --output PATH` repeats the
+[route preflight](config.md#route-preflight-opt-in)'s two checks with both
+turned on: `GET /models` on each openai route, and one streamed,
+schema-bound request per rail through nare, sent with the rail's own options.
+It probes every `--interval-seconds` (default 60) over `--window-seconds`
+(default 1800), and for at least `--min-probes` (default 30), with probes at
+both ends of the window.
+
+Objective version 1 passes (exit 0) only when no probe failed. Otherwise it
+fails (exit 5). The report records every probe, each failure's typed reason,
+and the p50 and p95 request latency. It names each rail by provider and model,
+never by its route address. Request probes are model calls, and no campaign is
+charged for them.

@@ -4,8 +4,10 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import shutil
 import time
 from dataclasses import asdict, replace
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal, cast
 
@@ -55,6 +57,51 @@ from scrutare.evaluation.transient import (
 from scrutare.personas import PersonaDefinition, load_persona, resolve_personas
 from scrutare.personas.registry import procedure_record
 from scrutare.provenance import write_artifact_manifest
+
+# Halts a campaign may resume after: the rail failed, never the model or the protocol.
+RESUME_REASONS = ('transport', 'gateway', 'preflight', 'launch')
+# Snapshot fields a launch fills in after its identity is fixed; a resume checks the nare
+# fields against the runtime and records its own preflight in its segment.
+_LATER_SNAPSHOT_FIELDS = ('nare_version', 'nare_contract', 'nare_structured_output',
+                          'preflight', 'case_variants')
+
+
+def _normalized(data: Any) -> Any:
+    return json.loads(json.dumps(data, sort_keys=True, allow_nan=False))
+
+
+def _identity(snapshot: dict[str, Any]) -> Any:
+    return _normalized({key: value for key, value in snapshot.items()
+                        if key not in _LATER_SNAPSHOT_FIELDS})
+
+
+def _replace_json(path: Path, data: Any) -> None:
+    temporary = path.with_name(path.name + '.next')
+    with temporary.open('w', encoding='utf-8') as stream:
+        json.dump(data, stream, indent=2, sort_keys=True, allow_nan=False)
+        stream.write('\n')
+    temporary.replace(path)
+
+
+def _read_record(path: Path) -> dict[str, Any] | None:
+    try:
+        record = read_json(path)
+    except (OSError, ValueError):
+        return None
+    return record if isinstance(record, dict) else None
+
+
+def _final(record: dict[str, Any] | None) -> bool:
+    """A retained cell outcome no resume may rerun: anything not stopped by the halt."""
+    return record is not None and record.get('status') != 'missing' and record.get(
+        'error') != 'Interrupted' and all(attempt.get('error') != 'Interrupted'
+                                         for attempt in record.get('attempts', []))
+
+
+def _pending_replay(record: dict[str, Any]) -> bool:
+    """A rule A original whose one replay is still owed."""
+    attempts = record.get('attempts', [])
+    return len(attempts) == 1 and bool(attempts[0].get('retryable_session_failures'))
 
 
 def write_json(path: Path, data: Any) -> None:
@@ -197,12 +244,22 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                          transient_retry_budget: int | None = None,
                          assessment_tokens: int | None = None,
                          qualification_rule_a: bool = False,
+                         resume: str | None = None,
+                         screen: dict[str, Any] | None = None,
                          ) -> dict[str, Any]:
     """Fresh 3-repeat job; ordinary CI calls this only with explicitly offline evidence.
 
     A cell interrupted only by upstream HTTP 5xx may rerun in a fresh directory
     up to `transient_retries` times, within `transient_retry_budget` reruns for the
     whole job when one is given. Every attempt stays on disk and in its record.
+
+    `resume` continues a rule A campaign in `output` after an infrastructure halt, under
+    the same freeze. Its value is the halt's declared kind (`RESUME_REASONS`). Every cell
+    with a retained outcome keeps it untouched; a cell the halt stopped is moved under
+    `_halted/` with its spend recorded and runs again from its frozen inputs; unstarted
+    cells run as frozen. Anything that changed since the freeze refuses the resume.
+    `screen`, when given, is the screening manifest this job runs under, recorded in
+    the snapshot so the screen gate can tell a screen from a full qualification.
     """
     if (evidence_kind not in ('model', 'offline') or not cases
             or type(concurrency) is not int or not 1 <= concurrency <= 32):
@@ -216,6 +273,11 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                          'nonnegative job budget')
     if type(qualification_rule_a) is not bool or qualification_rule_a and transient_retries:
         raise ValueError('rule A requires a boolean and cannot combine with transient retries')
+    if resume is not None and (resume not in RESUME_REASONS or not qualification_rule_a):
+        raise ValueError('a resume needs rule A and a halt kind among '
+                         + ', '.join(RESUME_REASONS))
+    if screen is not None and not qualification_rule_a:
+        raise ValueError('a screen runs under rule A, like the qualification it screens for')
     variants = comparison_configs(config, comparison_set=comparison_set,
                                   variant_names=variant_names,
                                   assessment_tokens=assessment_tokens)
@@ -268,11 +330,24 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         if qualification_rule_a else set()
     label_hashes = {case.id: hashlib.sha256(case.labels.read_bytes()).hexdigest()
                     for case in cases}
-    output = output.absolute()
+    # Resolved, so every launch and resume of a campaign names its paths the same way.
+    output = output.resolve()
+    previous: dict[str, Any] | None = None
+    if resume is not None:
+        try:
+            previous = read_json(output / 'experiment.json')
+            frozen = read_json(output / 'snapshot.json')
+            segments = read_json(output / 'segments.json')
+        except (OSError, ValueError) as error:
+            raise ValueError('a resume needs a campaign with snapshot, experiment and '
+                             'segment records') from error
+        if previous.get('status') == 'complete':
+            raise ValueError('the campaign is complete; there is nothing to resume')
     # Opt-in, and before the output directory, which is this job's one-run claim: a route
     # that cannot answer raises PreflightError having claimed and spent nothing.
     preflight = await run_preflight(config, runtime)
-    output.mkdir(parents=True, exist_ok=False)
+    if resume is None:
+        output.mkdir(parents=True, exist_ok=False)
     snapshot: dict[str, Any] = {
         'schema_version': 1, 'scrutare_version': __version__, 'evidence_kind': evidence_kind,
         'nare_version': None, 'nare_contract': None,
@@ -321,6 +396,13 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         snapshot['preflight'] = preflight.to_dict()
     if qualification_rule_a:
         snapshot['qualification'] = RULE_A
+    if screen is not None:
+        snapshot['screen'] = screen
+    if resume is not None and _identity(snapshot) != _identity(frozen):
+        changed = sorted(key for key in set(snapshot) | set(frozen)
+                         if key not in _LATER_SNAPSHOT_FIELDS
+                         and _normalized(snapshot.get(key)) != _normalized(frozen.get(key)))
+        raise ValueError('the campaign changed since its freeze: ' + ', '.join(changed))
     def prepare(directory: Path, case: Case, conf: ReviewConfig) -> PreparedReviewInputs:
         """Materialize one attempt from the bytes frozen above, never from the corpus."""
         directory.mkdir(parents=True)
@@ -344,7 +426,7 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
     # Prepare every case synchronously before provider inspection. This records
     # actual routed participants and fixed ledger reservations, not guessed rosters.
     case_variants: dict[str, dict[str, Any]] = {}
-    for case in cases:
+    for case in cases if resume is None else ():
         case_variants[case.id] = {}
         for variant, conf in variants.items():
             for repeat in range(1, 4):
@@ -407,27 +489,186 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                     cell['analysis_status'] = read_json(inputs.root / 'static-analysis.json')[
                         'status']
                 case_variants[case.id][variant] = cell
-    snapshot['case_variants'] = case_variants
-    write_json(output / 'snapshot.json', snapshot)
+    if resume is None:
+        snapshot['case_variants'] = case_variants
+        write_json(output / 'snapshot.json', snapshot)
+    else:
+        case_variants = frozen['case_variants']
     capability = await inspect_nare_runtime(runtime)
     require_structured_output(config.models, capability)
     require_findings_options(config.findings, capability)
-    snapshot.update(nare_version=capability.version, nare_contract=capability.contract)
-    if config.models.structured_output:
-        snapshot['nare_structured_output'] = list(capability.structured_output)
-    write_json(output / 'snapshot.next.json', snapshot)
-    (output / 'snapshot.next.json').replace(output / 'snapshot.json')
+    if resume is None:
+        snapshot.update(nare_version=capability.version, nare_contract=capability.contract)
+        if config.models.structured_output:
+            snapshot['nare_structured_output'] = list(capability.structured_output)
+        write_json(output / 'snapshot.next.json', snapshot)
+        (output / 'snapshot.next.json').replace(output / 'snapshot.json')
+        segments = []
+    elif (capability.version, capability.contract) != (frozen['nare_version'],
+                                                       frozen['nare_contract']):
+        raise ValueError('the campaign was frozen on nare '
+                         f"{frozen['nare_version']}; this runtime is {capability.version}")
+    else:
+        snapshot = frozen
     completed: dict[str, dict[str, Any]] = {}
+    halted: dict[str, list[dict[str, Any]]] = {}
+    started_journal = output / 'started.jsonl'
+    segment_number = len(segments)
+    if resume is not None:
+        assert previous is not None
+        if config.models.structured_output and list(capability.structured_output) != frozen.get(
+                'nare_structured_output'):
+            raise ValueError('the runtime answer encodings differ from the freeze')
+        # The latest segment that started each attempt directory, before any spend.
+        started: dict[str, int] = {}
+        for line in (started_journal.read_text(encoding='utf-8').splitlines()
+                     if started_journal.exists() else ()):
+            try:
+                entry = json.loads(line)
+                started[entry['run_dir']] = max(started.get(entry['run_dir'], -1),
+                                                int(entry['segment']))
+            except (ValueError, KeyError, TypeError):
+                continue
+        persisted = {row['run_id']: row for row in previous['runs']}
+        for run_id, row in persisted.items():
+            if row.get('halted_attempts'):
+                halted[run_id] = list(row['halted_attempts'])
+        by_id = {case.id: case for case in cases}
+        halted_root = output / '_halted' / f'segment-{segment_number:04d}'
+        # Adopt what an earlier resume moved but was stopped before it could record.
+        referenced = {h['run_dir'] for entries in halted.values() for h in entries}
+        for folder in sorted((output / '_halted').glob('segment-*')):
+            for expected in snapshot['expected_runs']:
+                run_id = expected['run_id']
+                for relative in (Path(run_id), Path('_retries') / run_id / 'attempt-0002'):
+                    moved = folder / relative
+                    if moved.is_dir() and str(moved) not in referenced:
+                        record = _read_record(moved / 'evaluation.json')
+                        halted.setdefault(run_id, []).append({
+                            'segment': int(folder.name.removeprefix('segment-')) - 1,
+                            'set_aside_in': int(folder.name.removeprefix('segment-')),
+                            'source_dir': str(output / relative), 'run_dir': str(moved),
+                            'status': (record or {}).get('status', 'unrecorded'),
+                            'error': (record or {}).get('error'),
+                            'usage': _observed_usage(moved).to_dict()})
+
+        def ran_since_set_aside(run_id: str, directory: Path) -> bool:
+            """Started after its last set-aside: a fresh, never-run directory is not halted."""
+            last = max((h['set_aside_in'] for h in halted.get(run_id, ())
+                        if h.get('source_dir') == str(directory)), default=0)
+            return started.get(str(directory), -1) >= last
+
+        # First pass decides and verifies everything without touching the campaign, so a
+        # refusal leaves it exactly as the halt left it.
+        # (cell, directory, its record, case, arm, prepare the cell again, discard): a
+        # discarded directory is a copy a resume prepared that never ran, so holds no spend.
+        moves: list[tuple[str, Path, dict[str, Any] | None, Case, str, bool, bool]] = []
+
+        def resume_copy(run_id: str, directory: Path) -> bool:
+            """Prepared by an earlier resume and never run since: no spend, no evidence."""
+            return (not (directory / 'evaluation.json').exists()
+                    and any(h.get('source_dir') == str(directory)
+                            for h in halted.get(run_id, ()))
+                    and not ran_since_set_aside(run_id, directory))
+        for expected in snapshot['expected_runs']:
+            run_id = expected['run_id']
+            case, variant = by_id[expected['case_id']], expected['variant']
+            conf = variants[variant]
+            directory = output / run_id
+            row = persisted.get(run_id)
+            original = _read_record(directory / 'evaluation.json')
+            retry = output / '_retries' / run_id / 'attempt-0002'
+            kept = row if row is not None and _final(row) else (
+                original if _final(original) else None)
+            if kept is not None:
+                completed[run_id] = kept
+                # A replay the halt stopped, or finished but never persisted, runs again.
+                if _pending_replay(kept) and retry.exists():
+                    record = _read_record(retry / 'evaluation.json')
+                    # Prepared but never started (no journal line, no record) holds no spend.
+                    unused = record is None and not ran_since_set_aside(run_id, retry)
+                    moves.append((run_id, retry, record, case, variant, False, unused))
+                continue
+            if directory.exists() and (ran_since_set_aside(run_id, directory)
+                                       or original is not None):
+                moves.append((run_id, directory, original, case, variant, True, False))
+                continue
+            if not directory.exists():
+                # Set aside by an earlier resume that stopped before preparing it again.
+                moves.append((run_id, directory, None, case, variant, True, False))
+                continue
+            if resume_copy(run_id, directory):
+                # Possibly half-written by a resume that was stopped: prepare it afresh.
+                moves.append((run_id, directory, None, case, variant, True, True))
+                continue
+            try:
+                unchanged = all((directory / name).read_bytes() == data
+                                for name, data in captures[case.id].items()) and (
+                    prepared_content_hashes(prepare_review_inputs(directory, conf))
+                    == case_variants[case.id][variant]['inputs_sha256'])
+            except Exception:
+                unchanged = False
+            if not unchanged:
+                raise ValueError(f'the frozen inputs of {run_id} changed; refusing to resume')
+        # The segment is claimed before anything moves, so a resume stopped midway leaves
+        # the next one a fresh segment and never a half-used one.
+        segments.append({'segment': segment_number, 'reason': resume,
+                         'started_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+                         'preflight': preflight.to_dict() if preflight is not None else None,
+                         'nare_version': capability.version,
+                         'retained_cells': sorted(r for r in completed
+                                                  if not any(m[0] == r for m in moves)),
+                         'halted_cells': sorted({m[0] for m in moves
+                                                 if m[1].exists() and not m[6]})})
+        _replace_json(output / 'segments.json', segments)
+        for run_id, directory, record, case, variant, again, discard in moves:
+            if discard and directory.exists():
+                shutil.rmtree(directory)
+            if directory.exists():
+                target = halted_root / directory.relative_to(output)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                directory.replace(target)
+                halted.setdefault(run_id, []).append({
+                    'segment': segment_number - 1,
+                    'set_aside_in': segment_number, 'source_dir': str(directory),
+                    'run_dir': str(target),
+                    'status': (record or {}).get('status', 'unrecorded'),
+                    'error': (record or {}).get('error'),
+                    'usage': _observed_usage(target).to_dict()})
+            if again:
+                inputs = prepare(directory, case, variants[variant])
+                if prepared_content_hashes(inputs) != case_variants[case.id][variant][
+                        'inputs_sha256']:
+                    raise ValueError(f'the frozen inputs of {run_id} changed; '
+                                     'refusing to resume')
+    elif qualification_rule_a:
+        segments.append({'segment': 0, 'reason': None,
+                         'started_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+                         'preflight': preflight.to_dict() if preflight is not None else None,
+                         'nare_version': capability.version,
+                         'retained_cells': [], 'halted_cells': []})
+        _replace_json(output / 'segments.json', segments)
     def persist() -> dict[str, Any]:
         records = [completed.get(cell['run_id'], {**cell, 'status': 'missing',
                    'accounting_complete': False, 'usage': TokenUsage().to_dict(),
                    'findings': [], 'latency_seconds': 0}) for cell in snapshot['expected_runs']]
+        # A set-aside attempt stays on its cell's record until the cell runs again, so a
+        # second halt cannot drop the first one's spend.
+        records = [dict(r, halted_attempts=halted[r['run_id']])
+                   if r['run_id'] in halted and 'halted_attempts' not in r else r
+                   for r in records]
         result = {'schema_version': 1, 'evidence_kind': evidence_kind,
-                  'status': 'complete' if len(completed) == len(records) else 'incomplete',
+                  'status': 'complete' if len(completed) == len(records) and all(
+                      _final(r) and not (qualification_rule_a and _pending_replay(r))
+                      for r in records) else 'incomplete',
                   'runs': records}
         if qualification_rule_a:
             result['cumulative_usage'] = sum_usage([a for r in records
                                                   for a in r.get('attempts', [])])
+            stopped = [h for r in records for h in r.get('halted_attempts', [])]
+            if stopped:
+                # Spend the halts stopped mid-cell, a lower bound kept apart from scored usage.
+                result['halted_usage'] = sum_usage(stopped)
         temporary = output / 'experiment.next.json'
         with temporary.open('w', encoding='utf-8') as stream:
             json.dump(result, stream, indent=2, sort_keys=True, allow_nan=False)
@@ -449,6 +690,11 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
             'usage': TokenUsage().to_dict(), 'findings': [], 'error': None,
         }
         interrupted = False
+        if qualification_rule_a:
+            # Before any spend: a resume tells a started cell from an unstarted one by this.
+            with started_journal.open('a', encoding='utf-8') as stream:
+                stream.write(json.dumps({'run_id': run_id, 'run_dir': str(directory),
+                                         'segment': segment_number}, sort_keys=True) + '\n')
         try:
             panel = await run_review(directory, conf, runtime=runtime)
             record.update(status=panel.status,
@@ -477,6 +723,8 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         if qualification_rule_a and record['status'] == 'complete' and not record[
                 'findings'] and case.id in defect_cases:
             record.update(status='invalid', error='EmptyEvidence')
+        if run_id in halted:
+            record['halted_attempts'] = halted[run_id]
         record['latency_seconds'] = time.monotonic() - started
         return record, interrupted
 
@@ -564,7 +812,8 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         async with semaphore:
             await execute(case, variant, conf, repeat)
     tasks = [asyncio.create_task(bounded(case, variant, conf, repeat))
-             for case in cases for variant, conf in variants.items() for repeat in range(1, 4)]
+             for case in cases for variant, conf in variants.items() for repeat in range(1, 4)
+             if f'{case.id}/{variant}/{repeat}' not in completed]
     try:
         await asyncio.gather(*tasks)
         if qualification_rule_a:
@@ -574,7 +823,8 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                     for repeat in range(1, 4):
                         run_id = f'{case.id}/{variant}/{repeat}'
                         original = completed[run_id]
-                        if not original['attempts'][0]['retryable_session_failures']:
+                        if (len(original['attempts']) > 1
+                                or not original['attempts'][0]['retryable_session_failures']):
                             continue
                         directory = output / '_retries' / run_id / 'attempt-0002'
                         inputs = prepare(directory, case, conf)
