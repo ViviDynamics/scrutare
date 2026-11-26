@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import shutil
 import time
 from dataclasses import asdict, replace
 from datetime import datetime, timezone
@@ -329,7 +330,8 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
         if qualification_rule_a else set()
     label_hashes = {case.id: hashlib.sha256(case.labels.read_bytes()).hexdigest()
                     for case in cases}
-    output = output.absolute()
+    # Resolved, so every launch and resume of a campaign names its paths the same way.
+    output = output.resolve()
     previous: dict[str, Any] | None = None
     if resume is not None:
         try:
@@ -543,7 +545,7 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                     if moved.is_dir() and str(moved) not in referenced:
                         record = _read_record(moved / 'evaluation.json')
                         halted.setdefault(run_id, []).append({
-                            'segment': started.get(str(output / relative), 0),
+                            'segment': int(folder.name.removeprefix('segment-')) - 1,
                             'set_aside_in': int(folder.name.removeprefix('segment-')),
                             'source_dir': str(output / relative), 'run_dir': str(moved),
                             'status': (record or {}).get('status', 'unrecorded'),
@@ -558,8 +560,16 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
 
         # First pass decides and verifies everything without touching the campaign, so a
         # refusal leaves it exactly as the halt left it.
-        # (cell, directory to set aside, its record, case, arm, prepare the cell again)
-        moves: list[tuple[str, Path, dict[str, Any] | None, Case, str, bool]] = []
+        # (cell, directory, its record, case, arm, prepare the cell again, discard): a
+        # discarded directory is a copy a resume prepared that never ran, so holds no spend.
+        moves: list[tuple[str, Path, dict[str, Any] | None, Case, str, bool, bool]] = []
+
+        def resume_copy(run_id: str, directory: Path) -> bool:
+            """Prepared by an earlier resume and never run since: no spend, no evidence."""
+            return (not (directory / 'evaluation.json').exists()
+                    and any(h.get('source_dir') == str(directory)
+                            for h in halted.get(run_id, ()))
+                    and not ran_since_set_aside(run_id, directory))
         for expected in snapshot['expected_runs']:
             run_id = expected['run_id']
             case, variant = by_id[expected['case_id']], expected['variant']
@@ -574,16 +584,22 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                 completed[run_id] = kept
                 # A replay the halt stopped, or finished but never persisted, runs again.
                 if _pending_replay(kept) and retry.exists():
-                    moves.append((run_id, retry, _read_record(retry / 'evaluation.json'),
-                                  case, variant, False))
+                    record = _read_record(retry / 'evaluation.json')
+                    # Prepared but never started (no journal line, no record) holds no spend.
+                    unused = record is None and not ran_since_set_aside(run_id, retry)
+                    moves.append((run_id, retry, record, case, variant, False, unused))
                 continue
             if directory.exists() and (ran_since_set_aside(run_id, directory)
                                        or original is not None):
-                moves.append((run_id, directory, original, case, variant, True))
+                moves.append((run_id, directory, original, case, variant, True, False))
                 continue
             if not directory.exists():
                 # Set aside by an earlier resume that stopped before preparing it again.
-                moves.append((run_id, directory, None, case, variant, True))
+                moves.append((run_id, directory, None, case, variant, True, False))
+                continue
+            if resume_copy(run_id, directory):
+                # Possibly half-written by a resume that was stopped: prepare it afresh.
+                moves.append((run_id, directory, None, case, variant, True, True))
                 continue
             try:
                 unchanged = all((directory / name).read_bytes() == data
@@ -602,15 +618,18 @@ async def run_experiment(cases: tuple[Case, ...], config: ReviewConfig, output: 
                          'nare_version': capability.version,
                          'retained_cells': sorted(r for r in completed
                                                   if not any(m[0] == r for m in moves)),
-                         'halted_cells': sorted({m[0] for m in moves if m[1].exists()})})
+                         'halted_cells': sorted({m[0] for m in moves
+                                                 if m[1].exists() and not m[6]})})
         _replace_json(output / 'segments.json', segments)
-        for run_id, directory, record, case, variant, again in moves:
+        for run_id, directory, record, case, variant, again, discard in moves:
+            if discard and directory.exists():
+                shutil.rmtree(directory)
             if directory.exists():
                 target = halted_root / directory.relative_to(output)
                 target.parent.mkdir(parents=True, exist_ok=True)
                 directory.replace(target)
                 halted.setdefault(run_id, []).append({
-                    'segment': max(started.get(str(directory), segment_number - 1), 0),
+                    'segment': segment_number - 1,
                     'set_aside_in': segment_number, 'source_dir': str(directory),
                     'run_dir': str(target),
                     'status': (record or {}).get('status', 'unrecorded'),

@@ -271,3 +271,45 @@ def test_a_refused_resume_leaves_the_campaign_untouched(campaign):
     with pytest.raises(ValueError, match='frozen inputs of a/senior/3'):
         campaign.launch({}, resume='transport')
     assert sorted(p.relative_to(campaign.out) for p in campaign.out.rglob('*')) == before
+
+
+def test_a_resume_killed_while_preparing_a_cell_again_stays_resumable(campaign,
+                                                                       monkeypatch):
+    with pytest.raises(asyncio.CancelledError):
+        campaign.launch({(1, False): 'hang'})
+    import scrutare.evaluation.runner as runner
+    original, seen = runner.prepare_review_inputs, []
+    def dying(directory, conf):
+        seen.append(directory)
+        # Cells 2 and 3 are verified first; the third call prepares cell 1 again.
+        if len(seen) == 3:
+            (directory / 'review-inputs').mkdir()
+            raise Killed
+        return original(directory, conf)
+    monkeypatch.setattr(runner, 'prepare_review_inputs', dying)
+    with pytest.raises(Killed):
+        campaign.launch({}, resume='transport')
+    monkeypatch.setattr(runner, 'prepare_review_inputs', original)
+    result = campaign.launch({}, resume='transport')
+    rows = {row['run_id']: row for row in result['runs']}
+    assert result['status'] == 'complete'
+    assert len(rows['a/senior/1']['halted_attempts']) == 1
+    assert result['halted_usage']['input'] == 7
+
+
+def test_a_replay_prepared_but_never_started_is_not_a_halted_attempt(campaign, monkeypatch):
+    plan = {(1, False): 'output_cap', (2, False): 'output_cap', (3, False): 'output_cap'}
+    import scrutare.evaluation.runner as runner
+    original = runner.prepare_review_inputs
+    def dying(directory, conf):
+        inputs = original(directory, conf)
+        if '_retries' in directory.parts:
+            raise Killed
+        return inputs
+    monkeypatch.setattr(runner, 'prepare_review_inputs', dying)
+    with pytest.raises(Killed):
+        campaign.launch(plan)
+    monkeypatch.setattr(runner, 'prepare_review_inputs', original)
+    result = campaign.launch(plan, resume='launch')
+    assert result['status'] == 'complete'
+    assert all('halted_attempts' not in row for row in result['runs'])
