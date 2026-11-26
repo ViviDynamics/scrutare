@@ -1,0 +1,9 @@
+{
+  "cases": ["dev2-01", "dev2-03"],
+  "corpus": "evaluations/development-v2",
+  "corpus_manifest_sha256": "80eb9bc1be972c7a31a118a01d29e571682f7a24273275b4363a14bfea774799",
+  "gate": "every cell complete with complete accounting, under rule A",
+  "id": "screen-v1",
+  "schema_version": 1,
+  "selection": "the first labeled-defect case and the first clean case of development-v2, in manifest order, fixed before any screen ran"
+}
