@@ -109,35 +109,26 @@ The design and milestone order are in
 
 ## Install and review a pull request
 
-Install this reviewed checkout with Python 3.10 or newer for contract 3 support.
-Use [version-specific release instructions](docs/releases.md) when installing a
-published wheel:
+On macOS or Linux with Git and curl, run this from any directory:
 
 ```sh
-uv tool install --python 3.10 .
+curl -fsSL https://github.com/ViviDynamics/scrutare/releases/latest/download/install.sh | sh
 ```
 
-You also need the [GitHub CLI](https://cli.github.com/) on PATH and a
-separate [nare 2026.11.109 installation](docs/session-fanout.md). Use existing
-authorized GitHub access with permission to read the PR and submit reviews,
-and credentials for the selected model provider. Every model call goes through
-nare. Scrutare does not install nare into its own environment.
+The installer prints the executable path and both release versions. It reuses uv or installs a private copy, provisions Python 3.14, and pairs the release wheel with the Nare runtime pinned by that release.
 
-Create `scrutare.yaml` in your repository:
+**Copy this prompt into your coding agent in the checkout you want reviewed.**
 
-```yaml
-models:
-  default:
-    model: <model>
+```text
+Set up the latest released Scrutare CLI for this repository. Run the installer above if needed:
+curl -fsSL https://github.com/ViviDynamics/scrutare/releases/latest/download/install.sh | sh
+Use its printed executable path. Reuse authorized GitHub CLI access and the existing provider configuration. Check gh auth status --hostname github.com with output suppressed. Check only whether the selected provider's credential variable is set. Never print, paste or store credential values. If access is missing, ask me to configure it privately. Ask only for missing inputs, including the full PR URL and any model, provider or compatible endpoint needed for a new configuration.
+Run the installed executable's setup --pr command with the chosen full URL. Keep an existing scrutare.yaml. Only for a new file, pass --model and --provider, plus --base-url for a custom endpoint. Use shell quoting for each value. Report setup errors without exposing configuration contents. On success, print the exact review command setup returned and stop before posting. If I want GitHub Actions, show the literal uses: ViviDynamics/scrutare@ tag matching the installed version.
 ```
 
-```sh
-scrutare review --pr https://github.com/owner/repo/pull/12 \
-  --nare-executable /absolute/path/to/nare-environment/bin/nare
-scrutare review --pr 12 --config path/to/settings.yaml
-```
+Install the GitHub CLI separately and supply the selected rail's provider credential through its environment. The [CLI guide](docs/cli.md) includes the local check and the release-pinned Action setup.
 
-`--nare-executable` defaults to `nare` on PATH. A numeric PR resolves the
+A numeric PR resolves the
 repository through `gh repo view` from the current checkout. The command reads
 configuration once before GitHub access, captures a coherent PR, runs the selected strategy,
 and posts the verdict against the captured head. Success prints the exact JSON

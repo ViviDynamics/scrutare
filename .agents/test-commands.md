@@ -21,6 +21,7 @@ Commands default to Python 3.10 when `SCRUTARE_PYTHON` is unset.
 | Strict types | always | `uv run --python "${SCRUTARE_PYTHON:-3.10}" --locked --extra dev mypy src scripts/check-release.py scripts/auto-release.py scripts/bump-nare.py` |
 | Wheel | always | `uv build --python "${SCRUTARE_PYTHON:-3.10}" --wheel` |
 | Installed CLI | always | `scripts/smoke-cli.sh` |
+| Release installer | always | `tag=$(uv run --locked scrutare --version) && scripts/build-installer.sh "${tag#scrutare }" && scripts/smoke-installer.sh "${tag#scrutare }"` |
 
 Set `SCRUTARE_TEST_NARE_EXECUTABLE` to the absolute separately installed nare
 2026.11.109 console path before the complete table. See

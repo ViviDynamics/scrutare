@@ -22,6 +22,7 @@ from scrutare.engine.review import (
     review_pr,
 )
 from scrutare.engine.session_models import NareRuntime
+from scrutare.interfaces.setup import setup_review
 from scrutare.replay import ReplayError, replay_run
 
 
@@ -30,6 +31,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="scrutare", description=__doc__)
     parser.add_argument("--version", action="version", version=f"scrutare {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
+    setup = commands.add_parser("setup", help="prepare a configuration and print a review command")
+    setup.add_argument("--pr", required=True, help="full GitHub pull request URL")
+    setup.add_argument("--config", type=Path, default=Path("scrutare.yaml"))
+    setup.add_argument("--model", help="model for a new configuration")
+    setup.add_argument("--provider", choices=("openai", "anthropic"), default="anthropic",
+                       help="provider for a new configuration (default: anthropic)")
+    setup.add_argument("--base-url", help="compatible endpoint for a new configuration")
     review = commands.add_parser(
         "review", help="review a PR and post the captured-head verdict",
         description="Capture, review and post a verdict with durable local artifacts.",
@@ -78,6 +86,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         args = parser.parse_args(argv)
     except SystemExit as exc:
         return int(exc.code) if isinstance(exc.code, int) else 1
+
+    if args.command == "setup":
+        return setup_review(args.pr, args.config, args.model, args.provider, args.base_url)
 
     if args.command == "replay":
         try:

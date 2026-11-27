@@ -169,3 +169,13 @@ def test_container_context_is_allowlisted_to_recipe_and_wheels():
     assert "dist/**" in patterns, "opening dist/ must not admit non-wheel files"
     assert patterns.index("!dist/") < patterns.index("dist/**")
     assert patterns.index("dist/**") < patterns.index("!dist/scrutare-*-py3-none-any.whl")
+
+
+def test_release_smokes_and_publishes_its_tag_stamped_installer():
+    workflow = yaml.safe_load((ROOT / ".github/workflows/release.yml").read_text())
+    steps = workflow["jobs"]["publish"]["steps"]
+    runs = [step.get("run", "") for step in steps]
+    publish = next(i for i, run in enumerate(runs) if "gh release create" in run)
+    assert any("build-installer.sh" in run for run in runs[:publish])
+    assert any("smoke-installer.sh" in run for run in runs[:publish])
+    assert "dist/install.sh" in runs[publish]

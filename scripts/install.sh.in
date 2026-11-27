@@ -1,0 +1,61 @@
+# The release workflow embeds the matching wheel version and the tested Nare pin above.
+install_scrutare() (
+    umask 077
+    root=${XDG_DATA_HOME:-"$HOME/.local/share"}/scrutare
+    case "$root" in /*) ;; *) echo 'Scrutare requires an absolute data directory.' >&2; exit 1;; esac
+    mkdir -p "$root/bin"
+    tmp=$(mktemp -d "$root/.install.XXXXXXXX")
+    trap 'rm -rf "$tmp"' EXIT
+    trap 'exit 1' HUP INT TERM
+    command -v git >/dev/null || { echo 'Install git and rerun this command.' >&2; exit 1; }
+    if command -v uv >/dev/null 2>&1; then
+        uv=uv
+    else
+        uv="$root/uv/uv"
+        if [ ! -x "$uv" ]; then
+            curl -fsSL https://github.com/astral-sh/uv/releases/download/0.13.5/uv-installer.sh -o "$tmp/uv-installer.sh"
+            UV_UNMANAGED_INSTALL="$root/uv" sh "$tmp/uv-installer.sh"
+        fi
+    fi
+
+    envs="$root/releases/$release"
+    nare="$envs/nare/bin/nare"
+    cli="$envs/cli/bin/scrutare"
+    mkdir -p "$envs"
+    if [ ! -x "$nare" ] || [ "$("$nare" --version)" != "$nare_release" ]; then
+        git clone --quiet --depth 1 --branch "$nare_release" https://github.com/ViviDynamics/nare.git "$tmp/nare"
+        test "$(git -C "$tmp/nare" rev-parse HEAD)" = "$nare_commit"
+        UV_PROJECT_ENVIRONMENT="$envs/nare" "$uv" sync --project "$tmp/nare" --python 3.14 --locked --no-dev --no-editable
+    fi
+    if [ ! -x "$cli" ] || [ "$("$cli" --version)" != "scrutare $release" ]; then
+        wheel="scrutare-$release-py3-none-any.whl"
+        curl -fsSL "https://github.com/ViviDynamics/scrutare/releases/download/$release/$wheel" -o "$tmp/$wheel"
+        "$uv" venv --allow-existing --python 3.14 "$envs/cli"
+        "$uv" pip install --python "$envs/cli/bin/python" "$tmp/$wheel"
+    fi
+    test "$("$cli" --version)" = "scrutare $release"
+    test "$("$nare" --version)" = "$nare_release"
+    "$nare" contract > "$tmp/contract.json"
+    "$envs/cli/bin/python" - "$tmp/contract.json" "$nare_release" <<'PY'
+import json, sys
+with open(sys.argv[1]) as stream:
+    contract = json.load(stream)
+if contract.get("contract") != 3 or contract.get("nare") != sys.argv[2]:
+    sys.exit("Installed Nare has an incompatible machine contract.")
+PY
+    {
+        printf '#!/bin/sh\nrelease=%s\n' "$release"
+        cat <<'LAUNCH'
+set -eu
+root=$(CDPATH='' cd "$(dirname "$0")/.." && pwd)
+envs="$root/releases/$release"
+export PATH="$envs/nare/bin:$PATH"
+exec "$envs/cli/bin/scrutare" "$@"
+LAUNCH
+    } > "$tmp/scrutare"
+    chmod 755 "$tmp/scrutare"
+    mv -f "$tmp/scrutare" "$root/bin/scrutare"
+    printf 'Installed Scrutare %s and Nare %s.\nExecutable: %s/bin/scrutare\n' "$release" "$nare_release" "$root"
+)
+# Run only once the piped script has been read in full.
+install_scrutare
