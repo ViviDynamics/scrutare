@@ -71,7 +71,7 @@ and [release automation](docs/releases.md#release-contract).
 
 This source checkout integrates nare 2026.11.109 and machine contract 3. Published
 Scrutare releases through 2026.10.47 require their older Nare pins; follow the
-instructions at the matching release tag, or install this checkout as below.
+instructions at the matching release tag or the [source installation guide](docs/releases.md#wheel).
 Review-quality enhancements remain opt-in pending the measured promotion gate
 in [#51](https://github.com/ViviDynamics/scrutare/issues/51).
 The [GitHub App service](docs/app.md) is
@@ -120,16 +120,28 @@ The installer prints the executable path and both release versions. It reuses uv
 **Copy this prompt into your coding agent in the checkout you want reviewed.**
 
 ```text
-Set up the latest released Scrutare CLI for this repository. Run the installer above if needed:
+Set up the latest released Scrutare CLI in this checkout. Run:
 curl -fsSL https://github.com/ViviDynamics/scrutare/releases/latest/download/install.sh | sh
-Use its printed executable path. Reuse authorized GitHub CLI access and the existing provider configuration. Check gh auth status --hostname github.com with output suppressed. Check only whether the selected provider's credential variable is set. Never print, paste or store credential values. If access is missing, ask me to configure it privately. Ask only for missing inputs, including the full PR URL and any model, provider or compatible endpoint needed for a new configuration.
-Run the installed executable's setup --pr command with the chosen full URL. Keep an existing scrutare.yaml. Only for a new file, pass --model and --provider, plus --base-url for a custom endpoint. Use shell quoting for each value. Report setup errors without exposing configuration contents. On success, print the exact review command setup returned and stop before posting. If I want GitHub Actions, show the literal uses: ViviDynamics/scrutare@ tag matching the installed version.
+
+Use the executable path it prints. Reuse existing GitHub and provider
+configuration. Run gh auth status --hostname github.com with its output
+suppressed. Check only whether the selected provider's credential variable is
+set. Keep credentials out of chat, files and logs. Ask me to configure missing
+access privately.
+
+Ask only for missing inputs: the full PR URL and, for a new configuration, the
+provider, model and any custom endpoint. Run setup --pr with the chosen URL.
+Preserve an existing scrutare.yaml. For a new file, pass --model and
+--provider, plus --base-url for a custom endpoint. Quote each argument.
+
+Print the exact review command setup returns. Stop before posting. If I request
+GitHub Actions, show the literal uses line pinned to the installed version.
 ```
 
 Install the GitHub CLI separately and supply the selected rail's provider credential through its environment. The [CLI guide](docs/cli.md) includes the local check and the release-pinned Action setup.
 
-A numeric PR resolves the
-repository through `gh repo view` from the current checkout. The command reads
+The printed review command posts the verdict. A numeric PR passed directly to
+`scrutare review` resolves the repository through `gh repo view` from the current checkout. The command reads
 configuration once before GitHub access, captures a coherent PR, runs the selected strategy,
 and posts the verdict against the captured head. Success prints the exact JSON
 saved in the run's `result.json`, after recording delivery and `artifacts.json`.

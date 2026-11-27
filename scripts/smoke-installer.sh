@@ -16,7 +16,9 @@ cat > "$sandbox/path/curl" <<'CURL'
 set -eu
 base=https://github.com/ViviDynamics/scrutare/releases
 wheel=scrutare-$SCRUTARE_SMOKE_TAG-py3-none-any.whl
-case "$2" in
+# uv's private bootstrap also uses curl when testing on a host without uv.
+case "$*" in *github.com/astral-sh/uv/*) exec "$SCRUTARE_SMOKE_CURL" "$@" ;; esac
+case "${2:-}" in
     "$base/latest/download/install.sh") file=install.sh ;;
     "$base/download/$SCRUTARE_SMOKE_TAG/$wheel") file="$wheel" ;;
     *) echo 'unexpected installer asset request' >&2; exit 1 ;;

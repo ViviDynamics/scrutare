@@ -17,10 +17,22 @@ The installer prints the executable path and both release versions. It reuses uv
 **Copy this prompt into your coding agent in the checkout you want reviewed.**
 
 ```text
-Set up the latest released Scrutare CLI for this repository. Run the installer above if needed:
+Set up the latest released Scrutare CLI in this checkout. Run:
 curl -fsSL https://github.com/ViviDynamics/scrutare/releases/latest/download/install.sh | sh
-Use its printed executable path. Reuse authorized GitHub CLI access and the existing provider configuration. Check gh auth status --hostname github.com with output suppressed. Check only whether the selected provider's credential variable is set. Never print, paste or store credential values. If access is missing, ask me to configure it privately. Ask only for missing inputs, including the full PR URL and any model, provider or compatible endpoint needed for a new configuration.
-Run the installed executable's setup --pr command with the chosen full URL. Keep an existing scrutare.yaml. Only for a new file, pass --model and --provider, plus --base-url for a custom endpoint. Use shell quoting for each value. Report setup errors without exposing configuration contents. On success, print the exact review command setup returned and stop before posting. If I want GitHub Actions, show the literal uses: ViviDynamics/scrutare@ tag matching the installed version.
+
+Use the executable path it prints. Reuse existing GitHub and provider
+configuration. Run gh auth status --hostname github.com with its output
+suppressed. Check only whether the selected provider's credential variable is
+set. Keep credentials out of chat, files and logs. Ask me to configure missing
+access privately.
+
+Ask only for missing inputs: the full PR URL and, for a new configuration, the
+provider, model and any custom endpoint. Run setup --pr with the chosen URL.
+Preserve an existing scrutare.yaml. For a new file, pass --model and
+--provider, plus --base-url for a custom endpoint. Quote each argument.
+
+Print the exact review command setup returns. Stop before posting. If I request
+GitHub Actions, show the literal uses line pinned to the installed version.
 ```
 
 For manual setup, install the GitHub CLI and authorize access to read the PR and submit a review. Configure `ANTHROPIC_API_KEY` for Anthropic or `OPENAI_API_KEY` for an authenticated OpenAI-compatible endpoint in your shell or secret manager. If the target endpoint accepts unauthenticated requests, follow its configuration.
