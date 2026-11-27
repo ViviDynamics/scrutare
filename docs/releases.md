@@ -18,6 +18,10 @@ Asset publication alone does not establish hosted acceptance. There is no PyPI
 installation claim. See the [pipeline guide](pipeline.md) for the pinned caller,
 trusted configuration and prerequisites.
 
+## Standalone installer
+
+Each release built by the current workflow publishes `install.sh` beside the wheel. The [CLI guide](cli.md#install-and-set-up) gives the stable download command and setup prompt. The installer embeds the Scrutare tag and Nare release and commit, checks the separate locked Nare environment and its contract, and installs a launcher under `${XDG_DATA_HOME:-$HOME/.local/share}/scrutare/bin`. The release smoke exercises both a clean install and an existing configuration before publication.
+
 ## Wheel
 
 Scrutare supports Python 3.10 and newer. Published wheels are immutable GitHub
@@ -178,7 +182,7 @@ The release workflow accepts tag pushes and explicit dispatches on tags only.
 It requires the tagged commit to be on main, runs the unchanged source's tests,
 lint and strict types on Python 3.10 and 3.14, builds and validates one wheel,
 installs and smokes it outside the checkout, then builds and smokes that exact
-wheel's image. Only then does it create the GitHub release with the wheel and
+wheel's image. Only then does it create the GitHub release with the wheel and installer and
 push the versioned GHCR image. There is no `latest` alias. Publication uses
 narrowly scoped workflow permissions. The composite Action resolves its immutable
 image from its canonical release tag, so `ViviDynamics/scrutare@YYYY.M.N` runs

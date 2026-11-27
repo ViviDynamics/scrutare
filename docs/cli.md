@@ -2,7 +2,59 @@
 
 `scrutare review` captures a PR, executes the panel through a separate nare
 process, and posts one captured-head GitHub review. `python -m scrutare` provides
-the same interface. See [releases](releases.md) for installation.
+the same interface.
+
+## Install and set up
+
+On macOS or Linux with Git and curl, run this from any directory:
+
+```sh
+curl -fsSL https://github.com/ViviDynamics/scrutare/releases/latest/download/install.sh | sh
+```
+
+The installer prints the executable path and both release versions. It reuses uv or installs a private copy, provisions Python 3.14, and pairs the release wheel with the Nare runtime pinned by that release.
+
+**Copy this prompt into your coding agent in the checkout you want reviewed.**
+
+```text
+Set up the latest released Scrutare CLI in this checkout. Run:
+curl -fsSL https://github.com/ViviDynamics/scrutare/releases/latest/download/install.sh | sh
+
+Use the executable path it prints. Reuse existing GitHub and provider
+configuration. Run gh auth status --hostname github.com with its output
+suppressed. Check only whether the selected provider's credential variable is
+set. Keep credentials out of chat, files and logs. Ask me to configure missing
+access privately.
+
+Ask only for missing inputs: the full PR URL and, for a new configuration, the
+provider, model and any custom endpoint. Run setup --pr with the chosen URL.
+Preserve an existing scrutare.yaml. For a new file, pass --model and
+--provider, plus --base-url for a custom endpoint. Quote each argument.
+
+Print the exact review command setup returns. Stop before posting. If I request
+GitHub Actions, show the literal uses line pinned to the installed version.
+```
+
+For manual setup, install the GitHub CLI and authorize access to read the PR and submit a review. Configure `ANTHROPIC_API_KEY` for Anthropic or `OPENAI_API_KEY` for an authenticated OpenAI-compatible endpoint in your shell or secret manager. If the target endpoint accepts unauthenticated requests, follow its configuration.
+
+For example, in the target checkout with an existing configuration:
+
+```sh
+cli="${XDG_DATA_HOME:-$HOME/.local/share}/scrutare/bin/scrutare"
+"$cli" setup --pr https://github.com/owner/repo/pull/12
+```
+
+For a new file, append `--model MODEL --provider anthropic` or `--model MODEL --provider openai`, using your model identifier. Supply `--base-url` for a compatible endpoint. Setup validates the YAML locally, preserves existing bytes, and prints a quoted command for the selected PR and paired runtime. Running that command calls the model and submits the review.
+
+For GitHub Actions, generate the literal version-pinned line from the installed release and paste it into the [caller workflow](pipeline.md):
+
+```sh
+version=$("$cli" --version)
+printf '      - uses: ViviDynamics/scrutare@%s\n' "${version#scrutare }"
+```
+
+## Review
+
 
 ```sh
 scrutare review --pr https://github.com/owner/repo/pull/12 \

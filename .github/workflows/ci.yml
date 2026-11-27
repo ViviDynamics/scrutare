@@ -51,3 +51,10 @@ jobs:
       - name: Installed CLI smoke check
         shell: bash
         run: scripts/smoke-cli.sh
+      - name: Smoke the release installer and offline setup
+        if: matrix.python == '3.14'
+        shell: bash
+        run: |
+          tag=$(uv run --locked scrutare --version)
+          scripts/build-installer.sh "${tag#scrutare }"
+          scripts/smoke-installer.sh "${tag#scrutare }"

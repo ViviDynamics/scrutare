@@ -132,7 +132,11 @@ jobs:
         run: docker build --build-arg "SCRUTARE_WHEEL=$WHEEL" --tag "$IMAGE" .
       - name: Offline container smoke check
         run: scripts/smoke-container.sh "$IMAGE" "$RELEASE_TAG"
-      - name: Create release with wheel asset
+      - name: Build and smoke the release installer
+        run: |
+          scripts/build-installer.sh "$RELEASE_TAG"
+          scripts/smoke-installer.sh "$RELEASE_TAG"
+      - name: Create release with wheel and installer
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -140,11 +144,14 @@ jobs:
           set -euo pipefail
           wheel=$WHEEL
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            if ! gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name' | grep -Fx "$(basename "$wheel")"; then
-              gh release upload "$RELEASE_TAG" "$wheel"
-            fi
+            assets=$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')
+            for asset in "$wheel" dist/install.sh; do
+              if ! grep -Fx "$(basename "$asset")" <<< "$assets"; then
+                gh release upload "$RELEASE_TAG" "$asset"
+              fi
+            done
           else
-            gh release create "$RELEASE_TAG" "$wheel" --verify-tag --title "$RELEASE_TAG" --generate-notes
+            gh release create "$RELEASE_TAG" "$wheel" dist/install.sh --verify-tag --title "$RELEASE_TAG" --generate-notes
           fi
       - name: Publish versioned image
         env:
