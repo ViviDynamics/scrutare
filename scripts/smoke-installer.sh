@@ -17,7 +17,9 @@ set -eu
 base=https://github.com/ViviDynamics/scrutare/releases
 wheel=scrutare-$SCRUTARE_SMOKE_TAG-py3-none-any.whl
 # uv's private bootstrap also uses curl when testing on a host without uv.
-case "$*" in *github.com/astral-sh/uv/*) exec "$SCRUTARE_SMOKE_CURL" "$@" ;; esac
+case "$*" in
+    *github.com/astral-sh/uv/*|*releases.astral.sh/github/uv/*) exec "$SCRUTARE_SMOKE_CURL" "$@" ;;
+esac
 case "${2:-}" in
     "$base/latest/download/install.sh") file=install.sh ;;
     "$base/download/$SCRUTARE_SMOKE_TAG/$wheel") file="$wheel" ;;
@@ -27,7 +29,13 @@ flags=$1
 shift 2
 exec "$SCRUTARE_SMOKE_CURL" "$flags" "file://$SCRUTARE_SMOKE_ASSETS/$file" "$@"
 CURL
-chmod +x "$sandbox/path/curl"
+# The prompt checks existing GitHub and provider access. Keep this fixture read-only.
+cat > "$sandbox/path/gh" <<'GH'
+#!/bin/sh
+test "$*" = 'auth status --hostname github.com'
+GH
+chmod +x "$sandbox/path/curl" "$sandbox/path/gh"
+export OPENAI_API_KEY=offline-fixture
 export PATH="$sandbox/path:$PATH"
 cd "$sandbox/checkout"
 git init -q
@@ -37,6 +45,10 @@ for pass in fresh repeat; do
     output=$(curl -fsSL https://github.com/ViviDynamics/scrutare/releases/latest/download/install.sh | sh)
     grep -Fx "Executable: $cli" <<< "$output"
     test "$("$cli" --version)" = "scrutare $tag"
+    gh auth status --hostname github.com >/dev/null 2>&1
+    test -n "${OPENAI_API_KEY:-}"
+    version=$("$cli" --version)
+    test "uses: ViviDynamics/scrutare@${version#scrutare }" = "uses: ViviDynamics/scrutare@$tag"
     if [ "$pass" = fresh ]; then
         "$cli" setup --pr "$pr" --provider openai --model smoke > next-command
         printf '# local edits\n' >> scrutare.yaml
