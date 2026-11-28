@@ -72,7 +72,7 @@ exact bytes are retained. See the [configuration reference](config.md).
 `nare` on PATH and can select a separate environment with its own interpreter.
 The tested runtime is nare 2026.11.135; the engine requires at least 2026.10.0 and
 contract 1 (releases before 2026.10.7), contract 2 (before 2026.11.33),
-or contract 3. The `panel`, [iterative](iterative-review.md), and
+contract 3 (before 2026.11.135) or contract 4. The `panel`, [iterative](iterative-review.md), and
 [debate](debate.md) strategies execute reviews. A missing runtime is rejected
 before repository lookup, capture or model calls. Runtime version
 and protocol inspection remain engine checks. Built-in personas and custom

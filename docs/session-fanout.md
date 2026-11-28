@@ -46,9 +46,22 @@ an external process, without a Scrutare production import or dependency.
 Inspection checks its version and contract once per wave before any session
 launch. All model calls go through nare.
 
+### Upgrading to contract 4
+
+The pinned runtime uses contract 4, first released in nare 2026.11.135. Contract
+4 changes only what `--allowed-tools` does: it pre-approves the named tools
+instead of narrowing the tool set. Scrutare narrows with `--tools read` and never
+passes `--allowed-tools`, so a contract 4 runtime takes every contract 3 path
+below: the advertised flags, native recovery controls, capability entries and
+replay audit. Elsewhere in these documents "a contract 3 runtime" includes
+contract 4. Inspection expects contract 4 from 2026.11.135 and contract 3 from
+2026.11.33 up to it, and Scrutare passes `--contract` equal to the inspected
+contract. The replay audit binds a recorded invocation to the contract its
+recorded release speaks, so a contract 4 run's evidence must say 4 throughout.
+
 ### Upgrading to contract 3
 
-The pinned runtime uses contract 3, first released in nare 2026.11.33. Its
+Contract 3 was first released in nare 2026.11.33. Its
 redaction rules preserve code expressions while redacting credential values;
 Scrutare continues to decode and replay historical contract 1/2 evidence.
 Unknown contracts and release/contract mismatches fail inspection before review.

@@ -27,9 +27,9 @@ Each release built by the current workflow publishes `install.sh` beside the whe
 Scrutare supports Python 3.10 and newer. Published wheels are immutable GitHub
 release assets; use the installation instructions at the matching Scrutare tag
 for its compatible Nare runtime. Releases through 2026.10.47 use older Nare pins
-and cannot use this checkout's contract 3 integration.
+and cannot use this checkout's contract 4 integration.
 
-For contract 3 support, install this reviewed source checkout until a release
+For contract 4 support, install this reviewed source checkout until a release
 containing the integration is published:
 
 ```sh

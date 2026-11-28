@@ -41,6 +41,7 @@ from scrutare.engine.nare_session import (
     _takes_value,
     _wait_capture,
     inspect_nare_runtime,
+    modern_contract,
 )
 from scrutare.engine.session_models import NareCapability, NareRuntime
 
@@ -224,7 +225,7 @@ async def _request(rail: ModelRail, runtime: NareRuntime, capability: NareCapabi
                       seconds=round(time.monotonic() - started, 3), **detail)
         return record
 
-    if capability.contract != 3 or not _takes_value(capability, "--tools"):
+    if not modern_contract(capability.contract) or not _takes_value(capability, "--tools"):
         return done("runtime_refused")
     if _rail_refusal(rail, capability) is not None:
         return done("runtime_refused")
