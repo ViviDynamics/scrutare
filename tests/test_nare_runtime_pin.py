@@ -8,7 +8,7 @@ from nare_pin import COMMIT, PIN_FILE, RELEASE, read_pin
 
 ROOT = Path(__file__).parents[1]
 # The pin before the current one. scripts/bump-nare.py moves it on every bump.
-PREVIOUS = ("2026.11.107", "4baaeb8527478401cbd7bf54b74f48c286d8a093")
+PREVIOUS = ("2026.11.109", "989636b56ce62375bd67401ab09c970f40c49b5f")
 INSTALL = (
     '. ./nare.pin\n'
     'nare_checkout="$RUNNER_TEMP/scrutare-nare-$NARE_RELEASE"\n'

@@ -1,5 +1,5 @@
 # The nare release every Scrutare installation uses: CI, release, the Action image,
 # the smoke scripts and the installed tests. scripts/bump-nare.py rewrites it.
 # Plain KEY=value lines, so sh (`. ./nare.pin`), Docker and Python read it alike.
-NARE_RELEASE=2026.11.109
-NARE_COMMIT=989636b56ce62375bd67401ab09c970f40c49b5f
+NARE_RELEASE=2026.11.135
+NARE_COMMIT=7518d62a082cab62b84b8278faf7915a188c0845

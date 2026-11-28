@@ -186,7 +186,7 @@ fields; an override can set it alone or clear an inherited value with `null`.
 It is refused before any session launches when the nare runtime does not
 advertise the capability for that rail's provider: the openai rail from nare
 2026.10.12, the anthropic rail on contract 3 runtimes that list it (the pinned
-2026.11.109 does). Use it only with a backend that enforces `response_format`
+2026.11.135 does). Use it only with a backend that enforces `response_format`
 json_schema, such as vLLM; an OpenAI-compatible server that ignores the field
 answers unconstrained, and validation still decides.
 
@@ -236,7 +236,7 @@ answer. In every encoding nare still validates the answer against the schema,
 its usage, truncation and repetition guards stay active, and Scrutare's own
 validation decides as before.
 
-Both values need nare 2026.11.109 or newer, whose `nare contract` lists each
+Both values need nare 2026.11.135 or newer, whose `nare contract` lists each
 provider's modes under `structured_output.provider_modes`; the pinned release
 does. A review that asks for one on a runtime that does not list it for the
 openai rail is refused before any session launches, and a review that never
@@ -850,7 +850,7 @@ findings:
 nare (2026.11.102 and newer) then runs Scrutare's validator as its check
 command on every final answer that passes the findings schema. A refused answer
 goes back to the model as an in-session correction, with the transcript still
-cached and the read tool still offered (nare 2026.11.109 restores the session's
+cached and the read tool still offered (nare 2026.11.135 restores the session's
 tools after such a correction), so the model can read the file again and fix the
 citation in the next turn of the same process. It works on any provider rail.
 It applies to discovery sessions only (the reviewers of the initial wave);
@@ -944,7 +944,7 @@ A session's record:
 | `tokens`, `output_tokens` | The session's `usage.total` and `usage.output` |
 | `retries`, `retry_wait_seconds` | Resent requests and the waits nare announced before them (`detail.retry.wait`) |
 | `capacity_wait_seconds`, `capacity_slot_wait_seconds` | The session's recorded [capacity](#capacity-queueing-opt-in) waits, 0 without the block |
-| `requests` | nare's [request timing](https://github.com/ViviDynamics/nare/blob/2026.11.109/docs/contract.md#request-timing) summed over the session's invocations, or `null` when no result line carried it |
+| `requests` | nare's [request timing](https://github.com/ViviDynamics/nare/blob/2026.11.135/docs/contract.md#request-timing) summed over the session's invocations, or `null` when no result line carried it |
 | `first_token_seconds` | Mean time to first token: `requests.first_token_seconds` over `requests.first_tokens`, `null` with none |
 | `decode_tokens_per_second` | `requests.generation_output_tokens` over `requests.generation_seconds`, `null` when that is zero or `null` |
 
