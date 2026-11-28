@@ -34,10 +34,10 @@ for outcome in result.outcomes:
 and turn limits. It adds no YAML fields; the review CLI and the MCP server
 build it with the configured
 [`models.session_timeout_seconds`](config.md#session-timeout), or 600 seconds. Scrutare requires Python 3.10 or newer;
-install nare 2026.11.109 separately (supported minimum 2026.10.0) with the interpreter required by its
+install nare 2026.11.135 separately (supported minimum 2026.10.0) with the interpreter required by its
 release. For the pinned integration runtime, clone the public
-[ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.11.109),
-verify commit `989636b56ce62375bd67401ab09c970f40c49b5f` (the release and commit in
+[ViviDynamics/nare release](https://github.com/ViviDynamics/nare/tree/2026.11.135),
+verify commit `7518d62a082cab62b84b8278faf7915a188c0845` (the release and commit in
 `nare.pin`), and run
 `uv sync --project /path/to/nare-checkout --python 3.14 --locked --no-dev`.
 Point `NareRuntime.executable`, or the CLI option `--nare-executable`, at that
@@ -46,13 +46,26 @@ an external process, without a Scrutare production import or dependency.
 Inspection checks its version and contract once per wave before any session
 launch. All model calls go through nare.
 
+### Upgrading to contract 4
+
+The pinned runtime uses contract 4, first released in nare 2026.11.135. Contract
+4 changes only what `--allowed-tools` does: it pre-approves the named tools
+instead of narrowing the tool set. Scrutare narrows with `--tools read` and never
+passes `--allowed-tools`, so a contract 4 runtime takes every contract 3 path
+below: the advertised flags, native recovery controls, capability entries and
+replay audit. Elsewhere in these documents "a contract 3 runtime" includes
+contract 4. Inspection expects contract 4 from 2026.11.135 and contract 3 from
+2026.11.33 up to it, and Scrutare passes `--contract` equal to the inspected
+contract. The replay audit binds a recorded invocation to the contract its
+recorded release speaks, so a contract 4 run's evidence must say 4 throughout.
+
 ### Upgrading to contract 3
 
-The pinned runtime uses contract 3, first released in nare 2026.11.33. Its
+Contract 3 was first released in nare 2026.11.33. Its
 redaction rules preserve code expressions while redacting credential values;
 Scrutare continues to decode and replay historical contract 1/2 evidence.
 Unknown contracts and release/contract mismatches fail inspection before review.
-See nare's [machine contract](https://github.com/ViviDynamics/nare/blob/2026.11.109/docs/contract.md).
+See nare's [machine contract](https://github.com/ViviDynamics/nare/blob/2026.11.135/docs/contract.md).
 
 On contract 3, every initial and resumed correction invocation explicitly sets
 `--max-cutoffs 0`, `--request-retries 0`, and `--max-corrections 1`. This retains
@@ -131,7 +144,7 @@ entry names: the openai rail, and on contract 3 runtimes that list it the
 anthropic rail. The `json_object` and `tool_call` encodings (openai rails only)
 add `--structured-output json_object` or `--structured-output tool_call`
 instead, and are offered only when the entry's `provider_modes` (nare
-2026.11.109) lists the mode for openai and the advertised flag lists it among
+2026.11.135) lists the mode for openai and the advertised flag lists it among
 its choices. An entry without `provider_modes` offers `json_schema` alone, as
 before. Each constrained-turn record must name the rail's own encoding.
 A rail with [`cache_breakpoints`](config.md#prompt-cache-breakpoints-opt-in) or
@@ -338,7 +351,7 @@ and replay contracts.
 ## Offline installed CLI proof
 
 Set `SCRUTARE_TEST_NARE_EXECUTABLE` to the absolute installed console path for
-nare 2026.11.109, then run:
+nare 2026.11.135, then run:
 
 ```sh
 uv run --python 3.10 --locked --extra dev pytest tests/test_nare_cli_integration.py

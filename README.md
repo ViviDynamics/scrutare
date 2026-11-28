@@ -69,7 +69,7 @@ and CLI, Python API, GitHub Action and MCP interfaces. Successful main CI
 automatically tags and publishes releases; see [GitHub releases](https://github.com/ViviDynamics/scrutare/releases)
 and [release automation](docs/releases.md#release-contract).
 
-This source checkout integrates nare 2026.11.109 and machine contract 3. Published
+This source checkout integrates nare 2026.11.135 and machine contract 4. Published
 Scrutare releases through 2026.10.47 require their older Nare pins; follow the
 instructions at the matching release tag or the [source installation guide](docs/releases.md#wheel).
 Review-quality enhancements remain opt-in pending the measured promotion gate
@@ -211,7 +211,7 @@ uv run --locked --extra dev mypy src scripts/check-release.py scripts/auto-relea
 uv build --wheel
 ```
 
-CI also installs nare 2026.11.109 in a separate Python 3.14 environment pinned
+CI also installs nare 2026.11.135 in a separate Python 3.14 environment pinned
 to its public release commit (both recorded in `nare.pin`) and locked dependencies. Each matrix job runs
 offline tests through that installed CLI. To include the same proof locally,
 set `SCRUTARE_TEST_NARE_EXECUTABLE` to the absolute path of the separately

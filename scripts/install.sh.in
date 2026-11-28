@@ -40,7 +40,7 @@ install_scrutare() (
 import json, sys
 with open(sys.argv[1]) as stream:
     contract = json.load(stream)
-if contract.get("contract") != 3 or contract.get("nare") != sys.argv[2]:
+if contract.get("contract") != 4 or contract.get("nare") != sys.argv[2]:
     sys.exit("Installed Nare has an incompatible machine contract.")
 PY
     {

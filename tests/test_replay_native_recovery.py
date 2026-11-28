@@ -54,3 +54,57 @@ def test_replay_cannot_downgrade_contract_3_to_bypass_policy(tmp_path, claimed, 
     (attempt / "invocation.json").write_text(json.dumps(document))
     assert [issue.code for issue in audit._native_recovery_issues(tmp_path)] == [
         "native_recovery_policy_invalid"]
+
+
+def contract_4_invocation(attempt, **changes):
+    document = {"contract": 4, "nare_version": "2026.11.135",
+                "argv": ["nare", "run", "review", "--contract", "4", "--max-cutoffs", "0",
+                         "--request-retries", "0", "--max-corrections", "1"]}
+    document.update(changes)
+    (attempt / "invocation.json").write_text(json.dumps(document))
+
+
+def test_contract_4_replay_binds_the_same_native_recovery_policy(tmp_path):
+    attempt = tmp_path / "sessions/security/attempt-0001"
+    attempt.mkdir(parents=True)
+    contract_4_invocation(attempt)
+    (attempt / "stdout.jsonl").write_text(json.dumps(
+        {"type": "result", "contract": 4, "nare": "2026.11.135"}))
+    assert audit._native_recovery_issues(tmp_path) == ()
+    contract_4_invocation(attempt, argv=["nare", "run", "review", "--contract", "4",
+                                         "--max-cutoffs", "2", "--request-retries", "0",
+                                         "--max-corrections", "1"])
+    assert [issue.code for issue in audit._native_recovery_issues(tmp_path)] == [
+        "native_recovery_policy_invalid"]
+
+
+@pytest.mark.parametrize(("version", "recorded", "flag", "streamed"), [
+    ("2026.11.135", 3, "4", 4), ("2026.11.135", 4, "3", 4), ("2026.11.135", 4, "4", 3),
+    ("2026.11.134", 4, "4", 4)])
+def test_a_contract_the_recorded_release_does_not_speak_is_refused(tmp_path, version, recorded,
+                                                                   flag, streamed):
+    attempt = tmp_path / "sessions/security/attempt-0001"
+    attempt.mkdir(parents=True)
+    contract_4_invocation(attempt, contract=recorded, nare_version=version,
+                          argv=["nare", "run", "review", "--contract", flag, "--max-cutoffs",
+                                "0", "--request-retries", "0", "--max-corrections", "1"])
+    (attempt / "stdout.jsonl").write_text(json.dumps(
+        {"type": "result", "contract": streamed, "nare": version}))
+    assert [issue.code for issue in audit._native_recovery_issues(tmp_path)] == [
+        "native_recovery_policy_invalid"]
+
+
+@pytest.mark.parametrize("evidence", ["argv", "stream", "session"])
+def test_replay_cannot_drop_contract_4_evidence_to_bypass_policy(tmp_path, evidence):
+    attempt = tmp_path / "sessions/security/attempt-0001"
+    attempt.mkdir(parents=True)
+    document = {"contract": None, "argv": ["nare", "run", "review"]}
+    if evidence == "argv":
+        document["argv"] += ["--contract", "4"]
+    elif evidence == "stream":
+        (attempt / "stdout.jsonl").write_text(json.dumps({"type": "result", "contract": 4}))
+    else:
+        (attempt / "session.json").write_text(json.dumps({"contract": 4}))
+    (attempt / "invocation.json").write_text(json.dumps(document))
+    assert [issue.code for issue in audit._native_recovery_issues(tmp_path)] == [
+        "native_recovery_policy_invalid"]

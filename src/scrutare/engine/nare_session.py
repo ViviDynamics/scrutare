@@ -218,15 +218,30 @@ async def _probe(executable: Path, args: tuple[str, ...], root: Path,
 # offer only `read`, so both contracts carry the same evidence; each from its own releases.
 _CONTRACT_2_FROM = (2026, 10, 7)
 _CONTRACT_3_FROM = (2026, 11, 33)
-SUPPORTED_CONTRACTS = (1, 2, 3)
+# nare 2026.11.135 moved to contract 4, which only changes what --allowed-tools does: it
+# pre-approves the named tools instead of narrowing the tool set. Scrutare narrows with
+# --tools and never passes --allowed-tools, so a contract 4 runtime takes every contract 3
+# path (see modern_contract).
+_CONTRACT_4_FROM = (2026, 11, 135)
+SUPPORTED_CONTRACTS = (1, 2, 3, 4)
+
+
+def release_contract(version: str) -> int:
+    """The contract a nare release speaks, from its CalVer version."""
+    release = tuple(map(int, version.split(".")))
+    return (4 if release >= _CONTRACT_4_FROM else 3 if release >= _CONTRACT_3_FROM
+            else 2 if release >= _CONTRACT_2_FROM else 1)
+
+
+def modern_contract(contract: object) -> bool:
+    """Whether a contract advertises its run flags and native recovery controls (3 onward)."""
+    return type(contract) is int and contract in SUPPORTED_CONTRACTS and contract >= 3
 
 
 def _speaks(version: str, contract: object) -> bool:
     if type(contract) is not int or contract not in SUPPORTED_CONTRACTS:
         return False
-    release = tuple(map(int, version.split(".")))
-    expected = 3 if release >= _CONTRACT_3_FROM else 2 if release >= _CONTRACT_2_FROM else 1
-    return contract == expected
+    return contract == release_contract(version)
 
 
 # Options every contract 3 invocation sends, with whether each takes a value. A runtime that
@@ -447,9 +462,9 @@ async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
             if (not isinstance(contract, dict) or not _speaks(version, contract.get("contract"))
                     or contract.get("nare") != version):
                 raise SessionRuntimeError(
-                    "contract: expected supported contract 1, 2 or 3 and matching release")
+                    "contract: expected supported contract 1, 2, 3 or 4 and matching release")
             # Contracts 1 and 2 keep their release-number rules, whatever they advertise.
-            flags = _flags(contract) if contract["contract"] == 3 else None
+            flags = _flags(contract) if modern_contract(contract["contract"]) else None
             modes, providers, by_provider = _structured_output(contract, flags)
             return NareCapability(
                 version, contract["contract"], modes, _proxy_num_retries(contract, flags),
@@ -470,9 +485,9 @@ async def inspect_nare_runtime(runtime: NareRuntime) -> NareCapability:
 
 def _rail_refusal(rail: ModelRail, capability: NareCapability) -> str | None:
     """What this rail asks for that the inspected runtime cannot send, or None."""
-    if capability.contract == 3 and capability.flags is None:
-        return "contract 3 options without its advertised run flags"
-    modern = capability.contract == 3
+    modern = modern_contract(capability.contract)
+    if modern and capability.flags is None:
+        return "contract 3 or later options without its advertised run flags"
     if rail.proxy_num_retries is not None and not (
             capability.proxy_num_retries
             and (not modern or capability.advertises("--proxy-num-retries"))):
@@ -856,7 +871,7 @@ def citation_check_argv(findings: FindingSettings, root: Path,
 
 
 def _streams(capability: NareCapability) -> bool:
-    if capability.contract == 3:
+    if modern_contract(capability.contract):
         return capability.advertises("--stream")
     return tuple(map(int, capability.version.split("."))) >= (2026, 10, 4)
 
@@ -929,7 +944,7 @@ def _rail_argv(rail: ModelRail, capability: NareCapability,
     argv = ["--provider", rail.provider, "--model=" + rail.model]
     if rail.provider == "openai" and _streams(capability):
         argv.append("--stream")
-    if capability.contract == 3:
+    if modern_contract(capability.contract):
         # Preserve Scrutare's recovery policy rather than inherit newer CLI defaults.
         # A rail may opt in to resends and to cut-off corrections; unset keeps each zero.
         retries = rail.request_retries or 0

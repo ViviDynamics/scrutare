@@ -62,6 +62,6 @@ assert "--slurp" in subprocess.check_output(["gh", "api", "--help"], text=True)
 version = subprocess.check_output(["nare", "--version"], text=True).strip()
 assert version == sys.argv[2]
 contract = json.loads(subprocess.check_output(["nare", "contract"], text=True))
-assert contract["contract"] == 3 and contract["nare"] == version
-print(f"UID {os.getuid()}: writable /work, four personas, nare {version}, contract 3")
+assert contract["contract"] == 4 and contract["nare"] == version
+print(f"UID {os.getuid()}: writable /work, four personas, nare {version}, contract 4")
 PY

@@ -185,8 +185,8 @@ The setting is off by default and inherited by overrides like the other rail
 fields; an override can set it alone or clear an inherited value with `null`.
 It is refused before any session launches when the nare runtime does not
 advertise the capability for that rail's provider: the openai rail from nare
-2026.10.12, the anthropic rail on contract 3 runtimes that list it (the pinned
-2026.11.109 does). Use it only with a backend that enforces `response_format`
+2026.10.12, the anthropic rail on contract 3 or later runtimes that list it (the pinned
+2026.11.135 does). Use it only with a backend that enforces `response_format`
 json_schema, such as vLLM; an OpenAI-compatible server that ignores the field
 answers unconstrained, and validation still decides.
 
@@ -330,7 +330,7 @@ The default remains off.
 
 ## Request retries (opt-in)
 
-Scrutare starts every contract 3 session with `--request-retries 0`, so one
+Scrutare starts every contract 3 or later session with `--request-retries 0`, so one
 transient provider failure (a timeout, a dropped connection, HTTP 429, 502,
 503, 504 or 529) ends the session, and with it the review and every token it
 had spent. A rail can let nare resend the failed request instead:
@@ -363,7 +363,7 @@ requires `request_retries` above 0 on the same rail. The bound belongs to the
 resends, so an override that sets `request_retries` to 0 or `null` does not
 inherit the default rail's `request_retry_seconds`; setting the bound itself
 on such an override is refused.
-The runtime must be a contract 3 nare that lists `--request-retry-seconds`;
+The runtime must be a contract 3 or later nare that lists `--request-retry-seconds`;
 otherwise the wave is refused before any session starts. This is separate from
 `proxy_num_retries`, which asks a proxy to retry upstream inside one of nare's
 attempts.
@@ -405,7 +405,7 @@ The setting is a boolean, off by default, inherited by overrides and cleared
 with `null`. Other providers refuse it: the anthropic rail always marks. An
 override that changes the provider and inherits the setting is refused with a
 message that says so; set `cache_breakpoints: null` on that override. The
-runtime must be a contract 3 nare that advertises the capability for the
+runtime must be a contract 3 or later nare that advertises the capability for the
 openai rail. When any rail sets it, the canonical configuration and
 `fanout.json` record it on every rail, `invocation.json` records it in `rail`
 and its argv, and `result.json` records `{"enabled": true|false}`.
@@ -435,7 +435,7 @@ failure.
 
 ## Cut-off recovery (opt-in)
 
-Scrutare starts every contract 3 session with `--max-cutoffs 0`, so a reply
+Scrutare starts every contract 3 or later session with `--max-cutoffs 0`, so a reply
 the provider cut off at the output cap, or one that repeated itself until nare
 stopped it, ends the session at once. A rail can let nare correct such replies
 instead:
@@ -476,8 +476,8 @@ What nare then does (nare `docs/contract.md`, "Cut-off replies"):
 `max_cutoffs` accepts an integer from 0 to 3 on either provider, inherits
 through overrides, and is cleared with `null`. The cap is Scrutare's: nare
 takes any count, and nare's own command-line default is 2, which Scrutare never
-inherits. The runtime must be a contract 3 nare that lists `--max-cutoffs`
-taking a value (every contract 3 release does); against an older runtime the
+inherits. The runtime must be a contract 3 or later nare that lists `--max-cutoffs`
+taking a value (every contract 3 and 4 release does); against an older runtime the
 wave is refused before any session starts.
 
 When no rail sets it, argv, the canonical configuration and every record keep
@@ -580,7 +580,7 @@ an enabled mode uses must be written, so the configuration states the whole
 policy. The example values are nare's defaults and have not been measured for
 reviews. YAML reads an unquoted `off` as false, which is accepted as `off`.
 
-The inspected runtime must be a contract 3 nare that offers the mode: its
+The inspected runtime must be a contract 3 or later nare that offers the mode: its
 `capacity_queue` entry and flags for `fixed`, and also its `capacity_adaptive`
 entry and flags for `adaptive` (nare 2026.11.95 and 2026.11.96). It must also
 list `--stream`, for the timeout rule below. Otherwise the wave is refused
@@ -944,7 +944,7 @@ A session's record:
 | `tokens`, `output_tokens` | The session's `usage.total` and `usage.output` |
 | `retries`, `retry_wait_seconds` | Resent requests and the waits nare announced before them (`detail.retry.wait`) |
 | `capacity_wait_seconds`, `capacity_slot_wait_seconds` | The session's recorded [capacity](#capacity-queueing-opt-in) waits, 0 without the block |
-| `requests` | nare's [request timing](https://github.com/ViviDynamics/nare/blob/2026.11.109/docs/contract.md#request-timing) summed over the session's invocations, or `null` when no result line carried it |
+| `requests` | nare's [request timing](https://github.com/ViviDynamics/nare/blob/2026.11.135/docs/contract.md#request-timing) summed over the session's invocations, or `null` when no result line carried it |
 | `first_token_seconds` | Mean time to first token: `requests.first_token_seconds` over `requests.first_tokens`, `null` with none |
 | `decode_tokens_per_second` | `requests.generation_output_tokens` over `requests.generation_seconds`, `null` when that is zero or `null` |
 

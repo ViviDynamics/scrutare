@@ -24,8 +24,8 @@ STRUCTURED = {"flag": "--structured-output", "modes": ["json_schema"], "requires
 
 def advertised(tmp_path, *, version, contract, structured=None):
     path = executable(tmp_path, version=version, contract=contract)
-    if contract == 3:
-        # Every contract 3 release lists its run options; inspection refuses one that does not.
+    if contract in (3, 4):
+        # Every contract 3 or 4 release lists its run options; inspection refuses one that does not.
         path.write_text(path.read_text().replace(
             f'"nare": {version!r}}}', f'"nare": {version!r}, "flags": {flag_map()!r}}}'))
         return path
@@ -127,6 +127,19 @@ def test_contract_3_is_accepted_from_its_first_release(tmp_path, version):
 @pytest.mark.parametrize(("version", "contract"), [
     ("2026.11.32", 3), ("2026.11.33", 2), ("2026.11.80", 4)])
 def test_contract_3_boundary_and_unknown_contract_fail_closed(tmp_path, version, contract):
+    with pytest.raises(module().SessionRuntimeError, match="^contract:"):
+        inspect(advertised(tmp_path, version=version, contract=contract))
+
+
+@pytest.mark.parametrize("version", ["2026.11.135", "2026.12.1"])
+def test_contract_4_is_accepted_from_its_first_release(tmp_path, version):
+    assert inspect(advertised(tmp_path, version=version, contract=4)) == contract3_capability(
+        version=version, contract=4)
+
+
+@pytest.mark.parametrize(("version", "contract"), [
+    ("2026.11.134", 4), ("2026.11.135", 3), ("2026.11.135", 5)])
+def test_contract_4_boundary_and_unknown_contract_fail_closed(tmp_path, version, contract):
     with pytest.raises(module().SessionRuntimeError, match="^contract:"):
         inspect(advertised(tmp_path, version=version, contract=contract))
 

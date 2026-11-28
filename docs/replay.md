@@ -180,7 +180,7 @@ must record the rail's (`rail_options_result_disagrees`, invalid). A launched
 session without `result.json`, a counted session without `stdout.jsonl`, or an
 opted-in run without any session attempt is `rail_options_evidence_missing`
 (incomplete), and a captured configuration that cannot be read for this is
-`rail_options_config_invalid` (invalid). The contract 3 recovery check accepts
+`rail_options_config_invalid` (invalid). The contract 3 and later recovery check accepts
 `--request-retries N` and `--max-cutoffs N` only when each equals the value the
 session's own rail recorded, and `0` otherwise. Runs that never set these
 fields are not audited.

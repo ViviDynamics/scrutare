@@ -56,8 +56,9 @@ def flag_map(*, without=(), extra=None):
     return {name: record for name, record in flags.items() if name not in without}
 
 
-def contract3_capability(*, without=(), extra=None, version="2026.11.94", **fields):
-    return NareCapability(version, 3, flags=tuple(
+def contract3_capability(*, without=(), extra=None, version="2026.11.94", contract=3,
+                         **fields):
+    return NareCapability(version, contract, flags=tuple(
         NareFlag(name, record["takes_value"],
                  None if record["choices"] is None else tuple(record["choices"]))
         for name, record in sorted(flag_map(without=without, extra=extra).items())), **fields)
@@ -730,10 +731,12 @@ USAGE = {"input": 5, "output": 3, "cache_read": 4, "cache_write": 2, "cost": Non
     ("openai", "2026.10.3", 1, False),
     ("openai", "2026.10.4", 1, True),
     ("openai", "2026.10.10", 2, True),
-    ("openai", "2027.1.0", 3, True),
+    ("openai", "2026.11.80", 3, True),
+    ("openai", "2027.1.0", 4, True),
     ("anthropic", "2026.10.0", 1, False),
     ("anthropic", "2026.10.4", 1, False),
-    ("anthropic", "2027.1.0", 3, False),
+    ("anthropic", "2026.11.80", 3, False),
+    ("anthropic", "2027.1.0", 4, False),
 ])
 def test_streaming_argv_preserves_older_and_anthropic_runtimes(
     capture, tmp_path, provider, version, contract, stream
@@ -746,7 +749,7 @@ def test_streaming_argv_preserves_older_and_anthropic_runtimes(
         body = body.replace('a = parser.parse_args()',
                             'parser.add_argument("--stream", action="store_true")\n'
                             'a = parser.parse_args()')
-    if contract == 3:
+    if contract >= 3:
         body = body.replace('a = parser.parse_args()',
                             'for flag in ("max-cutoffs", "request-retries", "max-corrections"):\n'
                             '    parser.add_argument("--" + flag)\na = parser.parse_args()')
@@ -755,9 +758,9 @@ def test_streaming_argv_preserves_older_and_anthropic_runtimes(
         descriptor, ModelRail(provider, None, "fixture-model"), lease,
         ledger=ledger, artifact_directory=attempt, runtime=NareRuntime(path, 7, 5),
         capability=(contract3_capability(
-            version=version, without=("--compaction", "--compaction-trigger",
-                                      "--compaction-target"))
-                    if contract == 3 else NareCapability(version, contract))))
+            version=version, contract=contract,
+            without=("--compaction", "--compaction-trigger", "--compaction-target"))
+                    if contract >= 3 else NareCapability(version, contract))))
     assert outcome.status == "complete"
     observed = json.loads((attempt / "cwd" / "observed.json").read_bytes())
     assert ("--stream" in observed["argv"]) is stream

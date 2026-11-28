@@ -509,7 +509,7 @@ def _recorded_cutoffs(invocation: dict[str, Any]) -> str:
     return str(cutoffs) if type(cutoffs) is int and cutoffs >= 0 else "0"
 
 
-# Opt-in rail fields that exist only as contract 3 flags, and the records they leave.
+# Opt-in rail fields that exist only as contract 3 and later flags, and the records they leave.
 _OPTION_FIELDS = ("request_retries", "request_retry_seconds", "cache_breakpoints", "effort",
                   "max_cutoffs")
 _OPTION_FLAGS = ("--request-retry-seconds", "--cache-breakpoints", "--effort")
@@ -1045,7 +1045,9 @@ def _session_timeout_issues(run_dir: Path, config_data: object) -> tuple[AuditIs
 
 
 def _native_recovery_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
-    """Bind contract 3 recovery controls to all retained runtime identities."""
+    """Bind contract 3 and later recovery controls to all retained runtime identities."""
+    from scrutare.engine.nare_session import modern_contract, release_contract
+
     issues = []
     for attempt, invocation in _invocations(_session_records(run_dir)):
         record = invocation if isinstance(invocation, dict) else {}
@@ -1053,6 +1055,7 @@ def _native_recovery_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
         version = record.get("nare_version")
         modern = (isinstance(version, str) and re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version)
                   and tuple(map(int, version.split("."))) >= (2026, 11, 33))
+        expected = release_contract(version) if modern and isinstance(version, str) else None
         identities = []
         unreadable = False
         for name in ("stdout.jsonl", "session.json"):
@@ -1067,17 +1070,17 @@ def _native_recovery_issues(run_dir: Path) -> tuple[AuditIssue, ...]:
                 identities.append(identity)
             except ReplayError:
                 unreadable = True
-        if not (modern or record.get("contract") == 3
-                or isinstance(argv, list) and _flag(argv, "--contract") == "3"
-                or any(identity.get("contract") == 3 for identity in identities)):
+        if not (modern or modern_contract(record.get("contract"))
+                or isinstance(argv, list) and _flag(argv, "--contract") in ("3", "4")
+                or any(modern_contract(identity.get("contract")) for identity in identities)):
             continue
         if (unreadable or not modern or type(record.get("contract")) is not int
-                or record.get("contract") != 3
-                or any(identity.get("contract") != 3 or identity.get("nare") != version
+                or record.get("contract") != expected
+                or any(identity.get("contract") != expected or identity.get("nare") != version
                        for identity in identities)
                 or not isinstance(argv, list) or any(
                     _flag(argv, flag) != value or _names(argv).count(flag) != 1
-                    for flag, value in (("--contract", "3"),
+                    for flag, value in (("--contract", str(expected)),
                                         ("--max-cutoffs", _recorded_cutoffs(record)),
                                         ("--request-retries", _recorded_retries(record)),
                                         ("--max-corrections", _recorded_corrections(record))))):

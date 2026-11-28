@@ -1,4 +1,4 @@
-"""Strict contract-1/2/3 decoding of nare evidence and caller-attributed candidates."""
+"""Strict contract-1/2/3/4 decoding of nare evidence and caller-attributed candidates."""
 
 from __future__ import annotations
 
@@ -683,7 +683,7 @@ def _decode_evidence(
         if stop is not None:
             stop = _text(stop)
         contract = _integer(result["contract"], positive=True)
-        if contract not in (1, 2, 3):
+        if contract not in (1, 2, 3, 4):
             _fail()
         version = _text(result["nare"])
         count = _integer(result["turns"])
